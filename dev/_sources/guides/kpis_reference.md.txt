@@ -509,7 +509,9 @@ A departure is recorded at step `t` when an EV is connected at `t` and any of th
 - at `t + 1` the charger is free;
 - the session id or the EV id changes;
 - the schedule has no session ids and the countdown to departure resets: it is at most 1 at `t` and increases at `t + 1`;
-- `t` is the last step and the countdown is in [0, 1].
+- `t` is the last step of the member's window (the last control step of the episode, or the step before the member leaves) and the countdown is in [0, 1], or in [0, 2] when another `episode_split_boundary='disjoint'` split of the simulation follows the episode. These are the sessions that leave before the next control step, which comes one row after the last step, or two rows after it before a following `'disjoint'` split, whose row in between is never controlled. The last window of a simulation, a single episode, rolling and explicit-list splits, and a window that ends before its episode does all use [0, 1], so a run that is not split does not depend on the boundary. The last step scores them with the SOC the controller reached. With `evaluate_v2()` in the middle of an episode, the window ends at the current step.
+
+Each session is counted once over consecutive episodes. A departure at step 0 of an episode is not counted when the same session was already connected on the row before step 0: the same session or EV id there, and, without ids, no countdown reset from [0, 1]. Between consecutive episodes that row is the last control step of the episode before under `'shared'`, and the row between the two episodes under `'disjoint'`, so the episode before has already counted the session at its last step, and step 0 would only score the SOC set at reset. The rule looks only at that row, so it also applies with `rolling_episode_split` or an explicit list of `episode_time_steps`, where the row before step 0 may belong to no simulated episode and the session is then not counted. The first episode of a simulation has no row before step 0.
 
 The target SOC is read at `t`. A target in (1, 100] is taken as a percentage and divided by 100. A target outside [0, 1] after that, or a missing one, is invalid.
 

@@ -110,6 +110,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#occupant-set-point-limits">Occupant set-point limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ev-soc-unit-of-charger-files">EV SOC unit of charger files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#charger-defaults-and-attribute-names">Charger defaults and attribute names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ev-departures-at-the-end-of-the-window">EV departures at the end of the window</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#observation-spaces-follow-the-observations">Observation spaces follow the observations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-native-bau-uses-current-step-load-and-solar">The native BAU uses current-step load and solar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#numeric-and-configuration-hygiene">Numeric and configuration hygiene</a></li>
@@ -463,6 +464,31 @@ only when it is used, that is when an efficiency curve does not replace it.</p><
 A schema that omits <code class="docutils literal notranslate"><span class="pre">max_discharging_power</span></code> and relied on the 50 kW of V2G
 needs it set explicitly, or <code class="docutils literal notranslate"><span class="pre">physics_version=1</span></code>, which keeps the 50 kW defaults
 of CityLearn 3.6.0 (the name check applies to both versions).</p>
+</section>
+<section id="ev-departures-at-the-end-of-the-window">
+<h3>EV departures at the end of the window<a class="headerlink" href="#ev-departures-at-the-end-of-the-window" title="Link to this heading"></a></h3>
+<p>A session that is still connected at the last step of a member’s KPI window,
+with a countdown to departure of 0 or 1, is now a departure, as the
+<a class="reference internal" href="kpis_reference.html#departures"><span class="std std-ref">KPI reference</span></a> says. Its SOC at that step is
+scored against its target in <code class="docutils literal notranslate"><span class="pre">ev_events</span></code> and <code class="docutils literal notranslate"><span class="pre">ev_performance</span></code>, and the
+departure audit counts it. The last step is the last control step of the
+episode, or the step before a member leaves under a dynamic topology. At most
+one departure per charger is added per window, so short episodes that end at
+a usual departure time change the most; the default episodes of the bundled
+datasets do not change.</p>
+<p>Over consecutive split episodes each session is now counted once, by the
+episode that controlled it. Before, a session that ended with an episode was
+counted at step 0 of the next one, with the SOC set at reset, under
+<code class="docutils literal notranslate"><span class="pre">episode_split_boundary='shared'</span></code>, and not at all under <code class="docutils literal notranslate"><span class="pre">'disjoint'</span></code>, where a
+session connected on the row between two episodes was instead scored at step
+0 of the next one with the SOC set at reset. Now the last step of an episode
+counts a session that leaves before the next control step (countdown in
+[0, 1], or in [0, 2] when another <code class="docutils literal notranslate"><span class="pre">'disjoint'</span></code> split follows, so a run that is
+not split does not depend on the boundary), with the SOC the controller
+reached, and step 0 skips any session
+that was connected on the row before it. Departure counts and rates from
+earlier runs with short or split episodes should be recomputed before
+comparing (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/370">#370</a>).</p>
 </section>
 <section id="observation-spaces-follow-the-observations">
 <h3>Observation spaces follow the observations<a class="headerlink" href="#observation-spaces-follow-the-observations" title="Link to this heading"></a></h3>
