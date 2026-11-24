@@ -52,6 +52,33 @@ versão e o histórico da linha de desenvolvimento.
 
 ## Por publicar
 
+### Cache de datasets identificada pelo conteúdo
+
+As cópias locais dos datasets passam a ficar em cache sob a chave do seu
+conteúdo, em `datasets_by_content/<chave>/<dataset>` de
+`DataSet().cache_directory`, em vez de `datasets/<dataset>`. O código que
+carrega datasets pelo nome ou pelo caminho devolvido por
+`DataSet().get_dataset()` não precisa de mudar.
+
+- As cópias guardadas em cache por corridas anteriores em `datasets/<dataset>`
+  deixam de ser lidas enquanto existir uma cópia local completa, e ficam
+  intactas. Uma corrida que usava um schema desatualizado da cache passa a
+  carregar o local, o que pode mudar os seus resultados; para reproduzir essa
+  corrida, passe explicitamente o caminho do `schema.json` antigo.
+- Cada conteúdo diferente de um dataset tem a sua própria cópia, pelo que os
+  checkouts que mudam de branch acumulam cópias. `DataSet().clear_cache()`
+  remove-as todas.
+- O código que construía à mão o caminho da cache a partir de
+  `cache_directory`, `datasets` e do nome do dataset deve usar o caminho
+  devolvido por `DataSet().get_dataset(name)`.
+- As descargas, usadas quando não existe cópia local, continuam em cache em
+  `datasets/<dataset>` da tag da versão.
+
+O `IndependentBalanceAudit` aceita `flow_relative_tolerance` (1e-8 por
+omissão), que ajusta a tolerância dos resíduos de balanço do distrito ao seu
+fluxo bruto; o relatório regista o valor. Passe `flow_relative_tolerance=0`
+para manter a tolerância fixa anterior.
+
 ### Carregamento dos VE na baseline por omissão
 
 A baseline por omissão dos KPIs (`EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV`,

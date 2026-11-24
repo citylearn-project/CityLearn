@@ -34,6 +34,12 @@ def roots(tmp_path, monkeypatch):
     return cache/'datasets', local
 
 
+def _content_root(datasets: Path, local_root: Path) -> Path:
+    """The cache folder that a complete local dataset folder is copied to."""
+
+    return datasets.parent/DataSet.CONTENT_CACHE_DIRECTORY/DataSet._content_key(local_root)/local_root.name
+
+
 def _copy(source: Path, target: Path, **schema_changes) -> Path:
     shutil.copytree(source, target)
 
@@ -59,8 +65,25 @@ def test_a_cached_schema_without_its_files_is_repaired_from_a_complete_local_cop
     env = _env('demo')
 
     assert len(env.buildings) == 1
-    assert (cache/'demo'/'Building_1.csv').read_bytes() == (MINUTE_EV_DEMO/'Building_1.csv').read_bytes()
-    assert not any(p.name.startswith('.demo-') for p in cache.iterdir())
+    # The complete local copy is cached under its content key; the incomplete copy is no longer read.
+    cached = _content_root(cache, local/'demo')
+    assert Path(env.root_directory).resolve() == cached.resolve()
+    assert (cached/'Building_1.csv').read_bytes() == (MINUTE_EV_DEMO/'Building_1.csv').read_bytes()
+    assert not any(p.name.startswith('.demo-') for p in cached.parent.iterdir())
+
+
+def test_a_damaged_content_keyed_copy_is_repaired_from_the_local_copy(roots):
+    cache, local = roots
+    _copy(MINUTE_EV_DEMO, local/'demo')
+    cached = Path(DataSet(offline=True).get_dataset('demo')).parent
+    (cached/'Building_1.csv').unlink()
+
+    env = _env('demo')
+
+    assert len(env.buildings) == 1
+    assert Path(env.root_directory).resolve() == cached.resolve()
+    assert (cached/'Building_1.csv').read_bytes() == (MINUTE_EV_DEMO/'Building_1.csv').read_bytes()
+    assert not any(p.name.startswith('.demo-') for p in cached.parent.iterdir())
 
 
 def test_an_incomplete_cache_without_a_local_copy_raises_a_clear_error_offline(roots):
@@ -85,7 +108,7 @@ def test_a_file_name_in_free_text_is_not_required(roots):
     assert 'demo' in DataSet(offline=True).get_dataset_names()
     assert len(_env('demo').buildings) == 1
     assert len(_env('demo').buildings) == 1  # from the cache
-    assert not (cache/'demo'/'README.txt').exists()
+    assert not (_content_root(cache, local/'demo')/'README.txt').exists()
 
 
 def test_a_missing_file_of_an_excluded_building_is_not_required(roots):
