@@ -12,7 +12,8 @@ diferença, prevalece a versão inglesa.
 |---|---|
 | [Executar simulações](running_simulations.md) | Instalação, exemplos, parâmetros, CLI e exportação. |
 | [Funcionalidades](features.md) | Equipamentos e serviços disponíveis. |
-| [Schema](schema_reference.md) | Edifícios, equipamentos, topologia e mercado. |
+| [Schema](schema_reference.md) | Todas as chaves do schema: edifícios, equipamentos, VE, topologia, mercado e serviços. |
+| [Schema de referência completo](schema_full_reference.md) | Um schema com todas as opções, explicado chave a chave. |
 | [Datasets](dataset_reference.md) | Ficheiros, CSV/Parquet e conversão de unidades. |
 | [REC de Portugal](portugal_rec_datasets.md) | Quatro comunidades portuguesas e cenários de avaliação. |
 | [Unidades](data_unit_contract.md) | Contrato de energia, potência, preços e duração dos passos. |

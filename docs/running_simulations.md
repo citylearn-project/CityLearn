@@ -102,11 +102,11 @@ All communities must share `seconds_per_time_step`, effective episode length, `i
 | `schema` | `str`, `Path`, `Mapping` | required | Dataset name, schema path or preloaded dict. | Relative paths are resolved from `root_directory`. |
 | `root_directory` | path | schema | Base folder for dataset files. | Overrides schema value. |
 | `buildings` | list | schema | Subset of buildings to load. | Names or indices. |
-| `electric_vehicles` | list | schema | Subset of EVs to load. | Usually from `electric_vehicles_def`. |
+| `electric_vehicles` | list | schema | Accepted, but it does not select EVs. | Use `electric_vehicles_def.<ev>.include` in the schema. |
 | `simulation_start_time_step` | int | schema | First global timestep. | Inclusive. |
 | `simulation_end_time_step` | int | schema | Last global timestep. | Inclusive. |
 | `episode_time_steps` | int/list | schema | Episode size or explicit windows. | Can be used with rolling/random splits. |
-| `rolling_episode_split` | bool | schema | Sequential window episodes. | Useful for training. |
+| `rolling_episode_split` | bool | schema | Every row can start an episode (overlapping windows). | Useful for training. |
 | `random_episode_split` | bool | schema | Random window episodes. | Uses `random_seed`. |
 | `episode_split_boundary` | str | `shared` | How consecutive (non-rolling) splits meet. | `shared` shares the boundary row so every interval is simulated; `disjoint` restores the 3.6.0 splits. |
 | `seconds_per_time_step` | float | schema | Physical duration of each step. | Examples: 15, 60, 300, 900, 3600. |
@@ -121,7 +121,7 @@ All communities must share `seconds_per_time_step`, effective episode length, `i
 | `active_actions` | list/list[list] | schema | Enable only these actions. | Global or per-building override. |
 | `inactive_actions` | list/list[list] | schema/building | Disable actions. | Applied after active selection. |
 | `simulate_power_outage` | bool | schema/building | Enable outage simulation. | Uses data series or stochastic model. |
-| `solar_generation` | bool | schema | Compatibility switch for solar generation. | Kept for original CityLearn compatibility. |
+| `solar_generation` | bool/list | `True` | `False` (or one bool per building) removes the PV. | Constructor only; there is no schema key. |
 | `random_seed` | int | schema | Random seed. | Affects splits and stochastic attributes. |
 | `offline` | bool | `False` | Disable network fallbacks. | Requires local datasets. |
 | `interface` | `flat`/`entity` | schema/flat | Observation/action contract. | Entity returns tables and edges. |

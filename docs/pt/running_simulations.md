@@ -102,11 +102,11 @@ Todas as comunidades têm de partilhar `seconds_per_time_step`, a duração efet
 | `schema` | `str`, `Path`, `Mapping` | obrigatório | Nome do dataset, caminho do schema ou dict já carregado. | Os caminhos relativos são resolvidos a partir de `root_directory`. |
 | `root_directory` | caminho | schema | Pasta base dos ficheiros do dataset. | Substitui o valor do schema. |
 | `buildings` | lista | schema | Subconjunto de edifícios a carregar. | Nomes ou índices. |
-| `electric_vehicles` | lista | schema | Subconjunto de VE a carregar. | Normalmente a partir de `electric_vehicles_def`. |
+| `electric_vehicles` | lista | schema | Aceite, mas não escolhe VE. | Use `electric_vehicles_def.<ev>.include` no schema. |
 | `simulation_start_time_step` | int | schema | Primeiro passo de tempo global. | Inclusivo. |
 | `simulation_end_time_step` | int | schema | Último passo de tempo global. | Inclusivo. |
 | `episode_time_steps` | int/lista | schema | Tamanho do episódio ou janelas explícitas. | Pode ser usado com divisões sequenciais (rolling) ou aleatórias. |
-| `rolling_episode_split` | bool | schema | Episódios em janelas sequenciais. | Útil para treino. |
+| `rolling_episode_split` | bool | schema | Qualquer linha pode iniciar um episódio (janelas sobrepostas). | Útil para treino. |
 | `random_episode_split` | bool | schema | Episódios em janelas aleatórias. | Usa `random_seed`. |
 | `episode_split_boundary` | str | `shared` | Como se ligam divisões consecutivas (não rolling). | `shared` partilha a linha de fronteira, pelo que todos os intervalos são simulados; `disjoint` repõe as divisões da 3.6.0. |
 | `seconds_per_time_step` | float | schema | Duração física de cada passo. | Exemplos: 15, 60, 300, 900, 3600. |
@@ -121,7 +121,7 @@ Todas as comunidades têm de partilhar `seconds_per_time_step`, a duração efet
 | `active_actions` | list/list[list] | schema | Ativa apenas estas ações. | Substituição global ou por edifício. |
 | `inactive_actions` | list/list[list] | schema/building | Desativa ações. | Aplicado depois da seleção das ativas. |
 | `simulate_power_outage` | bool | schema/building | Ativa a simulação de cortes de energia. | Usa séries de dados ou um modelo estocástico. |
-| `solar_generation` | bool | schema | Interruptor de compatibilidade para a produção solar. | Mantido para compatibilidade com o CityLearn original. |
+| `solar_generation` | bool/lista | `True` | `False` (ou um bool por edifício) retira a FV. | Só no construtor; não há chave no schema. |
 | `random_seed` | int | schema | Semente aleatória. | Afeta as divisões e os atributos estocásticos. |
 | `offline` | bool | `False` | Desativa os recursos de rede alternativos. | Requer datasets locais. |
 | `interface` | `flat`/`entity` | schema/flat | Contrato de observações/ações. | Entity devolve tabelas e arestas. |
