@@ -5,7 +5,9 @@ controlled run. They are the default ``baseline`` of :py:meth:`citylearn.citylea
 and :py:meth:`citylearn.citylearn.CityLearnEnv.evaluate_v2`, so the version changes every
 ``*_baseline_*``, ``*_delta_*`` (not ``*_delta_to_business_as_usual_*``) and ``*_ratio_to_baseline_*``
 value on datasets with EV chargers, the equity KPIs built on them, and the legacy ``evaluate()`` table.
-Version 1 changes nothing simulated; version 2 also changes how the native BAU runs the HVAC (below).
+The version also fixes how the native BAU runs the HVAC, so on datasets with HVAC actions it changes every
+``*_business_as_usual`` row and every ``*_delta_to_business_as_usual_*`` and ``*_ratio_to_business_as_usual_*``
+value as well (below). Version 1 reproduces CityLearn 3.6.0.
 A run selects a version with the ``baseline_version`` schema key or the
 :py:class:`citylearn.citylearn.CityLearnEnv` argument of the same name; the argument takes precedence.
 

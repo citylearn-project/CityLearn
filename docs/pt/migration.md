@@ -104,10 +104,13 @@ arrefecimento ([#362](https://github.com/citylearn-project/CityLearn/issues/362)
   `immediate-full-charge-v4+hvac-dataset-demand-v1` (ou
   `immediate-user-target-v3+hvac-dataset-demand-v1`). Consulte
   [AVAC e a versão da baseline](baselines.md#avac-e-a-versão-da-baseline).
-- Nos datasets com ações de AVAC (`quebec_*`, `tx_travis`, `vt_chittenden`,
-  `ca_alameda`, `baeda_3dem` e os datasets do desafio de 2023), as linhas
+- Nos datasets com ações de AVAC (`quebec_neighborhood_with_demand_response_set_points`,
+  `quebec_neighborhood_without_demand_response_set_points`,
+  `tx_travis_county_neighborhood`, `vt_chittenden_county_neighborhood`,
+  `ca_alameda_county_neighborhood`, `baeda_3dem` e os
+  datasets `citylearn_challenge_2023_*`), as linhas
   `*_business_as_usual` predefinidas, e os deltas e rácios face ao BAU, mudam.
-  No Quebec (passos 0–335), o custo do BAU passa de 631,8 para 4403,8 EUR, a sua
+  No `quebec_neighborhood_without_demand_response_set_points` (passos 0–335), o custo do BAU passa de 631,8 para 4403,8 EUR, a sua
   temperatura interior média de 3,4 para 20,6 °C, e o rácio de custo do
   `RBCSmartPolicy` face ao BAU de 6,970 para 1,000.
 - Nos datasets sem ações de AVAC nada muda, bit a bit.

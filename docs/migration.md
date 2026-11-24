@@ -101,10 +101,13 @@ compared the controller with unheated or uncooled houses
   `immediate-full-charge-v4+hvac-dataset-demand-v1` (or
   `immediate-user-target-v3+hvac-dataset-demand-v1`). See
   [HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version).
-- On datasets with HVAC actions (`quebec_*`, `tx_travis`, `vt_chittenden`,
-  `ca_alameda`, `baeda_3dem` and the 2023 challenge datasets) the default
+- On datasets with HVAC actions (`quebec_neighborhood_with_demand_response_set_points`,
+  `quebec_neighborhood_without_demand_response_set_points`,
+  `tx_travis_county_neighborhood`, `vt_chittenden_county_neighborhood`,
+  `ca_alameda_county_neighborhood`, `baeda_3dem` and the
+  `citylearn_challenge_2023_*` datasets) the default
   `*_business_as_usual` rows, and the deltas and ratios to the BAU, change. On
-  Quebec (steps 0–335) the BAU cost goes from 631.8 to 4,403.8 EUR, its mean
+  `quebec_neighborhood_without_demand_response_set_points` (steps 0–335) the BAU cost goes from 631.8 to 4,403.8 EUR, its mean
   indoor temperature from 3.4 to 20.6 °C, and the cost ratio of
   `RBCSmartPolicy` to the BAU from 6.970 to 1.000.
 - On datasets without HVAC actions nothing changes, bit for bit.
