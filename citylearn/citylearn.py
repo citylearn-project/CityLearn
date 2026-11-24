@@ -221,12 +221,12 @@ class CityLearnEnv(Environment, Env):
         Physics definitions: ``2`` (default) or ``1``, which reproduces the physics of CityLearn 3.6.0. Overrides the
         schema key. The migration guide lists the corrections of version 2.
     baseline_version: int, optional
-        Definition of the default KPI baseline (the ``*_without_storage`` series): ``2`` (default) removes the battery,
-        the thermal storage and the EV charging of the controlled run, and adds back the EV charging of the native BAU
-        with the ``'full'`` target, so it is the same for every controller and has no V2G; ``1`` adds nothing back, as
-        in CityLearn 3.6.0. ``3`` (opt-in) keeps the baseline of ``2``, and the native BAU also runs the HVAC so that it
-        delivers the dataset's own heating and cooling demand, instead of sending zero to the HVAC actions. Overrides
-        the schema key. See :py:mod:`citylearn.internal.baseline_version`.
+        Definition of the default KPI baseline (the ``*_without_storage`` series) and of the native BAU HVAC: ``2``
+        (default) removes the battery, the thermal storage and the EV charging of the controlled run, and adds back the
+        EV charging of the native BAU with the ``'full'`` target, so it is the same for every controller and has no V2G;
+        its native BAU also runs the HVAC so that it delivers the dataset's own heating and cooling demand. ``1`` adds
+        nothing back and its BAU sends zero to the HVAC actions, as in CityLearn 3.6.0. Overrides the schema key. See
+        :py:mod:`citylearn.internal.baseline_version`.
     debug_timing: bool, optional
         Log runtime timings. Defaults to the schema value, else ``False``.
     check_observation_limits: bool, optional
@@ -648,7 +648,7 @@ class CityLearnEnv(Environment, Env):
 
     @property
     def baseline_version(self) -> int:
-        """Definition of the default KPI baseline and, from version 3, of the native BAU HVAC; see
+        """Definition of the default KPI baseline and, from version 2, of the native BAU HVAC; see
         :py:mod:`citylearn.internal.baseline_version`."""
 
         from citylearn.internal.baseline_version import baseline_version_of

@@ -150,7 +150,7 @@ a step. With dynamic topology a member counts only while it is active.
 |---|---|
 | `control` | The run being evaluated. |
 | `baseline` | The conventional counterfactual of the same run: the members without their battery and thermal storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator's own series. The EV charging of the run is replaced by that of the native BAU with the `'full'` target (charged on arrival until full, no V2G), the same for every controller; the deferrable appliances and the HVAC stay as the controller ran them. `baseline_version=1` adds no EV charging back, as in CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run. |
-| `business_as_usual` | The native business-as-usual rollout of the same scenario and window (see [Baselines](baselines.md)). Its HVAC requests zero up to `baseline_version=2`; with `baseline_version=3` it delivers the dataset heating and cooling demand ([HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version)). |
+| `business_as_usual` | The native business-as-usual rollout of the same scenario and window (see [Baselines](baselines.md)). Under `baseline_version=2` (default) its HVAC delivers the dataset heating and cooling demand; under `baseline_version=1` it requests zero, as in CityLearn 3.6.0 ([HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |
 
@@ -1543,7 +1543,7 @@ The KPI definition version (`kpi_definition_version` in the
 `evaluate_v2()` changed definition. Where a 3.6.0 value may have been used in
 published comparisons, it is kept under a distinct name, and the legacy
 `evaluate()` rows keep their own 3.6.0 definitions, apart from the baseline of
-datasets with EV chargers (last row), which `baseline_version=1` restores.
+datasets with EV chargers (the EV charger row), which `baseline_version=1` restores.
 
 | KPI | New definition | 3.6.0 value kept as |
 |---|---|---|
@@ -1562,6 +1562,7 @@ datasets with EV chargers (last row), which `baseline_version=1` restores.
 | Portfolio community-market local shares, demand-response compliance and demand-response audit coverage ratios (`MultiCommunityEnv`, #285) | Pooled from local plus grid energy, valid requested energy, requested energy and active intervals. | none |
 | Portfolio stationary-battery equivalent full cycles and their BAU comparisons (`MultiCommunityEnv`, #330) | Total throughput over twice the total nominal capacity, with BAU delta and ratio derived from the two portfolio values. | none |
 | On datasets with EV chargers: every `*_baseline_*`, `*_delta_*` (not `*_delta_to_business_as_usual_*`) and `*_ratio_to_baseline_*` row, the equity KPIs built on them, and the whole legacy `evaluate()` table (#365) | The baseline charges the EVs as the native BAU with the `'full'` target does, instead of not charging them (`baseline_version=2`). | `baseline_version=1` |
+| On datasets with HVAC actions: every `*_business_as_usual` row and every `*_delta_to_business_as_usual_*` and `*_ratio_to_business_as_usual_*` value (#362) | The native BAU delivers the dataset heating and cooling demand instead of sending zero to the HVAC actions (`baseline_version=2`). | `baseline_version=1` |
 
 In the legacy rows, a load-factor window whose signed peak is not positive is
 now undefined; it used to give an infinite or negative penalty, which safe

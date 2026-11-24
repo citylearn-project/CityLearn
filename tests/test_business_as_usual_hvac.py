@@ -1,8 +1,7 @@
-"""Under ``baseline_version=3`` the native BAU delivers the dataset heating and cooling demand (#362).
+"""Under ``baseline_version=2`` (the default) the native BAU delivers the dataset heating and cooling demand (#362).
 
-Up to version 2 the BAU sends zero to the HVAC actions, so on datasets with temperature dynamics its
-buildings are neither heated nor cooled. Version 3 is opt-in, and it changes nothing where no HVAC action
-is active.
+Under version 1, as in CityLearn 3.6.0, the BAU sends zero to the HVAC actions, so on datasets with temperature
+dynamics its buildings are neither heated nor cooled. Where no HVAC action is active the HVAC rule changes nothing.
 """
 
 import json
@@ -67,21 +66,27 @@ def _delivered_and_demand(building, heating):
     return np.asarray(delivered[:n], dtype=float), np.asarray(demand[:n], dtype=float)
 
 
-def test_default_baseline_version_is_still_2_and_the_bau_hvac_is_off():
+def test_default_baseline_version_is_2_and_the_bau_runs_the_hvac():
     env = CityLearnEnv(_schema(CASES['heating_device'][0]), central_agent=True, episode_time_steps=4)
     agent = BusinessAsUsualAgent(env)
 
     assert DEFAULT_BASELINE_VERSION == 2 and env.baseline_version == 2
-    assert agent.hvac == 'off'
-    assert agent.DEFINITION_VERSION == 'immediate-full-charge-v4'
-    assert 'hvac' not in agent.comparison_identity()['parameters']
+    assert agent.hvac == 'dataset_demand'
+    assert agent.DEFINITION_VERSION == 'immediate-full-charge-v4+hvac-dataset-demand-v1'
+    assert agent.comparison_identity()['parameters']['hvac'] == 'dataset_demand'
+
+
+def test_version_3_does_not_exist():
+    with pytest.raises(ValueError, match=r'baseline_version must be one of \[1, 2\]'):
+        CityLearnEnv(_schema(CASES['heating_device'][0]), central_agent=True, episode_time_steps=4,
+                     baseline_version=3)
 
 
 @pytest.mark.parametrize('case', list(CASES))
 @pytest.mark.parametrize('seconds_per_time_step', [3600, 900])
-def test_version_3_bau_delivers_the_dataset_demand(case, seconds_per_time_step):
+def test_version_2_bau_delivers_the_dataset_demand(case, seconds_per_time_step):
     dataset, action_name, start, heating = CASES[case]
-    env, agent, actions = _run_bau(dataset, start, baseline_version=3, seconds_per_time_step=seconds_per_time_step)
+    env, agent, actions = _run_bau(dataset, start, seconds_per_time_step=seconds_per_time_step)
     building = env.buildings[0]
     assert isinstance(building, DynamicsBuilding)
     assert agent.hvac == 'dataset_demand'
@@ -105,11 +110,13 @@ def test_version_3_bau_delivers_the_dataset_demand(case, seconds_per_time_step):
 
 
 @pytest.mark.parametrize('case', list(CASES))
-def test_version_2_bau_still_sends_zero_to_the_hvac(case):
+def test_version_1_bau_still_sends_zero_to_the_hvac(case):
     dataset, action_name, start, heating = CASES[case]
-    env, agent, actions = _run_bau(dataset, start, baseline_version=2)
+    env, agent, actions = _run_bau(dataset, start, baseline_version=1)
     building = env.buildings[0]
     assert agent.hvac == 'off'
+    assert agent.DEFINITION_VERSION == 'immediate-full-charge-v4'
+    assert 'hvac' not in agent.comparison_identity()['parameters']
     assert np.all(actions[:, env.action_names[0].index(action_name)] == 0.0)
 
     # Once the dynamics run, the zero action leaves the building without heating or cooling (#362).
@@ -121,13 +128,13 @@ def test_version_2_bau_still_sends_zero_to_the_hvac(case):
 
 def test_hvac_argument_overrides_the_version():
     dataset, _, start, heating = CASES['heating_device']
-    explicit, _, _ = _run_bau(dataset, start, baseline_version=2, hvac='dataset_demand')
-    by_version, _, _ = _run_bau(dataset, start, baseline_version=3)
-    off, agent, _ = _run_bau(dataset, start, baseline_version=3, hvac='off')
+    explicit, _, _ = _run_bau(dataset, start, baseline_version=1, hvac='dataset_demand')
+    by_version, _, _ = _run_bau(dataset, start, baseline_version=2)
+    off, agent, _ = _run_bau(dataset, start, baseline_version=2, hvac='off')
     assert agent.DEFINITION_VERSION == 'immediate-full-charge-v4'
     np.testing.assert_array_equal(explicit.buildings[0].net_electricity_consumption,
                                   by_version.buildings[0].net_electricity_consumption)
-    zero, _, _ = _run_bau(dataset, start, baseline_version=2)
+    zero, _, _ = _run_bau(dataset, start, baseline_version=1)
     np.testing.assert_array_equal(off.buildings[0].net_electricity_consumption,
                                   zero.buildings[0].net_electricity_consumption)
 
@@ -135,10 +142,9 @@ def test_hvac_argument_overrides_the_version():
         BusinessAsUsualAgent(explicit, hvac='thermostat')
 
 
-def _evaluate(baseline_version):
-    env = CityLearnEnv(str(MINUTE_EV_SCHEMA), central_agent=True, random_seed=0, render_mode='none',
-                       baseline_version=baseline_version)
-    agent = BusinessAsUsualAgent(env)
+def _evaluate(hvac):
+    env = CityLearnEnv(str(MINUTE_EV_SCHEMA), central_agent=True, random_seed=0, render_mode='none')
+    agent = BusinessAsUsualAgent(env, hvac=hvac)
     observations, _ = env.reset(seed=0)
 
     while not env.terminated:
@@ -147,23 +153,24 @@ def _evaluate(baseline_version):
     return env, env.evaluate_v2(), env.evaluate()
 
 
-def test_version_3_equals_version_2_without_hvac_actions():
-    v2_env, v2_kpis, v2_legacy = _evaluate(2)
-    v3_env, v3_kpis, v3_legacy = _evaluate(3)
-    assert not any(a in names for names in v3_env.action_names
+def test_the_hvac_rule_changes_nothing_without_hvac_actions():
+    off_env, off_kpis, off_legacy = _evaluate('off')
+    on_env, on_kpis, on_legacy = _evaluate('dataset_demand')
+    assert not any(a in names for names in on_env.action_names
                    for a in ('heating_device', 'cooling_device', 'cooling_or_heating_device'))
 
-    for left, right in zip(v2_env.buildings, v3_env.buildings):
+    for left, right in zip(off_env.buildings, on_env.buildings):
         np.testing.assert_array_equal(left.net_electricity_consumption, right.net_electricity_consumption)
 
-    pd.testing.assert_frame_equal(v2_kpis, v3_kpis)
-    pd.testing.assert_frame_equal(v2_legacy, v3_legacy)
+    pd.testing.assert_frame_equal(off_kpis, on_kpis)
+    pd.testing.assert_frame_equal(off_legacy, on_legacy)
 
 
 def test_bau_sidecar_follows_a_version_change_after_evaluation():
     dataset, _, start, _ = CASES['heating_device']
     env = CityLearnEnv(_schema(dataset), central_agent=True, random_seed=0, render_mode='none',
-                       solar_generation=False, simulation_start_time_step=start, episode_time_steps=STEPS)
+                       solar_generation=False, simulation_start_time_step=start, episode_time_steps=STEPS,
+                       baseline_version=1)
     env.reset()
 
     while not env.terminated:
@@ -173,11 +180,11 @@ def test_bau_sidecar_follows_a_version_change_after_evaluation():
         rows = kpis[kpis['cost_function'].astype(str) == 'district_cost_total_business_as_usual_eur']
         return rows['value'].astype(float).to_numpy()
 
-    v2 = bau_cost(env.evaluate_v2())
+    v1 = bau_cost(env.evaluate_v2())
     assert env._business_as_usual_baseline_cache[next(iter(env._business_as_usual_baseline_cache))].hvac == 'off'
-    env.baseline_version = 3
-    v3 = bau_cost(env.evaluate_v2())
+    env.baseline_version = 2
+    v2 = bau_cost(env.evaluate_v2())
     cached = next(iter(env._business_as_usual_baseline_cache.values()))
     assert cached.hvac == 'dataset_demand'
     assert cached.env._native_reference_metadata['definition_version'].endswith('+hvac-dataset-demand-v1')
-    assert v2.size == 1 and v3[0] > v2[0]
+    assert v1.size == 1 and v2[0] > v1[0]
