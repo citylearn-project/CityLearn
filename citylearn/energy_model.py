@@ -1212,21 +1212,53 @@ class StorageTank(StorageDevice):
 
         Notes
         -----
-        If charging, soc = min(`soc_init` + energy*`efficiency`, `max_input_power`, `capacity`)
-        If discharging, soc = max(0, `soc_init` + energy/`efficiency`, `max_output_power`)
+        `max_input_power` and `max_output_power` give one terminal-energy budget per control step and
+        direction, power times step duration. The first call in a step can use all of it; a later call in
+        the same step gets only what the earlier calls in that direction left.
+
+        If charging, soc = min(`soc_init` + energy*`efficiency`, `capacity`), with energy limited by the
+        remaining charge budget.
+        If discharging, soc = max(0, `soc_init` + energy/`efficiency`), with energy limited by the
+        remaining discharge budget.
         """
         _require_finite_energy(energy, self)
+        # The power limits are one terminal-energy budget per control step and direction: a later transfer
+        # in the same step gets only what the earlier transfers in that direction left of it.
+        same_step_transfer = getattr(self, '_balance_time_step', -1) == self.time_step
 
         if energy >= 0:
             if self.max_input_power is not None:
                 max_input_energy = power_kw_to_energy_kwh(self.max_input_power, self.seconds_per_time_step)
+                if same_step_transfer:
+                    max_input_energy = max(max_input_energy - getattr(self, '_step_transfer_input_energy', 0.0), 0.0)
                 energy = np.nanmin([energy, to_dataset_resolution_energy(max_input_energy, self.time_step_ratio)])
         else:
             if self.max_output_power is not None:
                 max_output_energy = power_kw_to_energy_kwh(self.max_output_power, self.seconds_per_time_step)
+                if same_step_transfer:
+                    max_output_energy = max(max_output_energy - getattr(self, '_step_transfer_output_energy', 0.0), 0.0)
                 energy = np.nanmax([-to_dataset_resolution_energy(max_output_energy, self.time_step_ratio), energy])
 
+        if not same_step_transfer:
+            self._step_transfer_input_energy = 0.0
+            self._step_transfer_output_energy = 0.0
+
         super().charge(energy)
+        if self._last_transfer_energy >= 0.0:
+            self._step_transfer_input_energy = (
+                getattr(self, '_step_transfer_input_energy', 0.0) + self._last_transfer_energy
+            )
+        else:
+            self._step_transfer_output_energy = (
+                getattr(self, '_step_transfer_output_energy', 0.0) - self._last_transfer_energy
+            )
+
+    def reset(self):
+        r"""Reset `StorageTank` to initial state."""
+
+        super().reset()
+        self._step_transfer_input_energy = 0.0
+        self._step_transfer_output_energy = 0.0
 
 class Battery(StorageDevice, ElectricDevice):
     r"""Base electricity storage class.
@@ -1474,6 +1506,13 @@ class Battery(StorageDevice, ElectricDevice):
         ----------
         energy : float
             Energy to charge if (+) or discharge if (-) in [kWh].
+
+        Notes
+        -----
+        The power curves give one terminal-energy budget per control step and direction, read at the stored
+        energy before the step's first transfer. The first call in a step can use all of it; a later call in
+        the same step gets only what the earlier calls in that direction left. Capacity and depth-of-discharge
+        limits use the current stored energy.
         """
         _require_finite_energy(energy, self)
 
