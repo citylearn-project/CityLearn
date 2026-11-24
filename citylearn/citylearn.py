@@ -136,7 +136,7 @@ class CityLearnEnv(Environment, Env):
         carries when a window starts exactly there. Random and rolling splits never carry, even when a pick happens
         to follow the previous episode, and the env warns once that the setting has no effect. Only the session
         connected across the boundary keeps its charge, at the new episode's first step; every later arrival takes
-        the schedule SOC. The first episode uses the schedule SOC, as when the setting is off. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still
+        the schedule SOC, and an arrival without one keeps the EV's simulated SOC, as in one run. The first episode uses the schedule SOC, as when the setting is off. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still
         start every episode from their initial state. Off, episodes are independent; on, an episode that continues the
         previous one depends on what the previous controller did. Can also be set with the schema key of the same name.
     seconds_per_time_step: float
@@ -2146,7 +2146,7 @@ class CityLearnEnv(Environment, Env):
         """First row of the episode that follows the current one when episodes are taken in order, else `None`."""
 
         tracker = self.episode_tracker
-        start, end = tracker.episode_start_time_step, tracker.episode_end_time_step
+        start = tracker.episode_start_time_step
         if self.random_episode_split:
             return None
 

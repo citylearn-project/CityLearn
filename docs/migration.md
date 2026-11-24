@@ -334,10 +334,17 @@ episode run by two controllers is not comparable, and `compare_exports`
 reports it as incompatible: with carry-over, compare whole split runs, not
 single episodes. Random and rolling splits never carry, and the env warns
 once that the setting has no effect there; an explicit list carries only when
-a window starts exactly where the previous one ends for the split boundary,
-and a `reset(options={'episode_index': ...})` that jumps elsewhere keeps the
+a window starts exactly where the previous one ends for the split boundary, so
+under the default `'shared'` a list without a gap, such as
+`[(1900, 1949), (1950, 1999)]`, does not carry (it carries under `'disjoint'`,
+or under `'shared'` when the next window starts on the previous window's last
+row), and a `reset(options={'episode_index': ...})` that jumps elsewhere keeps the
 schedule SOC. Only the session connected across the boundary is carried;
-every later arrival takes the arrival SOC of the file ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
+every later arrival takes the arrival SOC of the file, and an arrival without
+one keeps the EV's simulated SOC, as in one run. Summed over the episodes,
+departures, met departures and feasibility classes match one run, but the
+connected SOC gain of the energy accounting is each episode's own gain, so its
+sum is lower than in one run, and energy totals can differ slightly ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
 
 ### Observation spaces follow the observations
 

@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 import json
-from pathlib import Path
 import warnings
 
 import numpy as np
@@ -93,6 +92,22 @@ def test_carryover_counts_each_session_once(boundary):
     met = sum(_value(f, 'District', 'district_ev_events_departure_met_count') for f in frames)
     assert met <= _value(full, 'District', 'district_ev_events_departure_met_count')
     # Each episode's connected SOC gain starts from the carried SOC, which its own charging explains.
+    assert [_value(f, 'District', 'district_ev_energy_accounting_shortfall_kwh') for f in frames] == [0., 0.]
+
+
+def test_step_zero_arrival_without_file_soc_starts_from_the_carried_soc():
+    # EV 2 arrives on `charger_7_1` at row 2107, the boundary row, with no arrival SOC in the file, so
+    # it keeps its simulated SOC: the carried one. The energy accounting must start from that SOC too,
+    # and not from the EV's initial SOC, which would count gain that never happened in the episode.
+    window = dict(simulation_start_time_step=2084, simulation_end_time_step=2130)
+    split = dict(episode_time_steps=[(2084, 2107), (2107, 2130)], episode_split_boundary='shared')
+    (full,), _ = _bau(**window)
+    frames, soc = _bau(episodes=2, ev_soc_carryover=True, **window, **split)
+
+    assert soc[1][0] == pytest.approx(soc[0][1])
+    key = 'building_ev_energy_accounting_shortfall_kwh'
+    assert _value(full, 'Building_7', key) == 0.
+    assert [_value(f, 'Building_7', key) for f in frames] == [0., 0.]
     assert [_value(f, 'District', 'district_ev_energy_accounting_shortfall_kwh') for f in frames] == [0., 0.]
 
 
@@ -210,7 +225,6 @@ def test_later_arrival_of_a_carried_ev_takes_the_file_soc():
 
 
 def test_unit_last_step_and_step_zero_rules_follow_the_carryover_context():
-    from types import SimpleNamespace as NS
     from test_ev_departure_audit import counts, split_window
 
     # Countdown 1 at the last control step: the session is still connected on the next episode's first row.

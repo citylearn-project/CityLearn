@@ -349,10 +349,19 @@ não é comparável, e `compare_exports` indica-o como incompatível: com
 transporte, compare execuções divididas inteiras, não episódios isolados. As divisões aleatórias e
 rolantes nunca transportam, e o ambiente avisa uma vez que a definição não tem
 efeito nesse caso; uma lista explícita só transporta quando uma janela começa
-exatamente onde a anterior termina para a fronteira escolhida, e um
+exatamente onde a anterior termina para a fronteira escolhida, pelo que, com o
+`'shared'` por omissão, uma lista sem intervalo, como
+`[(1900, 1949), (1950, 1999)]`, não transporta (transporta com `'disjoint'`,
+ou com `'shared'` quando a janela seguinte começa na última linha da
+anterior), e um
 `reset(options={'episode_index': ...})` que salta para outro lado mantém o SOC
 do calendário. Só a sessão ligada através da fronteira é transportada; todas
-as chegadas seguintes usam o SOC de chegada do ficheiro ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
+as chegadas seguintes usam o SOC de chegada do ficheiro, e uma chegada sem ele
+mantém o SOC simulado do VE, tal como na execução única. Somadas sobre os
+episódios, as partidas, as partidas cumpridas e as classes de viabilidade
+coincidem com a execução única, mas o ganho de SOC ligado da contabilidade
+energética é o ganho de cada episódio, pelo que a sua soma é menor do que na
+execução única, e os totais de energia podem diferir ligeiramente ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
 
 ### Os espaços de observação seguem as observações
 

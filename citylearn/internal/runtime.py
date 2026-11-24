@@ -1193,9 +1193,19 @@ class CityLearnRuntimeService:
                         if soc_value is not None:
                             ev.battery.force_set_soc(soc_value)
                             ev._arrival_soc_time_step = env.time_step
-                        if carried:
+                        # An EV that arrives on the first row of a carried episode without an arrival SOC in
+                        # the file keeps its simulated SOC, which is the carried one, as in one run.
+                        kept_carried = (
+                            soc_value is None
+                            and not handover
+                            and env.time_step == 0
+                            and carryover.get('carried_in', False)
+                            and ev.name in carryover.get('soc', {})
+                        )
+                        if carried or kept_carried:
                             # The carried SOC is this session's start SOC in the episode: record it where the
-                            # KPIs, the departure audit and the observations read a connection boundary.
+                            # KPIs, the departure audit and the observations read a connection boundary,
+                            # instead of the EV's initial SOC.
                             boundary_soc = getattr(charger, '_topology_connection_soc', None)
                             if boundary_soc is None:
                                 boundary_soc = charger._topology_connection_soc = {}
