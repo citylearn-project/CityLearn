@@ -31,6 +31,7 @@ classifiers = [
 
 [project.optional-dependencies]
 parquet = ["pyarrow"]
+pvlib = ["pvlib>=0.11"]
 pysam = ["nrel-pysam"]
 # LSTM thermal dynamics (LSTMDynamics), used by the 2023 challenge, Quebec, baeda_3dem and EULP neighbourhood datasets.
 dynamics = ["torch"]
