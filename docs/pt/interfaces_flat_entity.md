@@ -140,6 +140,60 @@ sensores, o estado dos canais de atuadores e o estado da comunicação
 comunidade/nuvem são partes independentes do contrato. Um VE normalmente
 desligado não é um carregador avariado.
 
+## Limites das observações
+
+`observation_space` declara um `low` e um `high` para cada observação, nas duas
+interfaces. O ambiente não limita as observações a estes limites, pelo que uma
+observação pode ficar fora de `observation_space`, e `observation_space.contains()`
+e verificações como o `check_env` do Stable Baselines3 podem então assinalá-lo
+([#357](https://github.com/citylearn-project/CityLearn/issues/357)).
+O `NormalizedObservationWrapper` também não limita: aplica
+`(x - low) / (high - low)`, pelo que as suas saídas podem sair de [0, 1]. Para
+manter as observações dentro do espaço, acrescente o `ClippedObservationWrapper`
+(interface flat):
+
+```python
+from citylearn.wrappers import ClippedObservationWrapper, NormalizedObservationWrapper
+
+env = NormalizedObservationWrapper(ClippedObservationWrapper(env))
+```
+
+Onde o modelo não tem um limite rígido, os limites são estimativas que
+`Building.estimate_observation_space_limits` calcula a partir das séries do
+dataset na janela de simulação. Para as observações térmicas:
+
+| Observação | Limite |
+|---|---|
+| `indoor_dry_bulb_temperature` | Intervalo da coluna `indoor_dry_bulb_temperature` do dataset, alargado de `maximum_temperature_delta` (20 °C por omissão) de cada lado. |
+| `indoor_dry_bulb_temperature_heating_delta`, `indoor_dry_bulb_temperature_cooling_delta` | Fixo em ±`maximum_temperature_delta`, [−20, 20] por omissão. |
+| Set points de aquecimento e de arrefecimento | Intervalo do horário do dataset. Nos edifícios com interação dos ocupantes, com a física da versão 2, alargado a `set_point_limits` (15–30 °C por omissão); os ocupantes nunca levam o set point para além desses limites, pelo que estes limites são exatos. |
+
+Cada limite é depois alargado de `observation_space_limit_delta` (0 por omissão).
+
+A temperatura interior dos edifícios LSTM depende da forma como o AVAC é usado,
+pelo que ficar dentro destas estimativas depende do controlador. Nos dois bairros
+do Quebec (20 edifícios, passos 0–2159, física da versão 2):
+
+| Controlador | Temperatura interior | Delta de aquecimento | Set point |
+|---|---|---|---|
+| AVAC à procura do dataset: `BusinessAsUsualAgent` com `baseline_version=3`, `RBCBasicPolicy`, `RBCSmartPolicy`, `RBCCommunityPolicy` | dentro, 17,0–26,5 °C face a [−1,1; 42,4] | dentro | dentro |
+| AVAC sem funcionar: `BusinessAsUsualAgent` com `baseline_version` 1 ou 2 (predefinida), as referências baseadas em regras com `hvac='off'`, `ZeroActionAgent` | abaixo de `low` em 38% dos passos-edifício, até 22,6 °C | abaixo de `low` em 89% dos passos-edifício, até 31,6 °C | dentro |
+| Ações aleatórias | acima de `high` em 7% dos passos-edifício, até 20,7 °C | acima de `high` em 19% dos passos-edifício, até 27,3 °C | dentro |
+
+Sem aquecimento, a temperatura interior desce em direção à temperatura exterior,
+que neste período chega a −32,5 °C, pelo que o excesso fica do lado frio. As
+ações aleatórias podem aquecer um edifício muito para além de qualquer valor do
+dataset, pelo que o seu excesso fica do lado quente. Depois da normalização, a
+temperatura interior de um edifício do Quebec sem aquecimento chega a cerca de
+−0,47, e o seu delta de aquecimento a cerca de −0,79.
+
+Os KPIs, as recompensas, o `evaluate()` e o `evaluate_v2()` leem o estado dos
+edifícios, não o vetor de observações, pelo que não dependem destes limites. Os
+datasets sem ações de AVAC não são afetados: num episódio completo em
+`citylearn_challenge_2022_phase_all_plus_evs` e `pt_rec_4`, com o BAU, o
+`RBCSmartPolicy` e ações aleatórias, nenhuma observação sai do espaço mais do que
+o arredondamento a float32.
+
 ## `entity_specs`
 
 `env.entity_specs` é o schema legível por máquina das tabelas, colunas, IDs, unidades, bundles e arestas:

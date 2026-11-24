@@ -369,6 +369,8 @@ ocupantes podem sair deles; `ClippedObservationWrapper` mantém esses valores
 dentro do espaço. Na versão 2 da física os set points dos ocupantes ficam dentro
 de `set_point_limits` (ver
 [limites dos set points dos ocupantes](#limites-dos-set-points-dos-ocupantes)).
+Sem aquecimento, por exemplo com o BAU predefinido, a temperatura interior sai
+deles do lado frio; ver [limites das observações](interfaces_flat_entity.md#limites-das-observações).
 
 O que lê os limites:
 
