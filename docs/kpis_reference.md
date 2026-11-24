@@ -511,7 +511,7 @@ A departure is recorded at step `t` when an EV is connected at `t` and any of th
 - at `t + 1` the charger is free;
 - the session id or the EV id changes;
 - the schedule has no session ids and the countdown to departure resets: it is at most 1 at `t` and increases at `t + 1`;
-- `t` is the last step and the countdown is in [0, 1].
+- `t` is the last step of the member's window (the last control step of the episode, or the step before the member leaves) and the countdown is in [0, 1], so a session that is still connected when the window ends counts.
 
 The target SOC is read at `t`. A target in (1, 100] is taken as a percentage and divided by 100. A target outside [0, 1] after that, or a missing one, is invalid.
 

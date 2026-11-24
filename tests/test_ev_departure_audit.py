@@ -217,6 +217,53 @@ def test_back_to_back_countdown_reset_does_not_borrow_previous_session_time():
     assert_partition(c)
 
 
+
+@pytest.mark.parametrize('countdown,expected', [(1., 1), (0., 1), (2., 0), (-1., 0)])
+def test_session_that_ends_with_the_window_is_a_departure(countdown, expected):
+    # Issue #370: the EV stays connected through the schedule's terminal row,
+    # so only the "last step" rule can record its departure.
+    service, building, charger, ev = event(steps=3)
+    sim = charger.charger_simulation
+    sim.electric_vehicle_charger_state = np.ones(4)
+    sim.electric_vehicle_id = ['EV'] * 4
+    sim.electric_vehicle_departure_time = [countdown + 2., countdown + 1., countdown, max(countdown - 1., -1.)]
+    charger.past_connected_evs = [ev] * 4
+    building.time_step = 2
+    metrics = service._compute_ev_metrics(building)
+    assert metrics['_departure_audit']['departures_count'] == expected
+    assert metrics['departures_total'] == expected
+    if expected:
+        assert metrics['departures_met'] == 1
+    if countdown == 1.:
+        # A window one step longer still counts the session once.
+        building.time_step = 3
+        assert counts(service, building)['departures_count'] == 1
+
+
+def test_bundled_episode_ending_at_a_departure_counts_it():
+    """Reproduction from issue #370 on the bundled EV dataset."""
+    from citylearn.agents.baseline import BusinessAsUsualAgent
+
+    env = CityLearnEnv('citylearn_challenge_2022_phase_all_plus_evs', interface='flat',
+                       simulation_start_time_step=1900, simulation_end_time_step=1999,
+                       render_mode='none', export_kpis_on_episode_end=False)
+    try:
+        obs, _ = env.reset()
+        agent = BusinessAsUsualAgent(env)
+        done = False
+        while not done:
+            obs, _, terminated, truncated, _ = env.step(agent.predict(obs))
+            done = terminated or truncated
+        sim = next(b for b in env.buildings if b.name == 'Building_1').electric_vehicle_chargers[0].charger_simulation
+        assert list(sim.electric_vehicle_charger_state[95:100]) == [1.] * 5
+        assert list(sim.electric_vehicle_departure_time[95:100]) == [4., 3., 2., 1., 0.]
+        frame = env.evaluate_v2()
+        values = frame[frame.name == 'Building_1'].set_index('cost_function')['value']
+        assert values['building_ev_events_departure_count'] == 5
+        assert values['building_ev_departure_audit_departures_count'] == 5
+    finally:
+        env.close()
+
 @pytest.mark.parametrize('target,expected_met', [(45., 1), (90., 0)])
 def test_real_outage_delayed_charge_and_departure_service_export(tmp_path, target, expected_met):
     root = tmp_path / 'data'

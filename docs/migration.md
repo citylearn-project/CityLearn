@@ -245,6 +245,20 @@ A schema that omits `max_discharging_power` and relied on the 50 kW of V2G
 needs it set explicitly, or `physics_version=1`, which keeps the 50 kW defaults
 of CityLearn 3.6.0 (the name check applies to both versions).
 
+### EV departures at the end of the window
+
+A session that is still connected at the last step of a member's KPI window,
+with a countdown to departure of 0 or 1, is now a departure, as the
+[KPI reference](kpis_reference.md#departures) says. Its SOC at that step is
+scored against its target in `ev_events` and `ev_performance`, and the
+departure audit counts it. The last step is the last control step of the
+episode, or the step before a member leaves under a dynamic topology. At most
+one departure per charger is added per window, so short episodes that end at
+a usual departure time change the most; the default episodes of the bundled
+datasets do not change. Departure counts and rates from earlier runs with
+such episodes are one departure short per affected charger and should be
+recomputed before comparing ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
+
 ### Observation spaces follow the observations
 
 The observation values, their order and `observation_names` do not change, and

@@ -257,6 +257,21 @@ contava com os 50 kW de V2G tem de o definir explicitamente, ou usar
 `physics_version=1`, que mantém os 50 kW do CityLearn 3.6.0 (a verificação dos
 nomes aplica-se às duas versões).
 
+### Partidas de VE no fim da janela
+
+Uma sessão ainda ligada no último passo da janela de KPIs de um membro, com
+uma contagem decrescente até à partida de 0 ou 1, é agora uma partida, como
+diz a [referência dos KPIs](kpis_reference.md#partidas). O seu SOC nesse passo
+é avaliado face ao objetivo em `ev_events` e `ev_performance`, e a auditoria
+das partidas conta-a. O último passo é o último passo de controlo do
+episódio, ou o passo antes de um membro sair numa topologia dinâmica. Cada
+janela ganha no máximo uma partida por carregador, pelo que mudam mais os
+episódios curtos que terminam a uma hora habitual de partida; os episódios
+por omissão dos datasets incluídos não mudam. As contagens e rácios de
+partidas de execuções anteriores com esses episódios têm uma partida a menos
+por carregador afetado e devem ser recalculados antes de comparar
+([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
+
 ### Os espaços de observação seguem as observações
 
 Os valores das observações, a sua ordem e `observation_names` não mudam, nem as

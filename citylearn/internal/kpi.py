@@ -1019,6 +1019,11 @@ class CityLearnKPIService:
 
         return float(poor_mean / rich_mean)
 
+    @staticmethod
+    def _ev_terminal_departure_step(history_limit: int, states) -> int:
+        """Step at which a session whose countdown is in [0, 1] counts as a departure."""
+        return int(history_limit)
+
     def _compute_ev_metrics(self, building, *, t_start: int = 0, t_final: Optional[int] = None) -> Dict[str, float]:
         upper = int(max(building.time_step, 0))
         t_start = int(max(t_start, 0))
@@ -1103,6 +1108,9 @@ class CityLearnKPIService:
             if history_limit < t_start:
                 continue
 
+            # The window's last control step, not the schedule's terminal
+            # row: the loop never reaches that row in a normal episode.
+            terminal_step = self._ev_terminal_departure_step(history_limit, states)
             ev_ids = getattr(sim, 'electric_vehicle_id', None)
             session_ids = getattr(sim, 'electric_vehicle_session_id', None)
             departure_times = getattr(sim, 'electric_vehicle_departure_time', None)
@@ -1139,7 +1147,7 @@ class CityLearnKPIService:
                     np.nan,
                 )
                 terminal_departure = (
-                    t == len(states) - 1
+                    t == terminal_step
                     and np.isfinite(departure_countdown)
                     # -1 is the schedule's unknown-departure sentinel.
                     and 0.0 <= departure_countdown <= 1.0 + self.EV_DEPARTURE_EPS

@@ -515,7 +515,7 @@ Regista-se uma partida no passo `t` quando há um VE ligado em `t` e se verifica
 - em `t + 1` o carregador fica livre;
 - o identificador da sessão ou do VE muda;
 - o calendário não tem identificadores de sessão e a contagem decrescente até à partida reinicia: é no máximo 1 em `t` e aumenta em `t + 1`;
-- `t` é o último passo e a contagem decrescente está em [0, 1].
+- `t` é o último passo da janela do membro (o último passo de controlo do episódio, ou o passo antes de o membro sair) e a contagem decrescente está em [0, 1], de modo que conta uma sessão ainda ligada quando a janela termina.
 
 O SOC alvo é lido em `t`. Um alvo em (1, 100] é tratado como percentagem e dividido por 100. Um alvo fora de [0, 1] depois disso, ou em falta, é inválido.
 
