@@ -1212,8 +1212,14 @@ class StorageTank(StorageDevice):
 
         Notes
         -----
-        If charging, soc = min(`soc_init` + energy*`efficiency`, `max_input_power`, `capacity`)
-        If discharging, soc = max(0, `soc_init` + energy/`efficiency`, `max_output_power`)
+        `max_input_power` and `max_output_power` give one terminal-energy budget per control step and
+        direction, power times step duration. The first call in a step can use all of it; a later call in
+        the same step gets only what the earlier calls in that direction left.
+
+        If charging, soc = min(`soc_init` + energy*`efficiency`, `capacity`), with energy limited by the
+        remaining charge budget.
+        If discharging, soc = max(0, `soc_init` + energy/`efficiency`), with energy limited by the
+        remaining discharge budget.
         """
         _require_finite_energy(energy, self)
         # The power limits are one terminal-energy budget per control step and direction: a later transfer
@@ -1500,6 +1506,13 @@ class Battery(StorageDevice, ElectricDevice):
         ----------
         energy : float
             Energy to charge if (+) or discharge if (-) in [kWh].
+
+        Notes
+        -----
+        The power curves give one terminal-energy budget per control step and direction, read at the stored
+        energy before the step's first transfer. The first call in a step can use all of it; a later call in
+        the same step gets only what the earlier calls in that direction left. Capacity and depth-of-discharge
+        limits use the current stored energy.
         """
         _require_finite_energy(energy, self)
 
