@@ -254,6 +254,39 @@ lista cada linha alterada e o nome que guarda o seu valor da 3.6.0.
   a soma das rampas ascendentes no episódio. Passa a ser a média por transição
   de passo; a soma fica em `*_ramping_total_*_kw`.
   ([#245](https://github.com/citylearn-project/CityLearn/issues/245))
+- **Alvo do VE cumprido a menos de 0,005 de SOC.** Uma partida só cumpria o alvo
+  a menos de 1e-6 de SOC, mas as baselines baseadas em regras param de carregar
+  0,001 abaixo do alvo, pelo que os seus carros contavam como falhados. O teste de
+  cumprimento, a viabilidade do alvo e o alvo da auditoria de partidas usam agora
+  uma tolerância de 0,005 de SOC, a constante `EV_SERVICE_SOC_TOLERANCE` em
+  `citylearn.electric_vehicle`, limitada por `ev_departure_service_tolerance`. As
+  médias do défice e da insuficiência continuam exatas. Isto muda os KPIs de
+  cumprimento de todos os controladores. Em
+  `citylearn_challenge_2022_phase_all_plus_evs`, no ano completo (2791 partidas),
+  `district_ev_performance_departure_success_ratio` passa de 0,988 para 0,994
+  no BAU, de 0,598 para 0,994 no `RBCBasicPolicy`, de 0,495 para 0,994 no
+  `RBCSmartPolicy` e de 0,130 para 0,134 com ações aleatórias uniformes; o rácio
+  viável passa de 0,606 para 1,000 (Basic) e de 0,501 para 1,000 (Smart), e fica
+  em 1,000 no BAU. Em `pt_rec_15`, em duas semanas, passa de 0,4 para 1,0 (Basic)
+  e de 0,6 para 1,0 (Smart).
+- **Conforto sem set points.** Um edifício cujo dataset não tem colunas de set
+  points tem um set point de 0 °C na simulação, e os KPIs de conforto avaliavam-no
+  contra esse valor, pelo que cada passo ocupado estava 21 °C acima: em todos os
+  datasets `pt_rec_*`, todos os controladores tinham um rácio de desconforto de 1.
+  Os KPIs de conforto desse edifício (`comfort_resilience`, as linhas de
+  desconforto de `thermal_service_audit` e as linhas antigas `discomfort_*`)
+  passam a indefinidos, e o distrito ignora-o. A física e as observações não
+  mudam. Em `pt_rec_15`, em duas semanas,
+  `district_thermal_service_audit_discomfort_ratio` passa de 1,0 a indefinido no
+  BAU, nas duas baselines baseadas em regras e com ações aleatórias, e o rácio de
+  cobertura térmica de 1,0 para 0. Os datasets com set points, como Quebec, dão os
+  mesmos valores.
+- **Rácios de custo e de emissões com dois totais a zero.**
+  `*_cost_ratio_to_*_total_ratio` e `*_emissions_ratio_to_*_total_ratio` valiam 1
+  quando os dois totais eram zero, por exemplo os rácios de emissões em Quebec,
+  que tem intensidade carbónica nula. Passam a indefinidos ao nível do edifício,
+  do distrito e do portefólio, como já acontecia com os rácios dos aparelhos
+  diferíveis. Os outros rácios continuam a valer 1 com dois totais a zero.
 
 ### Física
 
