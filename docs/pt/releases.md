@@ -269,7 +269,15 @@ lista cada linha alterada e o nome que guarda o seu valor da 3.6.0.
   `RBCSmartPolicy` e de 0,130 para 0,134 com ações aleatórias uniformes; o rácio
   viável passa de 0,606 para 1,000 (Basic) e de 0,501 para 1,000 (Smart), e fica
   em 1,000 no BAU. Em `pt_rec_15`, em duas semanas, passa de 0,4 para 1,0 (Basic)
-  e de 0,6 para 1,0 (Smart).
+  e de 0,6 para 1,0 (Smart). As contagens de partidas cumpridas indicadas acima
+  para as partidas no fim do episódio (#370) e para o SOC dos VE transportado
+  (#388) foram medidas com o teste exato. Com 0,005, no mesmo dataset com a BAU a
+  partir do passo 1900, uma execução única nos passos 1900–1999 cumpre 33 das
+  suas 35 partidas (30 antes). Em dois episódios de 100 passos, a execução única
+  cumpre 70 de 72; as divisões cumprem 67 com `shared` e 70 com `disjoint` sem
+  transporte, e 70 com as duas fronteiras com transporte. As divisões 30 × 24
+  cumprem 197 (`shared`) e 168 (`disjoint`) sem transporte, e 216 e 224 com
+  transporte, tal como a execução única.
 - **Conforto sem set points.** Um edifício cujo dataset não tem colunas de set
   points tem um set point de 0 °C na simulação, e os KPIs de conforto avaliavam-no
   contra esse valor, pelo que cada passo ocupado estava 21 °C acima: em todos os
