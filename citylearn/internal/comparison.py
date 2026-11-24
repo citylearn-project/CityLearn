@@ -193,6 +193,8 @@ def context(env, data_files):
     temporal = {key:axis[key] for key in ('definition_version','initialization_seed','clock_source','dataset_seconds_per_time_step','control_seconds_per_time_step','terminal_padding','data_noise_generator','episode_split_rng','random_stream_version')}
     return dict(temporal=temporal,definition_version=DEFINITION_VERSION,
                 physics_version=getattr(env, 'physics_version', None),
+                baseline_version=getattr(env, 'baseline_version', None),
+                ev_soc_carryover=bool(getattr(env, 'ev_soc_carryover', False)),
                 engine=dict(version=__version__, source_sha256=source_sha256(Path(__file__).resolve().parents[1]),
                             runtime_versions=runtime_versions()),
                 physical_configuration_sha256=digest(canonical(physical, root, files)),
@@ -215,11 +217,13 @@ def native_reference(env):
     from citylearn.agents.baseline import BusinessAsUsualAgent
     result = dict(implementation='citylearn.agents.baseline.BusinessAsUsualAgent',
                   simulator_version=__version__,
-                  definition_version=BusinessAsUsualAgent.definition(getattr(env, 'business_as_usual_ev_charge_target', 'full'))[1],
+                  definition_version=BusinessAsUsualAgent.definition(
+                      getattr(env, 'business_as_usual_ev_charge_target', 'full'), BusinessAsUsualAgent.hvac_mode_for(env))[1],
                   observation_access='entity_observations', evaluated=False, resolved_parameters=None)
     key = (env.episode_tracker.episode, int(env.time_step))
     cached = getattr(env, '_business_as_usual_baseline_cache', {}).get(key)
-    if cached is not None and cached.ev_charge_target == getattr(env, 'business_as_usual_ev_charge_target', 'full'):
+    if (cached is not None and cached.ev_charge_target == getattr(env, 'business_as_usual_ev_charge_target', 'full')
+            and cached.hvac == BusinessAsUsualAgent.hvac_mode_for(env)):
         result.update(getattr(cached.env, '_native_reference_metadata', {}))
         result['evaluated'] = True
     return result
@@ -252,7 +256,7 @@ def compare_manifests(left, right, mode='controller'):
         if a.get('temporal') != b.get('temporal'):
             if 'temporal' not in a or 'temporal' not in b:missing.append('temporal')
             else:mismatches.append('temporal')
-        required = ('physics_version', 'engine', 'physical_configuration_sha256', 'data_files_sha256', 'episode_start_time_step',
+        required = ('physics_version', 'baseline_version', 'engine', 'physical_configuration_sha256', 'data_files_sha256', 'episode_start_time_step',
                     'episode_end_time_step', 'completed_intervals', 'seconds_per_time_step', 'time_step_ratio',
                     'random_seed', 'ev_drift_seed', 'initial_inventory', 'service_tolerances', 'observation', 'market')
         for key in required:
@@ -274,6 +278,10 @@ def compare_manifests(left, right, mode='controller'):
         feeder_b = b.get('district_electrical_service') or default_feeder
         if feeder_a != feeder_b:
             mismatches.append('district_electrical_service')
+
+        # Exports from before the setting existed ran without it.
+        if bool(a.get('ev_soc_carryover', False)) != bool(b.get('ev_soc_carryover', False)):
+            mismatches.append('ev_soc_carryover')
     for manifest in (left, right):
         identity = manifest.get('controller_identity') or {}
         if not identity.get('implementation') or not identity.get('version') or identity.get('parameters') is None or not identity.get('observation_access'):

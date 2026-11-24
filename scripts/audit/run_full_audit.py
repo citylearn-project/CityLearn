@@ -21,7 +21,7 @@ AUDIT_COVERAGE = {
     "entity_contract": "Entity IDs, features, relations and saved interface contracts.",
     "datasets": "Declared dataset schemas and bounded supported-interface rollouts.",
     "refactor_parity": "Fixed-command physical trajectories, service, cash, KPIs, interfaces and exports.",
-    "performance_results": "Legacy performance and RBC/SAC result snapshots; opt-in only.",
+    "performance_results": "Step-time smoke checks and physics invariant overhead; opt-in only.",
 }
 
 
@@ -48,10 +48,9 @@ def parse_args(argv=None) -> argparse.Namespace:
     mode.add_argument("--report-only", dest="strict", action="store_false", help="Collect diagnostics; return zero even when verification fails.")
     parser.set_defaults(strict=True)
     parser.add_argument("--audits", nargs="+", choices=tuple(AUDIT_COVERAGE), default=DEFAULT_AUDITS,
-                        help="Audits to run. Algorithm/result comparisons are excluded by default.")
-    parser.add_argument("--episode-steps", type=int, default=2000, help="Passed to perf/results audit where supported.")
+                        help="Audits to run. The performance audit is opt-in.")
     parser.add_argument("--seed", type=int, default=0, help="Passed to sub-audits where supported.")
-    parser.add_argument("--update-snapshots", action="store_true", help="Update contract/KPI baselines in snapshot-aware audits.")
+    parser.add_argument("--update-snapshots", action="store_true", help="Update the entity contract snapshots.")
     args = parser.parse_args(argv)
     if args.update_snapshots and args.strict:
         parser.error("Snapshot updates require --report-only; verification must not rewrite its references.")
@@ -102,12 +101,10 @@ def main(argv=None) -> int:
             "extra_args": [
                 "--output",
                 str(args.output_dir / "performance_results_audit.json"),
-                "--episode-steps",
-                str(args.episode_steps),
                 "--seed",
                 str(args.seed),
                 "--strict",
-            ] + (["--update-baselines"] if args.update_snapshots else []),
+            ],
         },
     ]
 

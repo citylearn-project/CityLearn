@@ -38,8 +38,12 @@ class MultiCommunityEnv(Env):
     PORTFOLIO_COMMUNITY_ID = "__portfolio__"
     PORTFOLIO_NAME = "Portfolio"
     _COMMUNITY_ID_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
+    _COMMUNITY_KEYS = ("community_id", "schema", "env_kwargs", "weight")
     _SUM_SUFFIXES = ("_kwh", "_eur", "_kgco2", "_count")
     _WEIGHTED_MEAN_SUFFIXES = ("_ratio", "_percent")
+    _MARKET_ENERGY = "district_energy_grid_community_market_"
+    _MARKET_COST = "district_cost_community_market_"
+    _MARKET_SHARE = "district_solar_self_consumption_community_market_"
 
     def __init__(
         self,
@@ -242,7 +246,11 @@ class MultiCommunityEnv(Env):
         rates and stationary-battery equivalent full cycles are pooled by their denominators,
         other ``_kwh``/``_eur``/``_kgco2``/``_count`` rows are summed,
         other ratios and percentages are means weighted by the community ``weight``, and other rows (``_kw``,
-        ``_c``, ``_hours``) have no portfolio row. The KPI reference guide gives the rule of each family.
+        ``_c``, ``_hours``) have no portfolio row. When some communities have a community market and others do
+        not, a community without a market enters the portfolio community-market rows with its plain grid
+        settlement: no local trade, its members' grid import and export, and its control cost as settled and
+        counterfactual cost. Its own district rows are unchanged. The KPI reference guide gives the rule of each
+        family.
         """
 
         return self._combine_community_kpis({
@@ -338,6 +346,7 @@ class MultiCommunityEnv(Env):
             "seconds_per_time_step": self.seconds_per_time_step,
             "episode_time_steps": self.episode_time_steps,
             "physics_version": next(iter(self.envs.values())).physics_version,
+            "baseline_version": next(iter(self.envs.values())).baseline_version,
             "random_stream_version": next(iter(self.envs.values())).random_stream_version,
             "time_step": self.time_step,
             "render_directory": str(self.render_output_root),
@@ -362,6 +371,14 @@ class MultiCommunityEnv(Env):
         for index, raw in enumerate(communities):
             if not isinstance(raw, Mapping):
                 raise TypeError(f"communities[{index}] must be a mapping.")
+
+            unknown_keys = [key for key in raw if key not in cls._COMMUNITY_KEYS]
+            if unknown_keys:
+                accepted = ", ".join(cls._COMMUNITY_KEYS)
+                names = ", ".join(repr(key) for key in unknown_keys)
+                raise ValueError(
+                    f"communities[{index}] has unknown key(s) {names}; accepted keys are {accepted}."
+                )
 
             community_id = cls._validate_community_id(raw.get("community_id"), index=index)
             if community_id in seen:
@@ -412,6 +429,9 @@ class MultiCommunityEnv(Env):
 
     @staticmethod
     def _validate_weight(value: Any, *, index: int) -> float:
+        if isinstance(value, (bool, np.bool_)):
+            raise ValueError(f"communities[{index}].weight must be a non-negative finite number, not a boolean.")
+
         try:
             weight = float(value)
         except (TypeError, ValueError) as exc:
@@ -472,7 +492,7 @@ class MultiCommunityEnv(Env):
             raise ValueError("MultiCommunityEnv requires all communities to share the same effective episode length.")
 
         # Portfolio KPIs add up district totals, so every community must use the same definitions.
-        for setting in ("physics_version", "random_stream_version"):
+        for setting in ("physics_version", "random_stream_version", "baseline_version"):
             values = {community_id: getattr(env, setting) for community_id, env in self.envs.items()}
             if len(set(values.values())) != 1:
                 raise ValueError(
@@ -602,6 +622,7 @@ class MultiCommunityEnv(Env):
             return pd.DataFrame(columns=list(local.columns))
 
         district["numeric_value"] = pd.to_numeric(district.get("value"), errors="coerce")
+        district = self._with_plain_grid_settlement(district, local)
         rows: List[Dict[str, Any]] = []
         total_ratios = CityLearnKPIService.total_ratio_components("district")
         pooled_means = CityLearnKPIService.pooled_mean_components("district")
@@ -670,6 +691,87 @@ class MultiCommunityEnv(Env):
             rows.append(row)
 
         return pd.DataFrame(rows, columns=list(local.columns))
+
+    def _with_plain_grid_settlement(self, district: pd.DataFrame, local: pd.DataFrame) -> pd.DataFrame:
+        """Give communities without a market their plain grid settlement in a mixed portfolio (#373).
+
+        A community without a community market reports zeros in its community-market rows, which are not a
+        measurement. Summed into the portfolio, those zeros left the community's grid flows and cost out of the
+        portfolio market totals. When at least one community has a market and another has none, the community
+        without a market enters the portfolio market rows as it settles with the grid: no local import or export,
+        its members' own grid import and export as grid import and export after local trading, its control cost
+        as settled and counterfactual cost (with no market, the members' cost is the grid cost), and zero savings
+        and operator balance. Its shares of local trade are 0, pooled by its grid flows. Portfolios where every
+        community has a market, or none has, are unchanged. Only the frame used for the portfolio rows changes.
+        """
+
+        market = {
+            community_id: bool(getattr(env, "community_market_enabled", False))
+            for community_id, env in self.envs.items()
+        }
+        without_market = [
+            community_id for community_id in district["community_id"].unique()
+            if community_id in market and not market[community_id]
+        ]
+        if not any(market.values()) or not without_market:
+            return district
+
+        buildings = local[local["level"] == "building"]
+        building_values = pd.to_numeric(buildings.get("value"), errors="coerce")
+        added: List[pd.DataFrame] = []
+
+        for community_id in without_market:
+            def building_total(name: str) -> float:
+                mask = (buildings["community_id"] == community_id) & (buildings["cost_function"] == name)
+                values = building_values[mask].dropna()
+                return float(values.sum()) if not values.empty else np.nan
+
+            control_cost = district.loc[
+                (district["community_id"] == community_id)
+                & (district["cost_function"] == "district_cost_total_control_eur"),
+                "numeric_value",
+            ]
+            cost = float(control_cost.iloc[0]) if not control_cost.empty else np.nan
+            grid_import = building_total("building_energy_grid_total_import_control_kwh")
+            grid_export = building_total("building_energy_grid_total_export_control_kwh")
+            days = CityLearnKPIService._simulated_days(self.envs[community_id])
+            daily = (lambda value: value/days if days > 0.0 else np.nan)
+            totals = {
+                "local_import": 0.0,
+                "local_export": 0.0,
+                "grid_import_after_local": grid_import,
+                "grid_export_after_local": grid_export,
+            }
+            costs = {"settled": cost, "counterfactual": cost, "savings": 0.0}
+            values = {}
+            for metric, value in totals.items():
+                values[f"{self._MARKET_ENERGY}{metric}_total_kwh"] = value
+                values[f"{self._MARKET_ENERGY}{metric}_daily_average_kwh"] = daily(value)
+            for metric, value in costs.items():
+                values[f"{self._MARKET_COST}{metric}_total_eur"] = value
+                values[f"{self._MARKET_COST}{metric}_daily_average_eur"] = daily(value)
+            values[f"{self._MARKET_COST}operator_balance_total_eur"] = 0.0
+            for metric in ("import_share", "local_share_of_demand", "local_share_of_export"):
+                values[f"{self._MARKET_SHARE}{metric}_ratio"] = 0.0
+
+            for metric, value in values.items():
+                own = (district["community_id"] == community_id) & (district["cost_function"] == metric)
+                if own.any():
+                    district.loc[own, "numeric_value"] = value
+                    continue
+                template = district[district["cost_function"] == metric]
+                if template.empty:
+                    continue
+                row = template.iloc[[0]].copy()
+                row["community_id"] = community_id
+                row["value"] = value
+                row["numeric_value"] = value
+                added.append(row)
+
+        if added:
+            district = pd.concat([district, *added], ignore_index=True)
+
+        return district
 
     @staticmethod
     def _pooled_mean(district: pd.DataFrame, metric: str, weight_names: Sequence[str]) -> float:

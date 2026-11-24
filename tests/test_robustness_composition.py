@@ -25,6 +25,7 @@ from test_robustness import (
     _write_events,
     _zero_actions,
 )
+from private_access import robustness_service, runtime_service
 
 
 @pytest.mark.parametrize("interface", ["flat", "entity"])
@@ -97,12 +98,12 @@ def test_asset_control_unavailability_wins_after_action_channels(
             assert energy[0] > 0.0
             assert energy[1] == 0.0
             assert energy[2] > 0.0  # Control returns after the event ends.
-            record = env._robustness_service.history[1]
+            record = robustness_service(env).history[1]
             assert record["event_ids"] == ["asset", "channel"]
             assert len(record["action"]) == 2
             assert len(record["asset"]) == 1
             episodes.append(energy)
-            histories.append(env._robustness_service.history)
+            histories.append(robustness_service(env).history)
         np.testing.assert_array_equal(*episodes)
         assert histories[0] == histories[1]
     finally:
@@ -167,7 +168,7 @@ def test_pv_control_unavailability_stops_generation_and_counts_in_balance(tmp_pa
         kpis = faulted.evaluate_v2()
         assert _kpi_value(kpis, "district_robustness_asset_unavailable_time_step_count") == pytest.approx(4.0)
         # The business-as-usual reference runs in the same physical world, with the same outage.
-        sidecar = faulted._business_as_usual_baseline_service.run().env.buildings[0]
+        sidecar = faulted.run_business_as_usual_baseline().env.buildings[0]
         np.testing.assert_array_equal(np.asarray(sidecar.solar_generation[:steps], dtype=float)[outage], 0.0)
 
         faulted.reset(seed=0)  # The next episode starts from the dataset production again.
@@ -230,7 +231,7 @@ def test_unavailability_composes_with_bias_and_preserves_independent_balances(
     try:
         env.reset(seed=19)
         with IndependentBalanceAudit(env) as audit:
-            step = env._runtime_service.step_without_feedback if fast else env.step
+            step = runtime_service(env).step_without_feedback if fast else env.step
             while not env.terminated:
                 step(commands(env, [0.4, 0.3], start=env.time_step == 0))
             result = audit.finish()
@@ -264,7 +265,7 @@ def test_noncommuting_action_channels_keep_file_order(tmp_path, reverse, expecte
     env = CityLearnEnv(_clean_schema(schema), episode_time_steps=4)
     try:
         parsed = [{"electrical_storage_action": 0.8}]
-        applied = env._robustness_service.apply_actions(parsed)
+        applied = robustness_service(env).apply_actions(parsed)
         assert applied[0]["electrical_storage_action"] == pytest.approx(expected)
         assert parsed[0]["electrical_storage_action"] == 0.8
     finally:
@@ -412,7 +413,7 @@ def test_optional_parameters_and_integral_numeric_steps_remain_supported(tmp_pat
     ])
     env = CityLearnEnv(_clean_schema(schema), episode_time_steps=4, physics_invariant_checks=True)
     try:
-        events = {event.event_id: event for event in env._robustness_service.events}
+        events = {event.event_id: event for event in robustness_service(env).events}
         assert events["noise"].std is None
         assert events["noise"].delay_steps == 1
         assert events["delay"].delay_steps == 2

@@ -4,6 +4,8 @@ Use this page to select a check and understand the scope of published results.
 For interpreting an ordinary simulation, start with the [scorecard](scorecard.md)
 and [KPI reference](kpis_reference.md).
 
+Portuguese version: [pt/validation.md](pt/validation.md).
+
 ## Run checks from a source checkout
 
 Install the development dependencies as described in the [developer guide](developer_guide.md).

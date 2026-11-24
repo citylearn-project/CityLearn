@@ -79,7 +79,7 @@ portefólio substitui o prefixo `district_` por `portfolio_`. Cada KPI de distri
 
 Uma taxa agregada mantém a linha de portefólio qualquer que seja a unidade, pelo
 que o atraso de arranque agregado dos equipamentos flexíveis (`_hours`) tem uma.
-A [referência multi-comunidade](multi_community_reference.md#kpis) explica o
+A [referência multi-comunidade](multi_community_reference.md#agregação-dos-kpis) explica o
 portefólio.
 
 ## Contrato de nomes
@@ -150,8 +150,8 @@ um step. Com topologia dinâmica, um membro só conta enquanto está ativo.
 | Variante | Significado |
 |---|---|
 | `control` | A execução avaliada. |
-| `baseline` | O contrafactual convencional da mesma execução: os membros sem armazenamento (e sem controlo de carga parcial nos edifícios com dinâmica LSTM), com PV, lido das próprias séries do simulador. `evaluate_v2(baseline_condition=...)` escolhe outra condição. Nos steps com falha de energia, as suas séries de net, custo e emissões são zero, como as da execução controlada. |
-| `business_as_usual` | A execução business-as-usual nativa do mesmo cenário e janela (ver [Baselines](../baselines.md)). |
+| `baseline` | O contrafactual convencional da mesma execução: os membros sem a bateria e o armazenamento térmico (e sem controlo de carga parcial nos edifícios com dinâmica LSTM), com PV, lido das próprias séries do simulador. O carregamento dos VE da execução é substituído pelo do BAU nativo com o alvo `'full'` (carregados à chegada até ficarem cheios, sem V2G), igual para todos os controladores; os aparelhos diferíveis e o AVAC ficam como o controlador os operou. `baseline_version=1` não volta a somar carregamento dos VE, como no CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` escolhe outra condição. Nos steps com falha de energia, as suas séries de net, custo e emissões são zero, como as da execução controlada. |
+| `business_as_usual` | A execução business-as-usual nativa do mesmo cenário e janela (ver [Baselines](baselines.md)). O seu AVAC pede zero até `baseline_version=2`; com `baseline_version=3` fornece a procura de aquecimento e de arrefecimento do dataset ([AVAC e a versão da baseline](baselines.md#avac-e-a-versão-da-baseline)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |
 
@@ -437,6 +437,7 @@ Distrito e portefólio:
 - As quotas do portefólio são agregadas (#312), o que dá a quota dos totais somados:
   - `import_share` e `local_share_of_demand` são ponderadas pela importação local mais a importação da rede depois da troca local;
   - `local_share_of_export` pela exportação local mais a exportação para a rede depois da troca local.
+- Portefólio com e sem mercados (#373): quando umas comunidades têm mercado comunitário e outras não, uma comunidade sem mercado entra nas linhas de mercado do portefólio com a sua liquidação simples com a rede. Não troca nada localmente; a sua importação e exportação da rede depois da troca local são a importação e a exportação dos seus próprios membros, as somas dos seus consumos líquidos positivos e negativos; os seus custos liquidado e contrafactual são o seu `cost_total_control_eur`, porque sem mercado os membros pagam à rede; a sua poupança e o saldo do operador são 0. As suas quotas contam por isso como 0, agregadas pelos seus fluxos com a rede. O custo liquidado do portefólio fica então igual ao `cost_total_control_eur` do portefólio, porque o custo de controlo de cada comunidade com mercado é o seu custo liquidado, e as quotas descrevem todo o portefólio. As linhas de distrito da própria comunidade mantêm os seus zeros. Quando nenhuma comunidade tem mercado, as linhas do portefólio são as somas desses zeros.
 
 Que KPI usar:
 - Para a parte da procura coberta localmente, use `district_solar_self_consumption_community_market_import_share_ratio`.
@@ -445,7 +446,7 @@ Que KPI usar:
 - Nenhuma destas quotas é o rácio de autoconsumo solar da família `solar_self_consumption`.
 
 Limitações conhecidas:
-- As linhas existem com o mercado desativado: os zeros não medem troca local.
+- As linhas existem com o mercado desativado: os zeros não medem troca local. Num portefólio que junta comunidades com e sem mercado, esses zeros são substituídos pela liquidação simples com a rede (ver acima).
 - O nome `local_share_of_demand` refere a procura, mas o seu denominador é a importação bruta dos membros.
 - As quotas e o saldo do operador não têm variante BAU.
 
@@ -532,7 +533,11 @@ Regista-se uma partida no passo `t` quando há um VE ligado em `t` e se verifica
 - em `t + 1` o carregador fica livre;
 - o identificador da sessão ou do VE muda;
 - o calendário não tem identificadores de sessão e a contagem decrescente até à partida reinicia: é no máximo 1 em `t` e aumenta em `t + 1`;
-- `t` é o último passo e a contagem decrescente está em [0, 1].
+- `t` é o último passo da janela do membro (o último passo de controlo do episódio, ou o passo antes de o membro sair) e a contagem decrescente está em [0, 1], ou em [0, 2] quando outra divisão `episode_split_boundary='disjoint'` da simulação se segue ao episódio. São as sessões que partem antes do passo de controlo seguinte, que vem uma linha depois do último passo, ou duas linhas depois antes de uma divisão `'disjoint'` seguinte, cuja linha intermédia nunca é controlada. A última janela de uma simulação, um episódio único, as divisões rolantes e em lista explícita, e uma janela que termina antes do seu episódio usam todas [0, 1], pelo que uma execução não dividida não depende da fronteira. O último passo avalia-as com o SOC que o controlador atingiu. Com `evaluate_v2()` a meio de um episódio, a janela termina no passo atual.
+
+Cada sessão é contada uma vez ao longo de episódios consecutivos. Uma partida no passo 0 de um episódio não é contada quando a mesma sessão já estava ligada na linha antes do passo 0: o mesmo identificador de sessão ou de VE nessa linha e, sem identificadores, sem reinício da contagem decrescente a partir de [0, 1]. Entre episódios consecutivos, essa linha é o último passo de controlo do episódio anterior com `'shared'`, e a linha entre os dois episódios com `'disjoint'`, pelo que o episódio anterior já contou a sessão no seu último passo, e o passo 0 apenas avaliaria o SOC definido no reset. A regra olha apenas para essa linha, pelo que também se aplica com `rolling_episode_split` ou com uma lista explícita de `episode_time_steps`, em que a linha antes do passo 0 pode não pertencer a nenhum episódio simulado e a sessão não é então contada. O primeiro episódio de uma simulação não tem linha antes do passo 0.
+
+Com `ev_soc_carryover=True`, um episódio que continua o anterior no tempo começa cada VE com o SOC que atingiu no fim desse episódio, pelo que uma sessão ligada através da fronteira mantém a sua carga e é avaliada onde realmente parte. As divisões que transportam dependem do modo de divisão. As divisões sequenciais transportam. As divisões aleatórias e rolantes nunca transportam, mesmo quando uma escolha aleatória segue o episódio anterior, e o ambiente avisa uma vez que a definição não tem efeito nesse caso. Uma lista explícita de `episode_time_steps` só transporta quando uma janela começa exatamente na última linha da janela anterior com `'shared'`, ou na linha seguinte com `'disjoint'`. Assim, com o `'shared'` por omissão, uma lista sem intervalo, como `[(1900, 1949), (1950, 1999)]`, não transporta, enquanto `[(1900, 1949), (1949, 1999)]` transporta; com `'disjoint'`, a lista sem intervalo transporta. Só a sessão ligada através da fronteira recebe o SOC transportado em vez do SOC do calendário, no primeiro passo do novo episódio. Todas as chegadas seguintes no episódio, incluindo uma nova chegada do mesmo VE, usam o SOC de chegada do ficheiro. Uma chegada sem SOC de chegada no ficheiro mantém o SOC simulado do VE, tal como na execução única, e no passo 0 de um episódio transportado esse é o SOC transportado. Só o SOC dos VE é transportado: as baterias, o armazenamento térmico e as temperaturas interiores continuam a começar cada episódio no seu estado inicial. A definição é um compromisso. Desligada, cada episódio é independente dos anteriores, mas uma sessão que atravessa uma fronteira perde a carga que recebeu. Ligada, essa carga mantém-se, mas um episódio que continua o anterior depende do que o controlador anterior fez, pelo que os seus KPIs deixam de ser os de um episódio independente. As duas regras acima mudam em conformidade. Quando o episódio seguinte começa na última linha deste (divisões `'shared'` consecutivas), o último passo só conta uma contagem decrescente de 0, e uma sessão ainda ligada nessa linha é contada pelo episódio seguinte. Quando começa na linha seguinte (divisões `'disjoint'` consecutivas), o último passo conta uma contagem decrescente em [0, 1]. O passo 0 de um episódio que começou com SOC transportado não ignora uma sessão ligada na linha antes dele. O SOC transportado, ou o SOC simulado de uma chegada no passo 0 sem SOC no ficheiro, é o SOC inicial da sessão no novo episódio para todos os KPIs de VE: as partidas cumpridas, a viabilidade e o ganho de SOC ligado da contabilidade energética partem todos dele, pelo que a carga do episódio anterior não é contada de novo. Somadas sobre os episódios, as partidas, as partidas cumpridas e as classes de viabilidade coincidem então com a execução única, exceto numa sessão cujo SOC de chegada a execução única não consegue determinar e indica como desconhecido, que a divisão determina a partir do SOC transportado. O ganho de SOC ligado é o ganho de cada episódio: uma sessão que carrega antes da fronteira e parte depois dela não tem essa carga em nenhum dos episódios, pelo que a soma sobre os episódios é menor do que na execução única (2412 contra 6120 kWh para divisões `'shared'` 30 × 24 no dataset abaixo) e não é comparável com ela. Com `'shared'`, uma sessão chega à linha de fronteira com o mesmo SOC que numa execução única; o controlador pode ainda agir no passo 0 de forma diferente da execução única nessa linha, pelo que os totais de energia podem diferir ligeiramente. Com `'disjoint'`, a linha entre dois episódios nunca é controlada, pelo que uma sessão ligada através dela chega ao passo 0 até um passo de carregamento atrás da execução única (entre 0 e 0,086 de SOC neste dataset). Em `citylearn_challenge_2022_phase_all_plus_evs` com a BAU a partir do passo 1900, as partidas cumpridas de divisões `'disjoint'` 2 × 100 e 30 × 24 são 67 e 221, tal como na execução única, enquanto sem transporte são 67 e 163.
 
 O SOC alvo é lido em `t`. Um alvo em (1, 100] é tratado como percentagem e dividido por 100. Um alvo fora de [0, 1] depois disso, ou em falta, é inválido.
 
@@ -1564,7 +1569,7 @@ Limitações conhecidas: o marcador não contém qualquer medição; use as colu
 
 ## Definicoes alteradas depois da 3.6.0
 
-A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_accounting` de `evaluate_v2()`) e `2.0.0`. Estas linhas de `evaluate_v2()` mudaram de definicao. Onde um valor da 3.6.0 pode ter sido usado em comparacoes publicadas, fica com um nome proprio, e as linhas legacy de `evaluate()` mantem as suas definicoes da 3.6.0.
+A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_accounting` de `evaluate_v2()`) e `2.0.0`. Estas linhas de `evaluate_v2()` mudaram de definicao. Onde um valor da 3.6.0 pode ter sido usado em comparacoes publicadas, fica com um nome proprio, e as linhas legacy de `evaluate()` mantem as suas definicoes da 3.6.0, exceto a baseline dos datasets com carregadores de VE (ultima linha), que `baseline_version=1` repoe.
 
 | KPI | Nova definicao | Valor da 3.6.0 mantido como |
 |---|---|---|
@@ -1582,6 +1587,7 @@ A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_
 | Taxas e medias EV de departure, service levels dos deferrable appliances e das escadas rolantes, start delay e self-consumption solar do portefólio (`MultiCommunityEnv`) | Agregadas a partir dos seus denominadores aditivos. | nenhum |
 | Shares locais do mercado comunitário, compliance de demand response e ratios de cobertura das auditorias de demand response do portefólio (`MultiCommunityEnv`, #285) | Agregados a partir da energia local mais a da rede, da energia pedida válida, da energia pedida e dos intervalos ativos. | nenhum |
 | Ciclos completos equivalentes das baterias estacionárias do portefólio e comparações com a execução BAU (`MultiCommunityEnv`, #330) | Energia movimentada total sobre o dobro da capacidade nominal total. A diferença e o rácio face à execução BAU usam os dois valores do portefólio. | nenhum |
+| Nos datasets com carregadores de VE: todas as linhas `*_baseline_*`, `*_delta_*` (exceto `*_delta_to_business_as_usual_*`) e `*_ratio_to_baseline_*`, os KPIs de equidade calculados a partir delas, e toda a tabela legacy de `evaluate()` (#365) | A baseline carrega os VE como o BAU nativo com o alvo `'full'`, em vez de nao os carregar (`baseline_version=2`). | `baseline_version=1` |
 
 Nas linhas legacy, uma janela de load factor cujo pico com sinal nao e positivo passa a ser indefinida; antes dava uma penalizacao infinita ou negativa, que a safe division reportava como um 0 perfeito.
 

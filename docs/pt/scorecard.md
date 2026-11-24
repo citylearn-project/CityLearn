@@ -57,7 +57,7 @@ aplicáveis em falta, e não como zero.
 
 ## Duas referências diferentes
 
-O guia de [Baselines](../baselines.md) explica a política BAU nativa, os seus
+O guia de [Baselines](baselines.md) explica a política BAU nativa, os seus
 parâmetros por omissão e as referências separadas usadas na avaliação e no
 settlement de demand response.
 

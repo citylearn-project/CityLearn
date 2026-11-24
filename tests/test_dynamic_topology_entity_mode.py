@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 
 from citylearn import random_streams
+from private_access import entity_service, kpi_service, member_pool, provenance_service, topology_service
 
 pytest.importorskip("gymnasium")
 
@@ -189,7 +190,7 @@ def test_dynamic_inactive_actions_keep_storage_action_disabled_after_add_asset()
         payload = _zero_entity_actions(env)
         payload["map"] = {"building:Building_3": {"electrical_storage": 0.2}}
         with pytest.raises(AssertionError, match="Unknown building action keys"):
-            env._entity_service.parse_actions(payload)
+            entity_service(env).parse_actions(payload)
     finally:
         env.close()
 
@@ -217,11 +218,11 @@ def test_hybrid_action_tables_plus_map_precedence_and_unknown_ids_validation():
             }
         }
 
-        parsed = env._entity_service.parse_actions(payload)
+        parsed = entity_service(env).parse_actions(payload)
         assert parsed[building_idx][f"{action_name}_action"] == pytest.approx(0.5)
 
         with pytest.raises(AssertionError):
-            env._entity_service.parse_actions(
+            entity_service(env).parse_actions(
                 {
                     "tables": payload["tables"],
                     "map": {
@@ -257,7 +258,7 @@ def test_removed_charger_action_id_is_invalid_after_topology_removal():
         }
 
         with pytest.raises(AssertionError, match="Unknown charger id"):
-            env._entity_service.parse_actions(payload)
+            entity_service(env).parse_actions(payload)
     finally:
         env.close()
 
@@ -298,7 +299,7 @@ def test_removed_charger_can_be_reinstalled_from_its_initial_template():
     try:
         env.reset(seed=0)
         charger_id = "Building_5/charger_5_1"
-        initial_charger = env._topology_service.member_pool["Building_5"].electric_vehicle_chargers[0]
+        initial_charger = member_pool(env)["Building_5"].electric_vehicle_chargers[0]
         assert charger_id in env.entity_specs["tables"]["charger"]["ids"]
 
         _step_until(env, 16)
@@ -307,16 +308,16 @@ def test_removed_charger_can_be_reinstalled_from_its_initial_template():
         _step_until(env, 18)
         assert charger_id in env.entity_specs["tables"]["charger"]["ids"]
         assert [event["applied"] for event in env.topology_event_log] == [True, True]
-        restored_charger = env._topology_service.member_pool["Building_5"].electric_vehicle_chargers[0]
-        historical_chargers = env._topology_service.historical_chargers("Building_5")
+        restored_charger = member_pool(env)["Building_5"].electric_vehicle_chargers[0]
+        historical_chargers = topology_service(env).historical_chargers("Building_5")
         assert restored_charger is not initial_charger
         assert historical_chargers == (initial_charger, restored_charger)
-        assert env._kpi_service._chargers_for_metrics(
-            env._topology_service.member_pool["Building_5"]
+        assert kpi_service(env)._chargers_for_metrics(
+            member_pool(env)["Building_5"]
         ) == list(historical_chargers)
         _step_until(env, 40)
-        ev_metrics = env._kpi_service._compute_ev_metrics(
-            env._topology_service.member_pool["Building_5"],
+        ev_metrics = kpi_service(env)._compute_ev_metrics(
+            member_pool(env)["Building_5"],
             t_start=0,
             t_final=env.time_step,
         )
@@ -406,7 +407,7 @@ def test_reinstalled_charger_recovers_the_same_evolved_ev(tmp_path, seconds):
             assert "Building_1/charger_1_1" in env.entity_specs["actions"]["charger"]["ids"]
             _assert_lifecycle_ev_observation(env, ev, expected)
             opening = battery.energy_init
-            kpi = env._kpi_service
+            kpi = kpi_service(env)
             sim = charger.charger_simulation
             states = sim.electric_vehicle_charger_state
             boundary_step, boundary_soc = kpi._ev_kpi_connection_boundary(charger, sim, ev, states, 6)
@@ -452,7 +453,7 @@ def test_first_ev_activation_accounts_for_opening_stock(tmp_path, seconds):
         assert opening["before"] == 0.
         assert opening["after"] == pytest.approx(.25*battery.capacity)
         assert opening["terminal"] == battery.energy_balance[5] == 0.
-        stock = env._provenance_service.stocks[id(battery)]
+        stock = provenance_service(env).stocks[id(battery)]
         assert stock.bag[("unknown", "Building_1")][0] == pytest.approx(.25*battery.capacity)
     finally:
         env.close()
@@ -468,11 +469,11 @@ def test_another_charger_keeps_the_ev_active_during_removal(tmp_path, seconds):
         _step_until(env, 2)
         alternate, = env.buildings[0].electric_vehicle_chargers
         assert alternate.connected_electric_vehicle is ev
-        assert env._provenance_service.stocks[id(ev.battery)].connection is alternate
+        assert provenance_service(env).stocks[id(ev.battery)].connection is alternate
         with pytest.warns(RuntimeWarning, match="already plugged"):
             _step_until(env, 5)
         assert env.electric_vehicles == [ev]
-        assert not env._topology_service.suspended_evs
+        assert not topology_service(env).suspended_evs
         assert ev.battery.soc[5] == pytest.approx(.25*.96**(5*seconds/3600))
         chargers = env.buildings[0].electric_vehicle_chargers
         assert [charger for charger in chargers if charger.connected_electric_vehicle is ev] == [alternate]
@@ -524,7 +525,7 @@ def test_kpi_and_audit_start_a_new_session_after_reentry(tmp_path, seconds):
         sim.electric_vehicle_required_soc_departure[5:7] = .8
         _step_until(env, 7)
 
-        service = env._kpi_service
+        service = kpi_service(env)
         states = sim.electric_vehicle_charger_state
         start = ev_departure_audit.connected_start(service, charger, sim, ev, states, 6)
         reason, audit_soc = ev_departure_audit.prerequisites(service, charger, sim, ev, states, start, .8)
@@ -641,8 +642,8 @@ def test_removed_pv_storage_and_deferrable_can_be_restored_from_same_member_temp
 
     try:
         env.reset(seed=0)
-        pv_member = env._topology_service.member_pool["Building_11"]
-        storage_member = env._topology_service.member_pool["Building_12"]
+        pv_member = member_pool(env)["Building_11"]
+        storage_member = member_pool(env)["Building_12"]
         initial_pv_power = float(pv_member.pv.nominal_power)
         expected_pv_generation = (
             pv_member._pv_generation_to_control_step(
@@ -658,7 +659,7 @@ def test_removed_pv_storage_and_deferrable_can_be_restored_from_same_member_temp
             time_step=0,
             enforce_polarity=False,
         )
-        initial_deferrable = env._topology_service.member_pool["Building_1"].deferrable_appliances[0]
+        initial_deferrable = member_pool(env)["Building_1"].deferrable_appliances[0]
 
         _step_until(env, 1)
         assert float(pv_member.pv.nominal_power) == pytest.approx(0.0)
@@ -691,9 +692,9 @@ def test_removed_pv_storage_and_deferrable_can_be_restored_from_same_member_temp
             time_step=restored_storage.time_step,
             enforce_polarity=False,
         )
-        historical_storages = env._topology_service.historical_storages("Building_12")
+        historical_storages = topology_service(env).historical_storages("Building_12")
         assert historical_storages == (initial_storage, restored_storage)
-        bess_metrics = env._kpi_service._compute_bess_metrics(
+        bess_metrics = kpi_service(env)._compute_bess_metrics(
             storage_member,
             t_start=0,
             t_final=restored_storage.time_step,
@@ -707,12 +708,12 @@ def test_removed_pv_storage_and_deferrable_can_be_restored_from_same_member_temp
         assert "Building_1/deferrable_appliance_1" in env.entity_specs["tables"]["deferrable_appliance"]["ids"]
         assert [event["applied"] for event in env.topology_event_log] == [True] * 6
 
-        restored_deferrable = env._topology_service.member_pool["Building_1"].deferrable_appliances[0]
-        historical_deferrables = env._topology_service.historical_deferrable_appliances("Building_1")
+        restored_deferrable = member_pool(env)["Building_1"].deferrable_appliances[0]
+        historical_deferrables = topology_service(env).historical_deferrable_appliances("Building_1")
         assert restored_deferrable is not initial_deferrable
         assert historical_deferrables == (initial_deferrable, restored_deferrable)
-        assert env._kpi_service._deferrable_appliances_for_metrics(
-            env._topology_service.member_pool["Building_1"]
+        assert kpi_service(env)._deferrable_appliances_for_metrics(
+            member_pool(env)["Building_1"]
         ) == list(historical_deferrables)
     finally:
         env.close()
@@ -897,7 +898,7 @@ def test_global_topology_events_are_replayed_and_offset_in_partial_window():
 
         # The events at global steps 2 and 3 must already define the topology
         # visible at local step zero of a window that starts at global step 3.
-        assert "Building_18" in env._topology_service.active_member_ids
+        assert "Building_18" in topology_service(env).active_member_ids
         assert "Building_2/charger_2_dyn_1" in env.entity_specs["tables"]["charger"]["ids"]
         assert [entry["time_step"] for entry in env.topology_event_log] == [2, 3]
         assert [entry["episode_time_step"] for entry in env.topology_event_log] == [0, 0]
@@ -930,7 +931,7 @@ def test_added_member_does_not_inherit_missed_pre_membership_requests():
         env.reset(seed=0)
         _step_until(env, 20)
 
-        member = env._topology_service.member_pool["Building_18"]
+        member = member_pool(env)["Building_18"]
         summary = member.deferrable_appliances[0].service_summary()
         assert summary["completed_cycles"] == 0.0
         assert summary["missed_cycles"] == 0.0
@@ -1083,13 +1084,13 @@ def test_dynamic_kpis_for_added_member_use_active_window_only():
         assert len(row) == 1
         assert len(daily_row) == 1
 
-        building_18 = env._topology_service.member_pool["Building_18"]
+        building_18 = member_pool(env)["Building_18"]
         lifecycle = env.topology_member_lifecycle["Building_18"]
         t_start = int(lifecycle["born_at"])
         removed_at = lifecycle["removed_at"]
         t_end = int(env.time_step) if removed_at is None else int(removed_at) - 1
 
-        control_cond, _ = env._kpi_service._default_building_conditions(
+        control_cond, _ = kpi_service(env)._default_building_conditions(
             building_18,
             None,
             None,
