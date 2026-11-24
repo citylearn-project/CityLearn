@@ -38,6 +38,7 @@ class MultiCommunityEnv(Env):
     PORTFOLIO_COMMUNITY_ID = "__portfolio__"
     PORTFOLIO_NAME = "Portfolio"
     _COMMUNITY_ID_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
+    _COMMUNITY_KEYS = ("community_id", "schema", "env_kwargs", "weight")
     _SUM_SUFFIXES = ("_kwh", "_eur", "_kgco2", "_count")
     _WEIGHTED_MEAN_SUFFIXES = ("_ratio", "_percent")
     _MARKET_ENERGY = "district_energy_grid_community_market_"
@@ -371,6 +372,14 @@ class MultiCommunityEnv(Env):
             if not isinstance(raw, Mapping):
                 raise TypeError(f"communities[{index}] must be a mapping.")
 
+            unknown_keys = [key for key in raw if key not in cls._COMMUNITY_KEYS]
+            if unknown_keys:
+                accepted = ", ".join(cls._COMMUNITY_KEYS)
+                names = ", ".join(repr(key) for key in unknown_keys)
+                raise ValueError(
+                    f"communities[{index}] has unknown key(s) {names}; accepted keys are {accepted}."
+                )
+
             community_id = cls._validate_community_id(raw.get("community_id"), index=index)
             if community_id in seen:
                 raise ValueError(f"Duplicate community_id: {community_id!r}.")
@@ -420,6 +429,9 @@ class MultiCommunityEnv(Env):
 
     @staticmethod
     def _validate_weight(value: Any, *, index: int) -> float:
+        if isinstance(value, (bool, np.bool_)):
+            raise ValueError(f"communities[{index}].weight must be a non-negative finite number, not a boolean.")
+
         try:
             weight = float(value)
         except (TypeError, ValueError) as exc:

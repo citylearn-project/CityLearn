@@ -132,6 +132,42 @@ def test_constructor_rejects_invalid_community_config(communities, match):
         MultiCommunityEnv(communities=communities)
 
 
+@pytest.mark.parametrize("key", ["wieght", "env_kwarg", "Schema"])
+def test_constructor_rejects_unknown_community_keys(key):
+    entry = _community("a")
+    entry[key] = 3.0
+
+    with pytest.raises(ValueError) as excinfo:
+        MultiCommunityEnv(communities=[entry, _community("b")])
+
+    message = str(excinfo.value)
+    assert "communities[0]" in message
+    assert repr(key) in message
+    for accepted in ("community_id", "schema", "env_kwargs", "weight"):
+        assert accepted in message
+
+
+@pytest.mark.parametrize("weight", [True, False, np.bool_(True)])
+def test_constructor_rejects_boolean_weight(weight):
+    with pytest.raises(ValueError, match="boolean"):
+        MultiCommunityEnv(communities=[_community("a", weight=weight), _community("b")])
+
+
+def test_constructor_keeps_valid_entries_with_every_accepted_key():
+    env = MultiCommunityEnv(
+        communities=[
+            _community("a", weight=3),
+            _community("b", weight=np.float64(0.5)),
+            {"community_id": "c", "schema": str(MINUTE_SCHEMA), "env_kwargs": _community("c")["env_kwargs"]},
+        ]
+    )
+
+    try:
+        assert env.weights == {"a": 3.0, "b": 0.5, "c": 1.0}
+    finally:
+        env.close()
+
+
 def test_constructor_rejects_mismatched_time_resolution_or_episode_length():
     with pytest.raises(ValueError, match="seconds_per_time_step"):
         MultiCommunityEnv(
