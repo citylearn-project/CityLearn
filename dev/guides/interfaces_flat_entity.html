@@ -74,6 +74,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#quick-comparison">Quick Comparison</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#flat-mode">Flat Mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#entity-mode">Entity Mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#observation-bounds">Observation Bounds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#entity-specs"><code class="docutils literal notranslate"><span class="pre">entity_specs</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#temporal-semantics">Temporal Semantics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#entity-bundles">Entity Bundles</a></li>
@@ -303,6 +304,84 @@ must derive that state from freshness, duration, semantic type and criticality.<
 <p>Asset connection, asset availability, sensor-channel state,
 actuator-channel state and community/cloud communication state are independent
 parts of the contract. A normally disconnected EV is not a failed charger.</p>
+</section>
+<section id="observation-bounds">
+<h2>Observation Bounds<a class="headerlink" href="#observation-bounds" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">observation_space</span></code> declares a <code class="docutils literal notranslate"><span class="pre">low</span></code> and a <code class="docutils literal notranslate"><span class="pre">high</span></code> for every observation, in both
+interfaces. The environment does not clip observations to these bounds, so an
+observation can fall outside <code class="docutils literal notranslate"><span class="pre">observation_space</span></code>, and <code class="docutils literal notranslate"><span class="pre">observation_space.contains()</span></code>
+and checks such as Stable Baselines3’s <code class="docutils literal notranslate"><span class="pre">check_env</span></code> can then report it
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/357">#357</a>).
+<code class="docutils literal notranslate"><span class="pre">NormalizedObservationWrapper</span></code> does not clip either: it applies
+<code class="docutils literal notranslate"><span class="pre">(x</span> <span class="pre">-</span> <span class="pre">low)</span> <span class="pre">/</span> <span class="pre">(high</span> <span class="pre">-</span> <span class="pre">low)</span></code>, so its outputs can leave [0, 1]. To keep observations
+inside the space, add <code class="docutils literal notranslate"><span class="pre">ClippedObservationWrapper</span></code> (flat interface):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClippedObservationWrapper</span><span class="p">,</span> <span class="n">NormalizedObservationWrapper</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">NormalizedObservationWrapper</span><span class="p">(</span><span class="n">ClippedObservationWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Where the model has no hard limit, the bounds are estimates that
+<code class="docutils literal notranslate"><span class="pre">Building.estimate_observation_space_limits</span></code> computes from the dataset series of
+the simulation window. For the thermal observations:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Observation</p></th>
+<th class="head"><p>Bound</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">indoor_dry_bulb_temperature</span></code></p></td>
+<td><p>Range of the dataset’s <code class="docutils literal notranslate"><span class="pre">indoor_dry_bulb_temperature</span></code> column, widened by <code class="docutils literal notranslate"><span class="pre">maximum_temperature_delta</span></code> (20 °C by default) on each side.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">indoor_dry_bulb_temperature_heating_delta</span></code>, <code class="docutils literal notranslate"><span class="pre">indoor_dry_bulb_temperature_cooling_delta</span></code></p></td>
+<td><p>Fixed at ±<code class="docutils literal notranslate"><span class="pre">maximum_temperature_delta</span></code>, [−20, 20] by default.</p></td>
+</tr>
+<tr class="row-even"><td><p>Heating and cooling set points</p></td>
+<td><p>Range of the dataset schedule. For occupant-interaction buildings under physics version 2, widened to <code class="docutils literal notranslate"><span class="pre">set_point_limits</span></code> (15–30 °C by default); the occupants never move the set point past those limits, so these bounds are exact.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Every bound is then widened by <code class="docutils literal notranslate"><span class="pre">observation_space_limit_delta</span></code> (0 by default).</p>
+<p>The indoor temperature of the LSTM buildings depends on how the HVAC is run, so
+whether it stays inside these estimates depends on the controller. On the two
+Quebec neighbourhoods (20 buildings, steps 0–2159, physics version 2):</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Controller</p></th>
+<th class="head"><p>Indoor temperature</p></th>
+<th class="head"><p>Heating delta</p></th>
+<th class="head"><p>Set point</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>HVAC at the dataset demand: <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> under <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code></p></td>
+<td><p>inside, 17.0–26.5 °C against [−1.1, 42.4]</p></td>
+<td><p>inside</p></td>
+<td><p>inside</p></td>
+</tr>
+<tr class="row-odd"><td><p>HVAC not run: <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> under <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code> 1 or 2 (the default), the rule-based baselines with <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code>, <code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code></p></td>
+<td><p>below <code class="docutils literal notranslate"><span class="pre">low</span></code> in 38% of building-steps, by up to 22.6 °C</p></td>
+<td><p>below <code class="docutils literal notranslate"><span class="pre">low</span></code> in 89% of building-steps, by up to 31.6 °C</p></td>
+<td><p>inside</p></td>
+</tr>
+<tr class="row-even"><td><p>Random actions</p></td>
+<td><p>above <code class="docutils literal notranslate"><span class="pre">high</span></code> in 7% of building-steps, by up to 20.7 °C</p></td>
+<td><p>above <code class="docutils literal notranslate"><span class="pre">high</span></code> in 19% of building-steps, by up to 27.3 °C</p></td>
+<td><p>inside</p></td>
+</tr>
+</tbody>
+</table>
+<p>Without heating the indoor temperature falls towards the outdoor temperature,
+which in this period goes down to −32.5 °C, so the excess is on the cold side.
+Random actions can heat a building well beyond any dataset value, so their
+excess is on the hot side. After normalisation, the indoor temperature of an
+unheated Quebec building reaches about −0.47, and its heating delta about −0.79.</p>
+<p>The KPIs, the rewards, <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> and <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> read the building state,
+not the observation vector, so they do not depend on these bounds. Datasets
+without HVAC actions are not affected: over a full episode on
+<code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code> and <code class="docutils literal notranslate"><span class="pre">pt_rec_4</span></code>, under the BAU,
+<code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and random actions, no observation leaves the space by more than
+float32 rounding.</p>
 </section>
 <section id="entity-specs">
 <span id="entity_specs"></span><h2><code class="docutils literal notranslate"><span class="pre">entity_specs</span></code><a class="headerlink" href="#entity-specs" title="Link to this heading"></a></h2>

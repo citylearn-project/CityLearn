@@ -554,7 +554,9 @@ arbitrary control, for example random actions over a full Quebec episode, the
 LSTM indoor temperature, and under physics version 1 the occupant set points,
 can leave them; <code class="docutils literal notranslate"><span class="pre">ClippedObservationWrapper</span></code> keeps such values inside the space.
 Under physics version 2 the occupant set points stay within <code class="docutils literal notranslate"><span class="pre">set_point_limits</span></code>
-(see <a class="reference internal" href="#occupant-set-point-limits"><span class="std std-ref">occupant set-point limits</span></a>).</p>
+(see <a class="reference internal" href="#occupant-set-point-limits"><span class="std std-ref">occupant set-point limits</span></a>). Without heating,
+for example under the default BAU, the indoor temperature leaves them on the
+cold side; see <a class="reference internal" href="interfaces_flat_entity.html#observation-bounds"><span class="std std-ref">observation bounds</span></a>.</p>
 <p>What reads the bounds:</p>
 <table class="docutils align-default">
 <thead>
