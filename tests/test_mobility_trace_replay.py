@@ -214,3 +214,17 @@ def test_invalid_session_columns_are_rejected(recorded, tmp_path, column, value,
 
     with pytest.raises(ValueError, match=message):
         _replay(tmp_path, 0.0)
+
+
+def test_external_vehicle_has_no_drift_without_a_provider(recorded):
+    _, directory = recorded
+    schema = _schema(directory, external=False)
+    for building in schema["buildings"].values():
+        for charger in (building.get("chargers") or {}).values():
+            charger["charger_simulation"] = "away.csv"
+    pd.DataFrame({column: [3] * 8 if column == "electric_vehicle_charger_state" else [None] * 8
+                  for column in FILE_COLUMNS[:7]}).to_csv(directory / "away.csv", index=False)
+    env = CityLearnEnv(schema, central_agent=True, random_seed=0)
+    _run(env, 0.0)
+    soc = np.array(env.electric_vehicles[0].battery.soc)
+    assert np.all(soc[:-1] == soc[0])

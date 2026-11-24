@@ -1290,7 +1290,7 @@ class CityLearnRuntimeService:
 
         legacy_drift = physics_version_of(env) < 2
         mobility = getattr(env, '_mobility_service', None)
-        managed_evs = mobility.managed_vehicle_names() if mobility is not None and mobility.active else ()
+        managed_evs = mobility.managed_vehicle_names() if mobility is not None else ()
         # A trip energy sets the SOC at arrival; nothing drifts it before.
         managed_evs = set(managed_evs).union(*(
             getattr(charger.charger_simulation, 'trip_energy_vehicle_ids', ())
