@@ -48,8 +48,9 @@ pode ainda conter cópias CRLF; o `git status` mostra os ficheiros de dados
 convertidos como modificados. Faça um clone novo e configure-o como em
 [Ambiente local](#ambiente-local): o clone aplica as novas regras de checkout e
 deixa intacta a cópia de trabalho existente, incluindo as alterações não
-registadas em commit. Depois, limpe a cache de datasets, que pode conter cópias
-feitas a partir do checkout antigo:
+registadas em commit. A cache de datasets identifica as cópias locais pelo
+conteúdo dos seus ficheiros, pelo que as cópias feitas a partir do checkout
+antigo não são lidas; limpe-a para libertar o espaço que ocupam:
 
 ```console
 git clone https://github.com/citylearn-project/CityLearn.git

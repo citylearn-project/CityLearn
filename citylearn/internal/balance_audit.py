@@ -24,6 +24,15 @@ DESTINATIONS = (
 )
 
 
+# Each district balance residual: origin, the summary key of its source, and its unit.
+RESIDUAL_SOURCES = (
+    ("pv", "pv_generated_kwh", "kwh"),
+    ("grid", "external_import_kwh", "kwh"),
+    ("unknown", "unknown_input_kwh", "kwh"),
+    ("carbon", "external_purchase_emissions_kgco2", "kgco2"),
+)
+
+
 class BalanceAuditError(AssertionError):
     pass
 
@@ -134,12 +143,30 @@ class IndependentBalanceAudit:
     It adds no dispatch decisions and preserves the original runtime methods.
     """
 
-    def __init__(self, env, *, absolute_tolerance=1e-5, relative_tolerance=1e-7):
+    def __init__(
+        self,
+        env,
+        *,
+        absolute_tolerance=1e-5,
+        relative_tolerance=1e-7,
+        flow_relative_tolerance=1e-8,
+    ):
         if env.time_step != 0:
             raise ValueError("Start an audit immediately after reset, before actions")
         self.env = env
+        # A check passes when |actual - expected| <= atol + rtol * max(|actual|, |expected|) + flow_rtol * scale.
+        # atol is the floor for short windows and values near zero. rtol bounds the rounding of a value
+        # relative to itself. Neither bounds a balance residual: it is close to zero by definition, but it
+        # is the difference of the window's source total and the sum of its destination flows, so it
+        # carries their rounding. Its scale is the gross flow it is computed from, the sum of the absolute
+        # values of those terms, which grows with the window length and with the energy that flows. The
+        # rounding observed on the three-phase demo is about 1.5e-9 of that flow, constant from 168 to 336
+        # steps (5.5e-6 kWh on 7.3 MWh, 1.2e-5 on 14.7 MWh with the BAU), so flow_rtol = 1e-8 leaves a
+        # margin of about 6 while a 1e-3 kWh imbalance still fails on any window with less than 100 MWh of
+        # gross flow (some 2,000 steps of that demo).
         self.atol = float(absolute_tolerance)
         self.rtol = float(relative_tolerance)
+        self.flow_rtol = float(flow_relative_tolerance)
         self.stocks = {}
         self.sources = {}
         self.sinks = {}
@@ -163,7 +190,9 @@ class IndependentBalanceAudit:
             str(k): total(s["mix"]) for k, s in self.stocks.items()
         }
 
-    def check(self, label, actual, expected):
+    def check(self, label, actual, expected, scale=0.0):
+        """Check that `actual` equals `expected`; `scale` is the gross flow a residual is computed from."""
+
         if expected is None:
             self.check_count += 1
             if actual is not None and np.isfinite(float(actual)):
@@ -171,7 +200,11 @@ class IndependentBalanceAudit:
             return
         actual, expected = float(actual), float(expected)
         error = abs(actual - expected)
-        limit = self.atol + self.rtol * max(abs(actual), abs(expected))
+        limit = (
+            self.atol
+            + self.rtol * max(abs(actual), abs(expected))
+            + self.flow_rtol * abs(float(scale))
+        )
         self.check_count += 1
         self.max_error = max(self.max_error, error)
         self.max_scaled_error = max(self.max_scaled_error, error / limit)
@@ -746,13 +779,16 @@ class IndependentBalanceAudit:
                     .get("served_energy_kwh", 0.0),
                     row.get("appliance_kwh", 0.0),
                 )
-            for name, summary in self.expected_summary().items():
+            summaries = self.expected_summary()
+            scales = self.residual_scales(summaries["District"])
+            for name, summary in summaries.items():
                 level = "district" if name == "District" else "building"
                 for key, expected_value in summary.items():
                     self.check(
                         "provenance KPI " + name + " " + key,
                         values[name, level + "_energy_provenance_" + key],
                         expected_value,
+                        scale=scales.get(key, 0.0) if name == "District" else 0.0,
                     )
             for key, suffix in [
                 ("net_kwh", "energy_grid_total_net_exchange_control_kwh"),
@@ -772,6 +808,7 @@ class IndependentBalanceAudit:
             max_tolerance_fraction=self.max_scaled_error,
             absolute_tolerance=self.atol,
             relative_tolerance=self.rtol,
+            flow_relative_tolerance=self.flow_rtol,
             source_free_circulation_intervals=self.singular_networks,
             members={k: dict(v) for k, v in self.members.items()},
             carbon_boundary="acquisition_carbon; unknown input energy remains in explicit unknown cohorts",
@@ -855,13 +892,7 @@ class IndependentBalanceAudit:
             key: sum(r[key] for r in rows.values())
             for key in next(iter(rows.values()), {})
         }
-        for origin, source_key in [
-            ("pv", "pv_generated_kwh"),
-            ("grid", "external_import_kwh"),
-            ("unknown", "unknown_input_kwh"),
-            ("carbon", "external_purchase_emissions_kgco2"),
-        ]:
-            unit = "kgco2" if origin == "carbon" else "kwh"
+        for origin, source_key, unit in RESIDUAL_SOURCES:
             district[origin + "_balance_residual_" + unit] = district.get(
                 source_key, 0.0
             ) - sum(
@@ -880,3 +911,16 @@ class IndependentBalanceAudit:
         )
         rows["District"] = district
         return rows
+
+    @staticmethod
+    def residual_scales(district):
+        """Return the gross flow of each district balance residual: |source| plus the |destination flows|."""
+
+        return {
+            origin + "_balance_residual_" + unit: abs(district.get(source_key, 0.0))
+            + sum(
+                abs(district.get(origin + "_" + dest + "_" + unit, 0.0))
+                for dest in DESTINATIONS
+            )
+            for origin, source_key, unit in RESIDUAL_SOURCES
+        }
