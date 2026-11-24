@@ -75,7 +75,8 @@ def test_every_bundled_schema_resolves_its_input_files_from_the_cache(private_ca
 
     for name in names:
         cached = Path(dataset.get_dataset(name)).resolve().parent
-        assert cached == (private_cache / 'datasets' / name).resolve()
+        content_key = DataSet._content_key(dataset._find_local_dataset_root(name))
+        assert cached == (private_cache / DataSet.CONTENT_CACHE_DIRECTORY / content_key / name).resolve()
 
         for schema_path in sorted(cached.rglob('*.json')):
             schema = FileHandler.read_json(schema_path)
@@ -121,7 +122,9 @@ def test_15s_parquet_dataset_runs_from_the_cache(name, load_by, private_cache):
                        physics_invariant_checks=True, export_kpis_on_episode_end=False)
 
     try:
-        assert Path(env.root_directory).resolve() == (private_cache / 'datasets' / name).resolve()
+        content_key = DataSet._content_key(DATASETS / name)
+        expected = private_cache / DataSet.CONTENT_CACHE_DIRECTORY / content_key / name
+        assert Path(env.root_directory).resolve() == expected.resolve()
         env.reset(seed=0)
 
         for _ in range(3):

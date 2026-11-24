@@ -176,8 +176,8 @@ do Quebec (20 edifícios, passos 0–2159, física da versão 2):
 
 | Controlador | Temperatura interior | Delta de aquecimento | Set point |
 |---|---|---|---|
-| AVAC à procura do dataset: `BusinessAsUsualAgent` com `baseline_version=3`, `RBCBasicPolicy`, `RBCSmartPolicy`, `RBCCommunityPolicy` | dentro, 17,0–26,5 °C face a [−1,1; 42,4] | dentro | dentro |
-| AVAC sem funcionar: `BusinessAsUsualAgent` com `baseline_version` 1 ou 2 (predefinida), as referências baseadas em regras com `hvac='off'`, `ZeroActionAgent` | abaixo de `low` em 38% dos passos-edifício, até 22,6 °C | abaixo de `low` em 89% dos passos-edifício, até 31,6 °C | dentro |
+| AVAC à procura do dataset: `BusinessAsUsualAgent` com `baseline_version=2` (predefinida), `RBCBasicPolicy`, `RBCSmartPolicy`, `RBCCommunityPolicy` | dentro, 17,0–26,5 °C face a [−1,1; 42,4] | dentro | dentro |
+| AVAC sem funcionar: `BusinessAsUsualAgent` com `baseline_version=1`, as referências baseadas em regras com `hvac='off'`, `ZeroActionAgent` | abaixo de `low` em 38% dos passos-edifício, até 22,6 °C | abaixo de `low` em 89% dos passos-edifício, até 31,6 °C | dentro |
 | Ações aleatórias | acima de `high` em 7% dos passos-edifício, até 20,7 °C | acima de `high` em 19% dos passos-edifício, até 27,3 °C | dentro |
 
 Sem aquecimento, a temperatura interior desce em direção à temperatura exterior,

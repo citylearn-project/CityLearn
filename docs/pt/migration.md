@@ -52,6 +52,33 @@ versão e o histórico da linha de desenvolvimento.
 
 ## Por publicar
 
+### Cache de datasets identificada pelo conteúdo
+
+As cópias locais dos datasets passam a ficar em cache sob a chave do seu
+conteúdo, em `datasets_by_content/<chave>/<dataset>` de
+`DataSet().cache_directory`, em vez de `datasets/<dataset>`. O código que
+carrega datasets pelo nome ou pelo caminho devolvido por
+`DataSet().get_dataset()` não precisa de mudar.
+
+- As cópias guardadas em cache por corridas anteriores em `datasets/<dataset>`
+  deixam de ser lidas enquanto existir uma cópia local completa, e ficam
+  intactas. Uma corrida que usava um schema desatualizado da cache passa a
+  carregar o local, o que pode mudar os seus resultados; para reproduzir essa
+  corrida, passe explicitamente o caminho do `schema.json` antigo.
+- Cada conteúdo diferente de um dataset tem a sua própria cópia, pelo que os
+  checkouts que mudam de branch acumulam cópias. `DataSet().clear_cache()`
+  remove-as todas.
+- O código que construía à mão o caminho da cache a partir de
+  `cache_directory`, `datasets` e do nome do dataset deve usar o caminho
+  devolvido por `DataSet().get_dataset(name)`.
+- As descargas, usadas quando não existe cópia local, continuam em cache em
+  `datasets/<dataset>` da tag da versão.
+
+O `IndependentBalanceAudit` aceita `flow_relative_tolerance` (1e-8 por
+omissão), que ajusta a tolerância dos resíduos de balanço do distrito ao seu
+fluxo bruto; o relatório regista o valor. Passe `flow_relative_tolerance=0`
+para manter a tolerância fixa anterior.
+
 ### Carregamento dos VE na baseline por omissão
 
 A baseline por omissão dos KPIs (`EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV`,
@@ -79,50 +106,64 @@ controlador que carregasse os carros parecia pior do que a baseline
   O manifesto dessa execução regista a referência do BAU como avaliada.
 - Só mudam os datasets com carregadores de VE: `citylearn_challenge_2022_phase_all_plus_evs`,
   os datasets `pt_rec_*` e os demos trifásicos. A simulação, as linhas do
-  controlo, as linhas do BAU e as recompensas não mudam. Os KPIs de equidade,
+  controlo e as recompensas não mudam, nem as linhas do BAU nos datasets sem
+  ações de AVAC (ver [AVAC no BAU](#avac-no-bau)). Os KPIs de equidade,
   calculados a partir do benefício de cada membro face à baseline, mudam com ela.
 - Defina `baseline_version` como `1` (argumento do construtor ou chave do
-  schema) para reproduzir a baseline do CityLearn 3.6.0. A versão fica em
+  schema) para reproduzir a baseline do CityLearn 3.6.0, incluindo o seu BAU
+  que não usa o AVAC. A versão fica em
   `env.get_metadata()` e no manifesto de exportação, no nível de topo e em
   `comparison_context`; `compare_exports()` dá como `incompatible` duas
   execuções com versões diferentes. O `MultiCommunityEnv` exige que todas as
   comunidades usem a mesma versão.
 
-### AVAC no BAU (`baseline_version=3`, opcional)
+### AVAC no BAU
 
-Nos datasets com ações de AVAC (dinâmica de temperatura), o BAU envia zero a
+Nos datasets com ações de AVAC (dinâmica de temperatura), o BAU enviava zero a
 `heating_device`, `cooling_device` e `cooling_or_heating_device`, pelo que os
-seus edifícios não são aquecidos nem arrefecidos e as linhas
-`*_business_as_usual` comparam o controlador com casas sem aquecimento ou sem
+seus edifícios não eram aquecidos nem arrefecidos e as linhas
+`*_business_as_usual` comparavam o controlador com casas sem aquecimento ou sem
 arrefecimento ([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
 
-- Por omissão nada muda: `baseline_version=2` continua a ser a predefinida, e as
-  versões 1 e 2 dão os mesmos resultados de antes.
-- Defina `baseline_version=3` para o BAU fornecer, em cada passo, a procura de
-  aquecimento e de arrefecimento do próprio dataset, limitada aos limites da
-  ação e do equipamento. As linhas do BAU e os deltas e rácios face ao BAU
-  mudam nos datasets com ações de AVAC; nos outros datasets a versão 3 é igual
-  à versão 2. A definição do BAU passa a
+- Com `baseline_version=2`, a predefinida, o BAU passa a fornecer, em cada
+  passo, a procura de aquecimento e de arrefecimento do próprio dataset,
+  limitada aos limites da ação e do equipamento. Nesses datasets, a definição do BAU passa a
   `immediate-full-charge-v4+hvac-dataset-demand-v1` (ou
   `immediate-user-target-v3+hvac-dataset-demand-v1`). Consulte
   [AVAC e a versão da baseline](baselines.md#avac-e-a-versão-da-baseline).
+- Nos datasets com ações de AVAC (`quebec_neighborhood_with_demand_response_set_points`,
+  `quebec_neighborhood_without_demand_response_set_points`,
+  `tx_travis_county_neighborhood`, `vt_chittenden_county_neighborhood`,
+  `ca_alameda_county_neighborhood`, `baeda_3dem` e os
+  datasets `citylearn_challenge_2023_*`), as linhas
+  `*_business_as_usual` predefinidas, e os deltas e rácios face ao BAU, mudam.
+  No `quebec_neighborhood_without_demand_response_set_points` (passos 0–335), o custo do BAU passa de 631,8 para 4403,8 EUR, a sua
+  temperatura interior média de 3,4 para 20,6 °C, e o rácio de custo do
+  `RBCSmartPolicy` face ao BAU de 6,970 para 1,000.
+- Nos datasets sem ações de AVAC nada muda, bit a bit.
+- `baseline_version=1` mantém o BAU com o AVAC a zero, como no CityLearn 3.6.0,
+  para reproduzir resultados anteriores.
 - Um `BusinessAsUsualAgent` executado por si segue a versão do ambiente;
   `hvac='off'` ou `hvac='dataset_demand'` substitui-a.
+- Um controlador que não comande o AVAC, como o `ZeroActionAgent`, parece agora
+  muito mais barato do que o BAU nestes datasets, porque o BAU paga o
+  aquecimento e o arrefecimento. Leia os seus rácios face ao BAU em conjunto com
+  os KPIs de conforto.
 
 ### As referências baseadas em regras usam o AVAC
 
 `RBCBasicPolicy`, `RBCSmartPolicy` e `RBCCommunityPolicy` passam a fornecer a
 procura de aquecimento e de arrefecimento do dataset através das ações de AVAC,
-com a regra do BAU de `baseline_version=3`.
+com a regra do BAU predefinido.
 
 - Datasets sem ações de AVAC: nada muda, bit a bit, incluindo a
   `comparison_identity()`.
 - Datasets com ações de AVAC: as referências baseadas em regras aquecem e
-  arrefecem, pelo que os seus KPIs de energia, custo e conforto mudam.
-  Compare-as com o BAU de `baseline_version=3`; face ao BAU da versão 2,
-  predefinida, que não aquece nem arrefece, os seus rácios face ao BAU comparam
-  casas aquecidas com casas sem aquecimento. A sua identidade regista
-  `hvac='dataset_demand'` e a definição ganha o sufixo `+hvac-dataset-demand-v1`.
+  arrefecem, pelo que os seus KPIs de energia, custo e conforto mudam. Com a
+  `baseline_version=2` predefinida, o BAU também aquece e arrefece, pelo que os
+  seus rácios face ao BAU comparam casas aquecidas e arrefecidas da mesma forma.
+  A sua identidade regista `hvac='dataset_demand'` e a definição ganha o sufixo
+  `+hvac-dataset-demand-v1`.
 - As regras do armazenamento, dos VE e dos aparelhos não mudam, mas, num dataset
   com ações de AVAC que também tenha baterias, as ações das baterias podem mudar:
   a carga a que as regras reagem passa a incluir o AVAC.
@@ -329,6 +370,39 @@ qualquer sessão que já estava ligada na linha antes dele. As contagens e
 rácios de partidas de execuções anteriores com episódios curtos ou divididos
 devem ser recalculados antes de comparar
 ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
+
+### SOC dos VE transportado entre divisões de episódios
+
+Nada muda sem `ev_soc_carryover=True`. Com esta definição, um episódio que
+continua o anterior no tempo (começa na última linha do episódio anterior, ou
+na linha seguinte, e o episódio anterior chegou ao fim) começa cada VE com o
+SOC que atingiu no fim desse episódio, e uma sessão ligada através da fronteira
+é avaliada onde realmente parte, com essa carga, como descreve a
+[referência dos KPIs](kpis_reference.md#partidas). Só o SOC dos VE é transportado: as baterias, o armazenamento térmico e as temperaturas interiores continuam a começar cada episódio no seu estado inicial. A definição é um compromisso. Desligada, cada episódio é independente dos anteriores, mas uma sessão que atravessa uma fronteira perde a carga que recebeu. Ligada, essa carga mantém-se, mas um episódio que continua o anterior depende do que o controlador anterior fez, pelo que os seus KPIs deixam de ser os de um episódio independente. As partidas cumpridas das
+execuções divididas aproximam-se então das de uma execução única, pelo que os
+resultados com e sem a definição não são comparáveis, e `compare_exports`
+indica-os como incompatíveis. Com `'disjoint'`, a linha entre dois episódios
+nunca é controlada, pelo que uma sessão ligada através dela pode ficar até um
+passo de carregamento atrás da execução única. Um episódio transportado começa
+com o SOC deixado pelo controlador anterior, que entra no seu inventário
+inicial, pelo que o mesmo episódio transportado corrido por dois controladores
+não é comparável, e `compare_exports` indica-o como incompatível: com
+transporte, compare execuções divididas inteiras, não episódios isolados. As divisões aleatórias e
+rolantes nunca transportam, e o ambiente avisa uma vez que a definição não tem
+efeito nesse caso; uma lista explícita só transporta quando uma janela começa
+exatamente onde a anterior termina para a fronteira escolhida, pelo que, com o
+`'shared'` por omissão, uma lista sem intervalo, como
+`[(1900, 1949), (1950, 1999)]`, não transporta (transporta com `'disjoint'`,
+ou com `'shared'` quando a janela seguinte começa na última linha da
+anterior), e um
+`reset(options={'episode_index': ...})` que salta para outro lado mantém o SOC
+do calendário. Só a sessão ligada através da fronteira é transportada; todas
+as chegadas seguintes usam o SOC de chegada do ficheiro, e uma chegada sem ele
+mantém o SOC simulado do VE, tal como na execução única. Somadas sobre os
+episódios, as partidas, as partidas cumpridas e as classes de viabilidade
+coincidem com a execução única, mas o ganho de SOC ligado da contabilidade
+energética é o ganho de cada episódio, pelo que a sua soma é menor do que na
+execução única, e os totais de energia podem diferir ligeiramente ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
 
 ### Os espaços de observação seguem as observações
 

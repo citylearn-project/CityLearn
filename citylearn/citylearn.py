@@ -3,6 +3,7 @@ from copy import deepcopy
 from enum import Enum
 import importlib
 import logging
+import warnings
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Mapping, Tuple, Union
@@ -128,6 +129,16 @@ class CityLearnEnv(Environment, Env):
         (N must be at least 2). `'disjoint'` advances them by N rows, as CityLearn 3.6.0 and earlier did, so the interval
         between two consecutive episodes is never simulated. Can also be set with the schema key of the same name. Rolling
         and explicit list splits are not affected.
+    ev_soc_carryover: bool, default: False
+        Start each EV of an episode from its SOC at the end of the previous episode, when the new episode continues
+        it in time: it starts on the previous episode's last row (`'shared'`) or on the row after it (`'disjoint'`),
+        and the previous episode ran to its end. Sequential splits carry, and an explicit list of `episode_time_steps`
+        carries when a window starts exactly there. Random and rolling splits never carry, even when a pick happens
+        to follow the previous episode, and the env warns once that the setting has no effect. Only the session
+        connected across the boundary keeps its charge, at the new episode's first step; every later arrival takes
+        the schedule SOC, and an arrival without one keeps the EV's simulated SOC, as in one run. The first episode uses the schedule SOC, as when the setting is off. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still
+        start every episode from their initial state. Off, episodes are independent; on, an episode that continues the
+        previous one depends on what the previous controller did. Can also be set with the schema key of the same name.
     seconds_per_time_step: float
         Number of seconds in 1 `time_step` and must be set to >= 1. It must equal the dataset step unless
         `time_step_ratio_mode='compress'`.
@@ -221,12 +232,12 @@ class CityLearnEnv(Environment, Env):
         Physics definitions: ``2`` (default) or ``1``, which reproduces the physics of CityLearn 3.6.0. Overrides the
         schema key. The migration guide lists the corrections of version 2.
     baseline_version: int, optional
-        Definition of the default KPI baseline (the ``*_without_storage`` series): ``2`` (default) removes the battery,
-        the thermal storage and the EV charging of the controlled run, and adds back the EV charging of the native BAU
-        with the ``'full'`` target, so it is the same for every controller and has no V2G; ``1`` adds nothing back, as
-        in CityLearn 3.6.0. ``3`` (opt-in) keeps the baseline of ``2``, and the native BAU also runs the HVAC so that it
-        delivers the dataset's own heating and cooling demand, instead of sending zero to the HVAC actions. Overrides
-        the schema key. See :py:mod:`citylearn.internal.baseline_version`.
+        Definition of the default KPI baseline (the ``*_without_storage`` series) and of the native BAU HVAC: ``2``
+        (default) removes the battery, the thermal storage and the EV charging of the controlled run, and adds back the
+        EV charging of the native BAU with the ``'full'`` target, so it is the same for every controller and has no V2G;
+        its native BAU also runs the HVAC so that it delivers the dataset's own heating and cooling demand. ``1`` adds
+        nothing back and its BAU sends zero to the HVAC actions, as in CityLearn 3.6.0. Overrides the schema key. See
+        :py:mod:`citylearn.internal.baseline_version`.
     debug_timing: bool, optional
         Log runtime timings. Defaults to the schema value, else ``False``.
     check_observation_limits: bool, optional
@@ -262,7 +273,7 @@ class CityLearnEnv(Environment, Env):
         'inactive_observations', 'active_actions', 'inactive_actions', 'simulate_power_outage', 'solar_generation',
         'random_seed', 'offline', 'time_step_ratio', 'interface', 'topology_mode', 'start_date',
         'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version', 'physics_version',
-        'baseline_version',
+        'baseline_version', 'ev_soc_carryover',
     )
 
     def __init__(self,
@@ -279,6 +290,7 @@ class CityLearnEnv(Environment, Env):
         export_kpis_on_episode_end: bool = None, **kwargs: Any
     ):
         episode_split_boundary = kwargs.pop('episode_split_boundary', None)
+        ev_soc_carryover = kwargs.pop('ev_soc_carryover', None)
         time_step_ratio_mode = kwargs.pop('time_step_ratio_mode', None)
         render_directory = kwargs.pop('render_directory', None)
         render_directory_name = kwargs.pop('render_directory_name', 'render_logs')
@@ -523,6 +535,8 @@ class CityLearnEnv(Environment, Env):
         self.episode_split_boundary = (
             self.schema.get('episode_split_boundary') if episode_split_boundary is None else episode_split_boundary
         )
+        self.ev_soc_carryover = self.schema.get('ev_soc_carryover') if ev_soc_carryover is None else ev_soc_carryover
+        self._ev_soc_carryover_context = None
         self.central_agent = central_agent
         self.shared_observations = shared_observations
 
@@ -648,7 +662,7 @@ class CityLearnEnv(Environment, Env):
 
     @property
     def baseline_version(self) -> int:
-        """Definition of the default KPI baseline and, from version 3, of the native BAU HVAC; see
+        """Definition of the default KPI baseline and, from version 2, of the native BAU HVAC; see
         :py:mod:`citylearn.internal.baseline_version`."""
 
         from citylearn.internal.baseline_version import baseline_version_of
@@ -715,6 +729,13 @@ class CityLearnEnv(Environment, Env):
         `'disjoint'` (CityLearn 3.6.0 splits, which never simulate the interval between two episodes)."""
 
         return self.__episode_split_boundary
+
+    @property
+    def ev_soc_carryover(self) -> bool:
+        """Whether an EV starts an episode that continues the previous one in time from its SOC at the end of
+        that episode, instead of the schedule SOC."""
+
+        return self.__ev_soc_carryover
 
     @property
     def random_episode_split(self) -> bool:
@@ -1513,6 +1534,10 @@ class CityLearnEnv(Environment, Env):
     def episode_split_boundary(self, episode_split_boundary: str):
         self.__episode_split_boundary = EpisodeTracker.validate_episode_split_boundary(episode_split_boundary)
 
+    @ev_soc_carryover.setter
+    def ev_soc_carryover(self, ev_soc_carryover: bool):
+        self.__ev_soc_carryover = parse_bool(ev_soc_carryover, default=False, path='ev_soc_carryover')
+
     @random_episode_split.setter
     def random_episode_split(self, random_episode_split: bool):
         self.__random_episode_split = False if random_episode_split is None else random_episode_split
@@ -1602,6 +1627,7 @@ class CityLearnEnv(Environment, Env):
             'physics_version': self.physics_version,
             'baseline_version': self.baseline_version,
             'episode_split_boundary': self.episode_split_boundary,
+            'ev_soc_carryover': self.ev_soc_carryover,
             'time_step_ratio_mode': self.time_step_ratio_mode,
             'energy_accounting': self._provenance_service.get_metadata(),
             'temporal_reproducibility': axis_metadata(self),
@@ -1988,6 +2014,9 @@ class CityLearnEnv(Environment, Env):
             Override :meth"`get_info` to get custom key-value pairs in `info`.
         """
 
+        # Taken before anything is reset: the EV SOC at the end of the episode that is ending.
+        previous_episode_end = self._ev_soc_carryover_end_state()
+
         # object reset
         super().reset()
         self._final_kpis_exported = False
@@ -2031,6 +2060,7 @@ class CityLearnEnv(Environment, Env):
             for ev in self.electric_vehicles:
                 ev.reset()
 
+        self._ev_soc_carryover_reset(previous_episode_end)
         self._demand_response_service.reset()
         self._robustness_service.reset()
         self.associate_chargers_to_electric_vehicles()
@@ -2081,6 +2111,119 @@ class CityLearnEnv(Environment, Env):
         self.reward_function.env_metadata = self.get_metadata()
 
         return self.observations, self.get_info()
+
+    def _ev_soc_carryover_end_state(self) -> Union[Mapping[str, Any], None]:
+        """The window and the EV SOC at the last row of the current episode, if it ran to that row."""
+
+        tracker = self.episode_tracker
+        start, end = tracker.episode_start_time_step, tracker.episode_end_time_step
+        if not self.ev_soc_carryover or start is None or end is None or self.time_step != end - start:
+            return None
+
+        # Devices stop at the last control step: its SOC is the one reached at the episode's last row.
+        soc = {}
+        for ev in list(getattr(self, '_all_electric_vehicles', None) or self.electric_vehicles or []):
+            index = int(ev.battery.time_step)
+            if index < len(ev.battery.soc) and np.isfinite(ev.battery.soc[index]):
+                soc[ev.name] = float(ev.battery.soc[index])
+
+        return dict(start=int(start), end=int(end), soc=soc)
+
+    def _ev_soc_carryover_applies(self) -> bool:
+        """Whether the split mode can carry EV SOC: sequential and explicit-list splits, not random or rolling ones."""
+
+        if self.random_episode_split:
+            return False
+        # Rolling is ignored for explicit lists, as in `EpisodeTracker.next_episode`.
+        return isinstance(self.episode_time_steps, list) or not self.rolling_episode_split
+
+    def _ev_soc_carryover_start_after(self, end: int) -> int:
+        """Row where an episode that continues one ending on row `end` starts, for the split boundary."""
+
+        return int(end) if self.episode_split_boundary == 'shared' else int(end) + 1
+
+    def _ev_soc_carryover_next_start(self) -> Union[int, None]:
+        """First row of the episode that follows the current one when episodes are taken in order, else `None`."""
+
+        tracker = self.episode_tracker
+        start = tracker.episode_start_time_step
+        if self.random_episode_split:
+            return None
+
+        if isinstance(self.episode_time_steps, list):
+            splits = tracker.validate_episode_splits(self.episode_time_steps)
+            index = int(tracker.episode) % len(splits)
+            return int(splits[index + 1][0]) if index + 1 < len(splits) else None
+
+        if self.rolling_episode_split:
+            return None
+
+        length = int(self.episode_time_steps)
+        step = max(length - 1, 1) if self.episode_split_boundary == 'shared' else length
+        next_start = int(start) + step
+        return next_start if next_start + length - 1 <= tracker.simulation_end_time_step else None
+
+    def _ev_soc_carryover_reset(self, previous_episode_end: Union[Mapping[str, Any], None]):
+        """Set the EV SOC carried from the previous episode and the KPI context of the new episode.
+
+        The context says whether the episode starts from carried SOC, which sessions continue across its
+        first row, and the largest departure countdown its last step counts (see
+        `CityLearnKPIService._ev_last_step_countdown`). The native BAU reference takes the evaluated env's
+        context, so that it starts from the same state and counts departures the same way.
+        """
+
+        if not self.ev_soc_carryover:
+            self._ev_soc_carryover_context = None
+            return
+
+        if not self._ev_soc_carryover_applies() and not getattr(self, '_ev_soc_carryover_warned', False):
+            self._ev_soc_carryover_warned = True
+            warnings.warn(
+                'ev_soc_carryover has no effect with random or rolling episode splits: every episode starts '
+                'from the schedule SOC. Use sequential splits or an explicit list of episode_time_steps.',
+                UserWarning,
+                stacklevel=3,
+            )
+
+        inherited = getattr(self, '_ev_soc_carryover_inherited', None)
+        if inherited is not None:
+            context = deepcopy(inherited)
+        else:
+            tracker = self.episode_tracker
+            start, end = int(tracker.episode_start_time_step), int(tracker.episode_end_time_step)
+            # Random and rolling splits never carry, even when a pick happens to follow the previous
+            # episode, so those episodes stay independent. An explicit list carries only when the window
+            # starts exactly where the previous one ends for the split boundary.
+            carried = (
+                self._ev_soc_carryover_applies()
+                and previous_episode_end is not None
+                and start == self._ev_soc_carryover_start_after(previous_episode_end['end'])
+                and start > previous_episode_end['start']
+            )
+            continuing = []
+            if carried:
+                kpi = self._kpi_service
+                for building in getattr(self, '_all_buildings', None) or self.buildings:
+                    for charger in building.electric_vehicle_chargers or []:
+                        sim = charger.charger_simulation
+                        if kpi._ev_session_connected_before_window(sim):
+                            continuing.append(str(sim.electric_vehicle_id[0]))
+            next_start = self._ev_soc_carryover_next_start()
+            context = dict(
+                carried_in=bool(carried),
+                soc=dict(previous_episode_end['soc']) if carried else {},
+                continuing=sorted(continuing),
+                # A session still connected on the next episode's first row is scored there, with the
+                # carried SOC, so the last step only counts those that leave before that row.
+                last_step_countdown=(
+                    0.0 if next_start == end and self._ev_soc_carryover_start_after(end) == end else 1.0
+                ),
+            )
+
+        self._ev_soc_carryover_context = context
+        for ev in list(getattr(self, '_all_electric_vehicles', None) or self.electric_vehicles or []):
+            if ev.name in context['soc']:
+                ev.battery.force_set_soc(context['soc'][ev.name])
 
     def _configure_community_market(self):
         config = {}

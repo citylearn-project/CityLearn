@@ -250,6 +250,7 @@ def axis_metadata(env):
         random_stream_version=getattr(env, "random_stream_version", None),
         physics_version=getattr(env, "physics_version", None),
         episode_split_boundary=getattr(env, "episode_split_boundary", None),
+        ev_soc_carryover=bool(getattr(env, "ev_soc_carryover", False)),
         time_step_ratio_mode=getattr(env, "time_step_ratio_mode", None),
         random_stream_episode=getattr(tracker, "random_stream_episode", None),
         reset_seed_explicit=getattr(env, "_reset_seed_explicit", False),
