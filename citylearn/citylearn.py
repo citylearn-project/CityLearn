@@ -6,7 +6,7 @@ import logging
 import warnings
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Mapping, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, List, Mapping, Tuple, Union
 from gymnasium import Env, spaces
 import datetime
 import difflib
@@ -39,7 +39,7 @@ from citylearn.internal.physics_invariants import CityLearnPhysicsInvariantServi
 from citylearn.internal.provenance import CityLearnProvenanceService
 from citylearn.internal.runtime import CityLearnRuntimeService
 from citylearn.internal.entity_interface import CityLearnEntityInterfaceService
-from citylearn.internal.histories import RowHistory, ScalarHistory, _copy_row, default_history
+from citylearn.internal.histories import RowHistory, ScalarHistory, default_history
 from citylearn.internal.topology import CityLearnTopologyService
 from citylearn.internal.demand_response import CityLearnDemandResponseService
 from citylearn.internal.robustness import CityLearnRobustnessService
@@ -765,25 +765,10 @@ class CityLearnEnv(Environment, Env):
 
         Stored in a preallocated float64 buffer; the public ``list`` view is materialized lazily and
         extended incrementally per step while detaching before any in-place edit so caller changes never
-        alter stored history. Use :attr:`last_rewards` during a rollout to read only the latest row
-        without allocating the public list.
+        alter stored history. Read the latest row with ``env.rewards[-1]``.
         """
 
         return None if self._rewards_history is None else self._rewards_history.to_list()
-
-    @property
-    def last_rewards(self) -> Optional[List[float]]:
-        """Latest entry of :attr:`rewards` (``[]`` after :meth:`reset`, then the most recent step's reward list).
-
-        Reads only the latest row in time independent of episode length, without building :attr:`rewards`.
-        """
-
-        history = default_history(self, 'rewards')
-        if history is not None:
-            return history.last()
-
-        series = self.rewards
-        return None if series is None or len(series) == 0 else _copy_row(series[-1])
 
     @property
     def episode_rewards(self) -> List[Mapping[str, Union[float, List[float]]]]:
@@ -1201,122 +1186,31 @@ class CityLearnEnv(Environment, Env):
     def net_electricity_consumption_emission(self) -> List[float]:
         """Summed `Building.net_electricity_consumption_emission` time series, in [kg_co2].
 
-        Materialized lazily and extended incrementally per step while detaching on mutation; use
-        :attr:`last_net_electricity_consumption_emission` during a rollout to read only the latest
-        value without allocating the public list.
+        Materialized lazily and extended incrementally per step while detaching on mutation; read the latest
+        value with ``env.net_electricity_consumption_emission[-1]``.
         """
 
         return None if self._net_electricity_consumption_emission_history is None else self._net_electricity_consumption_emission_history.to_list()
 
     @property
-    def last_net_electricity_consumption_emission(self) -> Optional[float]:
-        """Latest entry of :attr:`net_electricity_consumption_emission`, in [kg_co2], read in O(1) time."""
-
-        history = default_history(self, 'net_electricity_consumption_emission')
-        if history is not None:
-            return history.last()
-
-        series = self.net_electricity_consumption_emission
-        return None if series is None or len(series) == 0 else series[-1]
-
-    @property
     def net_electricity_consumption_cost(self) -> List[float]:
         """Summed `Building.net_electricity_consumption_cost` time series, in [$].
 
-        Materialized lazily and extended incrementally per step while detaching on mutation; use
-        :attr:`last_net_electricity_consumption_cost` during a rollout to read only the latest value
-        without allocating the public list.
+        Materialized lazily and extended incrementally per step while detaching on mutation; read the latest
+        value with ``env.net_electricity_consumption_cost[-1]``.
         """
 
         return None if self._net_electricity_consumption_cost_history is None else self._net_electricity_consumption_cost_history.to_list()
 
     @property
-    def last_net_electricity_consumption_cost(self) -> Optional[float]:
-        """Latest entry of :attr:`net_electricity_consumption_cost`, in [$], read in O(1) time."""
-
-        history = default_history(self, 'net_electricity_consumption_cost')
-        if history is not None:
-            return history.last()
-
-        series = self.net_electricity_consumption_cost
-        return None if series is None or len(series) == 0 else series[-1]
-
-    @property
     def net_electricity_consumption(self) -> List[float]:
         """Summed `Building.net_electricity_consumption` time series, in [kWh].
 
-        Materialized lazily and extended incrementally per step while detaching on mutation; use
-        :attr:`last_net_electricity_consumption` during a rollout to read only the latest value
-        without allocating the public list.
+        Materialized lazily and extended incrementally per step while detaching on mutation; read the latest
+        value with ``env.net_electricity_consumption[-1]``.
         """
 
         return None if self._net_electricity_consumption_history is None else self._net_electricity_consumption_history.to_list()
-
-    @property
-    def last_net_electricity_consumption(self) -> Optional[float]:
-        """Latest entry of :attr:`net_electricity_consumption`, in [kWh], read in O(1) time."""
-
-        history = default_history(self, 'net_electricity_consumption')
-        if history is not None:
-            return history.last()
-
-        series = self.net_electricity_consumption
-        return None if series is None or len(series) == 0 else series[-1]
-
-    def _sum_building_series(self, attribute: str) -> np.ndarray:
-        """Sum a building series over the members of the district at each step.
-
-        In dynamic topology every member that has been active contributes, masked to the steps at which
-        it belonged to the district, as in `net_electricity_consumption` and `_sum_counterfactual_series`:
-        a member that leaves keeps its past contribution, and a member that joins adds nothing before it
-        joined, so it adds zero at the steps where it was not a member. A step is NaN only if no member
-        has a value there.
-        """
-
-        if self.topology_mode == 'dynamic' and getattr(self, '_topology_service', None) is not None:
-            population = ActivePopulation(self)
-            series = []
-
-            for building in self._kpi_service._get_kpi_buildings():
-                values = np.asarray(getattr(building, attribute)).reshape(-1)
-                if values.dtype.kind not in 'fc':
-                    values = values.astype('float64')
-                values = values.copy()
-                values[~population.mask(building.name, len(values), energy=True)] = 0.0
-                series.append(values)
-
-        elif len(self.buildings) == 0:
-            return np.array([], dtype='float64')
-
-        else:
-            series = [np.asarray(getattr(b, attribute)).reshape(-1) for b in self.buildings]
-
-        if len(series) == 0:
-            return np.array([], dtype='float64')
-
-        length = max((len(values) for values in series), default=0)
-        total = np.zeros(length, dtype='float64')
-        valid = np.zeros(length, dtype=bool)
-
-        for values in series:
-            end = len(values)
-            if end == 0:
-                continue
-
-            try:
-                mask = ~np.isnan(values)
-            except TypeError:
-                values = np.asarray(values, dtype='float64').reshape(-1)
-                mask = ~np.isnan(values)
-            if not np.any(mask):
-                continue
-
-            target = total[:end]
-            target[mask] = target[mask] + values[mask]
-            valid[:end] = valid[:end] | mask
-
-        total[~valid] = np.nan
-        return total
 
     @property
     def cooling_electricity_consumption(self) -> np.ndarray:

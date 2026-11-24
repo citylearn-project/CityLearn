@@ -413,7 +413,7 @@ def test_fallback_transition_and_post_fallback_edits_keep_histories_and_summary_
         cached_attempt[-1][0] = 88.0
         cached_attempt.append([77.0])
         assert env.rewards == [[], [1.0]]
-        assert env.last_rewards == [1.0]
+        assert env.rewards[-1] == [1.0]
 
         # Action 2 -> [2] (int), triggering _fallback() to plain-list storage.
         env.step(zero_action)
@@ -428,10 +428,10 @@ def test_fallback_transition_and_post_fallback_edits_keep_histories_and_summary_
         post_fallback[-1][0] = 55
         post_fallback.append([44])
         env.rewards[-1][0] = 33
-        last_edit = env.last_rewards
+        last_edit = env.rewards[-1]
         last_edit[0] = 22
         assert env.rewards == [[], [1.0], [2]]
-        assert env.last_rewards == [2]
+        assert env.rewards[-1] == [2]
 
         # Action 3 -> [2], completing the episode; summary sum must be 1.0 + 2 + 2 == 5.0.
         env.step(zero_action)
@@ -480,9 +480,9 @@ def test_custom_list_subclass_reward_rows_preserve_type_and_isolation():
         assert type(step_r1) is _CustomRewardRow and step_r1 == [1.0]
         assert env._rewards_history._items is not None
         assert type(env.rewards[-1]) is _CustomRewardRow and env.rewards[-1] == [1.0]
-        assert type(env.last_rewards) is _CustomRewardRow and env.last_rewards == [1.0]
+        assert type(env.rewards[-1]) is _CustomRewardRow and env.rewards[-1] == [1.0]
 
-        # Mutate the step return, public history row, outer list, and last_rewards copy.
+        # Mutate the step return, public history row, outer list, and rewards[-1] copy.
         step_r1[0] = 999.0
         step_r1.append(555.0)
         last_view = env.rewards[-1]
@@ -490,12 +490,12 @@ def test_custom_list_subclass_reward_rows_preserve_type_and_isolation():
         last_view.append(444.0)
         full_view = env.rewards
         full_view.append(_CustomRewardRow([777.0]))
-        env.last_rewards[0] = 666.0
+        env.rewards[-1][0] = 666.0
 
         assert env.rewards == [[], _CustomRewardRow([1.0])]
         assert type(env.rewards[-1]) is _CustomRewardRow
-        assert env.last_rewards == _CustomRewardRow([1.0])
-        assert type(env.last_rewards) is _CustomRewardRow
+        assert env.rewards[-1] == _CustomRewardRow([1.0])
+        assert type(env.rewards[-1]) is _CustomRewardRow
 
         env.step(zero_action)
         env.step(zero_action)
@@ -558,7 +558,6 @@ def test_subclass_public_district_series_override_honored_across_evaluator_and_s
         env.reporting_scale = 2.0
         scaled_import = sum(max(float(v), 0.0) for v in env.net_electricity_consumption)
         assert scaled_import == pytest.approx(8.4, abs=1e-4)
-        assert env.last_net_electricity_consumption == pytest.approx(env.net_electricity_consumption[-1])
 
         df = env.evaluate_v2(include_business_as_usual=False)
         import_row = df[
@@ -708,61 +707,6 @@ finally:
     assert stats["widths"] == [17, 17, 18, 18]
     assert stats["rss_delta"] < 32 * 1024 * 1024
     assert stats["peak_delta"] < 32 * 1024 * 1024
-
-
-def test_latest_value_properties_do_not_materialize_full_lists(monkeypatch):
-    env = CityLearnEnv(str(SCHEMA), episode_time_steps=8, random_seed=0)
-
-    try:
-        env.reset(seed=0)
-
-        def _forbid_to_list():
-            raise AssertionError("to_list() must not be called when reading last_* properties")
-
-        histories = (
-            env._rewards_history,
-            env._net_electricity_consumption_history,
-            env._net_electricity_consumption_cost_history,
-            env._net_electricity_consumption_emission_history,
-        )
-        for h in histories:
-            monkeypatch.setattr(h, "to_list", _forbid_to_list)
-
-        assert env.last_rewards == []
-        assert type(env.last_net_electricity_consumption) is np.float64
-        assert type(env.last_net_electricity_consumption_cost) is np.float64
-        assert type(env.last_net_electricity_consumption_emission) is np.float64
-
-        seen_rewards = [env.last_rewards]
-        seen_net, seen_cost, seen_emission = [], [], []
-        zero_actions = [np.zeros(s.shape, dtype="float32") for s in env.action_space]
-
-        for _ in range(5):
-            _, step_reward, *_ = env.step(zero_actions)
-            latest_r = env.last_rewards
-            assert latest_r == list(step_reward)
-            # Mutating the returned latest row must not alter stored history.
-            mutated = env.last_rewards
-            mutated[0] = 999999.0
-            assert env.last_rewards == list(step_reward)
-            seen_rewards.append(latest_r)
-            seen_net.append(env.last_net_electricity_consumption)
-            seen_cost.append(env.last_net_electricity_consumption_cost)
-            seen_emission.append(env.last_net_electricity_consumption_emission)
-
-        # Also check fallback mode still serves last_* without calling to_list().
-        env._rewards_history.append([1, 2])
-        assert env.last_rewards == [1, 2]
-        env._net_electricity_consumption_history.put(5, 12.5)
-        assert env.last_net_electricity_consumption == 12.5
-
-        monkeypatch.undo()
-        assert env.rewards[:6] == seen_rewards
-        assert [v.tobytes() for v in env.net_electricity_consumption[:5]] == [v.tobytes() for v in seen_net]
-        assert [v.tobytes() for v in env.net_electricity_consumption_cost] == [v.tobytes() for v in seen_cost]
-        assert [v.tobytes() for v in env.net_electricity_consumption_emission] == [v.tobytes() for v in seen_emission]
-    finally:
-        env.close()
 
 
 def test_streaming_and_latest_readers_do_not_populate_public_list_cache():
