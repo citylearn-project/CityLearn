@@ -1061,15 +1061,36 @@ class CityLearnKPIService:
             and after > before + self.EV_DEPARTURE_EPS
         )
 
-    def _ev_last_step_countdown(self) -> float:
+    def _ev_last_step_countdown(self, terminal_step: int) -> float:
         """Largest departure countdown counted at a window's last control step.
 
-        A session connected there with this countdown or less leaves before the first control
-        step after the window ends: one row later under ``shared`` episode boundaries, and two
-        rows later under ``disjoint`` ones, whose row in between is never controlled.
+        A session connected there with this countdown or less leaves before the next control
+        step: one row later in general, and two rows later when another ``disjoint`` split of
+        the simulation follows the episode, because the row between the two episodes is never
+        controlled. The last window of a simulation, a single episode and a window that ends
+        before the episode does (a member that leaves, or a mid-episode evaluation) use one row.
         """
 
-        return 2.0 if getattr(self.env, 'episode_split_boundary', 'shared') == 'disjoint' else 1.0
+        env = self.env
+        if (
+            getattr(env, 'episode_split_boundary', 'shared') != 'disjoint'
+            or getattr(env, 'rolling_episode_split', False)
+        ):
+            return 1.0
+
+        length = getattr(env, 'episode_time_steps', None)
+        tracker = getattr(env, 'episode_tracker', None)
+        if isinstance(length, bool) or not isinstance(length, (int, np.integer)) or tracker is None:
+            return 1.0
+
+        start = getattr(tracker, 'episode_start_time_step', None)
+        end = getattr(tracker, 'episode_end_time_step', None)
+        simulation_end = getattr(tracker, 'simulation_end_time_step', None)
+        if start is None or end is None or simulation_end is None or terminal_step != end - start - 1:
+            return 1.0
+
+        # Disjoint splits advance by `length` rows, so the next one starts at `end + 1`.
+        return 2.0 if end + int(length) <= simulation_end else 1.0
 
     def _compute_ev_metrics(self, building, *, t_start: int = 0, t_final: Optional[int] = None) -> Dict[str, float]:
         upper = int(max(building.time_step, 0))
@@ -1158,7 +1179,7 @@ class CityLearnKPIService:
             # The window's last control step, not the schedule's terminal
             # row: the loop never reaches that row in a normal episode.
             terminal_step = history_limit
-            terminal_countdown = self._ev_last_step_countdown()
+            terminal_countdown = self._ev_last_step_countdown(terminal_step)
             ev_ids = getattr(sim, 'electric_vehicle_id', None)
             session_ids = getattr(sim, 'electric_vehicle_session_id', None)
             departure_times = getattr(sim, 'electric_vehicle_departure_time', None)

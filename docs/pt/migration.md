@@ -297,8 +297,9 @@ era contada no passo 0 do seguinte, com o SOC definido no reset, com
 uma sessão ligada na linha entre dois episódios era antes avaliada no passo 0
 do seguinte com o SOC definido no reset. Agora o último passo de um episódio
 conta uma sessão que parte antes do passo de controlo seguinte (contagem
-decrescente em [0, 1] com `'shared'` e em [0, 2] com `'disjoint'`, também num
-único episódio), com o SOC que o controlador atingiu, e o passo 0 ignora
+decrescente em [0, 1], ou em [0, 2] quando outra divisão `'disjoint'` se segue,
+pelo que uma execução não dividida não depende da fronteira), com o SOC que o
+controlador atingiu, e o passo 0 ignora
 qualquer sessão que já estava ligada na linha antes dele. As contagens e
 rácios de partidas de execuções anteriores com episódios curtos ou divididos
 devem ser recalculados antes de comparar

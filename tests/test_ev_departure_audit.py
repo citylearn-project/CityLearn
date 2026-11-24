@@ -240,10 +240,16 @@ def test_session_that_ends_with_the_window_is_a_departure(countdown, expected):
 
 
 def split_window(*, boundary='shared', start=2, states=(1., 1., 1., 0.), countdowns=(2., 1., 0., -1.),
-                 ids=('EV',) * 4, session_ids=None):
-    """A one-step window at full schedule row `start` of a schedule that starts at the simulation start."""
+                 ids=('EV',) * 4, session_ids=None, length=3, simulation_end=100, rolling=False):
+    """A window ending at step 1 of an episode of `length` rows (step 1 is its last control step for the
+    default 3 rows) at full schedule row `start` of a schedule that starts at the simulation start."""
     service, building, charger, ev = event(steps=1)
     service.env.episode_split_boundary = boundary
+    service.env.episode_time_steps = length
+    service.env.rolling_episode_split = rolling
+    end = start + (length if isinstance(length, int) else 3) - 1
+    service.env.episode_tracker = NS(episode_start_time_step=start, episode_end_time_step=end,
+                                     simulation_end_time_step=simulation_end)
     sim = charger.charger_simulation
     full = dict(electric_vehicle_charger_state=np.array(states),
                 electric_vehicle_departure_time=list(countdowns), electric_vehicle_id=list(ids))
@@ -275,13 +281,23 @@ def test_departure_at_step_zero_is_not_counted_twice(kwargs, expected):
     assert metrics['departures_total'] == expected
 
 
-@pytest.mark.parametrize('boundary,expected', [('shared', 0), ('disjoint', 1)])
-def test_last_step_counts_a_session_that_leaves_before_the_next_control_step(boundary, expected):
+@pytest.mark.parametrize('kwargs,expected', [
+    (dict(boundary='shared'), 0),
+    (dict(boundary='disjoint'), 1),
+    # No disjoint split follows: the last window, a single episode, explicit or rolling splits,
+    # and a window that ends before the episode's last control step.
+    (dict(boundary='disjoint', simulation_end=5), 0),
+    (dict(boundary='disjoint', length=3, simulation_end=3), 0),
+    (dict(boundary='disjoint', length=[(1, 3), (4, 6)]), 0),
+    (dict(boundary='disjoint', rolling=True), 0),
+    (dict(boundary='disjoint', length=4), 0),
+])
+def test_last_step_counts_a_session_that_leaves_before_the_next_control_step(kwargs, expected):
     # The window's last step is row 2, with countdown 2: the EV stays connected until row 4.
-    # That row is the next window's step 0 under disjoint boundaries, which skips it, and its
-    # step 1 under shared ones, which counts it.
-    service, building = split_window(boundary=boundary, start=1, states=(1., 1., 1., 1., 1., 0.),
-                                     countdowns=(3., 3., 2., 1., 0., -1.), ids=('EV',) * 6)
+    # When a disjoint split follows, row 4 is its step 0, which skips the session, so the last
+    # step counts it. Otherwise the next control step is row 3, and the session leaves after it.
+    service, building = split_window(start=1, states=(1., 1., 1., 1., 1., 0.),
+                                     countdowns=(3., 3., 2., 1., 0., -1.), ids=('EV',) * 6, **kwargs)
     charger = building.electric_vehicle_chargers[0]
     charger.past_connected_evs = [charger.past_connected_evs[0]] * 2
     metrics = service._compute_ev_metrics(building)
@@ -315,15 +331,22 @@ def _bau_departures(**kwargs):
         env.close()
 
 
-def test_bundled_episode_ending_at_a_departure_counts_it():
-    """Reproduction from issue #370 on the bundled EV dataset."""
-    env, (frame,) = _bau_departures(simulation_start_time_step=1900, simulation_end_time_step=1999)
+@pytest.mark.parametrize('boundary', ['shared', 'disjoint'])
+def test_bundled_episode_ending_at_a_departure_counts_it(boundary):
+    """Reproduction from issue #370 on the bundled EV dataset.
+
+    An unsplit run does not depend on the split boundary: under ``disjoint`` the five sessions
+    with countdown 2 at the last step leave after the simulation ends and are not counted."""
+    env, (frame,) = _bau_departures(simulation_start_time_step=1900, simulation_end_time_step=1999,
+                                    episode_split_boundary=boundary)
     sim = next(b for b in env.buildings if b.name == 'Building_1').electric_vehicle_chargers[0].charger_simulation
     assert list(sim.electric_vehicle_charger_state[95:100]) == [1.] * 5
     assert list(sim.electric_vehicle_departure_time[95:100]) == [4., 3., 2., 1., 0.]
     values = frame[frame.name == 'Building_1'].set_index('cost_function')['value']
     assert values['building_ev_events_departure_count'] == 5
     assert values['building_ev_departure_audit_departures_count'] == 5
+    district = frame[frame.name == 'District'].set_index('cost_function')['value']
+    assert district['district_ev_events_departure_count'] == 35
 
 
 @pytest.mark.parametrize('boundary,step', [('shared', 99), ('disjoint', 100)])

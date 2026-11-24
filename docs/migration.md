@@ -284,8 +284,9 @@ counted at step 0 of the next one, with the SOC set at reset, under
 session connected on the row between two episodes was instead scored at step
 0 of the next one with the SOC set at reset. Now the last step of an episode
 counts a session that leaves before the next control step (countdown in
-[0, 1] under `'shared'`, in [0, 2] under `'disjoint'`, also for a single
-episode), with the SOC the controller reached, and step 0 skips any session
+[0, 1], or in [0, 2] when another `'disjoint'` split follows, so a run that is
+not split does not depend on the boundary), with the SOC the controller
+reached, and step 0 skips any session
 that was connected on the row before it. Departure counts and rates from
 earlier runs with short or split episodes should be recomputed before
 comparing ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
