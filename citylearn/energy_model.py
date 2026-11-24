@@ -1485,7 +1485,20 @@ class Battery(StorageDevice, ElectricDevice):
         energy, efficiency = self._limit_charge_energy(energy, energy_init, degraded_capacity)
         # One efficiency entry per operation: the efficiency at the power finally applied.
         self.efficiency = efficiency
+        if not same_step_transfer:
+            # The first transfer of a step fixes the energy its power budget is read at.
+            self._step_transfer_start_energy = energy_init
+            self._step_transfer_input_energy = 0.0
+            self._step_transfer_output_energy = 0.0
         super()._charge(energy, energy_init=energy_init)
+        if self._last_transfer_energy >= 0.0:
+            self._step_transfer_input_energy = (
+                getattr(self, '_step_transfer_input_energy', 0.0) + self._last_transfer_energy
+            )
+        else:
+            self._step_transfer_output_energy = (
+                getattr(self, '_step_transfer_output_energy', 0.0) - self._last_transfer_energy
+            )
         ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
         if same_step_transfer and len(self._capacity_history) > 1:
             self._capacity_history[-1] = max(degraded_capacity - self.degrade(self._last_transfer_energy), 0.0)
@@ -1519,6 +1532,10 @@ class Battery(StorageDevice, ElectricDevice):
         `energy` and the returned energy are dataset-resolution kWh, as :py:meth:`charge` takes them. The
         efficiency is evaluated twice, at the requested and then at the limited power, as the battery
         model always has; only the last value is returned.
+
+        The power curves give one energy budget per control step and direction, read at the energy before
+        the step's first transfer. A later transfer in the same step gets only what the earlier transfers
+        in that direction left of it.
         """
 
         # Public control paths pass dataset-resolution kWh; physical limits are per control step.
@@ -1526,10 +1543,14 @@ class Battery(StorageDevice, ElectricDevice):
         requested_energy = float(energy) * ratio
         step_hours = max(float(self.seconds_per_time_step) / 3600.0, 1.0e-12)
         efficiency = self.efficiency
+        same_step_transfer = getattr(self, '_balance_time_step', -1) == self.time_step
+        budget_energy = getattr(self, '_step_transfer_start_energy', energy_init) if same_step_transfer else energy_init
 
         if requested_energy >= 0:
-            max_input_power = max(float(self.get_max_input_power(energy_init=energy_init)), 0.0)
+            max_input_power = max(float(self.get_max_input_power(energy_init=budget_energy)), 0.0)
             max_input_energy = power_kw_to_energy_kwh(max_input_power, self.seconds_per_time_step)
+            if same_step_transfer:
+                max_input_energy = max(max_input_energy - getattr(self, '_step_transfer_input_energy', 0.0), 0.0)
             limited_energy = min(requested_energy, max_input_energy)
 
             for _ in range(2):
@@ -1540,8 +1561,10 @@ class Battery(StorageDevice, ElectricDevice):
 
             return limited_energy / ratio, efficiency
 
-        max_output_power = max(float(self.get_max_output_power(energy_init=energy_init)), 0.0)
+        max_output_power = max(float(self.get_max_output_power(energy_init=budget_energy)), 0.0)
         max_output_energy = power_kw_to_energy_kwh(max_output_power, self.seconds_per_time_step)
+        if same_step_transfer:
+            max_output_energy = max(max_output_energy - getattr(self, '_step_transfer_output_energy', 0.0), 0.0)
         requested_output = abs(requested_energy)
         limited_output = min(requested_output, max_output_energy)
 
@@ -1770,6 +1793,9 @@ class Battery(StorageDevice, ElectricDevice):
         self._capacity_history = self._capacity_history[0:1]
         self.capacity_before_step = np.full(self.episode_tracker.episode_time_steps, np.nan)
         self.capacity_before_step[0] = self.degraded_capacity
+        self._step_transfer_start_energy = self.energy_init
+        self._step_transfer_input_energy = 0.0
+        self._step_transfer_output_energy = 0.0
 
 class DeferrableAppliance(ElectricDevice):
     """Generic deferrable appliance with sparse cycle requests and fixed kWh/step profiles."""
