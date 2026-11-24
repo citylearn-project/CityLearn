@@ -133,6 +133,30 @@ comunicado é aplicado com o mesmo valor quando o veículo da referência tinha 
 escrita e, caso contrário, como a mesma variação (limitada a [0, 1]): a referência mantém o seu
 próprio histórico de carga e vê o mesmo consumo de condução.
 
+## Repetir um fornecedor gravado
+
+As linhas de um fornecedor podem ser escritas em ficheiros de simulação de carregadores e repetidas por um
+`CityLearnEnv(schema)` simples, sem o fornecedor e sem o simulador de tráfego. Isto é válido quando o
+controlador altera apenas a potência dos edifícios e dos carregadores e a mobilidade não reage a ele. O
+simulador de tráfego corre uma vez e o CityLearn treina sobre o seu traço muitas vezes.
+
+Escreva as linhas de cada carregador externo (`charger.charger_simulation`, uma por passo) como colunas do
+[ficheiro de simulação do carregador](dataset_reference.md#colunas-da-simulação-de-carregadores) e defina
+`electric_vehicle_connected_seconds`, `electric_vehicle_connected_since_seconds`,
+`electric_vehicle_departure_seconds` e `electric_vehicle_discharge_soc_floor` como escritos. As linhas do
+fornecedor trazem o SOC absoluto à chegada em `electric_vehicle_current_soc`. Repetir esse valor só é exato
+para as ações gravadas: com outras ações, o veículo saiu da sessão anterior com outro SOC. Escreva a energia
+que o veículo usou desde a partida anterior em `electric_vehicle_trip_energy_kwh`, na primeira linha de cada
+sessão, e o veículo chega com o SOC dessa partida menos a energia da viagem dividida pela capacidade da
+bateria, limitado a [0, 1]. Na primeira sessão, o SOC anterior é o `initial_soc` do veículo. Os veículos com
+energia de viagem mantêm o SOC enquanto ausentes; não têm deriva aleatória, como os veículos
+`"external": true`.
+
+Com as ações gravadas, a repetição dá as mesmas energias dos carregadores e os mesmos KPIs que a execução em
+direto. O consumo de condução é o gravado, pelo que um veículo que carregou menos parte para a mesma viagem
+com menos energia, como na execução em direto; o percurso, a hora de chegada e a escolha do carregador não
+seguem o controlador.
+
 ## Exemplo
 
 ```python

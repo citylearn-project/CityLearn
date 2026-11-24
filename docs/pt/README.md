@@ -16,6 +16,8 @@ diferença, prevalece a versão inglesa.
 | [Datasets](dataset_reference.md) | Ficheiros, CSV/Parquet e conversão de unidades. |
 | [REC de Portugal](portugal_rec_datasets.md) | Quatro comunidades portuguesas e cenários de avaliação. |
 | [Unidades](data_unit_contract.md) | Contrato de energia, potência, preços e duração dos passos. |
+| [Fornecedores de mobilidade](mobility_provider.md) | Fornecedores externos e repetição de um traço gravado. |
+| [Dinâmica das sessões de carga](charger_session_dynamics.md) | Arranque, atraso do set-point, rampas e paragem. |
 | [Observações](observations_reference.md) | Campos, unidades, tabelas de entidades e relações. |
 | [Ações](actions_reference.md) | Intervalos e significado físico das ações. |
 | [Interfaces](interfaces_flat_entity.md) | Vetores e tabelas de entidades. |
