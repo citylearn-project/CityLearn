@@ -124,22 +124,22 @@ agent = BusinessAsUsualAgent(env)  # hvac='dataset_demand', a partir do env
 agente: `'off'` envia zero, `'dataset_demand'` fornece a procura do dataset. O
 BAU nativo do `evaluate_v2()` segue sempre a `baseline_version` do ambiente.
 
-**As referências baseadas em regras usam o AVAC da mesma forma.** `RBCBasicPolicy`,
-`RBCSmartPolicy` e `RBCCommunityPolicy` fornecem a procura de aquecimento e de
-arrefecimento do dataset com a mesma regra do BAU da versão 3, qualquer que seja
-a `baseline_version` (ver [AVAC das referências baseadas em regras](#avac-das-referências-baseadas-em-regras)),
-pelo que, com a versão 3, os seus rácios face ao BAU comparam casas aquecidas e
-arrefecidas da mesma forma. Com a versão 2, predefinida, o BAU não aquece nem
-arrefece, pelo que os seus rácios face ao BAU comparam casas aquecidas com casas
-sem aquecimento: use a versão 3 nestes datasets. O `ZeroActionAgent` continua a
-enviar zero, tal como
+**As referências baseadas em regras usam o AVAC da mesma forma.**
+`RBCBasicPolicy`, `RBCSmartPolicy` e `RBCCommunityPolicy` fornecem a procura de
+aquecimento e de arrefecimento do dataset com a mesma regra do BAU da versão 3,
+qualquer que seja a `baseline_version` (ver [AVAC das referências baseadas em
+regras](#avac-das-referências-baseadas-em-regras)), pelo que, com a versão 3, os
+seus rácios face ao BAU comparam casas aquecidas e arrefecidas da mesma forma.
+Com a versão 2, predefinida, o BAU não aquece nem arrefece, pelo que os seus
+rácios face ao BAU comparam casas aquecidas com casas sem aquecimento: use a
+versão 3 nestes datasets. O `ZeroActionAgent` continua a enviar zero, tal como
 qualquer controlador próprio que não comande o AVAC: com a versão 3, os seus
 valores `*_ratio_to_business_as_usual_*` parecem muito melhores apenas porque o
 BAU paga o aquecimento e o arrefecimento e ele não. Leia os rácios face ao BAU
 em conjunto com os KPIs de conforto (`*_comfort_resilience_discomfort_*`). O
 `evaluate_v2()` não tem linhas de conforto `*_business_as_usual`; para ver o
-conforto do BAU, execute o `BusinessAsUsualAgent` como controlador e leia os seus
-KPIs de conforto.
+conforto do BAU, execute o `BusinessAsUsualAgent` como controlador e leia os
+seus KPIs de conforto.
 
 ### Limitações conhecidas
 
@@ -283,16 +283,18 @@ community = RBCCommunityPolicy(env, community_import_threshold_kw=10.0)
 
 Estas políticas foram portadas das referências dos Soft-CPS Algorithms (commit
 `725a72a`). Com os mesmos valores predefinidos e as mesmas observações, pedem as
-mesmas ações de armazenamento, VE e aparelhos em todos os passos; a regra de AVAC
-acima é própria do CityLearn (`hvac='off'` dá o AVAC a zero da versão portada). `agent.comparison_identity()` regista a classe,
-a versão da definição e os parâmetros resolvidos para os manifestos das
-experiências.
+mesmas ações de armazenamento, VE e aparelhos em todos os passos; a regra de
+AVAC acima é própria do CityLearn (`hvac='off'` dá o AVAC a zero da versão
+portada). `agent.comparison_identity()` regista a classe, a versão da definição
+e os parâmetros resolvidos para os manifestos das experiências.
 
-As referências baseadas em regras também podem orientar a exploração de
-`SACRBC` e `MARLISARBC`. Passe como `rbc` uma instância construída sobre o mesmo
-ambiente, a classe ou o seu caminho de importação. Com uma classe ou um caminho
-de importação, os hiperparâmetros do próprio aprendiz ficam com o aprendiz, e os
-restantes argumentos nomeados vão para a referência:
+As referências baseadas em regras também podem orientar a exploração de `SACRBC`
+e `MARLISARBC`. Passe como `rbc` uma instância construída sobre o mesmo
+ambiente, a classe ou o seu caminho de importação. Nos datasets com ações de
+AVAC, a exploração usa então o AVAC à procura do dataset, como a referência
+baseada em regras; passe `hvac='off'` para manter o AVAC a zero. Com uma classe
+ou um caminho de importação, os hiperparâmetros do próprio aprendiz ficam com o
+aprendiz, e os restantes argumentos nomeados vão para a referência:
 
 ```python
 from citylearn.agents.baseline import RBCBasicPolicy

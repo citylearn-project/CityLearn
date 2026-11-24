@@ -123,6 +123,13 @@ com a regra do BAU de `baseline_version=3`.
   predefinida, que não aquece nem arrefece, os seus rácios face ao BAU comparam
   casas aquecidas com casas sem aquecimento. A sua identidade regista
   `hvac='dataset_demand'` e a definição ganha o sufixo `+hvac-dataset-demand-v1`.
+- As regras do armazenamento, dos VE e dos aparelhos não mudam, mas, num dataset
+  com ações de AVAC que também tenha baterias, as ações das baterias podem mudar:
+  a carga a que as regras reagem passa a incluir o AVAC.
+- O `SACRBC` e o `MARLISARBC` construídos com uma referência baseada em regras
+  como `rbc` exploram com o AVAC à procura do dataset. `hvac` não é um parâmetro
+  do agente de aprendizagem, pelo que `SACRBC(env, rbc=RBCBasicPolicy, hvac='off')`
+  o passa à referência baseada em regras e mantém a exploração anterior.
 - `RBCSmartPolicy(env, hvac='off')` (e o mesmo para as outras duas) dá o AVAC a
   zero das versões anteriores, para reproduzir resultados anteriores. Consulte
   [AVAC das referências baseadas em regras](baselines.md#avac-das-referências-baseadas-em-regras).

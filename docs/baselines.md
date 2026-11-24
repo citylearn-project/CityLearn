@@ -122,16 +122,17 @@ BAU of `evaluate_v2()` always follows the environment's `baseline_version`.
 **The rule-based baselines run the HVAC the same way.** `RBCBasicPolicy`,
 `RBCSmartPolicy` and `RBCCommunityPolicy` deliver the dataset heating and
 cooling demand with the same rule as the version 3 BAU, whatever the
-`baseline_version` (see [HVAC of the rule-based baselines](#hvac-of-the-rule-based-baselines)),
-so under version 3 their ratios to the BAU compare houses that are heated and
-cooled alike. Under the default version 2 the BAU does not heat or cool, so
-their ratios to the BAU compare heated houses with unheated ones: use version 3
-on these datasets. `ZeroActionAgent` still sends zero, and so does any controller of
-your own that does not drive the HVAC: under version 3 its
-`*_ratio_to_business_as_usual_*` values look much better only because the BAU
-pays for heating and cooling and it does not. Read the ratios to the BAU together
-with the comfort KPIs (`*_comfort_resilience_discomfort_*`). `evaluate_v2()` has
-no `*_business_as_usual` comfort rows, so to see the BAU comfort, run
+`baseline_version` (see [HVAC of the rule-based
+baselines](#hvac-of-the-rule-based-baselines)), so under version 3 their ratios
+to the BAU compare houses that are heated and cooled alike. Under the default
+version 2 the BAU does not heat or cool, so their ratios to the BAU compare
+heated houses with unheated ones: use version 3 on these datasets.
+`ZeroActionAgent` still sends zero, and so does any controller of your own that
+does not drive the HVAC: under version 3 its `*_ratio_to_business_as_usual_*`
+values look much better only because the BAU pays for heating and cooling and it
+does not. Read the ratios to the BAU together with the comfort KPIs
+(`*_comfort_resilience_discomfort_*`). `evaluate_v2()` has no
+`*_business_as_usual` comfort rows, so to see the BAU comfort, run
 `BusinessAsUsualAgent` as the controller and read its comfort KPIs.
 
 ### Known limits
@@ -272,14 +273,16 @@ community = RBCCommunityPolicy(env, community_import_threshold_kw=10.0)
 These policies are ported from the Soft-CPS Algorithms baselines (commit
 `725a72a`). With the same defaults and observations they request the same
 storage, EV and appliance actions at every step; the HVAC rule above is
-CityLearn's own (`hvac='off'` gives the zero HVAC of the port). `agent.comparison_identity()` records the class, the
-definition version and the resolved parameters for experiment manifests.
+CityLearn's own (`hvac='off'` gives the zero HVAC of the port).
+`agent.comparison_identity()` records the class, the definition version and the
+resolved parameters for experiment manifests.
 
-The rule baselines can also guide the exploration of `SACRBC` and
-`MARLISARBC`. Pass an instance built on the same environment, the class or its
-import path as `rbc`. With a class or an import path, the learner's own
-hyperparameters stay with the learner, and the remaining keyword arguments go to
-the baseline:
+The rule baselines can also guide the exploration of `SACRBC` and `MARLISARBC`.
+Pass an instance built on the same environment, the class or its import path as
+`rbc`. On datasets with HVAC actions the exploration then runs the HVAC at the
+dataset demand, as the rule baseline does; pass `hvac='off'` to keep the zero
+HVAC. With a class or an import path, the learner's own hyperparameters stay
+with the learner, and the remaining keyword arguments go to the baseline:
 
 ```python
 from citylearn.agents.baseline import RBCBasicPolicy

@@ -271,7 +271,6 @@ class _RuleBaselineAgent(Agent):
         heating, cooling = fraction(True), fraction(False)
         return heating if heating >= cooling else -cooling
 
-
     def _env_has_hvac_actions(self) -> bool:
         return any(name in self._HVAC_ACTIONS for building in self.env.unwrapped.buildings
                    for name in building.active_actions)
@@ -387,7 +386,6 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
 
         version = baseline_version_of(getattr(env, 'unwrapped', env))
         return 'dataset_demand' if version >= BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION else 'off'
-
 
 
 class _RuleBasedPolicy(_RuleBaselineAgent):
