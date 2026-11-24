@@ -112,6 +112,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#ev-soc-unit-of-charger-files">EV SOC unit of charger files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#charger-defaults-and-attribute-names">Charger defaults and attribute names</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ev-departures-at-the-end-of-the-window">EV departures at the end of the window</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ev-soc-carried-across-episode-splits">EV SOC carried across episode splits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#observation-spaces-follow-the-observations">Observation spaces follow the observations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-native-bau-uses-current-step-load-and-solar">The native BAU uses current-step load and solar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#numeric-and-configuration-hygiene">Numeric and configuration hygiene</a></li>
@@ -516,6 +517,36 @@ reached, and step 0 skips any session
 that was connected on the row before it. Departure counts and rates from
 earlier runs with short or split episodes should be recomputed before
 comparing (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/370">#370</a>).</p>
+</section>
+<section id="ev-soc-carried-across-episode-splits">
+<h3>EV SOC carried across episode splits<a class="headerlink" href="#ev-soc-carried-across-episode-splits" title="Link to this heading"></a></h3>
+<p>Nothing changes unless <code class="docutils literal notranslate"><span class="pre">ev_soc_carryover=True</span></code> is set. With it, an episode that
+continues the previous one in time (it starts on the previous episode’s last
+row, or on the row after it, and the previous episode ran to its end) starts
+each EV from the SOC it reached at the end of that episode, and a session
+connected across the boundary is scored where it really leaves, with that
+charge, as described in the <a class="reference internal" href="kpis_reference.html#departures"><span class="std std-ref">KPI reference</span></a>. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still start every episode from their initial state. The setting is a trade-off. Off, every episode is independent of the ones before it, but a session that crosses a boundary loses the charge it received. On, that charge is kept, but an episode that continues the previous one depends on what the previous controller did, so its KPIs are no longer those of an independent episode.
+Met departures of split runs then rise towards those of one run, so results
+with and without the setting are not comparable, and <code class="docutils literal notranslate"><span class="pre">compare_exports</span></code> reports
+them as incompatible. Under <code class="docutils literal notranslate"><span class="pre">'disjoint'</span></code> the row between two episodes is never
+controlled, so a session connected across it can be up to one charging step
+behind one run. A carried episode starts from the SOC that the previous
+controller left, which enters its initial inventory, so the same carried
+episode run by two controllers is not comparable, and <code class="docutils literal notranslate"><span class="pre">compare_exports</span></code>
+reports it as incompatible: with carry-over, compare whole split runs, not
+single episodes. Random and rolling splits never carry, and the env warns
+once that the setting has no effect there; an explicit list carries only when
+a window starts exactly where the previous one ends for the split boundary, so
+under the default <code class="docutils literal notranslate"><span class="pre">'shared'</span></code> a list without a gap, such as
+<code class="docutils literal notranslate"><span class="pre">[(1900,</span> <span class="pre">1949),</span> <span class="pre">(1950,</span> <span class="pre">1999)]</span></code>, does not carry (it carries under <code class="docutils literal notranslate"><span class="pre">'disjoint'</span></code>,
+or under <code class="docutils literal notranslate"><span class="pre">'shared'</span></code> when the next window starts on the previous window’s last
+row), and a <code class="docutils literal notranslate"><span class="pre">reset(options={'episode_index':</span> <span class="pre">...})</span></code> that jumps elsewhere keeps the
+schedule SOC. Only the session connected across the boundary is carried;
+every later arrival takes the arrival SOC of the file, and an arrival without
+one keeps the EV’s simulated SOC, as in one run. Summed over the episodes,
+departures, met departures and feasibility classes match one run, but the
+connected SOC gain of the energy accounting is each episode’s own gain, so its
+sum is lower than in one run, and energy totals can differ slightly (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/388">#388</a>).</p>
 </section>
 <section id="observation-spaces-follow-the-observations">
 <h3>Observation spaces follow the observations<a class="headerlink" href="#observation-spaces-follow-the-observations" title="Link to this heading"></a></h3>

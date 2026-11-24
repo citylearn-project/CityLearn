@@ -286,132 +286,137 @@
 <td class="text-right"><p>no</p></td>
 <td><p>How consecutive episode splits meet. <code class="docutils literal notranslate"><span class="pre">shared</span></code> (default) starts each split on the terminal row of the previous one, so every interval is simulated; <code class="docutils literal notranslate"><span class="pre">disjoint</span></code> keeps the 3.6.0 splits, which skip the interval between two episodes.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reward_function</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_soc_carryover</span></code></p></td>
+<td class="text-right"><p>bool/null</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Start each EV of an episode that continues the previous one in time (it starts on the previous episode’s last row, or on the row after it) from its SOC at the end of that episode, instead of the schedule SOC. Default <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reward_function</span></code></p></td>
 <td class="text-right"><p>object/string</p></td>
 <td class="text-right"><p>yes</p></td>
 <td><p>Reward class and kwargs.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">observations</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">observations</span></code></p></td>
 <td class="text-right"><p>object</p></td>
 <td class="text-right"><p>yes</p></td>
 <td><p>Flat observation catalog and flags.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">actions</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">actions</span></code></p></td>
 <td class="text-right"><p>object</p></td>
 <td class="text-right"><p>yes</p></td>
 <td><p>Flat action catalog and flags.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">buildings</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">buildings</span></code></p></td>
 <td class="text-right"><p>object</p></td>
 <td class="text-right"><p>yes</p></td>
 <td><p>Building definitions.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">agent</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">agent</span></code></p></td>
 <td class="text-right"><p>object/string</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>CLI agent configuration.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicles_def</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicles_def</span></code></p></td>
 <td class="text-right"><p>object</p></td>
 <td class="text-right"><p>if EVs exist</p></td>
 <td><p>EV catalog.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interface</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">interface</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">flat</span></code>/<code class="docutils literal notranslate"><span class="pre">entity</span></code></p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Environment I/O mode.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">observation_bundles</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">observation_bundles</span></code></p></td>
 <td class="text-right"><p>object</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Additional entity observation bundles.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">topology_mode</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">topology_mode</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">static</span></code>/<code class="docutils literal notranslate"><span class="pre">dynamic</span></code></p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Enables topology events.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">topology_events</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">topology_events</span></code></p></td>
 <td class="text-right"><p>list</p></td>
 <td class="text-right"><p>if dynamic</p></td>
 <td><p>Add/remove events.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response</span></code></p></td>
 <td class="text-right"><p>object</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Dataset-driven DSO/TSO flexibility requests and settlement.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">robustness</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">robustness</span></code></p></td>
 <td class="text-right"><p>object</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Dataset-driven observation, forecast, action and asset availability perturbations.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">community_market</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">community_market</span></code></p></td>
 <td class="text-right"><p>object</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Local market and market KPIs.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ev_departure_within_tolerance</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_departure_within_tolerance</span></code></p></td>
 <td class="text-right"><p>float</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Symmetric departure SOC accuracy tolerance, default <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_departure_service_tolerance</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ev_departure_service_tolerance</span></code></p></td>
 <td class="text-right"><p>float</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Lower departure SOC service tolerance for minimum acceptable EV service, default <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">render_mode</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">render_mode</span></code></p></td>
 <td class="text-right"><p>string</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">during</span></code> or <code class="docutils literal notranslate"><span class="pre">end</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">render_file_format</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">render_file_format</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">csv</span></code>/<code class="docutils literal notranslate"><span class="pre">parquet</span></code></p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Export format for render, KPI and BAU time-series files.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">render_chunk_size</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">render_chunk_size</span></code></p></td>
 <td class="text-right"><p>int</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Rows per export chunk; defaults to <code class="docutils literal notranslate"><span class="pre">50000</span></code> for parquet and <code class="docutils literal notranslate"><span class="pre">100000</span></code> for CSV.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end</span></code></p></td>
 <td class="text-right"><p>bool</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Export KPIs at episode end.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start_date</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">start_date</span></code></p></td>
 <td class="text-right"><p>string</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Base date for render/export.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">debug_timing</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">debug_timing</span></code></p></td>
 <td class="text-right"><p>bool</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Runtime timing logs.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">check_observation_limits</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">check_observation_limits</span></code></p></td>
 <td class="text-right"><p>bool</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Validate observation bounds.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">physics_invariant_checks</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">physics_invariant_checks</span></code></p></td>
 <td class="text-right"><p>bool</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Runtime physical invariant checks.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">physics_version</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">physics_version</span></code></p></td>
 <td class="text-right"><p>int</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Physics version, <code class="docutils literal notranslate"><span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">2</span></code> (default). <code class="docutils literal notranslate"><span class="pre">1</span></code> reproduces the physics of CityLearn 3.6.0; see the <a class="reference internal" href="migration.html#physics-version"><span class="std std-ref">migration guide</span></a>. The <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> argument of <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> takes precedence.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">baseline_version</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">baseline_version</span></code></p></td>
 <td class="text-right"><p>int</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Definition of the default KPI baseline, <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code> (default) or <code class="docutils literal notranslate"><span class="pre">3</span></code>. <code class="docutils literal notranslate"><span class="pre">3</span></code> (opt-in) keeps the baseline of <code class="docutils literal notranslate"><span class="pre">2</span></code> and makes the native BAU deliver the dataset heating and cooling demand instead of sending zero to the HVAC actions; see <a class="reference internal" href="baselines.html#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>. <code class="docutils literal notranslate"><span class="pre">2</span></code> removes the battery, the thermal storage and the EV charging of the controlled run and adds back the EV charging of the native BAU with the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target; <code class="docutils literal notranslate"><span class="pre">1</span></code> adds nothing back, as in CityLearn 3.6.0; see the <a class="reference internal" href="migration.html#ev-charging-in-the-default-baseline"><span class="std std-ref">migration guide</span></a>. The <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code> argument of <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> takes precedence.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metrics_log_interval</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metrics_log_interval</span></code></p></td>
 <td class="text-right"><p>int</p></td>
 <td class="text-right"><p>no</p></td>
 <td><p>Runtime metric log cadence.</p></td>

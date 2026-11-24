@@ -151,6 +151,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
@@ -281,6 +282,16 @@
 <span class="sd">        (N must be at least 2). `'disjoint'` advances them by N rows, as CityLearn 3.6.0 and earlier did, so the interval</span>
 <span class="sd">        between two consecutive episodes is never simulated. Can also be set with the schema key of the same name. Rolling</span>
 <span class="sd">        and explicit list splits are not affected.</span>
+<span class="sd">    ev_soc_carryover: bool, default: False</span>
+<span class="sd">        Start each EV of an episode from its SOC at the end of the previous episode, when the new episode continues</span>
+<span class="sd">        it in time: it starts on the previous episode's last row (`'shared'`) or on the row after it (`'disjoint'`),</span>
+<span class="sd">        and the previous episode ran to its end. Sequential splits carry, and an explicit list of `episode_time_steps`</span>
+<span class="sd">        carries when a window starts exactly there. Random and rolling splits never carry, even when a pick happens</span>
+<span class="sd">        to follow the previous episode, and the env warns once that the setting has no effect. Only the session</span>
+<span class="sd">        connected across the boundary keeps its charge, at the new episode's first step; every later arrival takes</span>
+<span class="sd">        the schedule SOC, and an arrival without one keeps the EV's simulated SOC, as in one run. The first episode uses the schedule SOC, as when the setting is off. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still</span>
+<span class="sd">        start every episode from their initial state. Off, episodes are independent; on, an episode that continues the</span>
+<span class="sd">        previous one depends on what the previous controller did. Can also be set with the schema key of the same name.</span>
 <span class="sd">    seconds_per_time_step: float</span>
 <span class="sd">        Number of seconds in 1 `time_step` and must be set to &gt;= 1. It must equal the dataset step unless</span>
 <span class="sd">        `time_step_ratio_mode='compress'`.</span>
@@ -415,7 +426,7 @@
         <span class="s1">'inactive_observations'</span><span class="p">,</span> <span class="s1">'active_actions'</span><span class="p">,</span> <span class="s1">'inactive_actions'</span><span class="p">,</span> <span class="s1">'simulate_power_outage'</span><span class="p">,</span> <span class="s1">'solar_generation'</span><span class="p">,</span>
         <span class="s1">'random_seed'</span><span class="p">,</span> <span class="s1">'offline'</span><span class="p">,</span> <span class="s1">'time_step_ratio'</span><span class="p">,</span> <span class="s1">'interface'</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'start_date'</span><span class="p">,</span>
         <span class="s1">'episode_split_boundary'</span><span class="p">,</span> <span class="s1">'time_step_ratio_mode'</span><span class="p">,</span> <span class="s1">'random_stream_version'</span><span class="p">,</span> <span class="s1">'physics_version'</span><span class="p">,</span>
-        <span class="s1">'baseline_version'</span><span class="p">,</span>
+        <span class="s1">'baseline_version'</span><span class="p">,</span> <span class="s1">'ev_soc_carryover'</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -432,6 +443,7 @@
         <span class="n">export_kpis_on_episode_end</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">):</span>
         <span class="n">episode_split_boundary</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'episode_split_boundary'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">ev_soc_carryover</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'ev_soc_carryover'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">time_step_ratio_mode</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'time_step_ratio_mode'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">render_directory</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'render_directory'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">render_directory_name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'render_directory_name'</span><span class="p">,</span> <span class="s1">'render_logs'</span><span class="p">)</span>
@@ -676,6 +688,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_split_boundary</span> <span class="o">=</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'episode_split_boundary'</span><span class="p">)</span> <span class="k">if</span> <span class="n">episode_split_boundary</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">episode_split_boundary</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ev_soc_carryover</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'ev_soc_carryover'</span><span class="p">)</span> <span class="k">if</span> <span class="n">ev_soc_carryover</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ev_soc_carryover</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev_soc_carryover_context</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span> <span class="o">=</span> <span class="n">central_agent</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shared_observations</span> <span class="o">=</span> <span class="n">shared_observations</span>
 
@@ -868,6 +882,13 @@
 <span class="sd">        `'disjoint'` (CityLearn 3.6.0 splits, which never simulate the interval between two episodes)."""</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__episode_split_boundary</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ev_soc_carryover</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether an EV starts an episode that continues the previous one in time from its SOC at the end of</span>
+<span class="sd">        that episode, instead of the schedule SOC."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ev_soc_carryover</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">random_episode_split</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -1666,6 +1687,10 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">episode_split_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_split_boundary</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__episode_split_boundary</span> <span class="o">=</span> <span class="n">EpisodeTracker</span><span class="o">.</span><span class="n">validate_episode_split_boundary</span><span class="p">(</span><span class="n">episode_split_boundary</span><span class="p">)</span>
 
+    <span class="nd">@ev_soc_carryover</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ev_soc_carryover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev_soc_carryover</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__ev_soc_carryover</span> <span class="o">=</span> <span class="n">parse_bool</span><span class="p">(</span><span class="n">ev_soc_carryover</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">'ev_soc_carryover'</span><span class="p">)</span>
+
     <span class="nd">@random_episode_split</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">random_episode_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">random_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__random_episode_split</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">random_episode_split</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">random_episode_split</span>
@@ -1766,6 +1791,7 @@
             <span class="s1">'physics_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">physics_version</span><span class="p">,</span>
             <span class="s1">'baseline_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_version</span><span class="p">,</span>
             <span class="s1">'episode_split_boundary'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_split_boundary</span><span class="p">,</span>
+            <span class="s1">'ev_soc_carryover'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_soc_carryover</span><span class="p">,</span>
             <span class="s1">'time_step_ratio_mode'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio_mode</span><span class="p">,</span>
             <span class="s1">'energy_accounting'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">(),</span>
             <span class="s1">'temporal_reproducibility'</span><span class="p">:</span> <span class="n">axis_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
@@ -2203,6 +2229,9 @@
 <span class="sd">            Override :meth"`get_info` to get custom key-value pairs in `info`.</span>
 <span class="sd">        """</span>
 
+        <span class="c1"># Taken before anything is reset: the EV SOC at the end of the episode that is ending.</span>
+        <span class="n">previous_episode_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_soc_carryover_end_state</span><span class="p">()</span>
+
         <span class="c1"># object reset</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_final_kpis_exported</span> <span class="o">=</span> <span class="kc">False</span>
@@ -2246,6 +2275,7 @@
             <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">:</span>
                 <span class="n">ev</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev_soc_carryover_reset</span><span class="p">(</span><span class="n">previous_episode_end</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_demand_response_service</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_robustness_service</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">associate_chargers_to_electric_vehicles</span><span class="p">()</span>
@@ -2297,6 +2327,119 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">observations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_info</span><span class="p">()</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ev_soc_carryover_end_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""The window and the EV SOC at the last row of the current episode, if it ran to that row."""</span>
+
+        <span class="n">tracker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">episode_start_time_step</span><span class="p">,</span> <span class="n">tracker</span><span class="o">.</span><span class="n">episode_end_time_step</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_soc_carryover</span> <span class="ow">or</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">end</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">!=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># Devices stop at the last control step: its SOC is the one reached at the episode's last row.</span>
+        <span class="n">soc</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_all_electric_vehicles'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">electric_vehicles</span> <span class="ow">or</span> <span class="p">[]):</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">index</span><span class="p">]):</span>
+                <span class="n">soc</span><span class="p">[</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">start</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">end</span><span class="p">),</span> <span class="n">soc</span><span class="o">=</span><span class="n">soc</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ev_soc_carryover_applies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether the split mode can carry EV SOC: sequential and explicit-list splits, not random or rolling ones."""</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_episode_split</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># Rolling is ignored for explicit lists, as in `EpisodeTracker.next_episode`.</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">rolling_episode_split</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ev_soc_carryover_start_after</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Row where an episode that continues one ending on row `end` starts, for the split boundary."""</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">end</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_split_boundary</span> <span class="o">==</span> <span class="s1">'shared'</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">end</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ev_soc_carryover_next_start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""First row of the episode that follows the current one when episodes are taken in order, else `None`."""</span>
+
+        <span class="n">tracker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">episode_start_time_step</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_episode_split</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">splits</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">validate_episode_splits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">)</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tracker</span><span class="o">.</span><span class="n">episode</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">splits</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rolling_episode_split</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">)</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_split_boundary</span> <span class="o">==</span> <span class="s1">'shared'</span> <span class="k">else</span> <span class="n">length</span>
+        <span class="n">next_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">start</span><span class="p">)</span> <span class="o">+</span> <span class="n">step</span>
+        <span class="k">return</span> <span class="n">next_start</span> <span class="k">if</span> <span class="n">next_start</span> <span class="o">+</span> <span class="n">length</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">simulation_end_time_step</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ev_soc_carryover_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">previous_episode_end</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">"""Set the EV SOC carried from the previous episode and the KPI context of the new episode.</span>
+
+<span class="sd">        The context says whether the episode starts from carried SOC, which sessions continue across its</span>
+<span class="sd">        first row, and the largest departure countdown its last step counts (see</span>
+<span class="sd">        `CityLearnKPIService._ev_last_step_countdown`). The native BAU reference takes the evaluated env's</span>
+<span class="sd">        context, so that it starts from the same state and counts departures the same way.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_soc_carryover</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev_soc_carryover_context</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_soc_carryover_applies</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_ev_soc_carryover_warned'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev_soc_carryover_warned</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s1">'ev_soc_carryover has no effect with random or rolling episode splits: every episode starts '</span>
+                <span class="s1">'from the schedule SOC. Use sequential splits or an explicit list of episode_time_steps.'</span><span class="p">,</span>
+                <span class="ne">UserWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">inherited</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_ev_soc_carryover_inherited'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">inherited</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">inherited</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tracker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tracker</span><span class="o">.</span><span class="n">episode_start_time_step</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">tracker</span><span class="o">.</span><span class="n">episode_end_time_step</span><span class="p">)</span>
+            <span class="c1"># Random and rolling splits never carry, even when a pick happens to follow the previous</span>
+            <span class="c1"># episode, so those episodes stay independent. An explicit list carries only when the window</span>
+            <span class="c1"># starts exactly where the previous one ends for the split boundary.</span>
+            <span class="n">carried</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_ev_soc_carryover_applies</span><span class="p">()</span>
+                <span class="ow">and</span> <span class="n">previous_episode_end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">start</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_soc_carryover_start_after</span><span class="p">(</span><span class="n">previous_episode_end</span><span class="p">[</span><span class="s1">'end'</span><span class="p">])</span>
+                <span class="ow">and</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="n">previous_episode_end</span><span class="p">[</span><span class="s1">'start'</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">continuing</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">carried</span><span class="p">:</span>
+                <span class="n">kpi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kpi_service</span>
+                <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_all_buildings'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="n">building</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span> <span class="ow">or</span> <span class="p">[]:</span>
+                        <span class="n">sim</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">charger_simulation</span>
+                        <span class="k">if</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_ev_session_connected_before_window</span><span class="p">(</span><span class="n">sim</span><span class="p">):</span>
+                            <span class="n">continuing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_id</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">next_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_soc_carryover_next_start</span><span class="p">()</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">carried_in</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">carried</span><span class="p">),</span>
+                <span class="n">soc</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">previous_episode_end</span><span class="p">[</span><span class="s1">'soc'</span><span class="p">])</span> <span class="k">if</span> <span class="n">carried</span> <span class="k">else</span> <span class="p">{},</span>
+                <span class="n">continuing</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="n">continuing</span><span class="p">),</span>
+                <span class="c1"># A session still connected on the next episode's first row is scored there, with the</span>
+                <span class="c1"># carried SOC, so the last step only counts those that leave before that row.</span>
+                <span class="n">last_step_countdown</span><span class="o">=</span><span class="p">(</span>
+                    <span class="mf">0.0</span> <span class="k">if</span> <span class="n">next_start</span> <span class="o">==</span> <span class="n">end</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_soc_carryover_start_after</span><span class="p">(</span><span class="n">end</span><span class="p">)</span> <span class="o">==</span> <span class="n">end</span> <span class="k">else</span> <span class="mf">1.0</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev_soc_carryover_context</span> <span class="o">=</span> <span class="n">context</span>
+        <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_all_electric_vehicles'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">electric_vehicles</span> <span class="ow">or</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="n">ev</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">context</span><span class="p">[</span><span class="s1">'soc'</span><span class="p">]:</span>
+                <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">force_set_soc</span><span class="p">(</span><span class="n">context</span><span class="p">[</span><span class="s1">'soc'</span><span class="p">][</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_configure_community_market</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>

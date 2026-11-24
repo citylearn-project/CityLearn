@@ -360,127 +360,133 @@ follows each device’s action contract.</p>
 <td><p>How consecutive (non-rolling) splits meet.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">shared</span></code> shares the boundary row so every interval is simulated; <code class="docutils literal notranslate"><span class="pre">disjoint</span></code> restores the 3.6.0 splits.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_soc_carryover</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Start each EV of an episode that continues the previous one in time from its SOC at the end of that episode.</p></td>
+<td><p>Only the EV SOC is carried. Off, episodes are independent but a session across a boundary loses its charge; on, consecutive episodes depend on the previous controller. See the <a class="reference internal" href="kpis_reference.html#departures"><span class="std std-ref">KPI reference</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code></p></td>
 <td class="text-right"><p>float</p></td>
 <td class="text-right"><p>schema</p></td>
 <td><p>Physical duration of each step.</p></td>
 <td><p>Examples: 15, 60, 300, 900, 3600.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code></p></td>
 <td class="text-right"><p>int/float</p></td>
 <td class="text-right"><p>inferred</p></td>
 <td><p>Ratio between control step and dataset spacing.</p></td>
 <td><p>Inferred from the data; a value passed here must match it.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode</span></code></p></td>
 <td class="text-right"><p>str</p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">reject</span></code></p></td>
 <td><p>What to do when the control step differs from the dataset step.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">reject</span></code> raises an error; <code class="docutils literal notranslate"><span class="pre">compress</span></code> keeps the 3.6.0 behaviour (one data row per step, energies scaled).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reward_function</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reward_function</span></code></p></td>
 <td class="text-right"><p>class/path</p></td>
 <td class="text-right"><p>schema</p></td>
 <td><p>Reward used by <code class="docutils literal notranslate"><span class="pre">step</span></code>.</p></td>
 <td><p>Supports <code class="docutils literal notranslate"><span class="pre">reward_function_kwargs</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reward_function_kwargs</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reward_function_kwargs</span></code></p></td>
 <td class="text-right"><p>dict</p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p></td>
 <td><p>Constructor kwargs for the reward.</p></td>
 <td><p>Pass-through.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">central_agent</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">central_agent</span></code></p></td>
 <td class="text-right"><p>bool</p></td>
 <td class="text-right"><p>schema</p></td>
 <td><p>Single controller for all buildings.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">False</span></code> returns one vector per building.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">shared_observations</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">shared_observations</span></code></p></td>
 <td class="text-right"><p>list</p></td>
 <td class="text-right"><p>schema</p></td>
 <td><p>Shared observations in central mode.</p></td>
 <td><p>Included once in central vectors.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">active_observations</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">active_observations</span></code></p></td>
 <td class="text-right"><p>list/list[list]</p></td>
 <td class="text-right"><p>schema</p></td>
 <td><p>Enable only these observations.</p></td>
 <td><p>Global or per-building override.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">inactive_observations</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">inactive_observations</span></code></p></td>
 <td class="text-right"><p>list/list[list]</p></td>
 <td class="text-right"><p>schema/building</p></td>
 <td><p>Disable observations.</p></td>
 <td><p>Applied after active selection.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">active_actions</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">active_actions</span></code></p></td>
 <td class="text-right"><p>list/list[list]</p></td>
 <td class="text-right"><p>schema</p></td>
 <td><p>Enable only these actions.</p></td>
 <td><p>Global or per-building override.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">inactive_actions</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">inactive_actions</span></code></p></td>
 <td class="text-right"><p>list/list[list]</p></td>
 <td class="text-right"><p>schema/building</p></td>
 <td><p>Disable actions.</p></td>
 <td><p>Applied after active selection.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code></p></td>
 <td class="text-right"><p>bool</p></td>
 <td class="text-right"><p>schema/building</p></td>
 <td><p>Enable outage simulation.</p></td>
 <td><p>Uses data series or stochastic model.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">solar_generation</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">solar_generation</span></code></p></td>
 <td class="text-right"><p>bool</p></td>
 <td class="text-right"><p>schema</p></td>
 <td><p>Compatibility switch for solar generation.</p></td>
 <td><p>Kept for original CityLearn compatibility.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
 <td class="text-right"><p>int</p></td>
 <td class="text-right"><p>schema</p></td>
 <td><p>Random seed.</p></td>
 <td><p>Affects splits and stochastic attributes.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">offline</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">offline</span></code></p></td>
 <td class="text-right"><p>bool</p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
 <td><p>Disable network fallbacks.</p></td>
 <td><p>Requires local datasets.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">interface</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interface</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">flat</span></code>/<code class="docutils literal notranslate"><span class="pre">entity</span></code></p></td>
 <td class="text-right"><p>schema/flat</p></td>
 <td><p>Observation/action contract.</p></td>
 <td><p>Entity returns tables and edges.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">topology_mode</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">topology_mode</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">static</span></code>/<code class="docutils literal notranslate"><span class="pre">dynamic</span></code></p></td>
 <td class="text-right"><p>schema/static</p></td>
 <td><p>Enable dynamic topology events.</p></td>
 <td><p>Dynamic requires <code class="docutils literal notranslate"><span class="pre">interface=&quot;entity&quot;</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start_date</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">start_date</span></code></p></td>
 <td class="text-right"><p>date/string</p></td>
 <td class="text-right"><p>schema/2024-01-01</p></td>
 <td><p>Base date for render/export timestamps.</p></td>
 <td><p>Does not change physics.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">render_mode</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">render_mode</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">none</span></code>/<code class="docutils literal notranslate"><span class="pre">during</span></code>/<code class="docutils literal notranslate"><span class="pre">end</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
 <td><p>CSV export policy.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">end</span></code> is preferred for performance.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">render_session_name</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">render_session_name</span></code></p></td>
 <td class="text-right"><p>string</p></td>
 <td class="text-right"><p>schema/None</p></td>
 <td><p>Export session subfolder.</p></td>
 <td><p>Must be relative.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end</span></code></p></td>
 <td class="text-right"><p>bool</p></td>
 <td class="text-right"><p>render flag</p></td>
 <td><p>Export KPIs at episode end.</p></td>
