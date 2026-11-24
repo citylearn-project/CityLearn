@@ -369,7 +369,9 @@ arbitrary control, for example random actions over a full Quebec episode, the
 LSTM indoor temperature, and under physics version 1 the occupant set points,
 can leave them; `ClippedObservationWrapper` keeps such values inside the space.
 Under physics version 2 the occupant set points stay within `set_point_limits`
-(see [occupant set-point limits](#occupant-set-point-limits)).
+(see [occupant set-point limits](#occupant-set-point-limits)). Without heating,
+for example under the default BAU, the indoor temperature leaves them on the
+cold side; see [observation bounds](interfaces_flat_entity.md#observation-bounds).
 
 What reads the bounds:
 
