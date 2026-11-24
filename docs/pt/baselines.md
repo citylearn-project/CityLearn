@@ -130,7 +130,7 @@ AVAC, pelo que, nestes datasets, as suas casas continuam sem aquecimento e sem
 arrefecimento. Com a versão 3, os seus valores `*_ratio_to_business_as_usual_*`
 parecem muito melhores apenas porque o BAU passa a pagar o aquecimento e o
 arrefecimento e eles não: no Quebec, nas duas primeiras semanas, o rácio de custo
-do `RBCSmartPolicy` passa de 1,000 para 0,144, enquanto o seu desconforto não
+do `RBCSmartPolicy` passa de 1,000 para 0,143, enquanto o seu desconforto não
 muda. Leia os rácios face ao BAU em conjunto com os KPIs de conforto
 (`*_comfort_resilience_discomfort_*`). O `evaluate_v2()` não tem linhas de
 conforto `*_business_as_usual`; para ver o conforto do BAU, execute o

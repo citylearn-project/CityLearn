@@ -124,7 +124,7 @@ BAU of `evaluate_v2()` always follows the environment's `baseline_version`.
 so on these datasets their houses stay unheated and uncooled. Under version 3
 their `*_ratio_to_business_as_usual_*` values look much better only because the
 BAU now pays for heating and cooling and they do not: on Quebec over the first
-two weeks, the cost ratio of `RBCSmartPolicy` goes from 1.000 to 0.144 while its
+two weeks, the cost ratio of `RBCSmartPolicy` goes from 1.000 to 0.143 while its
 discomfort does not change. Read the ratios to the BAU together with the comfort
 KPIs (`*_comfort_resilience_discomfort_*`). `evaluate_v2()` has no
 `*_business_as_usual` comfort rows, so to see the BAU comfort, run
