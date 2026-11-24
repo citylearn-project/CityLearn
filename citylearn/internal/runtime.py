@@ -751,6 +751,7 @@ class CityLearnRuntimeService:
             building.apply_actions(**building_actions)
 
         self.update_variables()
+        self._record_district_feeder_exceedance()
         self._record_deferrable_service_interval()
         env._provenance_service.settle()
         if getattr(getattr(env, '_demand_response_service', None), 'enabled', False):

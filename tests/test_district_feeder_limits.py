@@ -406,6 +406,47 @@ def test_per_step_exceedance_series_and_kpi_identities_with_bau_comparison(tmp_p
                 delta_val = d_bau[f"{prefix}_delta_to_business_as_usual_{unit}"]
                 assert np.isfinite(b_val)
                 assert delta_val == pytest.approx(c_val - b_val, abs=1.0e-6)
+
+    finally:
+        env.close()
+
+
+def test_business_as_usual_feeder_exceedance_matches_sidecar_net_consumption(tmp_path: Path):
+    # A 1 kW battery cannot cancel the loads, so the BAU sidecar imports and exports above the limits.
+    schema_path = _write_synthetic_feeder_scenario(
+        tmp_path / "bau_values",
+        step_seconds=900,
+        loads_kwh=(3.5, 0.5, 1.25, 0.5),
+        solar_kwh=(0.0, 2.5, 0.0, 3.5),
+        battery_capacity_kwh=1.0,
+        battery_power_kw=1.0,
+        battery_initial_soc=0.5,
+    )
+    import_kw, export_kw, step_hours = 2.0, 2.0, 0.25
+    feeder_cfg = {"enabled": True, "limits": {"import_kw": import_kw, "export_kw": export_kw}}
+
+    env = CityLearnEnv(str(schema_path), district_electrical_service=feeder_cfg)
+    try:
+        env.reset(seed=0)
+
+        for _ in range(4):
+            env.step([np.asarray([0.0], dtype="float32")])
+
+        d_bau = _district_kpis(env.evaluate_v2(include_business_as_usual=True))
+        bau_env = env.run_business_as_usual_baseline().env
+        bau_power_kw = np.asarray(bau_env.net_electricity_consumption, dtype="float64")[:4] / step_hours
+        expected = {
+            "import": np.maximum(bau_power_kw - import_kw, 0.0),
+            "export": np.maximum(-bau_power_kw - export_kw, 0.0),
+        }
+        assert expected["import"].sum() + expected["export"].sum() > 0.0
+
+        for direction, series in expected.items():
+            assert getattr(bau_env, f"feeder_{direction}_exceedance_kw") == pytest.approx(series, abs=1.0e-5)
+            prefix = f"district_energy_grid_feeder_limit_{direction}_exceedance"
+            assert d_bau[f"{prefix}_energy_total_business_as_usual_kwh"] == pytest.approx(series.sum() * step_hours, abs=1.0e-5)
+            assert d_bau[f"{prefix}_peak_business_as_usual_kw"] == pytest.approx(series.max(), abs=1.0e-5)
+            assert d_bau[f"{prefix}_step_business_as_usual_count"] == pytest.approx(float(np.count_nonzero(series > 1.0e-9)))
     finally:
         env.close()
 
