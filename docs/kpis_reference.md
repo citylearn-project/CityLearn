@@ -285,9 +285,9 @@ import exceedance_t = max(P_t − limit_import,t, 0)
 export exceedance_t = max(−P_t − limit_export,t, 0)
 exceedance ≤ 1e-5 kW is set to 0
 
-exceedance_energy_total_kwh = Σ_t Δh · exceedance_t
-exceedance_peak_kw          = max_t exceedance_t
-exceedance_step_count       = number of executed steps with Δh · exceedance_t > 1e-9 kWh
+exceedance_energy_total_control_kwh = Σ_t Δh · exceedance_t
+exceedance_peak_control_kw          = max_t exceedance_t
+exceedance_step_control_count       = number of executed steps with Δh · exceedance_t > 1e-9 kWh
 ```
 
 Per-step exceedance series are exposed on `env.feeder_import_exceedance_kw` and `env.feeder_export_exceedance_kw` (empty right after `reset()` until `step()` executes, and `0.0` at steps without a limit in that direction). Each metric publishes `_control`, `_business_as_usual` and `_delta_to_business_as_usual` (`control − business_as_usual`); when `evaluate_v2(include_business_as_usual=False)` is called, only `_control` is emitted. If `district_electrical_service` is enabled with only one direction configured, the unconfigured direction is undefined (`NaN`). When `district_electrical_service` is disabled, no feeder exceedance KPI rows are emitted.

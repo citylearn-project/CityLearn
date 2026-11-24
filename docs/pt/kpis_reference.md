@@ -289,9 +289,9 @@ excesso importação_t = max(P_t − limite_importação,t, 0)
 excesso exportação_t = max(−P_t − limite_exportação,t, 0)
 excesso ≤ 1e-5 kW é posto a 0
 
-exceedance_energy_total_kwh = Σ_t Δh · excesso_t
-exceedance_peak_kw          = max_t excesso_t
-exceedance_step_count       = número de passos executados com Δh · excesso_t > 1e-9 kWh
+exceedance_energy_total_control_kwh = Σ_t Δh · excesso_t
+exceedance_peak_control_kw          = max_t excesso_t
+exceedance_step_control_count       = número de passos executados com Δh · excesso_t > 1e-9 kWh
 ```
 
 As séries por passo ficam expostas em `env.feeder_import_exceedance_kw` e `env.feeder_export_exceedance_kw` (vazias logo após `reset()` até `step()` correr, e `0.0` nos passos sem limite nessa direção). Cada métrica publica `_control`, `_business_as_usual` e `_delta_to_business_as_usual` (`control − business_as_usual`); com `evaluate_v2(include_business_as_usual=False)`, apenas `_control` é emitido. Se `district_electrical_service` estiver ativo com apenas uma direção configurada, a direção não configurada fica indefinida (`NaN`). Quando `district_electrical_service` está desativado, estas linhas não são emitidas.
