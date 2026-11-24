@@ -309,3 +309,47 @@ def test_subhourly_repeated_transfers_share_the_control_step_budget():
 
     assert battery.energy_balance[0] == pytest.approx(1.125, rel=1e-6)
     assert battery.electricity_consumption[0] == pytest.approx(1.125, rel=1e-6)
+
+
+def _make_tank(*, seconds_per_time_step: int = 3600, time_step_ratio: float = 1.0) -> StorageTank:
+    tracker = EpisodeTracker(0, 3)
+    tracker.next_episode(4, rolling_episode_split=False, random_episode_split=False, random_seed=0)
+    tank = StorageTank(
+        capacity=100.0, max_input_power=5.0, max_output_power=4.0, initial_soc=0.5, efficiency=0.9,
+        loss_coefficient=0.0, seconds_per_time_step=seconds_per_time_step, time_step_ratio=time_step_ratio,
+        episode_tracker=tracker, random_seed=0,
+    )
+    tank.reset()
+    return tank
+
+
+def test_storage_tank_repeated_transfers_share_one_power_budget_per_step():
+    # Same per-call limit as #363, in StorageTank: three 5 kWh charges used to put 15 kWh through a 5 kW tank.
+    tank = _make_tank()
+    for _ in range(3):
+        tank.charge(5.0)
+    assert tank.energy_balance[0] == pytest.approx(5.0, rel=1e-6)
+
+    # The discharge budget (4 kW) is separate from the charge budget.
+    for _ in range(3):
+        tank.charge(-5.0)
+    assert tank.energy_balance[0] == pytest.approx(1.0, rel=1e-6)
+
+    # A split transfer moves the same energy as one transfer, and the next step starts with a full budget.
+    tank.next_time_step()
+    tank.charge(2.0)
+    tank.charge(10.0)
+    assert tank.energy_balance[1] == pytest.approx(5.0, rel=1e-6)
+
+    tank.reset()
+    tank.charge(5.0)
+    assert tank.energy_balance[0] == pytest.approx(5.0, rel=1e-6)
+
+
+def test_storage_tank_subhourly_repeated_transfers_share_the_control_step_budget():
+    # 15-minute steps: 5 kW x 0.25 h = 1.25 kWh per control step; each 4.0 kWh dataset-resolution request is
+    # 1.0 kWh of control-step energy at time_step_ratio 0.25.
+    tank = _make_tank(seconds_per_time_step=900, time_step_ratio=0.25)
+    for _ in range(3):
+        tank.charge(4.0)
+    assert tank.energy_balance[0] == pytest.approx(1.25, rel=1e-6)
