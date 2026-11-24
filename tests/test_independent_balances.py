@@ -552,3 +552,47 @@ def test_unknown_grid_carbon_keeps_unknown_energy_cohort(tmp_path):
         )
     finally:
         env.close()
+
+
+def test_residual_tolerance_scales_with_the_gross_flow_and_still_catches_1e_3_kwh(tmp_path):
+    # A balance residual is the difference of the window's source total and its destination flows, so its
+    # rounding grows with that gross flow. On citylearn_three_phase_electrical_service_demo with the BAU over
+    # 336 steps it was 1.2e-5 kWh on about 14.5 MWh of gross grid flow, above the fixed 1e-5 kWh floor.
+    env = scenario(tmp_path)
+    try:
+        env.reset()
+        audit = IndependentBalanceAudit(env)
+        gross = 14_500.0
+        audit.check("grid_balance_residual_kwh", -6.5e-6, 5.1e-6, scale=gross)
+        with pytest.raises(BalanceAuditError, match="grid_balance_residual_kwh"):
+            audit.check("grid_balance_residual_kwh", -6.5e-6, 5.1e-6)
+        for error in (1e-3, -1e-3):
+            with pytest.raises(BalanceAuditError, match="grid_balance_residual_kwh"):
+                audit.check("grid_balance_residual_kwh", error, 0.0, scale=gross)
+        assert IndependentBalanceAudit.residual_scales(
+            {"external_import_kwh": 10.0, "grid_load_kwh": 6.0, "grid_grid_export_kwh": 4.0}
+        )["grid_balance_residual_kwh"] == pytest.approx(20.0)
+    finally:
+        env.close()
+
+
+def test_a_1e_3_kwh_district_imbalance_fails_the_audit(tmp_path):
+    env = scenario(tmp_path)
+    try:
+        env.reset()
+        with IndependentBalanceAudit(env) as audit:
+            while not env.terminated:
+                env.step(commands(env, [0.5, -0.4], start=env.time_step == 0))
+            assert audit.finish()["status"] == "pass"
+            summary = provenance_service(env).summary
+
+            def imbalanced():
+                members, district = summary()
+                district = dict(district, grid_balance_residual_kwh=district["grid_balance_residual_kwh"] + 1e-3)
+                return members, district
+
+            provenance_service(env).summary = imbalanced
+            with pytest.raises(BalanceAuditError, match="grid_balance_residual_kwh"):
+                audit.finish()
+    finally:
+        env.close()
