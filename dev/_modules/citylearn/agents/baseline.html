@@ -177,6 +177,12 @@
 <span class="sd">                                            (15 kW by default). Without a market it shares no energy.</span>
 <span class="sd">==========================================  ==========================================================</span>
 
+<span class="sd">The three RBCs also run the HVAC (``heating_device``, ``cooling_device``,</span>
+<span class="sd">``cooling_or_heating_device``) at the dataset's heating and cooling demand, as the</span>
+<span class="sd">BAU does under ``baseline_version=3`` (``hvac='dataset_demand'``, the default; pass</span>
+<span class="sd">``hvac='off'`` for the zero HVAC of earlier releases). They do not optimise the HVAC.</span>
+<span class="sd">On datasets without HVAC actions this changes nothing.</span>
+
 <span class="sd">The policies are ported from the Soft-CPS Algorithms baselines and keep their</span>
 <span class="sd">audited defaults. Keyword arguments override the engine hyperparameters, for</span>
 <span class="sd">example ``RBCCommunityPolicy(env, community_import_threshold_kw=10.0)``.</span>
@@ -200,6 +206,11 @@
 
     <span class="n">ENGINE_CLASS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">NormalTargetPolicy</span>
     <span class="n">DEFINITION_VERSION</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">''</span>
+    <span class="c1">#: HVAC behaviours: ``'off'`` sends zero, ``'dataset_demand'`` delivers the dataset demand.</span>
+    <span class="n">HVAC_MODES</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'off'</span><span class="p">,</span> <span class="s1">'dataset_demand'</span><span class="p">)</span>
+    <span class="n">_HVAC_ACTIONS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'heating_device'</span><span class="p">,</span> <span class="s1">'cooling_device'</span><span class="p">,</span> <span class="s1">'cooling_or_heating_device'</span><span class="p">)</span>
+    <span class="c1">#: HVAC behaviour; subclasses set it before the base constructor runs.</span>
+    <span class="n">hvac</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'off'</span>
     <span class="n">_use_current_step_load</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="c1"># Values the Algorithms configuration layer resolves for every rule policy;</span>
     <span class="c1"># without them the engines fall back to the BAU self-consumption threshold.</span>
@@ -260,8 +271,9 @@
         <span class="n">names</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flattener</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_payload</span><span class="p">(</span><span class="n">payload</span><span class="p">))</span>
         <span class="n">buildings</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span>
         <span class="c1"># The engines control batteries, EV chargers and flexible appliances.</span>
-        <span class="c1"># Other active actions (HVAC, thermal storage, ...) receive zero,</span>
-        <span class="c1"># clipped to their bounds, as in earlier CityLearn baselines.</span>
+        <span class="c1"># Other active actions (thermal storage, ...) receive zero, clipped to</span>
+        <span class="c1"># their bounds, as in earlier CityLearn baselines. The HVAC actions are</span>
+        <span class="c1"># zero too unless `hvac` is 'dataset_demand' (_set_uncontrolled_actions).</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_layouts</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">engine_names</span><span class="p">,</span> <span class="n">engine_spaces</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">buildings</span><span class="p">:</span>
@@ -335,17 +347,96 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">next_time_step</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">actions</span>
 
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_hvac</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">hvac</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">hvac</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">HVAC_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'hvac must be one of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">HVAC_MODES</span><span class="p">)</span><span class="si">}</span><span class="s1">, got </span><span class="si">{</span><span class="n">hvac</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">hvac</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_uncontrolled_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]):</span>
-<span class="w">        </span><span class="sd">"""Set the actions the engine does not control in `actions`, the building's vector; they stay zero here."""</span>
+<span class="w">        </span><span class="sd">"""Set the actions the engine does not control in `actions`, the building's vector.</span>
+
+<span class="sd">        With ``hvac='dataset_demand'`` the HVAC actions deliver the dataset demand (see</span>
+<span class="sd">        :meth:`dataset_demand_hvac_action`), clipped to the action bounds. Every other one stays zero.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hvac</span> <span class="o">==</span> <span class="s1">'off'</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">active</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">active_actions</span><span class="p">)</span>
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">high</span>
+
+        <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">active</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HVAC_ACTIONS</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_demand_hvac_action</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                <span class="n">actions</span><span class="p">[</span><span class="n">position</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">low</span><span class="p">[</span><span class="n">position</span><span class="p">],</span> <span class="n">high</span><span class="p">[</span><span class="n">position</span><span class="p">]))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dataset_demand_hvac_action</span><span class="p">(</span><span class="n">building</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Action of HVAC action `name` that delivers the building's dataset demand at its current time step.</span>
+
+<span class="sd">        The LSTM buildings turn an action `a` into the output of the device run at ``a*nominal_power`` over</span>
+<span class="sd">        the dataset step, so `a` is the device input for the demand over the nominal input over that step.</span>
+<span class="sd">        The value is not clipped. Zero when there is no demand, no device or the ``hvac_mode`` excludes the</span>
+<span class="sd">        service; for ``cooling_or_heating_device`` the larger of the two services sets the sign.</span>
+<span class="sd">        """</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.energy_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">HeatPump</span>
+
+        <span class="n">time_step</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">time_step</span>
+        <span class="n">simulation</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">energy_simulation</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">simulation</span><span class="o">.</span><span class="n">hvac_mode</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span>
+        <span class="n">temperature</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">weather</span><span class="o">.</span><span class="n">outdoor_dry_bulb_temperature</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_dataset_step_hours</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">fraction</span><span class="p">(</span><span class="n">heating</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="mf">0.0</span>
+
+            <span class="n">series</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">heating_demand_without_control</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="n">simulation</span><span class="o">.</span><span class="n">cooling_demand_without_control</span>
+            <span class="n">demand</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">heating_device</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="n">building</span><span class="o">.</span><span class="n">cooling_device</span>
+            <span class="n">nominal</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="s1">'nominal_power'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">demand</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">nominal</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mf">0.0</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">HeatPump</span><span class="p">):</span>
+                <span class="n">electricity</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">get_input_power</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">heating</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">electricity</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">get_input_power</span><span class="p">(</span><span class="n">demand</span><span class="p">)</span>
+
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">electricity</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">nominal</span><span class="o">*</span><span class="n">hours</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="mf">0.0</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">'heating_device'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fraction</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">'cooling_device'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fraction</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">heating</span><span class="p">,</span> <span class="n">cooling</span> <span class="o">=</span> <span class="n">fraction</span><span class="p">(</span><span class="kc">True</span><span class="p">),</span> <span class="n">fraction</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">heating</span> <span class="k">if</span> <span class="n">heating</span> <span class="o">&gt;=</span> <span class="n">cooling</span> <span class="k">else</span> <span class="o">-</span><span class="n">cooling</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_env_has_hvac_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HVAC_ACTIONS</span> <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span>
+                   <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">building</span><span class="o">.</span><span class="n">active_actions</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_identity_hvac</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""HVAC value recorded in :meth:`comparison_identity`, or None to leave it out."""</span>
+
+        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hvac</span> <span class="o">==</span> <span class="s1">'off'</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">hvac</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">comparison_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
         <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'definition_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFINITION_VERSION</span><span class="p">}</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'ev_charge_target'</span><span class="p">):</span>
             <span class="n">parameters</span><span class="p">[</span><span class="s1">'ev_charge_target'</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_charge_target</span>
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'hvac'</span><span class="p">,</span> <span class="s1">'off'</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">'off'</span><span class="p">:</span>
-            <span class="c1"># Only when it is on, so the identity of the BAU without HVAC is the one of earlier releases.</span>
-            <span class="n">parameters</span><span class="p">[</span><span class="s1">'hvac'</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hvac</span>
+        <span class="n">hvac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_hvac</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">hvac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Only when it acts, so the identity without HVAC is the one of earlier releases.</span>
+            <span class="n">parameters</span><span class="p">[</span><span class="s1">'hvac'</span><span class="p">]</span> <span class="o">=</span> <span class="n">hvac</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
             <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
                 <span class="k">continue</span>
@@ -403,11 +494,8 @@
 <span class="sd">    ``business_as_usual_ev_charge_target`` and ``baseline_version``.</span>
 <span class="sd">    """</span>
 
-    <span class="c1">#: HVAC behaviours of the BAU, see the class description.</span>
-    <span class="n">HVAC_MODES</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'off'</span><span class="p">,</span> <span class="s1">'dataset_demand'</span><span class="p">)</span>
     <span class="c1">#: Suffix of the definition identifier when the BAU delivers the dataset HVAC demand.</span>
     <span class="n">HVAC_DEFINITION_SUFFIX</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'+hvac-dataset-demand-v1'</span>
-    <span class="n">_HVAC_ACTIONS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'heating_device'</span><span class="p">,</span> <span class="s1">'cooling_device'</span><span class="p">,</span> <span class="s1">'cooling_or_heating_device'</span><span class="p">)</span>
 
     <span class="n">EV_CHARGE_TARGETS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">'requested'</span><span class="p">:</span> <span class="p">(</span><span class="n">engines</span><span class="o">.</span><span class="n">NormalTargetPolicy</span><span class="p">,</span> <span class="s1">'immediate-user-target-v3'</span><span class="p">),</span>
@@ -453,82 +541,40 @@
 
         <span class="n">version</span> <span class="o">=</span> <span class="n">baseline_version_of</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'unwrapped'</span><span class="p">,</span> <span class="n">env</span><span class="p">))</span>
         <span class="k">return</span> <span class="s1">'dataset_demand'</span> <span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="n">BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION</span> <span class="k">else</span> <span class="s1">'off'</span></div>
-
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_hvac</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">hvac</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">hvac</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">HVAC_MODES</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'hvac must be one of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">HVAC_MODES</span><span class="p">)</span><span class="si">}</span><span class="s1">, got </span><span class="si">{</span><span class="n">hvac</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">hvac</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_set_uncontrolled_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hvac</span> <span class="o">==</span> <span class="s1">'off'</span><span class="p">:</span>
-            <span class="k">return</span>
-
-        <span class="n">active</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">active_actions</span><span class="p">)</span>
-        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">high</span>
-
-        <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">active</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HVAC_ACTIONS</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_demand_hvac_action</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-                <span class="n">actions</span><span class="p">[</span><span class="n">position</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">low</span><span class="p">[</span><span class="n">position</span><span class="p">],</span> <span class="n">high</span><span class="p">[</span><span class="n">position</span><span class="p">]))</span>
-
-<div class="viewcode-block" id="BusinessAsUsualAgent.dataset_demand_hvac_action">
-<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent.dataset_demand_hvac_action">[docs]</a>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">dataset_demand_hvac_action</span><span class="p">(</span><span class="n">building</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Action of HVAC action `name` that delivers the building's dataset demand at its current time step.</span>
-
-<span class="sd">        The LSTM buildings turn an action `a` into the output of the device run at ``a*nominal_power`` over</span>
-<span class="sd">        the dataset step, so `a` is the device input for the demand over the nominal input over that step.</span>
-<span class="sd">        The value is not clipped. Zero when there is no demand, no device or the ``hvac_mode`` excludes the</span>
-<span class="sd">        service; for ``cooling_or_heating_device`` the larger of the two services sets the sign.</span>
-<span class="sd">        """</span>
-
-        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.energy_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">HeatPump</span>
-
-        <span class="n">time_step</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">time_step</span>
-        <span class="n">simulation</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">energy_simulation</span>
-        <span class="n">mode</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">simulation</span><span class="o">.</span><span class="n">hvac_mode</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span>
-        <span class="n">temperature</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">weather</span><span class="o">.</span><span class="n">outdoor_dry_bulb_temperature</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span>
-        <span class="n">hours</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_dataset_step_hours</span><span class="p">()</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">fraction</span><span class="p">(</span><span class="n">heating</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)):</span>
-                <span class="k">return</span> <span class="mf">0.0</span>
-
-            <span class="n">series</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">heating_demand_without_control</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="n">simulation</span><span class="o">.</span><span class="n">cooling_demand_without_control</span>
-            <span class="n">demand</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span>
-            <span class="n">device</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">heating_device</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="n">building</span><span class="o">.</span><span class="n">cooling_device</span>
-            <span class="n">nominal</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="s1">'nominal_power'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">demand</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">nominal</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="mf">0.0</span>
-
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">HeatPump</span><span class="p">):</span>
-                <span class="n">electricity</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">get_input_power</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">heating</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">electricity</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">get_input_power</span><span class="p">(</span><span class="n">demand</span><span class="p">)</span>
-
-            <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">electricity</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">nominal</span><span class="o">*</span><span class="n">hours</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="mf">0.0</span>
-
-        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">'heating_device'</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">fraction</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">'cooling_device'</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">fraction</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-
-        <span class="n">heating</span><span class="p">,</span> <span class="n">cooling</span> <span class="o">=</span> <span class="n">fraction</span><span class="p">(</span><span class="kc">True</span><span class="p">),</span> <span class="n">fraction</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">heating</span> <span class="k">if</span> <span class="n">heating</span> <span class="o">&gt;=</span> <span class="n">cooling</span> <span class="k">else</span> <span class="o">-</span><span class="n">cooling</span></div>
 </div>
 
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">_RuleBasedPolicy</span><span class="p">(</span><span class="n">_RuleBaselineAgent</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Rule-based controller: the engine dispatches storage, EVs and appliances, the HVAC meets the dataset demand.</span>
+
+<span class="sd">    With ``hvac='dataset_demand'`` (default) the HVAC actions deliver the dataset's own heating and cooling</span>
+<span class="sd">    demand at each step, as the BAU does under ``baseline_version=3``: a thermostat that meets the load,</span>
+<span class="sd">    without optimisation. ``hvac='off'`` sends zero, as these controllers did before. On datasets without</span>
+<span class="sd">    HVAC actions both give the same results.</span>
+<span class="sd">    """</span>
+
+    <span class="c1">#: Suffix of the definition identifier when the HVAC delivers the dataset demand on a dataset with HVAC.</span>
+    <span class="n">HVAC_DEFINITION_SUFFIX</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'+hvac-dataset-demand-v1'</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">hvac</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'dataset_demand'</span><span class="p">,</span> <span class="o">**</span><span class="n">hyperparameters</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hvac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_hvac</span><span class="p">(</span><span class="n">hvac</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="o">**</span><span class="n">hyperparameters</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_identity_hvac</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="c1"># Recorded only where it acts, so runs without HVAC actions keep the identity of earlier releases.</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_identity_hvac</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_has_hvac_actions</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">comparison_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">identity</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">comparison_identity</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identity_hvac</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">identity</span><span class="p">[</span><span class="s1">'parameters'</span><span class="p">][</span><span class="s1">'definition_version'</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">HVAC_DEFINITION_SUFFIX</span>
+        <span class="k">return</span> <span class="n">identity</span>
+
+
 <div class="viewcode-block" id="RBCBasicPolicy">
 <a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.RBCBasicPolicy">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RBCBasicPolicy</span><span class="p">(</span><span class="n">_RuleBaselineAgent</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RBCBasicPolicy</span><span class="p">(</span><span class="n">_RuleBasedPolicy</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Current-price and service-urgency scheduling with battery self-consumption.</span>
 
 <span class="sd">    EVs receive the minimum charge that meets their departure target, raised to</span>
@@ -547,7 +593,7 @@
 
 <div class="viewcode-block" id="RBCSmartPolicy">
 <a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.RBCSmartPolicy">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RBCSmartPolicy</span><span class="p">(</span><span class="n">_RuleBaselineAgent</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RBCSmartPolicy</span><span class="p">(</span><span class="n">_RuleBasedPolicy</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Forecast-aware, strictly building-local rule-based controller.</span>
 
 <span class="sd">    Price and local PV-surplus forecasts schedule EV charging and appliance</span>
@@ -562,7 +608,7 @@
 
 <div class="viewcode-block" id="RBCCommunityPolicy">
 <a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.RBCCommunityPolicy">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RBCCommunityPolicy</span><span class="p">(</span><span class="n">_RuleBaselineAgent</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RBCCommunityPolicy</span><span class="p">(</span><span class="n">_RuleBasedPolicy</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Smart controller extended with community energy sharing.</span>
 
 <span class="sd">    With the community market enabled, shareable surplus from other members is</span>

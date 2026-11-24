@@ -117,14 +117,19 @@ agent = BusinessAsUsualAgent(env)  # hvac='dataset_demand', from the env
 `'off'` sends zero, `'dataset_demand'` delivers the dataset demand. The native
 BAU of `evaluate_v2()` always follows the environment's `baseline_version`.
 
-**Read the ratios to the BAU with the comfort KPIs.** Only the BAU changes with version 3. `RBCBasicPolicy`, `RBCSmartPolicy`,
-`RBCCommunityPolicy` and `ZeroActionAgent` still send zero to the HVAC actions,
-so on these datasets their houses stay unheated and uncooled. Under version 3
-their `*_ratio_to_business_as_usual_*` values look much better only because the
-BAU now pays for heating and cooling and they do not: on Quebec over the first
-two weeks, the cost ratio of `RBCSmartPolicy` goes from 1.000 to 0.143 while its
-discomfort does not change. Read the ratios to the BAU together with the comfort
-KPIs (`*_comfort_resilience_discomfort_*`). `evaluate_v2()` has no
+**The rule-based baselines run the HVAC the same way.** `RBCBasicPolicy`,
+`RBCSmartPolicy` and `RBCCommunityPolicy` deliver the dataset heating and
+cooling demand with the same rule as the version 3 BAU, whatever the
+`baseline_version` (see [HVAC of the rule-based
+baselines](#hvac-of-the-rule-based-baselines)), so under version 3 their ratios
+to the BAU compare houses that are heated and cooled alike. Under the default
+version 2 the BAU does not heat or cool, so their ratios to the BAU compare
+heated houses with unheated ones: use version 3 on these datasets.
+`ZeroActionAgent` still sends zero, and so does any controller of your own that
+does not drive the HVAC: under version 3 its `*_ratio_to_business_as_usual_*`
+values look much better only because the BAU pays for heating and cooling and it
+does not. Read the ratios to the BAU together with the comfort KPIs
+(`*_comfort_resilience_discomfort_*`). `evaluate_v2()` has no
 `*_business_as_usual` comfort rows, so to see the BAU comfort, run
 `BusinessAsUsualAgent` as the controller and read its comfort KPIs.
 
@@ -203,6 +208,39 @@ windows, seeds and market conditions as the candidate.
 | `RBCSmartPolicy` | Uses price forecasts and the forecast local PV surplus to schedule EV charging and appliance starts. The battery combines self-consumption, price arbitrage and a service reserve. It uses only building-local and public observations. |
 | `RBCCommunityPolicy` | Adds energy shareable between community members. When the community market is enabled, the batteries can support expensive periods once community import reaches `community_import_threshold_kw` (15 kW by default). This value triggers an action; the observed peak can exceed it. Without a community market it shares no energy and follows Smart's economic rules, but, unlike Smart, it is not restricted to building-local observations. |
 
+### HVAC of the rule-based baselines
+
+The engines dispatch the batteries, EV chargers and flexible appliances. The
+HVAC actions (`heating_device`, `cooling_device`, `cooling_or_heating_device`)
+follow `hvac`:
+
+| `hvac` | HVAC actions |
+|---|---|
+| `'dataset_demand'` (default) | Deliver the dataset's own heating and cooling demand at each step, with the rule of the version 3 BAU (see [HVAC and the baseline version](#hvac-and-the-baseline-version)): a thermostat that meets the load, without optimisation. |
+| `'off'` | Zero, as before. On datasets with temperature dynamics the houses are neither heated nor cooled. |
+
+On datasets without HVAC actions both give the same results, bit for bit, and
+the same `comparison_identity()`. On datasets with HVAC actions the identity
+records `hvac='dataset_demand'` and the definition version gets the suffix
+`+hvac-dataset-demand-v1`, so these runs are not mixed with runs from earlier
+releases. Thermal storage still receives zero.
+
+On Quebec (`quebec_neighborhood_without_demand_response_set_points`, steps
+0–335), the three rule-based baselines heat the houses as the version 3 BAU
+does. The mean indoor temperature is 20.6 °C instead of 3.4 °C, the minimum
+17.2 °C instead of −12.8 °C, and
+`district_comfort_resilience_discomfort_overall_ratio` goes from 0.183 to
+0.026. Quebec has no batteries or EVs, so they then run exactly as the version
+3 BAU: cost 4,403.8 EUR and a cost ratio of 1.000. With `hvac='off'` they cost
+631.8 EUR, a ratio of 0.143. Against the default version 2 BAU, which does not
+heat, their cost ratio is 6.970, so on datasets with HVAC actions compare them
+with the version 3 BAU.
+
+```python
+smart = RBCSmartPolicy(env)               # HVAC meets the dataset demand
+legacy = RBCSmartPolicy(env, hvac='off')  # HVAC at zero, as before
+```
+
 Smart and Community use the entity observation bundles when the schema enables
 them: `entity_core_electrical` for measured import and export,
 `entity_forecasts_existing` and `entity_forecasts_derived` for price and PV
@@ -232,14 +270,17 @@ community = RBCCommunityPolicy(env, community_import_threshold_kw=10.0)
 
 These policies are ported from the Soft-CPS Algorithms baselines (commit
 `725a72a`). With the same defaults and observations they request the same
-actions at every step. `agent.comparison_identity()` records the class, the
-definition version and the resolved parameters for experiment manifests.
+storage, EV and appliance actions at every step; the HVAC rule above is
+CityLearn's own (`hvac='off'` gives the zero HVAC of the port).
+`agent.comparison_identity()` records the class, the definition version and the
+resolved parameters for experiment manifests.
 
-The rule baselines can also guide the exploration of `SACRBC` and
-`MARLISARBC`. Pass an instance built on the same environment, the class or its
-import path as `rbc`. With a class or an import path, the learner's own
-hyperparameters stay with the learner, and the remaining keyword arguments go to
-the baseline:
+The rule baselines can also guide the exploration of `SACRBC` and `MARLISARBC`.
+Pass an instance built on the same environment, the class or its import path as
+`rbc`. On datasets with HVAC actions the exploration then runs the HVAC at the
+dataset demand, as the rule baseline does; pass `hvac='off'` to keep the zero
+HVAC. With a class or an import path, the learner's own hyperparameters stay
+with the learner, and the remaining keyword arguments go to the baseline:
 
 ```python
 from citylearn.agents.baseline import RBCBasicPolicy

@@ -104,6 +104,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#ev-charging-in-the-default-baseline">EV charging in the default baseline</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#hvac-in-the-bau-opt-in-baseline-version-3">HVAC in the BAU (opt-in <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-rule-based-baselines-run-the-hvac">The rule-based baselines run the HVAC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#district-emissions-with-local-trading-off">District emissions with local trading off</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#community-market-settings-are-validated">Community market settings are validated</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#portfolio-market-rows-with-and-without-markets">Portfolio market rows with and without markets</a></li>
@@ -304,6 +305,32 @@ becomes <code class="docutils literal notranslate"><span class="pre">immediate-f
 <a class="reference internal" href="baselines.html#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> you run yourself follows the environment’s version;
 <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code> or <code class="docutils literal notranslate"><span class="pre">hvac='dataset_demand'</span></code> overrides it.</p></li>
+</ul>
+</section>
+<section id="the-rule-based-baselines-run-the-hvac">
+<h3>The rule-based baselines run the HVAC<a class="headerlink" href="#the-rule-based-baselines-run-the-hvac" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> now deliver the
+dataset’s heating and cooling demand through the HVAC actions, with the rule of
+the <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code> BAU.</p>
+<ul class="simple">
+<li><p>Datasets without HVAC actions: nothing changes, bit for bit, including
+<code class="docutils literal notranslate"><span class="pre">comparison_identity()</span></code>.</p></li>
+<li><p>Datasets with HVAC actions: the rule-based baselines heat and cool, so their
+energy, cost and comfort KPIs change. Compare them with the
+<code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code> BAU; against the default version 2 BAU, which does not
+heat or cool, their ratios to the BAU compare heated houses with unheated
+ones. Their identity records <code class="docutils literal notranslate"><span class="pre">hvac='dataset_demand'</span></code> and the definition gets
+the suffix <code class="docutils literal notranslate"><span class="pre">+hvac-dataset-demand-v1</span></code>.</p></li>
+<li><p>The storage, EV and appliance rules do not change, but where a dataset with
+HVAC actions also has batteries, the battery actions can change: the load the
+rules react to now includes the HVAC.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SACRBC</span></code> and <code class="docutils literal notranslate"><span class="pre">MARLISARBC</span></code> built with a rule baseline as <code class="docutils literal notranslate"><span class="pre">rbc</span></code> explore with the
+HVAC at the dataset demand. <code class="docutils literal notranslate"><span class="pre">hvac</span></code> is not a learner parameter, so
+<code class="docutils literal notranslate"><span class="pre">SACRBC(env,</span> <span class="pre">rbc=RBCBasicPolicy,</span> <span class="pre">hvac='off')</span></code> passes it to the rule baseline
+and keeps the old exploration.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy(env,</span> <span class="pre">hvac='off')</span></code> (and the same for the other two) gives the
+zero HVAC of earlier releases, to reproduce earlier numbers. See
+<a class="reference internal" href="baselines.html#hvac-of-the-rule-based-baselines"><span class="std std-ref">HVAC of the rule-based baselines</span></a>.</p></li>
 </ul>
 </section>
 <section id="district-emissions-with-local-trading-off">

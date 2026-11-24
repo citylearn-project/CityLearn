@@ -87,6 +87,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#rule-based-baselines">Rule-based baselines</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hvac-of-the-rule-based-baselines">HVAC of the rule-based baselines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#automatic-bau-evaluation">Automatic BAU evaluation</a></li>
 </ul>
 </li>
@@ -325,14 +326,19 @@ runs with different baseline versions as incompatible.</p>
 <p><code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent(env,</span> <span class="pre">hvac=...)</span></code> overrides the environment for that agent:
 <code class="docutils literal notranslate"><span class="pre">'off'</span></code> sends zero, <code class="docutils literal notranslate"><span class="pre">'dataset_demand'</span></code> delivers the dataset demand. The native
 BAU of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> always follows the environment’s <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code>.</p>
-<p><strong>Read the ratios to the BAU with the comfort KPIs.</strong> Only the BAU changes with version 3. <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code>,
-<code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> and <code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code> still send zero to the HVAC actions,
-so on these datasets their houses stay unheated and uncooled. Under version 3
-their <code class="docutils literal notranslate"><span class="pre">*_ratio_to_business_as_usual_*</span></code> values look much better only because the
-BAU now pays for heating and cooling and they do not: on Quebec over the first
-two weeks, the cost ratio of <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> goes from 1.000 to 0.143 while its
-discomfort does not change. Read the ratios to the BAU together with the comfort
-KPIs (<code class="docutils literal notranslate"><span class="pre">*_comfort_resilience_discomfort_*</span></code>). <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> has no
+<p><strong>The rule-based baselines run the HVAC the same way.</strong> <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> deliver the dataset heating and
+cooling demand with the same rule as the version 3 BAU, whatever the
+<code class="docutils literal notranslate"><span class="pre">baseline_version</span></code> (see <a class="reference internal" href="#hvac-of-the-rule-based-baselines"><span class="std std-ref">HVAC of the rule-based
+baselines</span></a>), so under version 3 their ratios
+to the BAU compare houses that are heated and cooled alike. Under the default
+version 2 the BAU does not heat or cool, so their ratios to the BAU compare
+heated houses with unheated ones: use version 3 on these datasets.
+<code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code> still sends zero, and so does any controller of your own that
+does not drive the HVAC: under version 3 its <code class="docutils literal notranslate"><span class="pre">*_ratio_to_business_as_usual_*</span></code>
+values look much better only because the BAU pays for heating and cooling and it
+does not. Read the ratios to the BAU together with the comfort KPIs
+(<code class="docutils literal notranslate"><span class="pre">*_comfort_resilience_discomfort_*</span></code>). <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> has no
 <code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> comfort rows, so to see the BAU comfort, run
 <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> as the controller and read its comfort KPIs.</p>
 </section>
@@ -448,6 +454,45 @@ windows, seeds and market conditions as the candidate.</p>
 </tr>
 </tbody>
 </table>
+<section id="hvac-of-the-rule-based-baselines">
+<h3>HVAC of the rule-based baselines<a class="headerlink" href="#hvac-of-the-rule-based-baselines" title="Link to this heading"></a></h3>
+<p>The engines dispatch the batteries, EV chargers and flexible appliances. The
+HVAC actions (<code class="docutils literal notranslate"><span class="pre">heating_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code>)
+follow <code class="docutils literal notranslate"><span class="pre">hvac</span></code>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">hvac</span></code></p></th>
+<th class="head"><p>HVAC actions</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">'dataset_demand'</span></code> (default)</p></td>
+<td><p>Deliver the dataset’s own heating and cooling demand at each step, with the rule of the version 3 BAU (see <a class="reference internal" href="#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>): a thermostat that meets the load, without optimisation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">'off'</span></code></p></td>
+<td><p>Zero, as before. On datasets with temperature dynamics the houses are neither heated nor cooled.</p></td>
+</tr>
+</tbody>
+</table>
+<p>On datasets without HVAC actions both give the same results, bit for bit, and
+the same <code class="docutils literal notranslate"><span class="pre">comparison_identity()</span></code>. On datasets with HVAC actions the identity
+records <code class="docutils literal notranslate"><span class="pre">hvac='dataset_demand'</span></code> and the definition version gets the suffix
+<code class="docutils literal notranslate"><span class="pre">+hvac-dataset-demand-v1</span></code>, so these runs are not mixed with runs from earlier
+releases. Thermal storage still receives zero.</p>
+<p>On Quebec (<code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_without_demand_response_set_points</span></code>, steps
+0–335), the three rule-based baselines heat the houses as the version 3 BAU
+does. The mean indoor temperature is 20.6 °C instead of 3.4 °C, the minimum
+17.2 °C instead of −12.8 °C, and
+<code class="docutils literal notranslate"><span class="pre">district_comfort_resilience_discomfort_overall_ratio</span></code> goes from 0.183 to
+0.026. Quebec has no batteries or EVs, so they then run exactly as the version
+3 BAU: cost 4,403.8 EUR and a cost ratio of 1.000. With <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code> they cost
+631.8 EUR, a ratio of 0.143. Against the default version 2 BAU, which does not
+heat, their cost ratio is 6.970, so on datasets with HVAC actions compare them
+with the version 3 BAU.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">smart</span> <span class="o">=</span> <span class="n">RBCSmartPolicy</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>               <span class="c1"># HVAC meets the dataset demand</span>
+<span class="n">legacy</span> <span class="o">=</span> <span class="n">RBCSmartPolicy</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">hvac</span><span class="o">=</span><span class="s1">'off'</span><span class="p">)</span>  <span class="c1"># HVAC at zero, as before</span>
+</pre></div>
+</div>
 <p>Smart and Community use the entity observation bundles when the schema enables
 them: <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> for measured import and export,
 <code class="docutils literal notranslate"><span class="pre">entity_forecasts_existing</span></code> and <code class="docutils literal notranslate"><span class="pre">entity_forecasts_derived</span></code> for price and PV
@@ -474,13 +519,16 @@ with the price forecast:</p>
 </div>
 <p>These policies are ported from the Soft-CPS Algorithms baselines (commit
 <code class="docutils literal notranslate"><span class="pre">725a72a</span></code>). With the same defaults and observations they request the same
-actions at every step. <code class="docutils literal notranslate"><span class="pre">agent.comparison_identity()</span></code> records the class, the
-definition version and the resolved parameters for experiment manifests.</p>
-<p>The rule baselines can also guide the exploration of <code class="docutils literal notranslate"><span class="pre">SACRBC</span></code> and
-<code class="docutils literal notranslate"><span class="pre">MARLISARBC</span></code>. Pass an instance built on the same environment, the class or its
-import path as <code class="docutils literal notranslate"><span class="pre">rbc</span></code>. With a class or an import path, the learner’s own
-hyperparameters stay with the learner, and the remaining keyword arguments go to
-the baseline:</p>
+storage, EV and appliance actions at every step; the HVAC rule above is
+CityLearn’s own (<code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code> gives the zero HVAC of the port).
+<code class="docutils literal notranslate"><span class="pre">agent.comparison_identity()</span></code> records the class, the definition version and the
+resolved parameters for experiment manifests.</p>
+<p>The rule baselines can also guide the exploration of <code class="docutils literal notranslate"><span class="pre">SACRBC</span></code> and <code class="docutils literal notranslate"><span class="pre">MARLISARBC</span></code>.
+Pass an instance built on the same environment, the class or its import path as
+<code class="docutils literal notranslate"><span class="pre">rbc</span></code>. On datasets with HVAC actions the exploration then runs the HVAC at the
+dataset demand, as the rule baseline does; pass <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code> to keep the zero
+HVAC. With a class or an import path, the learner’s own hyperparameters stay
+with the learner, and the remaining keyword arguments go to the baseline:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">RBCBasicPolicy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.sac</span><span class="w"> </span><span class="kn">import</span> <span class="n">SACRBC</span>
 
@@ -493,6 +541,7 @@ the baseline:</p>
 <code class="docutils literal notranslate"><span class="pre">interface='flat'</span></code>; on the entity interface they raise a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. The rule
 baselines, <code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code> and the random <code class="docutils literal notranslate"><span class="pre">Agent</span></code> work with both
 interfaces.</p>
+</section>
 <section id="automatic-bau-evaluation">
 <h3>Automatic BAU evaluation<a class="headerlink" href="#automatic-bau-evaluation" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">env.evaluate_v2()</span></code> runs or reuses a separate BAU simulation up to the current
