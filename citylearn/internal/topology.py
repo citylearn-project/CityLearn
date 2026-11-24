@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 
@@ -623,6 +624,114 @@ class CityLearnTopologyService:
             elif isinstance(obj, dict):
                 stack.extend(obj.values())
 
+    #: Prefixes of the observation and action names that embed a charger id.
+    _CHARGER_NAME_PREFIXES = (
+        'electric_vehicle_charger_',
+        'connected_electric_vehicle_at_charger_',
+        'incoming_electric_vehicle_at_charger_',
+        'charging_phase_one_hot_',
+        'charger_',
+    )
+
+    @staticmethod
+    def cloned_charger_id(charger_id: str, source_member_id: str, target_member_id: str) -> str:
+        """Id a charger takes in a member cloned from `source_member_id`.
+
+        The source member's name in the id becomes the target's. Otherwise the identifier that ends the
+        member name (``1`` in ``Building_1``, ``001`` in ``Member_001``) is replaced by the target's at its
+        first standalone occurrence, so ``charger_1_1`` of ``Building_1`` becomes ``charger_2_1`` in
+        ``Building_2`` and ``CHG-M001-01`` of ``Member_001`` becomes ``CHG-M009-01`` in ``Member_009``.
+        When neither applies, or the id would not change, ``_<target member>`` is appended.
+        """
+
+        if source_member_id and source_member_id in charger_id:
+            renamed = charger_id.replace(source_member_id, target_member_id, 1)
+        else:
+            renamed = charger_id
+            source = re.search(r'[A-Za-z0-9]+$', source_member_id or '')
+            target = re.search(r'[A-Za-z0-9]+$', target_member_id or '')
+
+            if source is not None and target is not None:
+                token = source.group()
+                boundary = r'\d' if token.isdigit() else r'[A-Za-z0-9]'
+                renamed = re.sub(
+                    rf'(?<!{boundary}){re.escape(token)}(?!{boundary})', lambda _: target.group(), charger_id, count=1,
+                )
+
+        return renamed if renamed != charger_id else f'{charger_id}_{target_member_id}'
+
+    def _rename_cloned_member_chargers(self, building: Building, source_member_id: str, target_member_id: str):
+        """Give the chargers of a member cloned from `source_member_id` ids of their own.
+
+        The deep copy keeps the source's charger ids, so warnings, observation and action names and exports
+        named the clone's chargers after the source's. Each id becomes :py:meth:`cloned_charger_id`, made
+        unique among the chargers of every member, and the names and phase assignments that embed it follow.
+        """
+
+        chargers = list(building.electric_vehicle_chargers or [])
+
+        if not chargers:
+            return
+
+        taken = {
+            charger.charger_id
+            for member in self._member_pool.values()
+            for charger in member.electric_vehicle_chargers or []
+        }
+        renames: Dict[str, str] = {}
+
+        for charger in chargers:
+            old = charger.charger_id
+            new = self.cloned_charger_id(old, source_member_id, target_member_id)
+            candidate, suffix = new, 2
+
+            while candidate in taken or candidate in renames.values():
+                candidate, suffix = f'{new}_{suffix}', suffix + 1
+
+            renames[old] = candidate
+            charger.charger_id = candidate
+
+        # Longest ids first, so an id that starts another one is never matched in its place.
+        ordered = sorted(renames.items(), key=lambda item: len(item[0]), reverse=True)
+
+        def rename(key: str) -> str:
+            if key.startswith('electric_vehicle_storage_'):
+                charger_id = key[len('electric_vehicle_storage_'):]
+                return f'electric_vehicle_storage_{renames[charger_id]}' if charger_id in renames else key
+
+            for prefix in self._CHARGER_NAME_PREFIXES:
+                if key.startswith(prefix):
+                    for old, new in ordered:
+                        if key.startswith(f'{prefix}{old}_'):
+                            return f'{prefix}{new}{key[len(prefix) + len(old):]}'
+
+            return key
+
+        for attribute in ('observation_metadata', 'action_metadata'):
+            metadata = getattr(building, attribute, None)
+
+            if isinstance(metadata, dict):
+                setattr(building, attribute, {rename(key): value for key, value in metadata.items()})
+
+        phase_map = getattr(building, '_charger_phase_map', None)
+
+        if isinstance(phase_map, dict):
+            building._charger_phase_map = {renames.get(key, key): value for key, value in phase_map.items()}
+
+        for phase in getattr(building, '_phase_limits', None) or []:
+            if isinstance(phase, dict) and isinstance(phase.get('chargers'), list):
+                phase['chargers'] = [renames.get(charger_id, charger_id) for charger_id in phase['chargers']]
+
+        constraints = getattr(building, '_charging_constraints_config', None)
+
+        if isinstance(constraints, dict):
+            for phase in constraints.get('phases', None) or []:
+                if isinstance(phase, dict) and isinstance(phase.get('chargers'), list):
+                    phase['chargers'] = [renames.get(charger_id, charger_id) for charger_id in phase['chargers']]
+
+        # Rebuilds the lookup by id and the phase one-hot observations.
+        building._update_charger_lookup()
+
     def _collect_active_ev_ids(self, buildings: Iterable[Building]) -> Set[str]:
         active_ev_ids: Set[str] = set()
 
@@ -687,6 +796,7 @@ class CityLearnTopologyService:
             cloned = deepcopy(self._member_pool[source_member_id])
             cloned.name = target_member_id
             self._rekey_cloned_member_streams(cloned, source_member_id, target_member_id)
+            self._rename_cloned_member_chargers(cloned, source_member_id, target_member_id)
             self._bind_building_runtime_context(cloned)
             self._member_pool[target_member_id] = cloned
             self._member_order.append(target_member_id)
