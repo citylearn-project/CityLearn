@@ -13,3 +13,4 @@ pytest-cov
 # Property-based energy-conservation tests (tests/test_property_energy_conservation.py).
 hypothesis
 ruff
+pvlib
