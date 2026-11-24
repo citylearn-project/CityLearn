@@ -1,402 +1,323 @@
-# Observations Reference
+# Referência de observações
 
-Esta pagina e o dicionario de observacoes do simulador. O objetivo e ser legivel para humanos e tambem servir como contrato para wrappers, ORL, GraphRL e Transformers.
+Esta página é o dicionário de observações do simulador. Serve de contrato legível por pessoas e por máquinas para wrappers, Offline RL, GraphRL e políticas Transformer.
 
-## Contrato de Unidades
+Versão em inglês: [../observations_reference.md](../observations_reference.md).
 
-| Sufixo/nome | Unidade | Exemplo |
+## Contrato de unidades
+
+| Padrão do nome | Unidade | Exemplo |
 |---|---:|---|
 | `_power_kw`, `_kw`, `headroom_kw` | kW | `generation_power_kw`, `charging_slack_kw`. |
 | `_energy_kwh_step`, `_kwh_step` | kWh/step | `net_energy_kwh_step`. |
 | `_kwh` | kWh | `capacity_kwh`, `energy_to_full_kwh`. |
-| `_soc`, `_soc_ratio`, `_ratio` | ratio | `electrical_storage_soc`, `service_level_ratio`. |
-| `_time_step` | indice global/local conforme contexto | `deadline_time_step`. |
+| `_soc`, `_soc_ratio`, `_ratio` | rácio | `electrical_storage_soc`, `service_level_ratio`. |
+| `_time_step` | índice do passo | `deadline_time_step`. |
 | `hours_until_*` | horas | `hours_until_departure`. |
 | `*_count` | contagem | `active_buildings_count`. |
-| `electricity_pricing` | EUR/kWh ou currency/kWh | Depende do dataset. |
-| `carbon_intensity` | kgCO2/kWh | Emissoes grid. |
+| `electricity_pricing` | moeda/kWh | Moeda definida pelo dataset. |
+| `carbon_intensity` | kgCO2/kWh | Fator de emissões da rede. |
 | Temperaturas | C | `outdoor_dry_bulb_temperature`. |
-| Irradiancia | W/m2 | `direct_solar_irradiance`. |
+| Irradiância | W/m2 | `direct_solar_irradiance`. |
 
 Valores sentinela comuns:
 
 | Valor | Significado |
 |---:|---|
-| `-1` | Tempo/ID/quantidade indisponivel. |
-| `-0.1` | SOC desconhecido/EV ausente. |
-| `0` | Feature nao aplicavel quando zero e fisicamente valido ou entidade inexistente na tabela. |
+| `-1` | Tempo, ID ou quantidade indisponível. |
+| `-0.1` | SOC desconhecido ou sem VE. |
+| `0` | Não aplicável quando zero é fisicamente válido, ou linha de entidade ausente. |
 
-## Flat Observations
+## Observações flat
 
-Flat observations sao controladas por `schema["observations"]`. Em `central_agent=True`, as observacoes com `shared_in_central_agent=true` aparecem apenas uma vez no vetor central.
+As observações flat são controladas por `schema["observations"]`. Com `central_agent=True`, as observações marcadas com `shared_in_central_agent=true` aparecem apenas uma vez no vetor central.
 
-### Calendario
+### Calendário
 
-| Observacao | Unidade | O que e | Notas |
-|---|---:|---|---|
-| `month` | indice 1-12 | Mes. | Pode ser normalizado por wrappers externos. |
-| `day_type` | indice 1-8 | Dia da semana ou dia especial. | 1-7 segunda-domingo, 8 especial. |
-| `hour` | indice 1-24 | Hora. | Mantem contrato original CityLearn. |
-| `minutes` | indice 0-59 | Minuto. | So aparece se a coluna existir. |
-| `seconds` | indice 0-59 | Segundo. | Necessario para datasets sub-minuto. |
-| `daylight_savings_status` | binario | DST ativo/inativo. | 0/1. |
+| Observação | Unidade | Significado |
+|---|---:|---|
+| `month` | 1-12 | Mês. |
+| `day_type` | 1-8 | Dia da semana ou dia especial. |
+| `hour` | 1-24 | Hora. |
+| `minutes` | 0-59 | Minuto, apenas se existir no dataset. |
+| `seconds` | 0-59 | Segundo, necessário para datasets com resolução inferior ao minuto. |
+| `daylight_savings_status` | binário | Estado da hora de verão. |
 
-### Weather
+### Meteorologia
 
-| Observacao | Unidade | O que e |
+| Observação | Unidade | Significado |
 |---|---:|---|
 | `outdoor_dry_bulb_temperature` | C | Temperatura exterior. |
-| `outdoor_relative_humidity` | percent | Humidade relativa exterior. |
-| `diffuse_solar_irradiance` | W/m2 | Irradiancia difusa. |
-| `direct_solar_irradiance` | W/m2 | Irradiancia direta. |
-| `*_predicted_1` | mesma unidade | Forecast horizonte 1 do dataset. |
-| `*_predicted_2` | mesma unidade | Forecast horizonte 2 do dataset. |
-| `*_predicted_3` | mesma unidade | Forecast horizonte 3 do dataset. |
+| `outdoor_relative_humidity` | percentagem | Humidade relativa exterior. |
+| `diffuse_solar_irradiance` | W/m2 | Irradiância difusa. |
+| `direct_solar_irradiance` | W/m2 | Irradiância direta. |
+| `*_predicted_1/2/3` | mesma unidade | Horizontes de previsão tal como codificados pelo dataset. |
 
-O simulador nao assume que os horizontes sejam sempre 6/12/24h. Eles sao o que o dataset codifica.
+O simulador não assume horizontes de previsão fixos. São os que o dataset fornecer.
 
-### Pricing e Carbon
+### Preço e carbono
 
-| Observacao | Unidade | O que e |
+| Observação | Unidade | Significado |
 |---|---:|---|
-| `electricity_pricing` | currency/kWh | Preco atual de import grid. |
-| `electricity_pricing_predicted_1` | currency/kWh | Forecast de preco. |
-| `electricity_pricing_predicted_2` | currency/kWh | Forecast de preco. |
-| `electricity_pricing_predicted_3` | currency/kWh | Forecast de preco. |
-| `carbon_intensity` | kgCO2/kWh | Intensidade carbonica da grid. |
+| `electricity_pricing` | moeda/kWh | Preço atual de importação da rede. |
+| `electricity_pricing_predicted_1/2/3` | moeda/kWh | Previsões de preço. |
+| `carbon_intensity` | kgCO2/kWh | Intensidade carbónica da rede. |
 
-### Loads, Comfort e HVAC
+### Cargas, conforto e AVAC
 
-| Observacao | Unidade | O que e |
+| Observação | Unidade | Significado |
 |---|---:|---|
 | `indoor_dry_bulb_temperature` | C | Temperatura interior. |
-| `average_unmet_cooling_setpoint_difference` | C | Desvio medio face ao setpoint cooling. |
-| `indoor_relative_humidity` | percent | Humidade interior. |
-| `occupant_count` | pessoas | Ocupacao. |
-| `indoor_dry_bulb_temperature_cooling_set_point` | C | Setpoint cooling. |
-| `indoor_dry_bulb_temperature_heating_set_point` | C | Setpoint heating. |
-| `indoor_dry_bulb_temperature_cooling_delta` | C | Delta controlado por occupant/dynamics. |
-| `indoor_dry_bulb_temperature_heating_delta` | C | Delta controlado por occupant/dynamics. |
+| `average_unmet_cooling_setpoint_difference` | C | Violação média do setpoint de arrefecimento. |
+| `indoor_relative_humidity` | percentagem | Humidade relativa interior. |
+| `occupant_count` | pessoas | Ocupação. |
+| `indoor_dry_bulb_temperature_cooling_set_point` | C | Setpoint de arrefecimento. |
+| `indoor_dry_bulb_temperature_heating_set_point` | C | Setpoint de aquecimento. |
+| `indoor_dry_bulb_temperature_cooling_delta` | C | Delta de arrefecimento controlado. |
+| `indoor_dry_bulb_temperature_heating_delta` | C | Delta de aquecimento controlado. |
 | `comfort_band` | C | Banda de conforto. |
-| `hvac_mode` | enum | 0 off, 1 cooling, 2 heating, 3 auto. |
-| `cooling_demand` | kWh/step | Demanda termica cooling. |
-| `heating_demand` | kWh/step | Demanda termica heating. |
-| `dhw_demand` | kWh/step | Demanda DHW. |
-| `non_shiftable_load` | kWh/step | Consumo nao flexivel. |
-| `cooling_device_efficiency` | COP/ratio | Eficiencia instantanea cooling. |
-| `heating_device_efficiency` | COP/ratio | Eficiencia instantanea heating. |
-| `dhw_device_efficiency` | COP/ratio | Eficiencia instantanea DHW. |
+| `hvac_mode` | enum | 0 desligado, 1 arrefecimento, 2 aquecimento, 3 automático. |
+| `cooling_demand` | kWh/step | Procura térmica de arrefecimento. |
+| `heating_demand` | kWh/step | Procura térmica de aquecimento. |
+| `dhw_demand` | kWh/step | Procura de água quente sanitária. |
+| `non_shiftable_load` | kWh/step | Carga elétrica não flexível. |
+| `cooling_device_efficiency` | COP/rácio | Eficiência do equipamento de arrefecimento. |
+| `heating_device_efficiency` | COP/rácio | Eficiência do equipamento de aquecimento. |
+| `dhw_device_efficiency` | COP/rácio | Eficiência do equipamento de AQS. |
 
-### Storage e Net Energy
+### Armazenamento, FV e energia líquida
 
-| Observacao | Unidade | O que e |
+| Observação | Unidade | Significado |
 |---|---:|---|
-| `cooling_storage_soc` | ratio | SOC storage cooling. |
-| `heating_storage_soc` | ratio | SOC storage heating. |
-| `dhw_storage_soc` | ratio | SOC storage DHW. |
-| `electrical_storage_soc` | ratio | SOC BESS. |
-| `cooling_electricity_consumption` | kWh/step | Eletricidade do cooling device. |
-| `heating_electricity_consumption` | kWh/step | Eletricidade do heating device. |
-| `dhw_electricity_consumption` | kWh/step | Eletricidade DHW. |
-| `cooling_storage_electricity_consumption` | kWh/step | Eletricidade associada ao storage cooling. |
-| `heating_storage_electricity_consumption` | kWh/step | Eletricidade associada ao storage heating. |
-| `dhw_storage_electricity_consumption` | kWh/step | Eletricidade associada ao storage DHW. |
-| `electrical_storage_electricity_consumption` | kWh/step | Consumo BESS. Positivo carrega, negativo descarrega. |
-| `solar_generation` | kWh/step | Geracao PV ja convertida pelo modo PV. |
-| `net_electricity_consumption` | kWh/step | Import positivo, export negativo. |
-| `power_outage` | binario | Outage no timestep. |
-| `power_outage_unserved_energy` | kWh/step | Carga nao atendida durante o outage, como no KPI `power_outage_normalized_unserved_energy_total`. Zero sem outage. Apenas na interface flat; a tabela entity `building` não a inclui. |
-| `available_grid_power` | kW | Limite de importacao do proximo intervalo: o menor entre o `import_kw` estatico e a serie [available_grid_power](schema_reference.md#potencia-de-rede-disponivel). So com serie. Apenas na interface flat; na interface entity as margens do edificio seguem o limite. |
+| `cooling_storage_soc` | rácio | SOC do armazenamento de arrefecimento. |
+| `heating_storage_soc` | rácio | SOC do armazenamento de aquecimento. |
+| `dhw_storage_soc` | rácio | SOC do armazenamento de AQS. |
+| `electrical_storage_soc` | rácio | SOC do BESS. |
+| `*_electricity_consumption` | kWh/step | Consumo de eletricidade por uso final. |
+| `electrical_storage_electricity_consumption` | kWh/step | Consumo do BESS, positivo no carregamento e negativo na descarga. |
+| `solar_generation` | kWh/step | Produção FV depois da conversão do modo FV, para o intervalo seguinte (linha t+1 quando a observação é para t+1), como valor positivo. `Building.solar_generation` guarda a mesma série com valores negativos. |
+| `net_electricity_consumption` | kWh/step | Importação positiva, exportação negativa, no último intervalo liquidado (linha t quando a observação é para t+1). |
+| `power_outage` | binário | Estado de corte de energia. |
+| `power_outage_unserved_energy` | kWh/step | Carga não servida durante um corte de energia, como no KPI `power_outage_normalized_unserved_energy_total`. Zero sem corte. Apenas na interface flat; a tabela entity `building` não a inclui. |
+| `available_grid_power` | kW | Limite de importação da rede para o intervalo seguinte: o menor entre o `import_kw` estático e a série de [potência de rede disponível](schema_reference.md#potência-de-rede-disponível). Apenas com uma série. Apenas na interface flat; na interface entity, as features de margem (headroom) do edifício seguem o limite. |
 
-### EV e Charger Flat
+### Observações flat de VE e carregadores
 
-As chaves base no schema sao expandidas por charger.
+As chaves auxiliares do schema são expandidas por carregador.
 
-| Chave schema | Chave expandida | Unidade | O que e |
+| Chave do schema | Chave expandida | Unidade | Significado |
 |---|---|---:|---|
-| `electric_vehicle_charger_connected_state` | `electric_vehicle_charger_{id}_connected_state` | binario | EV ligado e pronto a carregar. |
-| `connected_electric_vehicle_at_charger_departure_time` | `connected_electric_vehicle_at_charger_{id}_departure_time` | steps | Steps ate departure do EV ligado. |
-| `connected_electric_vehicle_at_charger_required_soc_departure` | `connected_electric_vehicle_at_charger_{id}_required_soc_departure` | ratio | SOC requerido no departure. |
-| `connected_electric_vehicle_at_charger_soc` | `connected_electric_vehicle_at_charger_{id}_soc` | ratio | SOC atual do EV ligado. |
-| `connected_electric_vehicle_at_charger_battery_capacity` | `connected_electric_vehicle_at_charger_{id}_battery_capacity` | kWh | Capacidade do EV ligado. |
-| `electric_vehicle_charger_incoming_state` | `electric_vehicle_charger_{id}_incoming_state` | binario | EV incoming para esse charger. |
-| `incoming_electric_vehicle_at_charger_estimated_arrival_time` | `incoming_electric_vehicle_at_charger_{id}_estimated_arrival_time` | steps | Steps ate chegada estimada. |
-| `incoming_electric_vehicle_at_charger_estimated_soc_arrival` | `incoming_electric_vehicle_at_charger_{id}_estimated_soc_arrival` | ratio | SOC estimado na chegada. |
+| `electric_vehicle_charger_connected_state` | `electric_vehicle_charger_{id}_connected_state` | binário | VE ligado e pronto. |
+| `connected_electric_vehicle_at_charger_departure_time` | `connected_electric_vehicle_at_charger_{id}_departure_time` | passos | Passos até à partida. |
+| `connected_electric_vehicle_at_charger_required_soc_departure` | `connected_electric_vehicle_at_charger_{id}_required_soc_departure` | rácio | SOC exigido à partida. |
+| `connected_electric_vehicle_at_charger_soc` | `connected_electric_vehicle_at_charger_{id}_soc` | rácio | SOC do VE ligado. |
+| `connected_electric_vehicle_at_charger_battery_capacity` | `connected_electric_vehicle_at_charger_{id}_battery_capacity` | kWh | Capacidade da bateria do VE ligado. |
+| `electric_vehicle_charger_incoming_state` | `electric_vehicle_charger_{id}_incoming_state` | binário | Existe um VE a chegar. |
+| `incoming_electric_vehicle_at_charger_estimated_arrival_time` | `incoming_electric_vehicle_at_charger_{id}_estimated_arrival_time` | passos | Passos até à chegada estimada. |
+| `incoming_electric_vehicle_at_charger_estimated_soc_arrival` | `incoming_electric_vehicle_at_charger_{id}_estimated_soc_arrival` | rácio | SOC estimado à chegada. |
 
-### Deferrable Flat
+### Observações flat de aparelhos diferíveis
 
-As chaves base `deferrable_appliance_*` sao expandidas por appliance.
+As chaves auxiliares `deferrable_appliance_*` são expandidas por aparelho. Os mesmos campos aparecem na tabela entity `deferrable_appliance`.
 
-| Feature | Unidade | O que e |
+| Feature | Unidade | Significado |
 |---|---:|---|
-| `pending` | binario | Ha ciclo pendente exposto. |
-| `running` | binario | Ciclo atual esta em execucao. |
-| `can_start` | binario | Start seria aceito neste step. |
-| `deadline_missed` | binario | Ciclo exposto falhou deadline/latest start. |
-| `earliest_start_time_step` | timestep global | Primeiro start permitido. |
-| `latest_start_time_step` | timestep global | Ultimo start permitido. |
-| `deadline_time_step` | timestep global | Deadline de conclusao. |
-| `hours_until_latest_start` | h | Horas ate ultimo start. |
-| `hours_until_deadline` | h | Horas ate deadline. |
-| `slack_steps` | steps | Folga ate latest start. |
-| `slack_ratio` | ratio | Folga normalizada na janela. |
-| `urgency_ratio` | ratio | `1 - slack_ratio`. |
-| `cycle_duration_steps` | steps | Duracao do ciclo. |
+| `pending`, `running`, `can_start`, `deadline_missed` | binário | Indicadores do estado do ciclo. |
+| `earliest_start_time_step`, `latest_start_time_step`, `deadline_time_step` | passo global | Janela de flexibilidade e prazo. |
+| `hours_until_latest_start`, `hours_until_deadline` | horas | Tempo restante. |
+| `slack_steps` | passos | Folga restante até ao último arranque. |
+| `slack_ratio`, `urgency_ratio` | rácio | Folga e urgência normalizadas. |
+| `cycle_duration_steps` | passos | Duração do ciclo. |
 | `cycle_energy_kwh` | kWh | Energia total do ciclo. |
 | `remaining_energy_kwh` | kWh | Energia ainda por servir. |
-| `current_step_energy_kwh` | kWh/step | Energia do perfil no step atual. |
-| `priority` | ratio | Prioridade do pedido. |
-| `must_run` | binario | Pedido obrigatorio. |
-| `cycle_average_power_kw` | kW | Energia total / duracao. |
-| `cycle_peak_power_kw` | kW | Pico do perfil. |
-| `cycle_load_factor_ratio` | ratio | Average/peak. |
-| `cycle_peak_step_offset_ratio` | ratio | Posicao normalizada do pico no ciclo. |
-| `remaining_duration_steps` | steps | Steps restantes do ciclo. |
-| `remaining_average_power_kw` | kW | Energia restante / duracao restante. |
-| `current_step_power_kw` | kW | Potencia equivalente do step atual. |
+| `current_step_energy_kwh` | kWh/step | Energia do ciclo no passo atual. |
+| `priority` | rácio | Prioridade externa. |
+| `must_run` | binário | Pedido de serviço obrigatório. |
+| `cycle_average_power_kw`, `cycle_peak_power_kw` | kW | Potência média e de pico do ciclo. |
+| `cycle_load_factor_ratio`, `cycle_peak_step_offset_ratio` | rácio | Descritores do perfil do ciclo. |
+| `remaining_duration_steps` | passos | Duração restante do ciclo. |
+| `remaining_average_power_kw`, `current_step_power_kw` | kW | Potência média restante e potência do passo atual. |
 
-## Entity Observations
+### Observações flat de escadas rolantes
 
-Entity mode retorna tabelas. As features disponiveis dependem do schema, dos assets presentes e dos bundles ativos.
+As chaves auxiliares `escalator_*` são expandidas por escada rolante na interface flat.
 
-## Tabela `district`
+| Feature | Unidade | Significado |
+|---|---:|---|
+| `passengers_from_trains_15min`, `background_pedestrians_15min`, `passengers_expected_15min` | passageiros/passo | Fontes de procura agregada e procura total. |
+| `people_detected`, `available`, `service_required`, `service_met` | binário | Indicadores simples de procura, disponibilidade e serviço. |
+| `passing_trains` | contagem | Comboios de passagem; duplicados de chegada/partida na fonte não são contados duas vezes. |
+| `minutes_to_next_train` | minutos | Tempo até ao próximo comboio relevante. |
+| `state`, `requested_state` | enum `0–2` | Estado de standby, lento ou normal. |
+| `power_kw` | kW | Potência de funcionamento aplicada. |
+| `unserved_passengers_15min` | passageiros/passo | Procura deixada por servir em standby. |
 
-| Feature | Bundle | Unidade | O que e |
+## Tabelas entity
+
+O modo entity devolve `tables`, `edges` e `meta`. As features disponíveis dependem do schema, dos ativos em serviço e dos bundles ativados.
+
+### `district`
+
+| Grupo de features | Bundle | Unidade | Significado |
 |---|---|---:|---|
-| Shared flat observations | legacy | varia | Observacoes partilhadas do primeiro building, como calendario/weather/pricing. |
-| Forecasts `*_predicted_*` | `entity_forecasts_existing` | varia | Forecasts existentes no dataset. |
-| `community_net_power_kw` | `entity_community_operational` | kW | Net power agregada da comunidade. |
-| `community_net_energy_kwh_step` | `entity_community_operational` | kWh/step | Net energy agregada. |
-| `community_import_power_kw` | `entity_community_operational` | kW | Import positivo agregado. |
-| `community_import_energy_kwh_step` | `entity_community_operational` | kWh/step | Import agregado. |
-| `community_export_power_kw` | `entity_community_operational` | kW | Export agregado. |
-| `community_export_energy_kwh_step` | `entity_community_operational` | kWh/step | Export agregado. |
-| `community_pv_power_kw` | `entity_community_operational` | kW | PV agregado. |
-| `community_pv_energy_kwh_step` | `entity_community_operational` | kWh/step | Energia PV agregada. |
-| `community_bess_power_kw` | `entity_community_operational` | kW | Potencia BESS agregada. |
-| `community_bess_energy_kwh_step` | `entity_community_operational` | kWh/step | Energia BESS agregada. |
-| `community_ev_power_kw` | `entity_community_operational` | kW | Potencia EV agregada. |
-| `community_ev_energy_kwh_step` | `entity_community_operational` | kWh/step | Energia EV agregada. |
-| `community_building_headroom_kw` | `entity_community_operational` | kW | Headroom import total dos buildings. |
-| `community_building_export_headroom_kw` | `entity_community_operational` | kW | Headroom export total. |
-| `community_phase_headroom_kw` | `entity_community_operational` | kW | Headroom import por fases agregado. |
-| `community_phase_export_headroom_kw` | `entity_community_operational` | kW | Headroom export por fases agregado. |
-| `community_flexible_*_capacity_kw`, `community_flexible_*_capacity_kwh_step`, `community_flexible_energy_*_kwh` | `entity_community_operational` | varia | Flexibilidade agregada da comunidade para carga/descarga e folga energetica. |
-| `active_buildings_count` | `entity_community_operational` | count | Buildings ativos. |
-| `active_chargers_count` | `entity_community_operational` | count | Chargers ativos. |
-| `active_evs_count` | `entity_community_operational` | count | EVs ativos. |
-| `topology_version` | `entity_community_operational` | count | Versao da topologia. |
-| `dr_active` | `entity_demand_response` | binario | Se existe pedido demand response ativo neste timestep. |
-| `dr_issuer_code` | `entity_demand_response` | enum | Codigo do issuer: `1=dso`, `2=tso`, `0=nenhum/desconhecido`. |
-| `dr_direction` | `entity_demand_response` | enum | Direcao na perspetiva da carga: `1=up`, `-1=down`, `0=nenhuma`. |
-| `dr_target_power_kw` | `entity_demand_response` | kW | Target district do pedido ativo. |
-| `dr_baseline_power_kw` | `entity_demand_response` | kW | Baseline net power congelado do pedido ativo quando valido. |
-| `dr_time_remaining_hours` | `entity_demand_response` | h | Tempo restante na janela inclusiva de ativacao. |
-| `dr_activation_price_eur_per_kwh` | `entity_demand_response` | currency/kWh | Preco creditado por energia entregue. |
-| `dr_shortfall_penalty_eur_per_kwh` | `entity_demand_response` | currency/kWh | Penalizacao por energia em shortfall. |
-| `dr_previous_delivered_power_kw` | `entity_demand_response` | kW | Potencia entregue liquidada no step DR ativo anterior. |
-| `dr_previous_shortfall_power_kw` | `entity_demand_response` | kW | Shortfall liquidado no step DR ativo anterior. |
-| `community_net_prev_1_kwh_step` | `entity_temporal_derived` | kWh/step | Lag 1 da net community. |
-| `community_net_prev_3_mean_kwh_step` | `entity_temporal_derived` | kWh/step | Media curta da net community. |
-| `hour_sin/cos`, `day_type_sin/cos`, `month_sin/cos`, `seconds_of_day_sin/cos`, `is_weekend` | `entity_temporal_derived` | ratio/binario | Calendario robusto; `time_step` cru fica apenas em `meta`. |
-| `forecast_price_next_*`, `forecast_community_{load,pv,net}_next_*` | `entity_forecasts_derived` | varia | Forecasts pontuais a 15m/1h/3h/6h/24h; a origem e declarada em `meta.forecast_config`. |
+| Observações flat partilhadas | legacy | varia | Observações partilhadas do primeiro edifício. |
+| Previsões `*_predicted_*` | `entity_forecasts_existing` | varia | Previsões do dataset. |
+| `community_*_power_kw` | `entity_community_operational` | kW | Agregados de potência do distrito/comunidade. |
+| `community_*_energy_kwh_step` | `entity_community_operational` | kWh/step | Agregados de energia por passo do distrito/comunidade. |
+| `community_*_headroom_kw` | `entity_community_operational` | kW | Agregados da margem de importação/exportação. |
+| `community_flexible_*_capacity_kw`, `community_flexible_*_capacity_kwh_step`, `community_flexible_energy_*_kwh` | `entity_community_operational` | misto | Potência flexível agregada de carregamento/descarga e folga de energia. |
+| `active_buildings_count`, `active_chargers_count`, `active_evs_count` | `entity_community_operational` | contagem | Contagens da topologia ativa. |
+| `topology_version` | `entity_community_operational` | contagem | Versão atual da topologia. |
+| `dr_active` | `entity_demand_response` | binário | Se está ativo um pedido de resposta à procura neste passo. |
+| `dr_issuer_code` | `entity_demand_response` | enum | Código do emissor do pedido: `1=dso`, `2=tso`, `0=none/unknown`. |
+| `dr_direction` | `entity_demand_response` | enum | Direção na perspetiva da carga: `1=up`, `-1=down`, `0=none`. |
+| `dr_target_power_kw` | `entity_demand_response` | kW | Potência alvo ativa do distrito. |
+| `dr_baseline_power_kw` | `entity_demand_response` | kW | Potência líquida de referência congelada para o pedido ativo, quando válida. |
+| `dr_time_remaining_hours` | `entity_demand_response` | horas | Tempo restante na janela de ativação inclusiva. |
+| `dr_activation_price_eur_per_kwh` | `entity_demand_response` | moeda/kWh | Preço creditado pela energia entregue. |
+| `dr_shortfall_penalty_eur_per_kwh` | `entity_demand_response` | moeda/kWh | Preço de penalização pela energia em falta (shortfall). |
+| `dr_previous_delivered_power_kw` | `entity_demand_response` | kW | Potência entregue liquidada no passo DR ativo anterior. |
+| `dr_previous_shortfall_power_kw` | `entity_demand_response` | kW | Potência em falta liquidada no passo DR ativo anterior. |
+| `community_net_prev_1_kwh_step`, `community_net_prev_3_mean_kwh_step` | `entity_temporal_derived` | kWh/step | Features de desfasamento (lag) do distrito. |
+| `hour_sin/cos`, `day_type_sin/cos`, `month_sin/cos`, `seconds_of_day_sin/cos`, `is_weekend` | `entity_temporal_derived` | rácio/binário | Features de calendário; o `time_step` em bruto fica apenas no `meta` do payload. |
+| `forecast_price_next_*`, `forecast_community_{load,pv,net}_next_*` | `entity_forecasts_derived` | misto | Previsões pontuais a 15m/1h/3h/6h/24h; a sua origem é declarada em `meta.forecast_config`. |
 
-O `request_id` e validade da baseline de demand response ficam em `observations["meta"]["demand_response"]`, nao como colunas numericas.
+O `request_id` da resposta à procura e a validade da referência são expostos em `observations["meta"]["demand_response"]`, e não como colunas numéricas da tabela.
 
-## Tabela `building`
+### `building`
 
-| Feature | Bundle | Unidade | O que e |
+| Grupo de features | Bundle | Unidade | Significado |
 |---|---|---:|---|
-| Active flat building observations | legacy | varia | Observacoes flat nao partilhadas e nao especificas de assets. |
-| `net_power_kw` | `entity_core_electrical` | kW | Net do building em potencia. |
-| `net_energy_kwh_step` | `entity_core_electrical` | kWh/step | Net do building no step. |
-| `import_power_kw` | `entity_core_electrical` | kW | Import do building. |
-| `import_energy_kwh_step` | `entity_core_electrical` | kWh/step | Import no step. |
-| `export_power_kw` | `entity_core_electrical` | kW | Export do building. |
-| `export_energy_kwh_step` | `entity_core_electrical` | kWh/step | Export no step. |
-| `load_power_kw` | `entity_core_electrical` | kW | Carga agregada. |
-| `load_energy_kwh_step` | `entity_core_electrical` | kWh/step | Energia de carga agregada. |
-| `pv_power_kw` | `entity_core_electrical` | kW | PV do building. |
-| `pv_energy_kwh_step` | `entity_core_electrical` | kWh/step | Energia PV. |
-| `pv_surplus_power_kw` | `entity_core_electrical` | kW | Excedente PV local depois da carga nao flexivel. |
-| `pv_surplus_energy_kwh_step` | `entity_core_electrical` | kWh/step | Excedente PV local no step. |
-| `bess_power_kw` | `entity_core_electrical` | kW | Potencia BESS. |
-| `bess_energy_kwh_step` | `entity_core_electrical` | kWh/step | Energia BESS. |
-| `ev_charging_power_kw` | `entity_core_electrical` | kW | Potencia EV charging. |
-| `ev_charging_energy_kwh_step` | `entity_core_electrical` | kWh/step | Energia EV charging. |
-| `electrical_storage_soc_ratio` | `entity_core_electrical` | ratio | SOC BESS. |
-| `charging_total_service_power_kw` | `entity_core_electrical` | kW | Potencia charging total a passar no servico. |
-| `charging_phase_{L}_power_kw` | `entity_core_electrical` | kW | Potencia atual por fase. |
-| `building_import/export_headroom_kw`, `import/export_phase_headroom_kw` | `entity_core_electrical` | kW | Headroom eletrico local atual. |
-| `flexible_*_capacity_kw`, `flexible_*_capacity_kwh_step`, `flexible_energy_*_kwh` | `entity_core_electrical` | varia | Capacidade agregada BESS + EVs ligados para carga/descarga e folga energetica. |
-| `net_energy_prev_1_kwh_step` | `entity_temporal_derived` | kWh/step | Net lag 1. |
-| `net_energy_prev_3_mean_kwh_step` | `entity_temporal_derived` | kWh/step | Media net lag 3. |
-| `import_energy_prev_1_kwh_step` | `entity_temporal_derived` | kWh/step | Import lag 1. |
-| `export_energy_prev_1_kwh_step` | `entity_temporal_derived` | kWh/step | Export lag 1. |
-| `hour_sin/cos`, `day_type_sin/cos`, `month_sin/cos`, `seconds_of_day_sin/cos`, `is_weekend` | `entity_temporal_derived` | ratio/binario | Calendario robusto. |
-| `forecast_{load,pv,net}_next_*` | `entity_forecasts_derived` | kW | Forecasts pontuais por building a 15m/1h/3h/6h/24h. |
+| Observações flat do edifício ativo | legacy | varia | Features flat não partilhadas e não específicas de ativos. |
+| `net/import/export/load/pv/bess/ev_*_power_kw` | `entity_core_electrical` | kW | Potência elétrica por componente. |
+| `net/import/export/load/pv/bess/ev_*_energy_kwh_step` | `entity_core_electrical` | kWh/step | Energia por passo por componente. |
+| `electrical_storage_soc_ratio` | `entity_core_electrical` | rácio | SOC do BESS do edifício. |
+| `charging_total_service_power_kw` | `entity_core_electrical` | kW | Potência total do serviço de carregamento. |
+| `charging_phase_{L}_power_kw` | `entity_core_electrical` | kW | Potência de carregamento atual por fase. |
+| `pv_surplus_power_kw`, `pv_surplus_energy_kwh_step` | `entity_core_electrical` | kW/kWh | Excedente FV local depois da carga não flexível. |
+| `building_import/export_headroom_kw`, `import/export_phase_headroom_kw` | `entity_core_electrical` | kW | Margem elétrica local atual. |
+| `flexible_*_capacity_kw`, `flexible_*_capacity_kwh_step`, `flexible_energy_*_kwh` | `entity_core_electrical` | misto | Capacidade agregada de carregamento/descarga e folga de energia do BESS e dos VE ligados. |
+| `net_energy_prev_1_kwh_step`, `net_energy_prev_3_mean_kwh_step` | `entity_temporal_derived` | kWh/step | Features de desfasamento do edifício. |
+| `import_energy_prev_1_kwh_step`, `export_energy_prev_1_kwh_step` | `entity_temporal_derived` | kWh/step | Features de desfasamento de importação/exportação. |
+| `hour_sin/cos`, `day_type_sin/cos`, `month_sin/cos`, `seconds_of_day_sin/cos`, `is_weekend` | `entity_temporal_derived` | rácio/binário | Features de calendário. |
+| `forecast_{load,pv,net}_next_*` | `entity_forecasts_derived` | kW | Previsões pontuais do edifício a 15m/1h/3h/6h/24h. |
 
-## Tabela `charger`
+### `charger`
 
-| Feature | Bundle | Unidade | O que e |
+| Feature | Bundle | Unidade | Significado |
 |---|---|---:|---|
-| `connected_state` | legacy | binario | EV ligado. |
-| `incoming_state` | legacy | binario | EV incoming. |
-| `connected_ev_soc` | legacy | ratio | SOC do EV ligado. |
-| `connected_ev_required_soc_departure` | legacy | ratio | SOC requerido no departure. |
-| `connected_ev_battery_capacity_kwh` | legacy | kWh | Capacidade do EV ligado. |
-| `connected_ev_departure_time_step` | legacy | steps | Steps ate departure. |
-| `incoming_ev_estimated_soc_arrival` | legacy | ratio | SOC estimado na chegada. |
-| `incoming_ev_estimated_arrival_time_step` | legacy | steps | Steps ate chegada. |
-| `last_charged_kwh` | legacy | kWh/step | Comando de energia anterior. |
-| `max_charging_power_kw` | legacy | kW | Limite max charging. |
-| `max_discharging_power_kw` | legacy | kW | Limite max discharging. |
-| `min_charging_power_kw` | `entity_base` | kW | Minimo tecnico charging. |
-| `min_discharging_power_kw` | `entity_base` | kW | Minimo tecnico discharging. |
-| `charger_efficiency_ratio` | `entity_base` | ratio | Eficiencia fixa/default. |
-| `phase_connection_L1/L2/L3` | `entity_base` | one-hot | Ligacao de fase. `all_phases` marca L1/L2/L3 como 1. |
-| `commanded_power_kw` | `entity_core_electrical` | kW | Potencia comandada pelo agente. |
-| `applied_power_kw` | `entity_core_electrical` | kW | Potencia efetivamente aplicada. |
+| `connected_state`, `incoming_state` | legacy | binário | Estado atual de ligação/chegada do VE. |
+| `connected_ev_soc`, `connected_ev_required_soc_departure` | legacy | rácio | Campos de SOC do VE ligado. |
+| `connected_ev_battery_capacity_kwh` | legacy | kWh | Capacidade do VE ligado. |
+| `connected_ev_departure_time_step` | legacy | passos | Passos até à partida. |
+| `incoming_ev_estimated_soc_arrival` | legacy | rácio | SOC à chegada do VE que vai chegar. |
+| `incoming_ev_estimated_arrival_time_step` | legacy | passos | Passos até à chegada. |
+| `last_charged_kwh` | legacy | kWh/step | Última energia comandada. |
+| `max_charging_power_kw`, `max_discharging_power_kw` | legacy | kW | Limites de potência do carregador. |
+| `min_charging_power_kw`, `min_discharging_power_kw` | `entity_base` | kW | Potências mínimas técnicas. |
+| `charger_efficiency_ratio` | `entity_base` | rácio | Eficiência fixa/predefinida. |
+| `phase_connection_L1/L2/L3` | `entity_base` | one-hot | Ligação de fase; `all_phases` marca todas as fases. |
+| `commanded_power_kw`, `applied_power_kw` | `entity_core_electrical` | kW | Potência comandada e aplicada do carregador. |
 | `applied_energy_kwh_step` | `entity_core_electrical` | kWh/step | Energia aplicada. |
-| `hours_until_departure` | `entity_core_electrical` | h | Tempo ate departure do EV ligado. |
-| `time_until_departure_ratio` | `entity_core_electrical` | ratio | Horas ate departure / 24, clipped. |
-| `energy_to_required_soc_kwh` | `entity_core_electrical` | kWh | Energia necessaria para SOC requerido. |
-| `required_average_power_kw` | `entity_core_electrical` | kW | Energia necessaria / horas ate departure. |
-| `avg_power_to_departure_kw` | `entity_core_electrical` | kW | Alias operacional do anterior. |
-| `charging_slack_kw` | `entity_core_electrical` | kW | `max_charging_power - required_average_power`. |
-| `charging_priority_ratio` | `entity_core_electrical` | ratio | Urgencia energetica normalizada. |
-| `connected_ev_soc_min_ratio` | `entity_core_electrical` | ratio | SOC minimo descarregavel do EV ligado. |
-| `connected_ev_energy_available_kwh` | `entity_core_electrical` | kWh | Energia V2G disponivel acima do SOC minimo. |
-| `connected_ev_energy_to_full_kwh` | `entity_core_electrical` | kWh | Energia que ainda cabe no EV ligado; na versao 2 da fisica, ate a capacidade degradada, onde a carga para. |
-| `can_charge`, `can_discharge` | `entity_core_electrical` | binario | Se ha capacidade factivel de carga/descarga agora. |
-| `available_charge/discharge_power_kw` | `entity_core_electrical` | kW | Potencia factivel agora depois de SOC, availability, outage e headroom. |
-| `available_charge/discharge_action_normalized` | `entity_core_electrical` | ratio | Magnitude normalizada da acao ainda factivel. |
-| `max_deliverable_energy_until_departure_kwh` | `entity_core_electrical` | kWh | Energia ainda entregavel ate departure sob limites atuais. |
-| `departure_energy_margin_kwh` | `entity_core_electrical` | kWh | Margem entre energia entregavel e energia requerida. |
-| `departure_feasibility_ratio` | `entity_core_electrical` | ratio | Pressao de deadline; acima de 1 indica target acima do entregavel atual. |
-| `min_required_action_normalized` | `entity_core_electrical` | ratio | Acao minima media normalizada necessaria; acima de 1 indica impossibilidade pelo max power atual. |
-| `charge_efficiency_at_max_ratio` | `entity_core_electrical` | ratio | Eficiencia da curva em potencia maxima de carga. |
-| `discharge_efficiency_at_max_ratio` | `entity_core_electrical` | ratio | Eficiencia da curva em potencia maxima de descarga. |
-| `incoming_ev_required_soc_departure` | `entity_core_electrical` | ratio | Required SOC do EV incoming se conhecido. |
-| `incoming_ev_departure_time_step` | `entity_core_electrical` | steps | Departure do EV incoming se conhecido. |
-| `incoming_ev_hours_until_departure` | `entity_core_electrical` | h | Horas ate departure do EV incoming. |
-| `incoming_ev_time_until_departure_ratio` | `entity_core_electrical` | ratio | Horas ate departure / 24. |
-| `last_requested_*`, `last_limited_*`, `last_applied_power_kw`, `last_projection_error_kw` | `entity_action_feedback` | varia | Pedido bruto da policy, comando apos constraints e potencia fisicamente aplicada. |
-| `applied_energy_prev_15m_kwh`, `applied_power_mean_prev_15m_kw`, `time_since_last_nonzero_action_hours` | `entity_action_feedback` | varia | Historico curto de acao/aplicacao. |
-| `clip_reason_*` | `entity_action_feedback` | binario | Motivos de clipping: availability, power/deadband, SOC, headroom building/fase/export, outage ou janela deferrable. |
+| `hours_until_departure`, `time_until_departure_ratio` | `entity_core_electrical` | horas/rácio | Pressão temporal do VE ligado. |
+| `energy_to_required_soc_kwh`, `required_average_power_kw` | `entity_core_electrical` | kWh/kW | Energia e potência média necessárias para atingir o SOC de partida. |
+| `charging_slack_kw`, `charging_priority_ratio` | `entity_core_electrical` | kW/rácio | Descritores da urgência de carregamento. |
+| `connected_ev_soc_min_ratio`, `connected_ev_energy_available_kwh`, `connected_ev_energy_to_full_kwh` | `entity_core_electrical` | misto | Energia de descarga utilizável do VE ligado e margem de carregamento restante ([energia até à carga completa](#energia-até-à-carga-completa)). |
+| `can_charge`, `can_discharge`, `available_charge/discharge_power_kw`, `available_charge/discharge_action_normalized` | `entity_core_electrical` | misto | Capacidade de ação viável atual do carregador depois dos limites de SOC, disponibilidade, corte de energia e margem. |
+| `max_deliverable_energy_until_departure_kwh`, `departure_energy_margin_kwh` | `entity_core_electrical` | kWh | Energia ainda entregável até à partida com os limites atuais e a sua margem sobre a energia exigida. |
+| `departure_feasibility_ratio`, `min_required_action_normalized` | `entity_core_electrical` | rácio | Pressão do prazo; valores acima de `1` indicam que o alvo precisa de mais do que a ação viável/máxima atual. |
+| `charge_efficiency_at_max_ratio`, `discharge_efficiency_at_max_ratio` | `entity_core_electrical` | rácio | Valores da curva de eficiência à potência máxima. |
+| `incoming_ev_required_soc_departure`, `incoming_ev_departure_time_step` | `entity_core_electrical` | rácio/passos | Requisito de partida do VE que vai chegar, quando conhecido. |
+| `incoming_ev_hours_until_departure`, `incoming_ev_time_until_departure_ratio` | `entity_core_electrical` | horas/rácio | Pressão temporal do VE que vai chegar. |
+| `last_requested_*`, `last_limited_*`, `last_applied_power_kw`, `last_projection_error_kw` | `entity_action_feedback` | misto | Pedido bruto anterior da política, comando depois das restrições e potência do carregador fisicamente aplicada. |
+| `applied_energy_prev_15m_kwh`, `applied_power_mean_prev_15m_kw`, `time_since_last_nonzero_action_hours` | `entity_action_feedback` | misto | Histórico curto de ações e da sua aplicação. |
+| `clip_reason_*` | `entity_action_feedback` | binário | Causas de corte (clipping) em one-hot: disponibilidade, potência/banda morta, SOC, margem do edifício/fase/exportação, corte de energia ou janela do aparelho diferível. |
 
-## Tabela `ev`
+### `ev`
 
-| Feature | Bundle | Unidade | O que e |
+| Feature | Bundle | Unidade | Significado |
 |---|---|---:|---|
-| `soc` | legacy | ratio | SOC atual. |
-| `battery_capacity_kwh` | legacy | kWh | Capacidade da bateria. |
-| `depth_of_discharge_ratio` | legacy | ratio | Profundidade de descarga permitida. |
-| `soc_ratio` | `entity_core_electrical` | ratio | SOC canonico. |
-| `soc_min_ratio` | `entity_core_electrical` | ratio | SOC minimo derivado de depth of discharge. |
-| `soc_max_ratio` | `entity_core_electrical` | ratio | SOC maximo, normalmente 1. |
-| `energy_available_kwh` | `entity_core_electrical` | kWh | Energia descarregavel acima de `soc_min`. |
-| `energy_to_full_kwh` | `entity_core_electrical` | kWh | Energia ate `soc_max_ratio`; na versao 2 da fisica, ate a capacidade degradada se for menor, onde a carga para. |
+| `soc` | legacy | rácio | SOC do VE. |
+| `battery_capacity_kwh` | legacy | kWh | Capacidade da bateria do VE. |
+| `depth_of_discharge_ratio` | legacy | rácio | Profundidade de descarga permitida. |
+| `soc_ratio`, `soc_min_ratio`, `soc_max_ratio` | `entity_core_electrical` | rácio | Limites canónicos de SOC. |
+| `energy_available_kwh`, `energy_to_full_kwh` | `entity_core_electrical` | kWh | Energia utilizável e [energia até à carga completa](#energia-até-à-carga-completa). |
 
-## Tabela `storage`
+### `storage`
 
-| Feature | Bundle | Unidade | O que e |
+| Feature | Bundle | Unidade | Significado |
 |---|---|---:|---|
-| `soc` | legacy | ratio | SOC BESS. |
-| `capacity_kwh` | legacy | kWh | Capacidade nominal. |
-| `nominal_power_kw` | legacy | kW | Potencia nominal. |
-| `electricity_consumption_kwh` | legacy | kWh/step | Consumo BESS no step settled. |
-| `min_charge_power_kw` | `entity_base` | kW | Minimo tecnico de carga. |
-| `min_discharge_power_kw` | `entity_base` | kW | Minimo tecnico de descarga. |
-| `efficiency_ratio` | `entity_base` | ratio | Eficiencia round-trip nominal. |
-| `round_trip_efficiency_ratio` | `entity_base` | ratio | Eficiencia num sentido na ultima operacao, a raiz quadrada da eficiencia round-trip atual. O nome mantem-se para os layouts de observacao existentes. |
-| `phase_connection_L1/L2/L3` | `entity_base` | one-hot | Ligacao de fase do storage. |
-| `electrical_storage_soc_ratio` | `entity_core_electrical` | ratio | SOC canonico. |
-| `max_charge_power_kw` | `entity_core_electrical` | kW | Potencia maxima de carga no estado atual. |
-| `max_discharge_power_kw` | `entity_core_electrical` | kW | Potencia maxima de descarga no estado atual. |
-| `energy_to_full_kwh` | `entity_core_electrical` | kWh | Energia ate capacidade cheia; na versao 2 da fisica, ate `degraded_capacity_kwh` se for menor, onde a carga para. |
-| `energy_available_kwh` | `entity_core_electrical` | kWh | Energia acima do SOC minimo. |
-| `can_charge`, `can_discharge` | `entity_core_electrical` | binario | Se o BESS pode carregar/descarregar agora. |
-| `available_charge/discharge_power_kw` | `entity_core_electrical` | kW | Potencia BESS factivel agora depois de SOC, outage e headroom. |
-| `available_charge/discharge_action_normalized` | `entity_core_electrical` | ratio | Magnitude normalizada de acao BESS ainda factivel. |
-| `available_charge_energy_kwh_step`, `available_discharge_energy_kwh_step` | `entity_core_electrical` | kWh/step | Energia BESS factivel neste step apos limites de SOC/headroom/outage. |
-| `max_charge_energy_kwh_step`, `max_discharge_energy_kwh_step` | `entity_core_electrical` | kWh/step | Limite nominal de potencia BESS convertido para a duracao do step. |
-| `charge_headroom_ratio`, `discharge_available_ratio`, `usable_soc_ratio` | `entity_core_electrical` | ratio | Headroom de carga, energia descarregavel e SOC dentro da faixa usavel. |
-| `current_efficiency_ratio` | `entity_core_electrical` | ratio | Eficiencia corrente. |
-| `degraded_capacity_kwh` | `entity_core_electrical` | kWh | Capacidade apos degradacao. |
-| `soc_min_ratio` | `entity_core_electrical` | ratio | SOC minimo derivado de DoD. |
-| `last_requested_*`, `last_limited_*`, `last_applied_power_kw`, `last_projection_error_kw`, `clip_reason_*` | `entity_action_feedback` | varia | Pedido, comando limitado, aplicacao real e motivos de clipping BESS. |
+| `soc`, `capacity_kwh`, `nominal_power_kw`, `electricity_consumption_kwh` | legacy | misto | Estado do BESS e consumo liquidado. |
+| `min_charge_power_kw`, `min_discharge_power_kw` | `entity_base` | kW | Potências mínimas técnicas. |
+| `efficiency_ratio` | `entity_base` | rácio | Eficiência nominal de ida e volta (round-trip). |
+| `round_trip_efficiency_ratio` | `entity_base` | rácio | Eficiência num sentido na última operação, a raiz quadrada da eficiência de ida e volta atual. O nome mantém-se por causa dos layouts de observação existentes. |
+| `phase_connection_L1/L2/L3` | `entity_base` | one-hot | Ligação de fase do armazenamento. |
+| `electrical_storage_soc_ratio` | `entity_core_electrical` | rácio | SOC canónico do BESS. |
+| `max_charge_power_kw`, `max_discharge_power_kw` | `entity_core_electrical` | kW | Potências máximas atuais. |
+| `energy_to_full_kwh`, `energy_available_kwh` | `entity_core_electrical` | kWh | Margem de energia ([energia até à carga completa](#energia-até-à-carga-completa)) e energia disponível. |
+| `can_charge`, `can_discharge`, `available_charge/discharge_power_kw`, `available_charge/discharge_action_normalized` | `entity_core_electrical` | misto | Capacidade de ação viável atual do BESS depois dos limites de SOC, corte de energia e margem. |
+| `available_charge_energy_kwh_step`, `available_discharge_energy_kwh_step` | `entity_core_electrical` | kWh/step | Energia viável do BESS neste passo depois dos limites de SOC/margem/corte de energia. |
+| `max_charge_energy_kwh_step`, `max_discharge_energy_kwh_step` | `entity_core_electrical` | kWh/step | Limite de potência nominal do BESS convertido para a duração deste passo. |
+| `charge_headroom_ratio`, `discharge_available_ratio`, `usable_soc_ratio` | `entity_core_electrical` | rácio | Margem de carregamento, energia de descarga e SOC dentro da gama utilizável do BESS, normalizados. |
+| `current_efficiency_ratio`, `degraded_capacity_kwh`, `soc_min_ratio` | `entity_core_electrical` | misto | Eficiência atual, capacidade degradada e SOC mínimo. |
+| `last_requested_*`, `last_limited_*`, `last_applied_power_kw`, `last_projection_error_kw`, `clip_reason_*` | `entity_action_feedback` | misto | Pedido de ação anterior do BESS, comando limitado, potência aplicada e causas de corte. |
 
-## Tabela `pv`
+### Energia até à carga completa
 
-So aparece com `entity_core_electrical`.
+O SOC é relativo à capacidade nominal (`capacity_kwh`, `battery_capacity_kwh`).
+A perda de capacidade reduz a capacidade degradada de uma bateria
+(`degraded_capacity_kwh` no armazenamento), onde `Battery.charge` para, pelo
+que uma bateria degradada fica cheia abaixo de um SOC de 1. Na versão 2 da
+física, a predefinida, `energy_to_full_kwh`, `connected_ev_energy_to_full_kwh`
+e `flexible_energy_to_full_kwh` são a energia que a bateria ainda aceita: o
+menor entre `soc_max_ratio` vezes a capacidade e a capacidade degradada, menos
+a energia armazenada. As features de carregamento derivadas delas (`can_charge`,
+`available_charge_power_kw`, `available_charge_action_normalized`,
+`available_charge_energy_kwh_step`, `charge_headroom_ratio`,
+`max_deliverable_energy_until_departure_kwh`, `departure_energy_margin_kwh`,
+`departure_feasibility_ratio` e as somas `flexible_charge_*` e
+`community_flexible_*`) acompanham-nas. Na versão 1 da física são calculadas a
+partir da capacidade nominal, como no CityLearn 3.6.0, e indicam que uma
+bateria degradada cheia ainda pode carregar. As baterias sem perda de
+capacidade (`capacity_loss_coefficient` 0) dão os mesmos valores nas duas
+versões.
 
-| Feature | Unidade | O que e |
+### `pv`
+
+Presente apenas quando `entity_core_electrical` está ativado. Tal como as outras features elétricas do bundle core, estes são valores endógenos do último intervalo liquidado, e não entradas exógenas do intervalo seguinte.
+
+| Feature | Unidade | Significado |
 |---|---:|---|
-| `generation_power_kw` | kW | Geracao PV equivalente em potencia. |
-| `generation_energy_kwh_step` | kWh/step | Energia PV no step. |
-| `installed_power_kw` | kW | Potencia PV instalada. |
-| `generation_capacity_factor_ratio` | ratio | `generation_power_kw / installed_power_kw`. |
+| `generation_power_kw` | kW | Produção FV como potência, no último intervalo liquidado (linha t). |
+| `generation_energy_kwh_step` | kWh/step | Produção FV no último intervalo liquidado (linha t quando a observação é para t+1); `building.solar_generation` é o intervalo seguinte (linha t+1). |
+| `installed_power_kw` | kW | Potência FV instalada. |
+| `generation_capacity_factor_ratio` | rácio | `generation_power_kw / installed_power_kw`. |
 
-## Tabela `deferrable_appliance`
+### `deferrable_appliance`
 
-Todas as features pertencem a `entity_base` e sao sempre por appliance.
+As features base dos aparelhos diferíveis estão em `entity_base`; as definições estão na tabela flat de aparelhos diferíveis acima. Os aparelhos diferíveis entity incluem também `remaining_duration_hours`, `cycle_remaining_fraction_ratio`, `hours_until_earliest_start`, `start_window_width_hours`, `start_energy_kwh_step`, `start_power_kw` e `must_start_now`, para a pressão de prazo em RL. Com `entity_action_feedback`, os aparelhos diferíveis expõem também `last_start_requested`, `last_start_applied`, `start_blocked` e `clip_reason_*`.
 
-| Feature | Unidade | O que e |
+As previsões derivadas usam por omissão os valores futuros do dataset, por
+compatibilidade com versões anteriores (`load_pv_method = "actual_future"`).
+Um schema pode antes definir `derived_forecasts.load_pv_method = "daily_persistence"`;
+a carga e o FV usam então apenas a observação correspondente do dia anterior,
+com um arranque a frio (cold start) no passo atual. O preço respeita a
+fronteira de publicação declarada do mercado do dia seguinte: os valores OMIE
+realizados só são expostos depois da publicação e, caso contrário, é usado o
+fallback causal do schema (persistência diária na suite REC anual). As origens
+exatas são expostas em `meta.forecast_config`; os adaptadores para o mundo real
+devem preencher campos equivalentes a partir de previsões operacionais.
+
+## Arestas entity
+
+| Aresta | Forma | Liga |
 |---|---:|---|
-| `pending` | binario | Ciclo pendente. |
-| `running` | binario | Ciclo em execucao. |
-| `can_start` | binario | Start seria aceito neste step. |
-| `deadline_missed` | binario | Ciclo falhado. |
-| `earliest_start_time_step` | timestep global | Primeiro start permitido. |
-| `latest_start_time_step` | timestep global | Ultimo start permitido. |
-| `deadline_time_step` | timestep global | Deadline de conclusao. |
-| `hours_until_latest_start` | h | Tempo ate ultimo start. |
-| `hours_until_deadline` | h | Tempo ate deadline. |
-| `slack_steps` | steps | Folga ate latest start. |
-| `slack_ratio` | ratio | Folga normalizada. |
-| `urgency_ratio` | ratio | Urgencia normalizada. |
-| `cycle_duration_steps` | steps | Duracao do ciclo. |
-| `cycle_energy_kwh` | kWh | Energia total. |
-| `remaining_energy_kwh` | kWh | Energia restante. |
-| `current_step_energy_kwh` | kWh/step | Energia do ciclo neste step. |
-| `priority` | ratio | Prioridade externa. |
-| `must_run` | binario | Pedido obrigatorio. |
-| `cycle_average_power_kw` | kW | Potencia media do ciclo. |
-| `cycle_peak_power_kw` | kW | Potencia pico do ciclo. |
-| `cycle_load_factor_ratio` | ratio | Potencia media / pico. |
-| `cycle_peak_step_offset_ratio` | ratio | Posicao do pico dentro do ciclo. |
-| `remaining_duration_steps` | steps | Duracao restante. |
-| `remaining_duration_hours` | h | Duracao restante em tempo fisico. |
-| `cycle_remaining_fraction_ratio` | ratio | Fracao de energia do ciclo ainda por executar. |
-| `hours_until_earliest_start` | h | Tempo ate primeiro start permitido. |
-| `start_window_width_hours` | h | Largura da janela de start. |
-| `start_energy_kwh_step`, `start_power_kw` | kWh/kW | Energia/potencia se arrancar agora. |
-| `must_start_now` | binario | Deadline de start esta no step atual ou ja passou. |
-| `remaining_average_power_kw` | kW | Potencia media necessaria restante. |
-| `current_step_power_kw` | kW | Potencia equivalente do step atual. |
-| `last_start_requested`, `last_start_applied`, `start_blocked`, `clip_reason_*` | entity_action_feedback | varia | Feedback curto do ultimo comando de start. |
-
-Por compatibilidade, forecasts derivados usam por defeito valores futuros do
-dataset (`load_pv_method = "actual_future"`). Um schema pode escolher
-`daily_persistence`; nesse caso carga e PV usam apenas o ponto correspondente
-do dia anterior, com cold start no step atual. O preco respeita a fronteira de
-publicacao declarada para o mercado do dia seguinte: os valores OMIE realizados
-so sao expostos depois da publicacao e, antes disso, e usado o fallback causal
-do schema (persistencia diaria na suite REC anual). `meta.forecast_config`
-expoe a origem efetiva; em uso real, adapters externos devem preencher campos
-equivalentes com forecasts operacionais.
-
-## Edges Entity
-
-| Edge | Shape | O que liga |
-|---|---:|---|
-| `district_to_building` | `(n_buildings, 2)` | district row 0 para cada building. |
-| `building_to_charger` | `(n_chargers, 2)` | building para charger. |
-| `building_to_storage` | `(n_storage, 2)` | building para BESS. |
-| `building_to_pv` | `(n_pv, 2)` | building para PV. |
-| `building_to_deferrable_appliance` | `(n_appliances, 2)` | building para appliance. |
-| `charger_to_ev_connected` | `(n_chargers, 2)` | charger para EV ligado. Row `-1` se ausente. |
-| `charger_to_ev_connected_mask` | `(n_chargers,)` | 1 se edge connected valida. |
-| `charger_to_ev_incoming` | `(n_chargers, 2)` | charger para EV incoming. |
-| `charger_to_ev_incoming_mask` | `(n_chargers,)` | 1 se edge incoming valida. |
+| `district_to_building` | `(n_buildings, 2)` | Linha 0 do distrito a cada edifício. |
+| `building_to_charger` | `(n_chargers, 2)` | Edifício ao carregador. |
+| `building_to_storage` | `(n_storage, 2)` | Edifício ao BESS. |
+| `building_to_pv` | `(n_pv, 2)` | Edifício ao FV. |
+| `building_to_deferrable_appliance` | `(n_appliances, 2)` | Edifício ao aparelho diferível. |
+| `charger_to_ev_connected` | `(n_chargers, 2)` | Carregador ao VE ligado; linha `-1` quando ausente. |
+| `charger_to_ev_connected_mask` | `(n_chargers,)` | Máscara das arestas de ligação válidas. |
+| `charger_to_ev_incoming` | `(n_chargers, 2)` | Carregador ao VE que vai chegar. |
+| `charger_to_ev_incoming_mask` | `(n_chargers,)` | Máscara das arestas de chegada válidas. |

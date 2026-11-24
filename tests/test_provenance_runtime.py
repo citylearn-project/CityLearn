@@ -5,6 +5,7 @@ import pytest
 from citylearn.citylearn import CityLearnEnv
 from citylearn.internal.experiment import experiment_manifest
 from test_market_phase_invariants import _write_residual_market_schema
+from private_access import provenance_service, runtime_service
 
 
 def test_market_and_bau_emissions_share_the_same_boundary(tmp_path):
@@ -42,14 +43,14 @@ def test_passive_ledger_preserves_real_trajectories_and_no_feedback_path(tmp_pat
     passive, muted, sidecar = environments
     # Disable accounting alone, keeping the same seeded equipment and actions.
     for method in ('begin_step', 'settle', 'synchronize'):
-        setattr(muted._provenance_service, method, lambda: None)
+        setattr(provenance_service(muted), method, lambda: None)
     for action in (.5, -.5, 1., 0., -.2):
         for env in environments:
             if env.terminated:
                 continue
             values = _actions(env, action)
             if env is sidecar:
-                env._runtime_service.step_without_feedback(values)
+                runtime_service(env).step_without_feedback(values)
             else:
                 env.step(values)
     for env in (muted, sidecar):
@@ -57,7 +58,7 @@ def test_passive_ledger_preserves_real_trajectories_and_no_feedback_path(tmp_pat
         np.testing.assert_array_equal(passive.net_electricity_consumption_cost, env.net_electricity_consumption_cost)
         for a, b in zip(passive.electric_vehicles, env.electric_vehicles):
             np.testing.assert_array_equal(a.battery.soc, b.battery.soc)
-    assert passive._provenance_service.summary() == sidecar._provenance_service.summary()
+    assert provenance_service(passive).summary() == provenance_service(sidecar).summary()
     for env in environments:
         env.close()
 

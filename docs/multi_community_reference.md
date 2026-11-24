@@ -66,7 +66,7 @@ MultiCommunityEnv(
 )
 ```
 
-`community_id` must be unique, non-empty and safe as a relative path component. It may contain only letters, numbers, `_`, `-` and `.`. `weight` defaults to `1.0`, must be finite and non-negative, and at least one community must have a positive weight.
+`community_id` must be unique, non-empty and safe as a relative path component. It may contain only letters, numbers, `_`, `-` and `.`. `weight` defaults to `1.0`, must be finite and non-negative, and at least one community must have a positive weight. Only `community_id`, `schema`, `env_kwargs` and `weight` are accepted in an entry: any other key raises a `ValueError` that names it, and `weight` cannot be a boolean.
 
 `env_kwargs` are passed to the child `CityLearnEnv`. The wrapper sets each child export session to `<render_session_name>/<community_id>` so render and KPI files are separated by community.
 
@@ -77,6 +77,19 @@ MultiCommunityEnv(
 ```python
 observations = {"community_a": child_observations, "community_b": child_observations}
 info = {"communities": {...}, "time_step": 0}
+```
+
+`reset(seed=..., options=...)` passes `seed` to every child. `options` can hold one
+mapping per community, keyed by `community_id`; a community without its own entry
+receives the whole `options` mapping:
+
+```python
+# community_a replays episode 2. community_b has no entry, so it receives the
+# whole mapping and replays episode 0.
+env.reset(options={"community_a": {"episode_index": 2}, "episode_index": 0})
+
+# The same options for every child.
+env.reset(options={"episode_index": 2})
 ```
 
 `step(actions)` expects one child action payload per community:
@@ -117,8 +130,16 @@ All child environments must use:
 | Same effective episode length | Keeps training batches rectangular. |
 | Same `interface` | Keeps observation/action payload contracts stable. |
 | Same `central_agent` mode | Avoids mixing centralized and decentralized reward/action semantics. |
+| Same `physics_version` | Portfolio totals add up district values, so every community must simulate the same physics. |
+| Same `random_stream_version` | Randomly drawn defaults (battery curves, efficiencies, noise) must come from the same stream definition for the totals to be comparable. |
+| Same `baseline_version` | Portfolio baseline KPIs add up district baselines, so the baseline definition must match. |
 
-The wrapper validates these conditions at construction and again after reset.
+The wrapper validates these conditions at construction and again after reset, and
+raises a `ValueError` that names the setting, for example:
+
+```text
+ValueError: MultiCommunityEnv requires all communities to share physics_version, got {'A': 2, 'B': 1}.
+```
 
 Calendar windows are not part of the contract. Each child selects its episode
 split from its own simulation window, `random_episode_split` setting and
@@ -189,6 +210,19 @@ Ratios without additive totals stay weighted means: grid-shape ratios (peaks,
 ramping and load-factor penalties), comfort and resilience proportions, equity,
 the thermal-service, EV-departure and other audit ratios, battery capacity fade,
 and the ratio of battery capacity fade to its BAU value.
+
+Communities without a community market report zeros in their market rows. In a
+portfolio where some communities have a market and others do not, a community
+without a market enters the portfolio market rows
+(`portfolio_energy_grid_community_market_*`, `portfolio_cost_community_market_*`
+and `portfolio_solar_self_consumption_community_market_*`) with its plain grid
+settlement: no local trade, its members' grid import and export as grid import
+and export after local trading, its `cost_total_control_eur` as settled and
+counterfactual cost, and zero savings and operator balance. The portfolio
+market rows then cover every community, and the shares are those of the whole
+portfolio. The community's own district rows do not change, and neither do
+portfolios where every community has a market or none has
+([#373](https://github.com/citylearn-project/CityLearn/issues/373)).
 
 Portfolio KPI names replace a leading `district_` prefix with `portfolio_`, for example `district_demand_response_revenue_total_eur` becomes `portfolio_demand_response_revenue_total_eur`.
 

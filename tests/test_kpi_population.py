@@ -14,6 +14,7 @@ from citylearn.internal.kpi_population import current_population, population_sco
 from citylearn.internal.topology import CityLearnTopologyService
 from test_evaluation_progress import completed_env
 from test_independent_balances import scenario
+from private_access import kpi_service, topology_service
 
 
 def sample_service(history, *, horizon=7):
@@ -86,8 +87,8 @@ def test_scope_refreshes_episode_window_horizon_history_and_topology_then_releas
             lambda: setattr(service.env.episode_tracker, 'episode', 1),
             lambda: setattr(service.env.episode_tracker, 'episode_start_time_step', 102),
             lambda: setattr(service.env.episode_tracker, 'episode_end_time_step', 109),
-            lambda: setattr(service.env._topology_service, '_topology_version', 1),
-            lambda: setattr(service.env._topology_service, '_active_member_history', {0: ['b']}),
+            lambda: setattr(topology_service(service.env), '_topology_version', 1),
+            lambda: setattr(topology_service(service.env), '_active_member_history', {0: ['b']}),
         ]:
             refs.append(weakref.ref(pop));update();new = current_population(service)
             assert new is not pop
@@ -111,7 +112,7 @@ def test_failed_scope_does_not_leak_or_reuse_stale_masks():
         fail(kpi)
     assert not hasattr(kpi, '_evaluation_population')
     # Same env/time/version, but a separate evaluation must take a fresh snapshot.
-    kpi.env._topology_service._active_member_history[0] = ['b']
+    topology_service(kpi.env)._active_member_history[0] = ['b']
     @population_scope
     def again(service):
         assert not current_population(service).mask('a', 7).any()
@@ -124,7 +125,7 @@ def test_native_kpis_equal_uncached_and_release_after_repeated_evaluation(tmp_pa
     refs = []
     try:
         def observe(event):
-            pop = getattr(env._kpi_service, '_evaluation_population', None)
+            pop = getattr(kpi_service(env), '_evaluation_population', None)
             if pop is not None:
                 refs.append(weakref.ref(pop))
         first = env.evaluate_v2(include_business_as_usual=False, progress_callback=observe)
@@ -134,15 +135,15 @@ def test_native_kpis_equal_uncached_and_release_after_repeated_evaluation(tmp_pa
         assert_frame_equal(first, uncached, check_exact=True)
         assert first.attrs == uncached.attrs
         assert_frame_equal(first, env.evaluate_v2(include_business_as_usual=False), check_exact=True)
-        assert not hasattr(env._kpi_service, '_evaluation_population')
+        assert not hasattr(kpi_service(env), '_evaluation_population')
         gc.collect()
         assert all(ref() is None for ref in refs)
         assert bool(refs) is dynamic
         if dynamic:
-            original = env._topology_service.active_member_ids_at(0)
-            changed = env._topology_service.active_member_ids_at(0)
+            original = topology_service(env).active_member_ids_at(0)
+            changed = topology_service(env).active_member_ids_at(0)
             changed.clear()
-            assert env._topology_service.active_member_ids_at(0) == original
+            assert topology_service(env).active_member_ids_at(0) == original
     finally:
         env.close()
 
@@ -163,18 +164,18 @@ def test_partial_horizons_remove_rejoin_reset_and_native_bau(tmp_path, monkeypat
                     uncached = env.evaluate_v2(include_business_as_usual=False)
                 assert_frame_equal(cached, uncached, check_exact=True)
                 assert cached.attrs == uncached.attrs
-                assert not hasattr(env._kpi_service, '_evaluation_population')
+                assert not hasattr(kpi_service(env), '_evaluation_population')
             if env.terminated:
                 break
             obs, *_ = env.step(policy.predict(obs, deterministic=True))
         # Native BAU is a different environment with its own evaluation scope.
         with_bau = env.evaluate_v2(include_business_as_usual=True)
         assert not with_bau.empty
-        assert not hasattr(env._kpi_service, '_evaluation_population')
+        assert not hasattr(kpi_service(env), '_evaluation_population')
         for result in env._business_as_usual_baseline_cache.values():
-            assert not hasattr(result.env._kpi_service, '_evaluation_population')
+            assert not hasattr(kpi_service(result.env), '_evaluation_population')
         env.reset(seed=19)
-        assert not hasattr(env._kpi_service, '_evaluation_population')
+        assert not hasattr(kpi_service(env), '_evaluation_population')
         first = env.get_kpi_family_audit()
         assert first['district']['executed_intervals_count'] == 0
     finally:

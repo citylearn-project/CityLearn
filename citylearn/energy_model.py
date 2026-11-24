@@ -648,7 +648,7 @@ class PV(ElectricDevice):
 
         Parameters
         ----------
-        inverter_ac_power_perk_w : Union[float, Iterable[float]]
+        inverter_ac_power_per_kw : Union[float, Iterable[float]]
             Inverter AC power output per kW of PV capacity in [W/kW] when
             ``generation_mode='per_kw'``. Absolute PV generation in [kWh/step]
             when ``generation_mode='absolute'``.
@@ -661,7 +661,7 @@ class PV(ElectricDevice):
         Notes
         -----
         .. math::
-            \textrm{generation} = \frac{\textrm{capacity} \times \textrm{inverter_ac_power_per_w}}{1000} \times \Delta t
+            \textrm{generation} = \frac{\textrm{nominal_power} \times \textrm{inverter_ac_power_per_kw}}{1000} \times \frac{\textrm{seconds_per_time_step}}{3600}
         """
 
         if self.generation_mode == 'absolute':
@@ -802,11 +802,16 @@ class StorageDevice(Device):
     capacity : float, default: 0.0
         Maximum amount of energy the storage device can store in [kWh]. Must be >= 0.
     efficiency : Union[float, Tuple[float, float]], default: (0.90, 0.98)
-        Technical efficiency.
+        Round-trip efficiency. Each charge or discharge conversion uses its square root,
+        `one_way_efficiency`.
     loss_coefficient : Union[float, Tuple[float, float]], default: (0.001, 0.009)
-        Standby hourly losses. Must be between 0 and 1 (this value is often 0 or really close to 0).
+        Standby losses as a fraction of the stored energy per hour. Must be between 0 and 1 (this value is often 0
+        or really close to 0). The loss per step is compounded: ``1 - (1 - loss_coefficient)**(seconds_per_time_step/3600)``.
     initial_soc : Union[float, Tuple[float, float]], default: 0.0
-        State of charge when `time_step` = 0. Must be >= 0 and < `capacity`.
+        State of charge when `time_step` = 0, as a fraction of `capacity` in [0, 1]. :py:class:`Battery` overrides
+        the default with ``1 - depth_of_discharge``.
+    time_step_ratio : float, default: 1.0
+        Ratio of the control step to the dataset step.
 
     Other Parameters
     ----------------
@@ -831,7 +836,7 @@ class StorageDevice(Device):
     
     @property
     def time_step_ratio(self) -> float:
-        r"""Maximum amount of energy the storage device can store in [kWh]."""
+        r"""Ratio of the control step to the dataset step."""
 
         return self.__time_step_ratio
 
@@ -844,7 +849,7 @@ class StorageDevice(Device):
     
     @property
     def initial_soc(self) -> float:
-        r"""State of charge when `time_step` = 0 in [kWh]."""
+        r"""State of charge when `time_step` = 0, as a fraction of `capacity` in [0, 1]."""
 
         return self.__initial_soc
 
@@ -1024,10 +1029,17 @@ class StorageDevice(Device):
         self.__soc[self.time_step] = energy_final/max(as_float(self.capacity), ZERO_DIVISION_PLACEHOLDER)
         self.__soc_initialized[self.time_step] = True
         delta_energy = energy_final - energy_init
-        self.__energy_balance[self.time_step] = (
+        call_balance = (
             delta_energy / one_way_efficiency if delta_energy >= 0 else delta_energy * one_way_efficiency
         )
-        terminal_energy = float(self.__energy_balance[self.time_step])
+        if getattr(self, '_balance_time_step', -1) == self.time_step:
+            terminal_energy = float(np.float32(call_balance))
+            self.__energy_balance[self.time_step] = float(self.__energy_balance[self.time_step]) + terminal_energy
+        else:
+            self.__energy_balance[self.time_step] = call_balance
+            terminal_energy = float(self.__energy_balance[self.time_step])
+            self._balance_time_step = self.time_step
+        self._last_transfer_energy = terminal_energy
         stored_change = (terminal_energy * one_way_efficiency if terminal_energy >= 0.0
                          else terminal_energy / one_way_efficiency)
         self.__stored_energy_transfer = self.stored_energy_transfer + stored_change
@@ -1140,6 +1152,8 @@ class StorageDevice(Device):
         self.__gross_energy_discharge = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32') if self.__gross_energy_charge is not None else None
         self.__stored_energy_transfer = 0.0
         self.__transfer_time_step = self.time_step
+        self._balance_time_step = -1
+        self._last_transfer_energy = 0.0
         self._energy_events = []
         self._energy_event_step = self.time_step
 
@@ -1198,21 +1212,53 @@ class StorageTank(StorageDevice):
 
         Notes
         -----
-        If charging, soc = min(`soc_init` + energy*`efficiency`, `max_input_power`, `capacity`)
-        If discharging, soc = max(0, `soc_init` + energy/`efficiency`, `max_output_power`)
+        `max_input_power` and `max_output_power` give one terminal-energy budget per control step and
+        direction, power times step duration. The first call in a step can use all of it; a later call in
+        the same step gets only what the earlier calls in that direction left.
+
+        If charging, soc = min(`soc_init` + energy*`efficiency`, `capacity`), with energy limited by the
+        remaining charge budget.
+        If discharging, soc = max(0, `soc_init` + energy/`efficiency`), with energy limited by the
+        remaining discharge budget.
         """
         _require_finite_energy(energy, self)
+        # The power limits are one terminal-energy budget per control step and direction: a later transfer
+        # in the same step gets only what the earlier transfers in that direction left of it.
+        same_step_transfer = getattr(self, '_balance_time_step', -1) == self.time_step
 
         if energy >= 0:
             if self.max_input_power is not None:
                 max_input_energy = power_kw_to_energy_kwh(self.max_input_power, self.seconds_per_time_step)
+                if same_step_transfer:
+                    max_input_energy = max(max_input_energy - getattr(self, '_step_transfer_input_energy', 0.0), 0.0)
                 energy = np.nanmin([energy, to_dataset_resolution_energy(max_input_energy, self.time_step_ratio)])
         else:
             if self.max_output_power is not None:
                 max_output_energy = power_kw_to_energy_kwh(self.max_output_power, self.seconds_per_time_step)
+                if same_step_transfer:
+                    max_output_energy = max(max_output_energy - getattr(self, '_step_transfer_output_energy', 0.0), 0.0)
                 energy = np.nanmax([-to_dataset_resolution_energy(max_output_energy, self.time_step_ratio), energy])
 
+        if not same_step_transfer:
+            self._step_transfer_input_energy = 0.0
+            self._step_transfer_output_energy = 0.0
+
         super().charge(energy)
+        if self._last_transfer_energy >= 0.0:
+            self._step_transfer_input_energy = (
+                getattr(self, '_step_transfer_input_energy', 0.0) + self._last_transfer_energy
+            )
+        else:
+            self._step_transfer_output_energy = (
+                getattr(self, '_step_transfer_output_energy', 0.0) - self._last_transfer_energy
+            )
+
+    def reset(self):
+        r"""Reset `StorageTank` to initial state."""
+
+        super().reset()
+        self._step_transfer_input_energy = 0.0
+        self._step_transfer_output_energy = 0.0
 
 class Battery(StorageDevice, ElectricDevice):
     r"""Base electricity storage class.
@@ -1224,17 +1270,34 @@ class Battery(StorageDevice, ElectricDevice):
     nominal_power: float
         Maximum amount of electric power that the battery can use to charge or discharge.
     capacity_loss_coefficient : Union[float, Tuple[float, float]], default: (1e-5, 1e-4)
-        Battery degradation; storage capacity lost in each charge and discharge cycle (as a fraction of the total capacity).
-    power_efficiency_curve: list, default: [[0, 0.83],[0.3, 0.83],[0.7, 0.9],[0.8, 0.9],[1, 0.85]]
-        Charging/Discharging efficiency as a function of nominal power.
-    capacity_power_curve: list, default: [[0.0, 1],[0.8, 1],[1.0, 0.2]]   
-        Maximum charging power of the battery, as a fraction of `nominal_power`, as a function of its current state
-        of charge.
+        Battery degradation: fraction of `capacity` lost per equivalent full cycle. The loss in a step is
+        ``capacity_loss_coefficient * capacity * |terminal energy| / (2 * degraded_capacity)``.
+    power_efficiency_curve: list, optional
+        Round-trip efficiency as a function of the terminal power divided by `nominal_power`, as ``[[x, y], ...]``
+        points. Each conversion uses the square root of the interpolated value. When omitted, a five-point curve is
+        drawn from the random stream around `efficiency` (x points near 0, 0.3, 0.7, 0.8 and 1, values between
+        0.85 and 1.0 times `efficiency`), so it depends on the seed.
+    capacity_power_curve: list, optional
+        Maximum charging power of the battery, as a fraction of `nominal_power`, as a function of the state of charge
+        at the start of the step. When omitted, a three-point curve is drawn from the random stream (0.95 to 1.0 at an
+        empty battery, 0.9 to 0.95 near 0.8 state of charge and 0.2 to 0.3 when full), so it depends on the seed.
     depth_of_discharge: Union[float, Tuple[float, float]], default: 1.0
-        Maximum fraction of the battery that can be discharged relative to the total battery capacity.
+        Maximum fraction of `capacity` that can be discharged. Discharging stops at a state of charge of
+        ``1 - depth_of_discharge``. It also sets the default `initial_soc`.
     discharge_power_curve: list, default: [[0.0, 1.0], [1.0, 1.0]]
-        Maximum discharging power of the battery, as a fraction of `nominal_power`, as a function of its current
-        state of charge. The default discharges at `nominal_power` at any state of charge.
+        Maximum discharging power of the battery, as a fraction of `nominal_power`, as a function of the state of
+        charge at the start of the step. The default discharges at `nominal_power` at any state of charge.
+    time_step_ratio : float, default: 1.0
+        Ratio of the control step to the dataset step.
+
+    Notes
+    -----
+    Energies here are per control step, at the battery terminals (the building side). `efficiency` is a
+    round-trip value and each conversion keeps its square root, so charging :math:`E` stores
+    :math:`E\sqrt{\eta}` and discharging :math:`E` takes :math:`E/\sqrt{\eta}` from storage, where
+    :math:`\eta` is read from `power_efficiency_curve` at the applied power. Charging is limited by
+    `capacity_power_curve` and by the degraded capacity; discharging by `discharge_power_curve` and by the
+    floor ``(1 - depth_of_discharge) * capacity``. If `initial_soc` is omitted, the battery starts at that floor.
 
     Attributes
     ----------
@@ -1386,19 +1449,19 @@ class Battery(StorageDevice, ElectricDevice):
 
     @property
     def capacity_loss_coefficient(self) -> float:
-        """Battery degradation; storage capacity lost in each charge and discharge cycle (as a fraction of the total capacity)."""
+        """Battery degradation: fraction of `capacity` lost per equivalent full cycle."""
 
         return self.__capacity_loss_coefficient
 
     @property
     def power_efficiency_curve(self) -> np.ndarray:
-        """Charging/Discharging efficiency as a function of the nomianl power."""
+        """Round-trip efficiency curve as a 2 x N array: terminal power divided by `nominal_power` in row 0, efficiency in row 1."""
 
         return self.__power_efficiency_curve
 
     @property
     def capacity_power_curve(self) -> np.ndarray:
-        """Maximum power of the battery as a function of its current state of charge."""
+        """Charging power curve as a 2 x N array: state of charge in row 0, maximum power as a fraction of `nominal_power` in row 1."""
 
         return self.__capacity_power_curve
     
@@ -1421,13 +1484,13 @@ class Battery(StorageDevice, ElectricDevice):
 
     @property
     def time_step_ratio(self) -> float:
-        """Maximum power of the battery as a function of its current state of charge."""
+        """Ratio of the control step to the dataset step."""
 
         return self.__time_step_ratio
     
     @property
     def depth_of_discharge(self) -> float:
-        """Maximum fraction of the battery that can be discharged relative to the total battery capacity."""
+        """Maximum fraction of `capacity` that can be discharged; the state of charge stays at or above ``1 - depth_of_discharge``."""
 
         return self.__depth_of_discharge
 
@@ -1552,6 +1615,13 @@ class Battery(StorageDevice, ElectricDevice):
         ----------
         energy : float
             Energy to charge if (+) or discharge if (-) in [kWh].
+
+        Notes
+        -----
+        The power curves give one terminal-energy budget per control step and direction, read at the stored
+        energy before the step's first transfer. The first call in a step can use all of it; a later call in
+        the same step gets only what the earlier calls in that direction left. Capacity and depth-of-discharge
+        limits use the current stored energy.
         """
         _require_finite_energy(energy, self)
 
@@ -1559,13 +1629,31 @@ class Battery(StorageDevice, ElectricDevice):
             self.capacity_before_step[self.time_step] = self.degraded_capacity
         energy_init = self.energy_init
         degraded_capacity = self.degraded_capacity
+        same_step_transfer = getattr(self, '_balance_time_step', -1) == self.time_step
         energy, efficiency = self._limit_charge_energy(energy, energy_init, degraded_capacity)
         # One efficiency entry per operation: the efficiency at the power finally applied.
         self.efficiency = efficiency
+        if not same_step_transfer:
+            # The first transfer of a step fixes the energy its power budget is read at.
+            self._step_transfer_start_energy = energy_init
+            self._step_transfer_input_energy = 0.0
+            self._step_transfer_output_energy = 0.0
         super()._charge(energy, energy_init=energy_init)
-        self._capacity_history.append(max(degraded_capacity - self.degrade(), 0.0))
+        if self._last_transfer_energy >= 0.0:
+            self._step_transfer_input_energy = (
+                getattr(self, '_step_transfer_input_energy', 0.0) + self._last_transfer_energy
+            )
+        else:
+            self._step_transfer_output_energy = (
+                getattr(self, '_step_transfer_output_energy', 0.0) - self._last_transfer_energy
+            )
         ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
-        dataset_resolution_balance = self.energy_balance[self.time_step]/ratio
+        if same_step_transfer and len(self._capacity_history) > 1:
+            self._capacity_history[-1] = max(degraded_capacity - self.degrade(self._last_transfer_energy), 0.0)
+            dataset_resolution_balance = self._last_transfer_energy / ratio
+        else:
+            self._capacity_history.append(max(degraded_capacity - self.degrade(), 0.0))
+            dataset_resolution_balance = self.energy_balance[self.time_step] / ratio
         self.update_electricity_consumption(dataset_resolution_balance, enforce_polarity=False)
 
     def preview_charge(self, energy: float) -> float:
@@ -1592,6 +1680,10 @@ class Battery(StorageDevice, ElectricDevice):
         `energy` and the returned energy are dataset-resolution kWh, as :py:meth:`charge` takes them. The
         efficiency is evaluated twice, at the requested and then at the limited power, as the battery
         model always has; only the last value is returned.
+
+        The power curves give one energy budget per control step and direction, read at the energy before
+        the step's first transfer. A later transfer in the same step gets only what the earlier transfers
+        in that direction left of it.
         """
 
         # Public control paths pass dataset-resolution kWh; physical limits are per control step.
@@ -1599,10 +1691,14 @@ class Battery(StorageDevice, ElectricDevice):
         requested_energy = float(energy) * ratio
         step_hours = max(float(self.seconds_per_time_step) / 3600.0, 1.0e-12)
         efficiency = self.efficiency
+        same_step_transfer = getattr(self, '_balance_time_step', -1) == self.time_step
+        budget_energy = getattr(self, '_step_transfer_start_energy', energy_init) if same_step_transfer else energy_init
 
         if requested_energy >= 0:
-            max_input_power = max(float(self.get_max_input_power(energy_init=energy_init)), 0.0)
+            max_input_power = max(float(self.get_max_input_power(energy_init=budget_energy)), 0.0)
             max_input_energy = power_kw_to_energy_kwh(max_input_power, self.seconds_per_time_step)
+            if same_step_transfer:
+                max_input_energy = max(max_input_energy - getattr(self, '_step_transfer_input_energy', 0.0), 0.0)
             limited_energy = min(requested_energy, max_input_energy)
 
             for _ in range(2):
@@ -1613,8 +1709,10 @@ class Battery(StorageDevice, ElectricDevice):
 
             return limited_energy / ratio, efficiency
 
-        max_output_power = max(float(self.get_max_output_power(energy_init=energy_init)), 0.0)
+        max_output_power = max(float(self.get_max_output_power(energy_init=budget_energy)), 0.0)
         max_output_energy = power_kw_to_energy_kwh(max_output_power, self.seconds_per_time_step)
+        if same_step_transfer:
+            max_output_energy = max(max_output_energy - getattr(self, '_step_transfer_output_energy', 0.0), 0.0)
         requested_output = abs(requested_energy)
         limited_output = min(requested_output, max_output_energy)
 
@@ -1720,17 +1818,24 @@ class Battery(StorageDevice, ElectricDevice):
 
         return efficiency
 
-    def degrade(self) -> float:
+    def degrade(self, energy_balance: float = None) -> float:
         r"""Get amount of capacity degradation.
+
+        Parameters
+        ----------
+        energy_balance : float, optional
+            Terminal energy in control-step [kWh] to evaluate degradation for. Defaults to
+            ``self.energy_balance[self.time_step]``.
 
         Returns
         -------
         capacity : float
-            Maximum amount of energy the storage device can store in [kWh].
+            Capacity lost in [kWh].
         """
 
         # Calculating the degradation of the battery: new max. capacity of the battery after charge/discharge
-        capacity_degrade = self.capacity_loss_coefficient*self.capacity*abs(float(self.energy_balance[self.time_step]))/(2*max(self.degraded_capacity, ZERO_DIVISION_PLACEHOLDER))
+        balance = float(self.energy_balance[self.time_step]) if energy_balance is None else float(energy_balance)
+        capacity_degrade = self.capacity_loss_coefficient*self.capacity*abs(balance)/(2*max(self.degraded_capacity, ZERO_DIVISION_PLACEHOLDER))
         return capacity_degrade
     
     def autosize(
@@ -1836,6 +1941,9 @@ class Battery(StorageDevice, ElectricDevice):
         self._capacity_history = self._capacity_history[0:1]
         self.capacity_before_step = np.full(self.episode_tracker.episode_time_steps, np.nan)
         self.capacity_before_step[0] = self.degraded_capacity
+        self._step_transfer_start_energy = self.energy_init
+        self._step_transfer_input_energy = 0.0
+        self._step_transfer_output_energy = 0.0
 
 class DeferrableAppliance(ElectricDevice):
     """Generic deferrable appliance with sparse cycle requests and fixed kWh/step profiles."""

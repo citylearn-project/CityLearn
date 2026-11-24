@@ -1019,6 +1019,100 @@ class CityLearnKPIService:
 
         return float(poor_mean / rich_mean)
 
+    def _ev_session_connected_before_window(self, sim) -> bool:
+        """Whether the session departing at episode step 0 was already connected on the row before.
+
+        Such a session belongs to the rows before the window: a window ending there counts it at
+        its last step with the SOC the controller set (see ``_ev_last_step_countdown``). Counting it
+        again at step 0 would score the SOC set at reset. The first episode has no row before it.
+        """
+
+        start = getattr(sim, 'start_time_step', None)
+        data = getattr(sim, '__dict__', {})
+        states = data.get('_electric_vehicle_charger_state')
+        if start is None or states is None:
+            return False
+
+        start = int(start)
+        rows = (start - 1, start)
+        if rows[0] < 0 or start >= len(states) or any(states[row] != 1 for row in rows):
+            return False
+
+        has_session_ids = False
+        for name in ('_electric_vehicle_session_id', '_electric_vehicle_id'):
+            ids = data.get(name)
+            values = [None if ids is None else self._normal_ev_id(self._safe_sequence_value(ids, row)) for row in rows]
+            if any(value is not None and value != values[0] for value in values):
+                return False
+            if name == '_electric_vehicle_session_id':
+                has_session_ids = any(value is not None for value in values)
+
+        countdowns = data.get('_electric_vehicle_departure_time')
+        if has_session_ids or countdowns is None:
+            return True
+
+        # Without session ids, a countdown that resets from [0, 1] marks a new session, as in the
+        # departure rules.
+        before, after = (self._to_scalar(countdowns[row], np.nan) for row in rows)
+        return not (
+            np.isfinite(before)
+            and np.isfinite(after)
+            and 0.0 <= before <= 1.0 + self.EV_DEPARTURE_EPS
+            and after > before + self.EV_DEPARTURE_EPS
+        )
+
+    def _ev_soc_carried_in(self) -> bool:
+        """Whether the episode started from EV SOC carried from the previous one (`ev_soc_carryover`).
+
+        A session that continues across the first row then keeps the charge of the previous episode and is
+        scored where it leaves, so step 0 does not skip it.
+        """
+
+        carryover = getattr(self.env, '_ev_soc_carryover_context', None)
+        return bool(carryover and carryover.get('carried_in', False))
+
+    def _ev_last_step_countdown(self, terminal_step: int) -> float:
+        """Largest departure countdown counted at a window's last control step.
+
+        A session connected there with this countdown or less leaves before the next control
+        step: one row later in general, and two rows later when another ``disjoint`` split of
+        the simulation follows the episode, because the row between the two episodes is never
+        controlled. The last window of a simulation, a single episode and a window that ends
+        before the episode does (a member that leaves, or a mid-episode evaluation) use one row.
+        """
+
+        env = self.env
+        carryover = getattr(env, '_ev_soc_carryover_context', None)
+        if carryover is not None:
+            # With `ev_soc_carryover` a session connected on the next episode's first row is scored there,
+            # with the carried SOC; the env sets the countdown from where that episode starts.
+            tracker = getattr(env, 'episode_tracker', None)
+            start = getattr(tracker, 'episode_start_time_step', None)
+            end = getattr(tracker, 'episode_end_time_step', None)
+            if start is None or end is None or terminal_step != end - start - 1:
+                return 1.0
+            return float(carryover.get('last_step_countdown', 1.0))
+
+        if (
+            getattr(env, 'episode_split_boundary', 'shared') != 'disjoint'
+            or getattr(env, 'rolling_episode_split', False)
+        ):
+            return 1.0
+
+        length = getattr(env, 'episode_time_steps', None)
+        tracker = getattr(env, 'episode_tracker', None)
+        if isinstance(length, bool) or not isinstance(length, (int, np.integer)) or tracker is None:
+            return 1.0
+
+        start = getattr(tracker, 'episode_start_time_step', None)
+        end = getattr(tracker, 'episode_end_time_step', None)
+        simulation_end = getattr(tracker, 'simulation_end_time_step', None)
+        if start is None or end is None or simulation_end is None or terminal_step != end - start - 1:
+            return 1.0
+
+        # Disjoint splits advance by `length` rows, so the next one starts at `end + 1`.
+        return 2.0 if end + int(length) <= simulation_end else 1.0
+
     def _compute_ev_metrics(self, building, *, t_start: int = 0, t_final: Optional[int] = None) -> Dict[str, float]:
         upper = int(max(building.time_step, 0))
         t_start = int(max(t_start, 0))
@@ -1103,6 +1197,10 @@ class CityLearnKPIService:
             if history_limit < t_start:
                 continue
 
+            # The window's last control step, not the schedule's terminal
+            # row: the loop never reaches that row in a normal episode.
+            terminal_step = history_limit
+            terminal_countdown = self._ev_last_step_countdown(terminal_step)
             ev_ids = getattr(sim, 'electric_vehicle_id', None)
             session_ids = getattr(sim, 'electric_vehicle_session_id', None)
             departure_times = getattr(sim, 'electric_vehicle_departure_time', None)
@@ -1139,10 +1237,10 @@ class CityLearnKPIService:
                     np.nan,
                 )
                 terminal_departure = (
-                    t == len(states) - 1
+                    t == terminal_step
                     and np.isfinite(departure_countdown)
                     # -1 is the schedule's unknown-departure sentinel.
-                    and 0.0 <= departure_countdown <= 1.0 + self.EV_DEPARTURE_EPS
+                    and 0.0 <= departure_countdown <= terminal_countdown + self.EV_DEPARTURE_EPS
                 )
                 departure_transition = t + 1 < len(states) and (
                     next_state != 1
@@ -1174,6 +1272,9 @@ class CityLearnKPIService:
                 )
 
                 if current_state != 1 or not (departure_transition or terminal_departure):
+                    continue
+
+                if t == 0 and not self._ev_soc_carried_in() and self._ev_session_connected_before_window(sim):
                     continue
 
                 ev = self._safe_sequence_value(charger.past_connected_evs, t)

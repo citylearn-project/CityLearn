@@ -13,6 +13,13 @@ from citylearn.internal.balance_audit import IndependentBalanceAudit
 from test_deferrable_appliance_integration import _schema_with_deferrable_appliance
 from test_independent_balances import commands, scenario
 from test_robustness import _copy_schema, _clean_schema, _event, _write_events, _zero_actions
+from private_access import (
+    entity_service,
+    member_pool,
+    provenance_service,
+    robustness_service,
+    runtime_service,
+)
 
 
 def _load(schema, *, steps=8, central_agent=True):
@@ -76,7 +83,7 @@ def test_fault_envelopes_cover_composed_values_without_changing_physics(
             assert low <= value <= high
             np.testing.assert_array_equal(reward, baseline_reward)
         np.testing.assert_array_equal(env.net_electricity_consumption, baseline.net_electricity_consumption)
-        assert env._provenance_service.summary() == baseline._provenance_service.summary()
+        assert provenance_service(env).summary() == provenance_service(baseline).summary()
     finally:
         env.close()
         baseline.close()
@@ -93,7 +100,7 @@ def test_bounds_do_not_leak_fault_targets_or_change_edges(tmp_path, hidden):
     env = _load(schema)
     try:
         obs, _ = env.reset(seed=7)
-        original = env._entity_service.observation_space
+        original = entity_service(env).observation_space
         adjusted = env.observation_space
         assert adjusted["edges"] is original["edges"]
         for table, box in adjusted["tables"].spaces.items():
@@ -148,7 +155,7 @@ def test_future_member_absence_return_and_reset_have_exact_populations(tmp_path,
             assert district["window_action_event_step_count"] == 7
             assert district["applied_action_event_step_count"] == 3
             assert district["action_application_coverage_ratio"] == pytest.approx(3 / 7)
-            assert set(env._robustness_service.history) == {2, 3, 6, 7}
+            assert set(robustness_service(env).history) == {2, 3, 6, 7}
             assert report["legacy"]["buildings"]["Building_2"]["robustness_observation_corruption_count"] == 4
             assert report["executed_intervals"]["buildings"]["Building_2"]["robustness_observation_corruption_count"] == 3
             assert env.evaluate_v2(include_business_as_usual=False).attrs["robustness_audit"] == report
@@ -186,7 +193,7 @@ def test_future_assets_removal_reinstallation_and_absent_rows(tmp_path, asset_ty
             env.reset(seed=7)
             while not env.terminated:
                 env.step(_zero_actions(env))
-            assert set(env._robustness_service.history) == {2, 3, 6, 7}
+            assert set(robustness_service(env).history) == {2, 3, 6, 7}
             assert env.get_robustness_audit()["district"]["applied_observation_event_step_count"] == 4
     finally:
         env.close()
@@ -237,15 +244,15 @@ def test_sensor_faults_and_dynamic_members_keep_physics_and_reward(tmp_path, out
             while not env.terminated:
                 payload = commands(env, [0.4, -0.2], start=env.time_step == 0)
                 if fast:
-                    env._runtime_service.step_without_feedback(payload)
-                    baseline._runtime_service.step_without_feedback(payload)
+                    runtime_service(env).step_without_feedback(payload)
+                    runtime_service(baseline).step_without_feedback(payload)
                 else:
                     _, reward, *_ = env.step(payload)
                     _, base_reward, *_ = baseline.step(payload)
                     np.testing.assert_array_equal(reward, base_reward)
             assert audit.finish()["status"] == "pass"
         np.testing.assert_array_equal(env.net_electricity_consumption, baseline.net_electricity_consumption)
-        assert env._provenance_service.summary() == baseline._provenance_service.summary()
+        assert provenance_service(env).summary() == provenance_service(baseline).summary()
         if fast:
             assert env.get_robustness_audit()["district"]["observation_index_count"] == 1
     finally:
@@ -280,7 +287,7 @@ def test_forecast_bounds_respect_module_flags_and_feature_kind(tmp_path, interfa
             original_high = float(baseline.high[col])
         else:
             col = env.entity_specs["tables"]["district"]["features"].index(feature)
-            original_high = float(env._entity_service.observation_space["tables"]["district"].high[0, col])
+            original_high = float(entity_service(env).observation_space["tables"]["district"].high[0, col])
         assert high >= original_high + 2.5 if enabled else high == original_high
     finally:
         env.close()
@@ -300,7 +307,7 @@ def test_future_ev_telemetry_only_applies_when_its_charger_is_present(tmp_path):
         assert not env.electric_vehicles
         while not env.terminated:
             env.step(_zero_actions(env))
-        assert set(env._robustness_service.history) == set(range(2, 8))
+        assert set(robustness_service(env).history) == set(range(2, 8))
     finally:
         env.close()
 
@@ -345,7 +352,7 @@ def test_events_outside_presence_or_episode_have_no_false_applications(tmp_path)
         assert audit["district"]["scheduled_event_count"] == 1
         assert audit["district"]["window_observation_event_step_count"] == 3
         assert audit["district"]["observation_application_coverage_ratio"] == 0.0
-        assert not env._robustness_service.history
+        assert not robustness_service(env).history
     finally:
         env.close()
 
@@ -360,19 +367,19 @@ def test_declared_view_does_not_mutate_the_runtime_inventory(tmp_path):
     env = _load(schema)
     try:
         building = env.buildings[0]
-        before = (env.topology_version, env._topology_service.event_log, env.get_metadata(),
+        before = (env.topology_version, env.topology_event_log, env.get_metadata(),
                   building.active_actions, building.active_observations,
                   building.electrical_storage.soc.copy(), dict(building._charger_lookup))
-        view = declared_target_view(env._robustness_service)
+        view = declared_target_view(robustness_service(env))
         assert [b.name for b in view.env.buildings] == ["Building_1", "New"]
         view.env.entity_specs
-        after = (env.topology_version, env._topology_service.event_log, env.get_metadata(),
+        after = (env.topology_version, env.topology_event_log, env.get_metadata(),
                  building.active_actions, building.active_observations,
                  building.electrical_storage.soc.copy(), dict(building._charger_lookup))
         assert before[:5] == after[:5]
         np.testing.assert_array_equal(before[5], after[5])
         assert before[6] == after[6]
-        assert list(env._topology_service.member_pool) == ["Building_1"]
+        assert list(member_pool(env)) == ["Building_1"]
     finally:
         env.close()
 
@@ -399,7 +406,7 @@ def test_feature_only_exposed_by_a_future_member_is_valid_across_its_lifecycle(t
             obs, *_ = env.step(_zero_actions(env))
             if mode == "hidden_faults":
                 assert "robustness" not in obs["meta"]
-        assert set(env._robustness_service.history) == {2, 3}
+        assert set(robustness_service(env).history) == {2, 3}
     finally:
         env.close()
 
