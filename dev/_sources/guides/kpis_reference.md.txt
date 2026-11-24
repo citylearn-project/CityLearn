@@ -148,7 +148,7 @@ a step. With dynamic topology a member counts only while it is active.
 |---|---|
 | `control` | The run being evaluated. |
 | `baseline` | The conventional counterfactual of the same run: the members without their battery and thermal storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator's own series. The EV charging of the run is replaced by that of the native BAU with the `'full'` target (charged on arrival until full, no V2G), the same for every controller; the deferrable appliances and the HVAC stay as the controller ran them. `baseline_version=1` adds no EV charging back, as in CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run. |
-| `business_as_usual` | The native business-as-usual rollout of the same scenario and window (see [Baselines](baselines.md)). |
+| `business_as_usual` | The native business-as-usual rollout of the same scenario and window (see [Baselines](baselines.md)). Its HVAC requests zero up to `baseline_version=2`; with `baseline_version=3` it delivers the dataset heating and cooling demand ([HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |
 

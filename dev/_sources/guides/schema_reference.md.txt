@@ -55,7 +55,7 @@ This page documents the `schema.json` contract. The schema is the source of trut
 | `check_observation_limits` | bool | no | Validate observation bounds. |
 | `physics_invariant_checks` | bool | no | Runtime physical invariant checks. |
 | `physics_version` | int | no | Physics version, `1` or `2` (default). `1` reproduces the physics of CityLearn 3.6.0; see the [migration guide](migration.md#physics-version). The `physics_version` argument of `CityLearnEnv` takes precedence. |
-| `baseline_version` | int | no | Definition of the default KPI baseline, `1` or `2` (default). `2` removes the battery, the thermal storage and the EV charging of the controlled run and adds back the EV charging of the native BAU with the `'full'` target; `1` adds nothing back, as in CityLearn 3.6.0; see the [migration guide](migration.md#ev-charging-in-the-default-baseline). The `baseline_version` argument of `CityLearnEnv` takes precedence. |
+| `baseline_version` | int | no | Definition of the default KPI baseline, `1`, `2` (default) or `3`. `3` (opt-in) keeps the baseline of `2` and makes the native BAU deliver the dataset heating and cooling demand instead of sending zero to the HVAC actions; see [HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version). `2` removes the battery, the thermal storage and the EV charging of the controlled run and adds back the EV charging of the native BAU with the `'full'` target; `1` adds nothing back, as in CityLearn 3.6.0; see the [migration guide](migration.md#ev-charging-in-the-default-baseline). The `baseline_version` argument of `CityLearnEnv` takes precedence. |
 | `metrics_log_interval` | int | no | Runtime metric log cadence. |
 
 ### Calendar and dataset metadata keys

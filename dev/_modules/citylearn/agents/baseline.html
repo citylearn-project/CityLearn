@@ -162,6 +162,9 @@
 <span class="sd">                                            departure SOC (``ev_charge_target='requested'``);</span>
 <span class="sd">                                            starts appliances at the first admissible step; the</span>
 <span class="sd">                                            home battery stores PV surplus and serves local import.</span>
+<span class="sd">                                            With ``hvac='dataset_demand'`` (default under</span>
+<span class="sd">                                            ``baseline_version=3``) the HVAC delivers the dataset's</span>
+<span class="sd">                                            heating and cooling demand.</span>
 <span class="sd">:class:`RBCBasicPolicy`                     Current price and service urgency for EVs and</span>
 <span class="sd">                                            appliances; battery self-consumption.</span>
 <span class="sd">:class:`RBCSmartPolicy`                     Price and local PV-surplus forecasts schedule EVs and</span>
@@ -320,21 +323,29 @@
 
         <span class="n">_</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flattener</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
         <span class="n">per_building</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">controlled</span><span class="p">,</span> <span class="n">zeros</span><span class="p">),</span> <span class="n">vector</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layouts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">values</span><span class="p">)):</span>
+        <span class="c1"># The layouts follow env.buildings, attached again above when the topology changes.</span>
+        <span class="k">for</span> <span class="n">building</span><span class="p">,</span> <span class="p">(</span><span class="n">controlled</span><span class="p">,</span> <span class="n">zeros</span><span class="p">),</span> <span class="n">vector</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layouts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">values</span><span class="p">)):</span>
             <span class="n">full</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">zeros</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">controlled</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
                 <span class="n">full</span><span class="p">[</span><span class="n">position</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_uncontrolled_actions</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">full</span><span class="p">)</span>
             <span class="n">per_building</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">full</span><span class="p">)</span>
         <span class="n">actions</span> <span class="o">=</span> <span class="p">[[</span><span class="n">v</span> <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">per_building</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vector</span><span class="p">]]</span> <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">central_agent</span> <span class="k">else</span> <span class="n">per_building</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">actions</span> <span class="o">=</span> <span class="n">actions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">next_time_step</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">actions</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_uncontrolled_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">"""Set the actions the engine does not control in `actions`, the building's vector; they stay zero here."""</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">comparison_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
         <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'definition_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFINITION_VERSION</span><span class="p">}</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'ev_charge_target'</span><span class="p">):</span>
             <span class="n">parameters</span><span class="p">[</span><span class="s1">'ev_charge_target'</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_charge_target</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'hvac'</span><span class="p">,</span> <span class="s1">'off'</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">'off'</span><span class="p">:</span>
+            <span class="c1"># Only when it is on, so the identity of the BAU without HVAC is the one of earlier releases.</span>
+            <span class="n">parameters</span><span class="p">[</span><span class="s1">'hvac'</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hvac</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
             <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
                 <span class="k">continue</span>
@@ -377,9 +388,26 @@
 <span class="sd">    step and the home battery uses observed current-step demand and PV when</span>
 <span class="sd">    estimating local surplus or import.</span>
 
+<span class="sd">    The HVAC follows `hvac`. With ``'off'`` the ``heating_device``, ``cooling_device`` and</span>
+<span class="sd">    ``cooling_or_heating_device`` actions are zero, as in CityLearn 3.6.0, so on datasets with HVAC</span>
+<span class="sd">    actions the BAU buildings are neither heated nor cooled (#362). With ``'dataset_demand'`` each step the</span>
+<span class="sd">    HVAC action is the fraction of the device's nominal power that delivers the dataset's own heating or</span>
+<span class="sd">    cooling demand (``heating_demand_without_control`` and ``cooling_demand_without_control`` of the energy</span>
+<span class="sd">    simulation, the as-simulated demand of the building file), clipped to the action bounds; the device</span>
+<span class="sd">    limits (nominal power, outage supply) cap it as for any action. That is a thermostat that meets the</span>
+<span class="sd">    load without optimisation. The demand is used only in the steps whose ``hvac_mode`` allows that service.</span>
+<span class="sd">    The default, ``None``, is ``'dataset_demand'`` when the environment's ``baseline_version`` is 3 or more</span>
+<span class="sd">    and ``'off'`` otherwise.</span>
+
 <span class="sd">    Choose the BAU that ``evaluate_v2()`` uses with the environment's</span>
-<span class="sd">    ``business_as_usual_ev_charge_target``.</span>
+<span class="sd">    ``business_as_usual_ev_charge_target`` and ``baseline_version``.</span>
 <span class="sd">    """</span>
+
+    <span class="c1">#: HVAC behaviours of the BAU, see the class description.</span>
+    <span class="n">HVAC_MODES</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'off'</span><span class="p">,</span> <span class="s1">'dataset_demand'</span><span class="p">)</span>
+    <span class="c1">#: Suffix of the definition identifier when the BAU delivers the dataset HVAC demand.</span>
+    <span class="n">HVAC_DEFINITION_SUFFIX</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'+hvac-dataset-demand-v1'</span>
+    <span class="n">_HVAC_ACTIONS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'heating_device'</span><span class="p">,</span> <span class="s1">'cooling_device'</span><span class="p">,</span> <span class="s1">'cooling_or_heating_device'</span><span class="p">)</span>
 
     <span class="n">EV_CHARGE_TARGETS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">'requested'</span><span class="p">:</span> <span class="p">(</span><span class="n">engines</span><span class="o">.</span><span class="n">NormalTargetPolicy</span><span class="p">,</span> <span class="s1">'immediate-user-target-v3'</span><span class="p">),</span>
@@ -389,23 +417,111 @@
     <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'immediate-full-charge-v4'</span>
     <span class="n">_use_current_step_load</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">ev_charge_target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'full'</span><span class="p">,</span> <span class="o">**</span><span class="n">hyperparameters</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ENGINE_CLASS</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">definition</span><span class="p">(</span><span class="n">ev_charge_target</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">ev_charge_target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'full'</span><span class="p">,</span> <span class="n">hvac</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">hyperparameters</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hvac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hvac_mode_for</span><span class="p">(</span><span class="n">env</span><span class="p">)</span> <span class="k">if</span> <span class="n">hvac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_hvac</span><span class="p">(</span><span class="n">hvac</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ENGINE_CLASS</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">definition</span><span class="p">(</span><span class="n">ev_charge_target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hvac</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ev_charge_target</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ev_charge_target</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="o">**</span><span class="n">hyperparameters</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BusinessAsUsualAgent.definition">
 <a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent.definition">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">definition</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ev_charge_target</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">definition</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ev_charge_target</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">hvac</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'off'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Return the engine and the reproducible BAU definition identifier."""</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">EV_CHARGE_TARGETS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">ev_charge_target</span><span class="p">)]</span>
+            <span class="n">engine</span><span class="p">,</span> <span class="n">identifier</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">EV_CHARGE_TARGETS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">ev_charge_target</span><span class="p">)]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"ev_charge_target must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">EV_CHARGE_TARGETS</span><span class="p">)</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">ev_charge_target</span><span class="si">!r}</span><span class="s2">."</span>
-            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_validate_hvac</span><span class="p">(</span><span class="n">hvac</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'dataset_demand'</span><span class="p">:</span>
+            <span class="n">identifier</span> <span class="o">+=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">HVAC_DEFINITION_SUFFIX</span>
+
+        <span class="k">return</span> <span class="n">engine</span><span class="p">,</span> <span class="n">identifier</span></div>
+
+
+<div class="viewcode-block" id="BusinessAsUsualAgent.hvac_mode_for">
+<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent.hvac_mode_for">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hvac_mode_for</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""HVAC behaviour of the BAU under the environment's ``baseline_version``."""</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION</span><span class="p">,</span> <span class="n">baseline_version_of</span>
+
+        <span class="n">version</span> <span class="o">=</span> <span class="n">baseline_version_of</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'unwrapped'</span><span class="p">,</span> <span class="n">env</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s1">'dataset_demand'</span> <span class="k">if</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="n">BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION</span> <span class="k">else</span> <span class="s1">'off'</span></div>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_hvac</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">hvac</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">hvac</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">HVAC_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'hvac must be one of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">HVAC_MODES</span><span class="p">)</span><span class="si">}</span><span class="s1">, got </span><span class="si">{</span><span class="n">hvac</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">hvac</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_uncontrolled_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hvac</span> <span class="o">==</span> <span class="s1">'off'</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">active</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">active_actions</span><span class="p">)</span>
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">high</span>
+
+        <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">active</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HVAC_ACTIONS</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_demand_hvac_action</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                <span class="n">actions</span><span class="p">[</span><span class="n">position</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">low</span><span class="p">[</span><span class="n">position</span><span class="p">],</span> <span class="n">high</span><span class="p">[</span><span class="n">position</span><span class="p">]))</span>
+
+<div class="viewcode-block" id="BusinessAsUsualAgent.dataset_demand_hvac_action">
+<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent.dataset_demand_hvac_action">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dataset_demand_hvac_action</span><span class="p">(</span><span class="n">building</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Action of HVAC action `name` that delivers the building's dataset demand at its current time step.</span>
+
+<span class="sd">        The LSTM buildings turn an action `a` into the output of the device run at ``a*nominal_power`` over</span>
+<span class="sd">        the dataset step, so `a` is the device input for the demand over the nominal input over that step.</span>
+<span class="sd">        The value is not clipped. Zero when there is no demand, no device or the ``hvac_mode`` excludes the</span>
+<span class="sd">        service; for ``cooling_or_heating_device`` the larger of the two services sets the sign.</span>
+<span class="sd">        """</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.energy_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">HeatPump</span>
+
+        <span class="n">time_step</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">time_step</span>
+        <span class="n">simulation</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">energy_simulation</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">simulation</span><span class="o">.</span><span class="n">hvac_mode</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span>
+        <span class="n">temperature</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">weather</span><span class="o">.</span><span class="n">outdoor_dry_bulb_temperature</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_dataset_step_hours</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">fraction</span><span class="p">(</span><span class="n">heating</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="mf">0.0</span>
+
+            <span class="n">series</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">heating_demand_without_control</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="n">simulation</span><span class="o">.</span><span class="n">cooling_demand_without_control</span>
+            <span class="n">demand</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">heating_device</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="n">building</span><span class="o">.</span><span class="n">cooling_device</span>
+            <span class="n">nominal</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="s1">'nominal_power'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">demand</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">nominal</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mf">0.0</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">HeatPump</span><span class="p">):</span>
+                <span class="n">electricity</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">get_input_power</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">heating</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">electricity</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">get_input_power</span><span class="p">(</span><span class="n">demand</span><span class="p">)</span>
+
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">electricity</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">nominal</span><span class="o">*</span><span class="n">hours</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="mf">0.0</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">'heating_device'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fraction</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">'cooling_device'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fraction</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">heating</span><span class="p">,</span> <span class="n">cooling</span> <span class="o">=</span> <span class="n">fraction</span><span class="p">(</span><span class="kc">True</span><span class="p">),</span> <span class="n">fraction</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">heating</span> <span class="k">if</span> <span class="n">heating</span> <span class="o">&gt;=</span> <span class="n">cooling</span> <span class="k">else</span> <span class="o">-</span><span class="n">cooling</span></div>
 </div>
 
 

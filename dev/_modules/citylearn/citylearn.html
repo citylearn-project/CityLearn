@@ -377,7 +377,9 @@
 <span class="sd">        Definition of the default KPI baseline (the ``*_without_storage`` series): ``2`` (default) removes the battery,</span>
 <span class="sd">        the thermal storage and the EV charging of the controlled run, and adds back the EV charging of the native BAU</span>
 <span class="sd">        with the ``'full'`` target, so it is the same for every controller and has no V2G; ``1`` adds nothing back, as</span>
-<span class="sd">        in CityLearn 3.6.0. Overrides the schema key. See :py:mod:`citylearn.internal.baseline_version`.</span>
+<span class="sd">        in CityLearn 3.6.0. ``3`` (opt-in) keeps the baseline of ``2``, and the native BAU also runs the HVAC so that it</span>
+<span class="sd">        delivers the dataset's own heating and cooling demand, instead of sending zero to the HVAC actions. Overrides</span>
+<span class="sd">        the schema key. See :py:mod:`citylearn.internal.baseline_version`.</span>
 <span class="sd">    debug_timing: bool, optional</span>
 <span class="sd">        Log runtime timings. Defaults to the schema value, else ``False``.</span>
 <span class="sd">    check_observation_limits: bool, optional</span>
@@ -799,7 +801,8 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">baseline_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Definition of the default KPI baseline, see :py:mod:`citylearn.internal.baseline_version`."""</span>
+<span class="w">        </span><span class="sd">"""Definition of the default KPI baseline and, from version 3, of the native BAU HVAC; see</span>
+<span class="sd">        :py:mod:`citylearn.internal.baseline_version`."""</span>
 
         <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">baseline_version_of</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_baseline_version'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">baseline_version_of</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>

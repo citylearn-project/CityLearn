@@ -103,6 +103,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#ev-charging-in-the-default-baseline">EV charging in the default baseline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hvac-in-the-bau-opt-in-baseline-version-3">HVAC in the BAU (opt-in <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code>)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#district-emissions-with-local-trading-off">District emissions with local trading off</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#community-market-settings-are-validated">Community market settings are validated</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#portfolio-market-rows-with-and-without-markets">Portfolio market rows with and without markets</a></li>
@@ -281,6 +282,27 @@ reproduce the baseline of CityLearn 3.6.0. The version is in
 <code class="docutils literal notranslate"><span class="pre">comparison_context</span></code>; <code class="docutils literal notranslate"><span class="pre">compare_exports()</span></code> reports two runs under different
 versions as <code class="docutils literal notranslate"><span class="pre">incompatible</span></code>. <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> requires every community to
 use the same version.</p></li>
+</ul>
+</section>
+<section id="hvac-in-the-bau-opt-in-baseline-version-3">
+<span id="hvac-in-the-bau-opt-in-baseline_version3"></span><h3>HVAC in the BAU (opt-in <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code>)<a class="headerlink" href="#hvac-in-the-bau-opt-in-baseline-version-3" title="Link to this heading"></a></h3>
+<p>On datasets with HVAC actions (temperature dynamics), the BAU sends zero to
+<code class="docutils literal notranslate"><span class="pre">heating_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_device</span></code> and <code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code>, so its
+buildings are neither heated nor cooled and the <code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> rows
+compare the controller with unheated or uncooled houses
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/362">#362</a>).</p>
+<ul class="simple">
+<li><p>Nothing changes by default: <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code> stays the default and
+versions 1 and 2 give the same results as before.</p></li>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code> to make the BAU deliver the dataset’s own heating and
+cooling demand at each step, clipped to the action bounds and device limits.
+The BAU rows and the deltas and ratios to the BAU change on datasets with
+HVAC actions; on other datasets version 3 equals version 2. The BAU definition
+becomes <code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v4+hvac-dataset-demand-v1</span></code> (or
+<code class="docutils literal notranslate"><span class="pre">immediate-user-target-v3+hvac-dataset-demand-v1</span></code>). See
+<a class="reference internal" href="baselines.html#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> you run yourself follows the environment’s version;
+<code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code> or <code class="docutils literal notranslate"><span class="pre">hvac='dataset_demand'</span></code> overrides it.</p></li>
 </ul>
 </section>
 <section id="district-emissions-with-local-trading-off">
