@@ -251,3 +251,61 @@ def test_environment_physics_invariants_and_single_transfer_parity_v1_and_v2(phy
     assert float(b_single.electricity_consumption[0]) == expected_f32_balance
     expected_cap = 100.0 - b_single.capacity_loss_coefficient * 100.0 * abs(expected_f32_balance) / 200.0
     assert b_single.degraded_capacity == expected_cap
+
+
+@pytest.mark.parametrize("legacy_discharge_power_limit", [False, True])
+def test_repeated_transfers_share_one_power_budget_per_step(legacy_discharge_power_limit: bool):
+    # Issue #363: each call used to receive the full nominal_power x step budget, so three 5 kWh charges
+    # moved 13.38 kWh through a 5 kW battery in one hour.
+    battery = _make_battery(nominal_power=5.0, capacity_loss_coefficient=0.0,
+                            legacy_discharge_power_limit=legacy_discharge_power_limit)
+    input_budget = battery.get_max_input_power()
+    output_budget = battery.get_max_output_power()
+    assert input_budget == pytest.approx(4.5)
+
+    for _ in range(3):
+        battery.charge(5.0)
+
+    assert battery.energy_balance[0] == pytest.approx(input_budget, rel=1e-6)
+    assert battery.electricity_consumption[0] == pytest.approx(input_budget, rel=1e-6)
+    assert battery.gross_energy_charge[0] == pytest.approx(input_budget, rel=1e-6)
+    assert battery.preview_charge(1.0) == pytest.approx(0.0, abs=1e-6)
+
+    # The discharge budget is separate and read at the energy before the step's first transfer.
+    for _ in range(3):
+        battery.charge(-5.0)
+
+    assert battery.gross_energy_discharge[0] == pytest.approx(output_budget, rel=1e-6)
+    assert battery.energy_balance[0] == pytest.approx(input_budget - output_budget, rel=1e-6)
+    assert battery.preview_charge(-1.0) == pytest.approx(0.0, abs=1e-6)
+
+    # The next step starts with a full budget.
+    battery.next_time_step()
+    battery.charge(5.0)
+    assert battery.energy_balance[1] == pytest.approx(battery.get_max_input_power(energy_init=battery.soc[0] * 100.0),
+                                                      rel=1e-6)
+
+
+def test_split_transfer_moves_the_same_energy_as_one_transfer():
+    single = _make_battery(nominal_power=5.0, capacity_loss_coefficient=0.0)
+    single.charge(10.0)
+
+    split = _make_battery(nominal_power=5.0, capacity_loss_coefficient=0.0)
+    split.charge(2.0)
+    assert split.preview_charge(10.0) == pytest.approx(float(single.energy_balance[0]) - 2.0, rel=1e-6)
+    split.charge(10.0)
+
+    assert split.energy_balance[0] == pytest.approx(single.energy_balance[0], rel=1e-6)
+    assert split.soc[0] == pytest.approx(single.soc[0], rel=1e-6)
+
+
+def test_subhourly_repeated_transfers_share_the_control_step_budget():
+    # 15-minute steps: the budget is 4.5 kW x 0.25 h = 1.125 kWh per control step, while each 4.0 kWh
+    # dataset-resolution request is 1.0 kWh of control-step energy at time_step_ratio 0.25.
+    battery = _make_battery(nominal_power=5.0, capacity_loss_coefficient=0.0, seconds_per_time_step=900,
+                            time_step_ratio=0.25)
+    for _ in range(3):
+        battery.charge(4.0)
+
+    assert battery.energy_balance[0] == pytest.approx(1.125, rel=1e-6)
+    assert battery.electricity_consumption[0] == pytest.approx(1.125, rel=1e-6)
