@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from private_access import demand_response_service
 
 pytest.importorskip("gymnasium")
 
@@ -134,7 +135,7 @@ def test_building_demand_response_settlement_adds_up_to_the_district():
             t = int(env.time_step)
             env.step(actions(1.0 if 18 <= t <= 22 else -1.0 if 24 <= t <= 26 else 0.0))
 
-        service = env._demand_response_service
+        service = demand_response_service(env)
         rows = [row for row in service.settlement_history if row["baseline_valid"]]
         assert len(rows) == 3
         for row in rows:
@@ -159,7 +160,7 @@ def test_building_demand_response_settlement_adds_up_to_the_district():
         # Each member is credited against its equal share of the request, so the
         # mean of the member ratios (capped at 1) cannot exceed the district ratio.
         assert building_compliance.mean() <= district_compliance + 1.0e-9
-        assert env._demand_response_service.get_metadata()["definition_version"] == "demand-response-audit-v2"
+        assert demand_response_service(env).get_metadata()["definition_version"] == "demand-response-audit-v2"
     finally:
         env.close()
 

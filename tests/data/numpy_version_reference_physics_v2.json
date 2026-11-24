@@ -601,9 +601,9 @@
    ]
   },
   "kpis": {
-   "district_cost_ratio_to_baseline_total_ratio": 2.8420123897516048,
-   "district_emissions_ratio_to_baseline_total_ratio": 1.5424234179040441,
-   "district_energy_grid_ratio_to_baseline_import_total_ratio": 1.6012461155792037,
+   "district_cost_ratio_to_baseline_total_ratio": 1.2930723147492715,
+   "district_emissions_ratio_to_baseline_total_ratio": 0.7018651651471866,
+   "district_energy_grid_ratio_to_baseline_import_total_ratio": 0.6847647518878189,
    "district_cost_total_control_eur": 268.0324229172109
   }
  },
@@ -1209,9 +1209,9 @@
    ]
   },
   "kpis": {
-   "district_cost_ratio_to_baseline_total_ratio": 1.6979809744757342,
-   "district_emissions_ratio_to_baseline_total_ratio": 1.644978620346381,
-   "district_energy_grid_ratio_to_baseline_import_total_ratio": 1.704871981849579,
+   "district_cost_ratio_to_baseline_total_ratio": 0.7582993823680075,
+   "district_emissions_ratio_to_baseline_total_ratio": 0.7724814723951039,
+   "district_energy_grid_ratio_to_baseline_import_total_ratio": 0.7598077285800487,
    "district_cost_total_control_eur": 130.78938357221546
   }
  }

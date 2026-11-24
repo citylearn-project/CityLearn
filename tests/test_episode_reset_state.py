@@ -5,6 +5,7 @@ import numpy as np
 import citylearn.utilities as utilities
 from citylearn.citylearn import CityLearnEnv
 from citylearn.data import DataSet
+from private_access import charging_constraint_last_penalty_kwh
 
 
 def _full_series(data, name):
@@ -68,7 +69,7 @@ def test_charging_constraint_violation_observation_resets():
     building = env.buildings[0]
     env.reset()
     _run(env, lambda env: [[1.0 if 'storage' in name else 0.0 for name in env.action_names[0]]])
-    assert building._charging_constraint_last_penalty_kwh > 0.0, 'scenario must produce a violation'
+    assert charging_constraint_last_penalty_kwh(building) > 0.0, 'scenario must produce a violation'
 
     env.reset()
     assert building.observations()['charging_constraint_violation_kwh'] == 0.0

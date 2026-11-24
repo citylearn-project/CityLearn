@@ -133,6 +133,9 @@ def test_train_evaluates_the_trained_agent(tmp_path):
     assert set(_TrainingRecordingAgent.evaluated_ids) == set(_TrainingRecordingAgent.trained_ids)
     evaluation = FileHandler.read_json(tmp_path / 'simulation' / 'train-evaluation.json')
     assert evaluation['evaluation_episode_time_steps'] == [0, 7]
+    # train --evaluate also writes the evaluate_v2() table (#367).
+    kpis = pd.read_csv(tmp_path / 'simulation' / 'train-evaluation_v2.csv')
+    assert {'cost_function', 'value', 'name', 'level'} <= set(kpis.columns)
 
 
 @pytest.mark.parametrize('evaluation_episode_time_steps', [[[1, 6]], [1, 6]], ids=['cli_pairs', 'single_pair'])

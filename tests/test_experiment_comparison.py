@@ -7,6 +7,7 @@ from citylearn.internal.comparison import compare_manifests, compare_exports
 from citylearn.internal.experiment import experiment_manifest
 from citylearn.citylearn import CityLearnEnv
 from test_deferrable_appliance_integration import _schema_with_deferrable_appliance, _zero_flat_actions
+from private_access import ev_drift_seed
 
 
 def export_run(path, output, *, seed=0, ratio=.8, identity='controller-a'):
@@ -115,7 +116,7 @@ def test_repeated_episodes_pair_away_vehicle_stochastic_trajectory(tmp_path):
         initial=deepcopy(env._comparison_initial_inventory)
         while not env.terminated:env.step(_zero_flat_actions(env))
         ref=env.run_business_as_usual_baseline().env
-        assert ref._ev_drift_seed==env._ev_drift_seed
+        assert ev_drift_seed(ref)==ev_drift_seed(env)
         for a,b in zip(env.electric_vehicles,ref.electric_vehicles):
             np.testing.assert_allclose(a.battery.soc,b.battery.soc,atol=1e-7)
         final=experiment_manifest(env)['final_inventory']

@@ -12,6 +12,7 @@ from citylearn.citylearn import CityLearnEnv
 from citylearn.data import DataSet
 from citylearn.energy_model import Battery, StorageTank
 from citylearn.power_outage import PowerOutage, ReliabilityMetricsPowerOutage
+from private_access import ev_drift_seed, runtime_service, topology_service
 
 # First uniform of RandomState(1234): every 'v1' parameter of a device seeded with 1234 sits here.
 LEGACY_QUANTILE_1234 = np.random.RandomState(1234).uniform()
@@ -178,7 +179,7 @@ def test_v1_ev_drift_seed_is_additive():
     try:
         env.reset()
         env.reset()
-        assert env._ev_drift_seed == 7 + 1
+        assert ev_drift_seed(env) == 7 + 1
     finally:
         env.close()
 
@@ -191,13 +192,13 @@ def test_v2_ev_drift_is_per_ev_and_episode_and_repeats_with_the_seed():
         b0 = _run_zero(env_b)
         n0 = _run_zero(env_next)
         np.testing.assert_array_equal(a0, b0)
-        assert env_a._ev_drift_seed != env_next._ev_drift_seed
+        assert ev_drift_seed(env_a) != ev_drift_seed(env_next)
         # Episode 1 of seed 7 is not episode 0 of seed 8.
         assert not np.array_equal(a1, n0)
         # Every EV holds its own stream.
         keys = {key[1] for key in env_a._ev_drift_generators}
         assert len(keys) >= 2
-        streams = [env_a._runtime_service.ev_drift_generator(name, random_streams.EV_AWAY_SOC_DRIFT) for name in sorted(keys)]
+        streams = [runtime_service(env_a).ev_drift_generator(name, random_streams.EV_AWAY_SOC_DRIFT) for name in sorted(keys)]
         assert len({id(s) for s in streams}) == len(streams)
         # An explicit reset seed repeats the first episode of an env built with that seed.
         explicit = _run_zero(env_a, seed=7, options={'episode_index': 0})
@@ -221,7 +222,7 @@ def test_seeded_reset_restarts_the_episode_streams_but_not_the_window_or_constru
         env_8.reset(seed=7)
         assert env_8.random_seed == 7
         assert env_8.episode_tracker.random_stream_episode == 0
-        assert env_8._ev_drift_seed == env_7._ev_drift_seed
+        assert ev_drift_seed(env_8) == ev_drift_seed(env_7)
         # ... but keeps the parameters drawn at construction with seed 8.
         assert [ev.battery.efficiency for ev in env_8.electric_vehicles] == efficiencies_8
 
@@ -316,7 +317,7 @@ def test_v2_cloned_member_draws_its_own_streams():
         env.reset()
         for _ in range(3):
             env.step(_zero_entity_actions(env))
-        pool = env._topology_service._member_pool
+        pool = topology_service(env)._member_pool
         source, clone = pool[source_name], pool['Clone_1']
         assert clone.random_stream_key == ('building', 'Clone_1')
         assert clone.occupant.random_stream_key == ('building', 'Clone_1', 'occupant')

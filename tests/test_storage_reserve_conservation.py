@@ -12,6 +12,7 @@ from citylearn.base import EpisodeTracker
 from citylearn.citylearn import CityLearnEnv
 from citylearn.energy_model import Battery, StorageTank
 from citylearn.internal.physics_invariants import CityLearnPhysicsInvariantService
+from private_access import runtime_service
 
 
 def _battery(initial_soc=.5, loss=0., seconds=900):
@@ -221,7 +222,7 @@ def test_invariants_detect_stored_energy_created_without_charge(tmp_path, monkey
             battery.force_set_soc(float(battery.soc[battery.time_step])+.05)
 
         monkeypatch.setattr(battery, 'charge', broken_charge)
-        step = env._runtime_service.step_without_feedback if fast_path else env.step
+        step = runtime_service(env).step_without_feedback if fast_path else env.step
         with pytest.raises(AssertionError, match='Stored battery energy mismatch'):
             step(_actions(env, 0.))
     finally:

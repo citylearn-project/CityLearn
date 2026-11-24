@@ -1,5 +1,7 @@
 # Retired dataset format notes
 
+Portuguese version: [pt/retired_datasets.md](pt/retired_datasets.md).
+
 ## Retired 2023 Annual REC Suite
 
 Versions 1.8.0 through 3.0.1 included a reproducible hybrid annual scenario ladder for thesis and
