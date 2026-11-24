@@ -6,6 +6,7 @@ import pytest
 
 from citylearn.citylearn import CityLearnEnv
 from test_market_phase_invariants import _write_residual_market_schema, _rollout_zero_actions
+from private_access import market_settlement_history
 
 
 @pytest.mark.parametrize('import_price', [0.20, -0.10])
@@ -31,7 +32,7 @@ def test_market_savings_exclude_external_export_revenue(
         expected_counterfactual = 0.0
         expected_savings = 0.0
         for rows, demand, surplus in zip(
-            env._community_market_settlement_history, [2.0, 1.0, 0.5], [1.0, 3.0, 0.5],
+            market_settlement_history(env), [2.0, 1.0, 0.5], [1.0, 3.0, 0.5],
         ):
             shared = min(demand, surplus) if local_trading else 0.0
             counterfactual = demand * import_price - surplus * export_price

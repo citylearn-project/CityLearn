@@ -8,7 +8,6 @@ reward and KPIs read, does not depend on the placeholder held for the next step.
 """
 
 import numpy as np
-import pytest
 
 from citylearn.citylearn import CityLearnEnv
 

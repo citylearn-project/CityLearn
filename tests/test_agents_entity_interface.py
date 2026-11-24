@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from citylearn.agents.base import Agent
-from citylearn.agents.baseline import RBCBasicPolicy, ZeroActionBaselineAgent
+from citylearn.agents.baseline import RBCBasicPolicy, ZeroActionAgent
 from citylearn.citylearn import CityLearnEnv
 
 DATASET = 'citylearn_challenge_2022_phase_all_plus_evs'
@@ -45,7 +45,7 @@ def _run(env, agent, steps=3):
 
 
 @pytest.mark.parametrize('central_agent', [False, True])
-@pytest.mark.parametrize('agent_class', [Agent, ZeroActionBaselineAgent])
+@pytest.mark.parametrize('agent_class', [Agent, ZeroActionAgent])
 def test_generic_agents_act_on_the_entity_interface(agent_class, central_agent):
     env = _env('entity', central_agent=central_agent)
     agent = agent_class(env)
@@ -56,7 +56,7 @@ def test_generic_agents_act_on_the_entity_interface(agent_class, central_agent):
     for action in _run(env, agent):
         assert [len(a) for a in action] == [s.shape[0] for s in flat]
 
-        if agent_class is ZeroActionBaselineAgent:
+        if agent_class is ZeroActionAgent:
             assert all(v == 0.0 for a in action for v in a)
 
     env.close()
@@ -64,7 +64,7 @@ def test_generic_agents_act_on_the_entity_interface(agent_class, central_agent):
 
 def test_generic_agents_keep_the_flat_spaces_on_the_flat_interface():
     env = _env('flat')
-    agent = ZeroActionBaselineAgent(env)
+    agent = ZeroActionAgent(env)
 
     for agent_spaces, env_spaces in ((agent.action_space, env.action_space), (agent.observation_space, env.observation_space)):
         assert isinstance(agent_spaces, list) and agent_spaces == env_spaces

@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 import json
-from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
@@ -18,6 +17,7 @@ from test_deferrable_appliance_integration import (
     _zero_entity_payload,
 )
 from test_market_phase_invariants import _write_residual_market_schema
+from private_access import provenance_service, runtime_service, topology_service
 
 
 def scenario(
@@ -32,7 +32,12 @@ def scenario(
     phase_limits=False,
     negative=False,
     unknown_carbon=False,
+    physics_version=None,
 ):
+    """Two members with storage, PV, an EV charger, a washer, a community market and optional outages.
+
+    ``outage`` is a bool (outage at steps 2 and 3) or a list of eight 0/1 flags.
+    """
     path = _schema_with_deferrable_appliance(tmp_path, earliest=0, latest=1)
     schema = json.loads(path.read_text())
     schema.update(
@@ -47,7 +52,8 @@ def scenario(
     schema["community_market"] = {
         "enabled": True,
         "local_price_ratio_to_grid_import": 0.8,
-        "grid_export_price": 0.05,
+        # Version 1 pays nothing for exports and rejects a non-zero price (#366).
+        "grid_export_price": 0.05 if version == 2 else 0.0,
         "settlement_version": version,
         "import_member_weights": {"Building_1": 2.0, "Building_2": 1.0},
     }
@@ -92,10 +98,13 @@ def scenario(
         f = frame.copy()
         f["non_shiftable_load"] = load
         f["solar_generation"] = pv
-        f["power_outage"] = [0, 0, 1, 1, 0, 0, 0, 0] if outage else 0
+        if isinstance(outage, (list, tuple)):
+            f["power_outage"] = [int(v) for v in outage]
+        else:
+            f["power_outage"] = [0, 0, 1, 1, 0, 0, 0, 0] if outage else 0
         f.to_csv(path.parent / (name + ".csv"), index=False)
         schema["buildings"][name]["power_outage"] = {
-            "simulate_power_outage": bool(outage)
+            "simulate_power_outage": bool(outage) if not isinstance(outage, (list, tuple)) else any(outage)
         }
     carbon = pd.read_csv(path.parent / "carbon_intensity.csv")
     carbon["carbon_intensity"] = [0.2, 0.6, 0.1, 0.7, 0.15, 0.4, 0.1, 0.2]
@@ -135,6 +144,8 @@ def scenario(
             schema["community_market"]["tariff_files"][name] = file
     if events is not None:
         schema.update(topology_mode="dynamic", topology_events=events)
+    if physics_version is not None:
+        schema["physics_version"] = physics_version
     return CityLearnEnv(schema, random_seed=19, offline=True)
 
 
@@ -155,8 +166,7 @@ def test_joint_equipment_sharing_losses_and_carbon(tmp_path, seconds, fast):
     try:
         env.reset()
         with IndependentBalanceAudit(env) as audit:
-            original = deepcopy(env.observations)
-            step = env._runtime_service.step_without_feedback if fast else env.step
+            step = runtime_service(env).step_without_feedback if fast else env.step
             while not env.terminated:
                 t = env.time_step
                 step(
@@ -216,7 +226,7 @@ def test_history_survives_exit_and_recommissioning(tmp_path, kind):
         assert any(
             r["destination"] == "asset_exit" for r in result["source_destinations"]
         )
-        history = env._topology_service.historical_storages("Building_1")
+        history = topology_service(env).historical_storages("Building_1")
         assert len(history) == 2
         # Querying must not consume source or destination evidence.
         before = deepcopy(result["source_destinations"])
@@ -293,12 +303,12 @@ def test_audit_is_passive_restores_runtime_and_has_no_reset_leak(tmp_path):
     env = scenario(tmp_path)
     try:
         env.reset()
-        method = env._runtime_service._step_once
+        method = runtime_service(env)._step_once
         with IndependentBalanceAudit(env) as audit:
             while not env.terminated:
                 env.step(commands(env, [0.0, 0.0]))
             first = audit.finish()
-        assert env._runtime_service._step_once == method
+        assert runtime_service(env)._step_once == method
         env.reset()
         with IndependentBalanceAudit(env) as audit:
             while not env.terminated:
@@ -316,14 +326,14 @@ def test_corrupted_accounting_is_detected_without_using_it_as_expected(tmp_path)
         with IndependentBalanceAudit(env) as audit:
             while not env.terminated:
                 env.step(commands(env, [0.0, 0.0]))
-            source = env._provenance_service.source_destinations
+            source = provenance_service(env).source_destinations
 
             def wrong():
                 rows = source()
                 rows[0]["energy_kwh"] += 0.1
                 return rows
 
-            env._provenance_service.source_destinations = wrong
+            provenance_service(env).source_destinations = wrong
             with pytest.raises(BalanceAuditError, match="provenance"):
                 audit.finish()
     finally:
@@ -371,7 +381,7 @@ def test_unused_pv_in_outage_is_curtailment_not_useful_load(tmp_path):
             while not env.terminated:
                 env.step([np.zeros(env.action_space[0].shape)])
             report = audit.finish()
-        summary = env._provenance_service.summary()[1]
+        summary = provenance_service(env).summary()[1]
         assert summary["pv_load_kwh"] == 0
         assert summary["pv_curtailment_kwh"] == pytest.approx(4.5)
         assert summary["pv_useful_building_ratio"] == 0

@@ -91,6 +91,43 @@ def test_website_omits_repository_translation_links():
     assert "guides/retired_datasets" not in index
 
 
+def _markdown_anchors(path):
+    """GitHub heading slugs of a Markdown file, ignoring fenced code."""
+    anchors, seen, in_code = set(), {}, False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.lstrip().startswith("```"):
+            in_code = not in_code
+            continue
+        match = None if in_code else re.match(r"#{1,6} (.*)", line)
+        if match:
+            text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", match.group(1).strip().replace("`", "").lower())
+            slug = re.sub(r"[^\w\- ]", "", text).replace(" ", "-")
+            anchors.add(slug if slug not in seen else f"{slug}-{seen[slug]}")
+            seen[slug] = seen.get(slug, 0) + 1
+    return anchors
+
+
+def test_portuguese_guides_cover_english_guides():
+    english = {path.name for path in (ROOT / "docs").glob("*.md")}
+    portuguese = {path.name for path in (ROOT / "docs/pt").glob("*.md")} - {"README.md"}
+    assert english == portuguese
+    readme = (ROOT / "docs/pt/README.md").read_text(encoding="utf-8")
+    assert all(f"]({name})" in readme for name in english)
+
+
+@pytest.mark.parametrize("path", sorted((ROOT / "docs/pt").glob("*.md")), ids=lambda path: path.name)
+def test_portuguese_guide_links_resolve(path):
+    text = re.sub(r"```.*?```", "", path.read_text(encoding="utf-8"), flags=re.S)
+    for target in re.findall(r"\]\(([^)\s]+)\)", text):
+        if re.match(r"[a-z]+:", target):
+            continue
+        file, _, anchor = target.partition("#")
+        destination = (path.parent / file).resolve() if file else path
+        assert destination.exists(), target
+        if anchor and destination.suffix == ".md":
+            assert anchor in _markdown_anchors(destination), target
+
+
 @pytest.mark.parametrize("central_agent", [False, True])
 def test_custom_controller_and_reward(central_agent, monkeypatch, tmp_path):
     from examples.custom_controller import GridImportReward, run
@@ -213,7 +250,7 @@ def test_load_environment_notebook(monkeypatch, tmp_path):
     assert scope["env"].central_agent is True
 
 
-@pytest.mark.parametrize("name", ["controller_examples", "load_environment", "cli", "rl_training"])
+@pytest.mark.parametrize("name", ["controller_examples", "load_environment", "cli", "rl_training", "rllib_training"])
 def test_tutorials_have_no_stale_outputs(name):
     notebook = json.loads((ROOT / "examples" / f"{name}.ipynb").read_text(encoding="utf-8"))
     for cell in notebook["cells"]:

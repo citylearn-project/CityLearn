@@ -1,12 +1,25 @@
 name: Sphinx build
 
+# The site root / (and /stable/) serves the latest final release so the public Documentation link, the site home and
+# existing deep links open the latest stable release by default, while development-only root URLs redirect to /dev/.
+# Each release tag v<version> is published under /<version>/, and master (development) is published under /dev/
+# (docs/publishing.md, "Documentation site"). To publish or rerun an existing tag, run this workflow manually from
+# master with the tag as input.
 on:
   push:
     branches:
     - master
+    tags:
+    - 'v*'
   pull_request:
     branches:
     - master
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build and publish under /<version>/, for example v3.6.0
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -14,10 +27,41 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      with:
+        # An empty ref is the event's own ref; a manual run builds the given tag.
+        ref: ${{ inputs.tag }}
+    - name: Select the documentation version
+      id: version
+      env:
+        TAG: ${{ inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || '' }}
+      run: |
+        version="${TAG#v}"
+        if [ -n "$version" ] && ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?$'; then
+          echo "::error::Not a release version: $TAG"
+          exit 1
+        fi
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+    - name: Use the version switcher of master
+      # Old tags do not have the switcher or sidebar template, so release builds take them from master.
+      if: steps.version.outputs.version != ''
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      with:
+        ref: master
+        path: master-docs
+        sparse-checkout: docs/source
+    - name: Copy the version switcher
+      if: steps.version.outputs.version != ''
+      run: |
+        mkdir -p docs/source/_static docs/source/_templates
+        cp master-docs/docs/source/_templates/layout.html docs/source/_templates/layout.html
+        cp master-docs/docs/source/_static/version_switcher.js docs/source/_static/version_switcher.js
+        rm -rf master-docs
     - name: Set up Python
-      uses: actions/setup-python@v7
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
       with:
         python-version: '3.11'
     - name: Install dependencies
@@ -30,42 +74,110 @@ jobs:
         sudo apt-get install -y pandoc
         python -m pip install --upgrade pip
         python -m pip install -r requirements.txt -r test_requirements.txt -r docs/requirements.txt
-        # autodoc imports citylearn.end_use_load_profiles, whose dependencies are an optional extra.
-        python -m pip install -e ".[end_use_load_profiles]"
-    - name: Test documentation examples
-      run: python -m pytest -q tests/test_documentation_examples.py
-    - name: Build and check HTML
+        # autodoc imports citylearn.end_use_load_profiles; older tags without the extra fall back to a plain install.
+        python -m pip install -e ".[end_use_load_profiles]" || python -m pip install -e .
+    - name: Test documentation examples and versioning helpers
+      # Old tags may not have these tests.
+      if: steps.version.outputs.version == ''
+      run: python -m pytest -q tests/test_documentation_examples.py tests/test_docs_versioning.py tests/test_docs_ci_scripts.py
+    - name: Check the KPI catalogue
+      # The catalogue pages are generated from citylearn/misc/kpi_catalogue.yml on master; older tags predate it.
+      if: steps.version.outputs.version == ''
+      run: |
+        python scripts/docs/kpi_catalogue.py --check
+        python -m pytest -q tests/test_kpi_catalogue.py
+    - name: Execute the example notebooks
+      # The notebooks in the repository have no outputs. Builds whose checkout supports run_notebooks.py --output-dir
+      # (master and future releases) run them as run_tests.yml does and overwrite examples/ in this checkout so the
+      # published pages show CI outputs. Historical tags (<= v3.6.0) predate run_notebooks.py.
+      run: |
+        if [ -f scripts/ci/run_notebooks.py ] && grep -q -- '--output-dir' scripts/ci/run_notebooks.py; then
+          python -m pip install nbclient nbformat ipykernel "stable-baselines3>=2.4" "ray[rllib]" scikit-learn
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m ipykernel install --user --name python3
+          python scripts/ci/run_notebooks.py --output-dir examples
+        else
+          echo "Skipping notebook execution (scripts/ci/run_notebooks.py --output-dir not present in this ref)."
+        fi
+    - name: Build HTML
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
       run: |
         # citylearn.internal is private; docs/source/python_api.rst lists the public modules.
         sphinx-apidoc citylearn citylearn/internal -o docs/source/api -e -M
-        sphinx-build -b html docs/source docs/build/html
-        python scripts/ci/check_docs.py docs/build/html
+        # docs_is_release marks release builds (published at /<version>/, and at / and /stable/ when latest final).
+        sphinx-build -b html ${VERSION:+-A docs_is_release=true} docs/source docs/build/html
+    - name: Check HTML
+      # Check links and assets whenever scripts/ci/check_docs.py exists, requiring notebook outputs on builds that
+      # support --require-notebook-outputs (master and future releases).
+      run: |
+        if [ -f scripts/ci/check_docs.py ]; then
+          if grep -q -- '--require-notebook-outputs' scripts/ci/check_docs.py; then
+            python scripts/ci/check_docs.py --require-notebook-outputs docs/build/html
+          else
+            python scripts/ci/check_docs.py docs/build/html
+          fi
+        fi
     - name: Save documentation preview
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
       with:
         name: documentation-html
         path: docs/build/html
         retention-days: 7
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-24.04
     environment: github-pages
     permissions:
       contents: write
+    # Every publication commits to the same branch, so run them one after the other.
+    concurrency:
+      group: documentation-deploy
+      cancel-in-progress: false
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
     steps:
-    - uses: actions/checkout@v7
-    - uses: actions/download-artifact@v8
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      with:
+        ref: master
+    - name: Set up Python
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
+      with:
+        python-version: '3.11'
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8
       with:
         name: documentation-html
         path: docs/build/html
-    - name: Add CNAME
+    - name: Check whether gh-pages already exists
+      # Distinguish a verified first deployment (gh-pages absent on a reachable remote) from a read failure.
+      id: gh_pages
+      run: |
+        state="$(python scripts/ci/prepare_docs_site.py --probe-remote origin --branch gh-pages)"
+        echo "state=$state" >> "$GITHUB_OUTPUT"
+    - name: Read the published site
+      if: steps.gh_pages.outputs.state == 'present'
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      with:
+        ref: gh-pages
+        path: published
+    - name: Stage versioned site, versions.json and root redirects
       env:
         CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN }}
-      run: printf '%s\n' "$CUSTOM_DOMAIN" > docs/build/html/CNAME
-    - name: Deploy
-      uses: peaceiris/actions-gh-pages@v4
+        EXISTING_SITE_STATE: ${{ steps.gh_pages.outputs.state }}
+      run: |
+        python -m pip install packaging
+        python scripts/ci/prepare_docs_site.py \
+          --site-dir published \
+          --build-dir docs/build/html \
+          --existing-site-state "$EXISTING_SITE_STATE" \
+          --require-git-dir \
+          --version "$VERSION" \
+          --custom-domain "$CUSTOM_DOMAIN"
+    - name: Publish documentation site
+      uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453  # v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: docs/build/html
+        publish_dir: published
+        keep_files: false

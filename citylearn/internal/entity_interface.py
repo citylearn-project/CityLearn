@@ -10,6 +10,7 @@ from gymnasium import spaces
 import numpy as np
 
 from citylearn.internal import entity_layout, entity_observations
+from citylearn.internal.physics_version import physics_version_of
 
 
 @dataclass(frozen=True)
@@ -1301,7 +1302,12 @@ class CityLearnEntityInterfaceService:
         depth_of_discharge = self._safe_scalar(getattr(battery, "depth_of_discharge", 1.0), 1.0)
         soc_min = float(np.clip(1.0 - depth_of_discharge, 0.0, 1.0))
         energy_available = max((current_soc - soc_min) * battery_capacity, 0.0)
-        energy_to_full = max((self._soc_max(battery) - current_soc) * battery_capacity, 0.0)
+        energy_to_full = self._energy_to_full_kwh(
+            battery,
+            current_soc,
+            battery_capacity,
+            max((self._soc_max(battery) - current_soc) * battery_capacity, 0.0),
+        )
         outage = bool(getattr(building, "power_outage", False))
 
         charge_efficiency = max(self._safe_scalar(charge_efficiency_at_max, 1.0), 1.0e-6)
@@ -1477,7 +1483,9 @@ class CityLearnEntityInterfaceService:
             soc_min = max(1.0 - depth_of_discharge, 0.0)
             soc_max = self._soc_max(storage)
             current_energy = soc * max(capacity, 0.0)
-            storage_energy_to_full = max(soc_max * capacity - current_energy, 0.0)
+            storage_energy_to_full = self._energy_to_full_kwh(
+                storage, soc, max(capacity, 0.0), max(soc_max * capacity - current_energy, 0.0)
+            )
             storage_energy_available = max((soc - soc_min) * max(capacity, 0.0), 0.0)
             max_charge_power = (
                 self._safe_scalar(storage.get_max_input_power(), nominal_power)
@@ -1526,7 +1534,9 @@ class CityLearnEntityInterfaceService:
 
             depth_of_discharge = self._safe_scalar(getattr(battery, "depth_of_discharge", 1.0), 1.0)
             soc_min = max(1.0 - depth_of_discharge, 0.0)
-            ev_energy_to_full = max((self._soc_max(battery) - soc) * capacity, 0.0)
+            ev_energy_to_full = self._energy_to_full_kwh(
+                battery, soc, capacity, max((self._soc_max(battery) - soc) * capacity, 0.0)
+            )
             ev_energy_available = max((soc - soc_min) * capacity, 0.0)
             max_charge_power = self._safe_scalar(getattr(charger, "max_charging_power", 0.0), 0.0)
             max_discharge_power = self._safe_scalar(getattr(charger, "max_discharging_power", 0.0), 0.0)
@@ -2977,6 +2987,22 @@ class CityLearnEntityInterfaceService:
         """Upper SOC limit: InventoryBattery declares `max_soc`; a Battery charges to 1."""
 
         return self._safe_scalar(getattr(battery, "max_soc", 1.0), 1.0)
+
+    def _energy_to_full_kwh(self, battery, soc: float, capacity: float, energy_to_full: float) -> float:
+        """Cap the nominal `energy_to_full` at the energy `battery` still accepts after capacity fade.
+
+        `Battery.charge` stops at `degraded_capacity`, which fade lowers below `capacity` while the SOC
+        stays relative to `capacity`, so a faded battery is full below `_soc_max`. Where the SOC limit
+        binds first, and under physics version 1, the nominal value is returned unchanged.
+        """
+
+        degraded_capacity = getattr(battery, "degraded_capacity", None)
+        if degraded_capacity is None or physics_version_of(self.env) < 2:
+            return energy_to_full
+        degraded_capacity = max(self._safe_scalar(degraded_capacity, capacity), 0.0)
+        if degraded_capacity >= self._soc_max(battery) * capacity:
+            return energy_to_full
+        return max(degraded_capacity - soc * capacity, 0.0)
 
     @staticmethod
     def _action_scalar(value: Any, default: float = 0.0) -> float:

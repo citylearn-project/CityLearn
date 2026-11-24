@@ -3,7 +3,6 @@ from copy import deepcopy
 import json
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -11,6 +10,7 @@ from citylearn.citylearn import CityLearnEnv
 from test_deferrable_appliance_integration import (
     _schema_with_deferrable_appliance, _zero_flat_actions, _zero_entity_payload,
 )
+from private_access import runtime_service, topology_service
 
 
 def make_env(tmp_path, *, earliest=0, latest=3, start=0, steps=8, events=None, seconds=900):
@@ -52,7 +52,7 @@ def test_executed_prefix_completion_and_reset(tmp_path, seconds, feedback):
     env = make_env(tmp_path, seconds=seconds)
     try:
         env.reset()
-        step = env.step if feedback else env._runtime_service.step_without_feedback
+        step = env.step if feedback else runtime_service(env).step_without_feedback
         assert request(env)['state'] == 'excluded'
         step(action(env, True))
         row = request(env)
@@ -95,7 +95,7 @@ def test_removal_and_reentry_preserve_partial_service_once(tmp_path, kind):
         assert row['served_energy_kwh'] == pytest.approx(.1)
         assert row['final_unserved_energy_kwh'] == pytest.approx(.2)
         env.step(action(env))
-        history = env._topology_service.historical_deferrable_appliances('Building_1')
+        history = topology_service(env).historical_deferrable_appliances('Building_1')
         assert len(history) == 2 and history[0] is old
         assert history[1].service_audit()['records'][0]['reason'] == 'already_accounted_previous_instance'
         while not env.terminated:

@@ -1,6 +1,7 @@
 import math
 from typing import Any, List, Tuple
 import numpy as np
+from citylearn import random_streams
 from citylearn.agents.base import Agent, require_flat_interface
 from citylearn.citylearn import CityLearnEnv
 
@@ -30,6 +31,12 @@ class TabularQLearning(Agent):
     ----------------
     **kwargs: Any
         Other keyword arguments used to initialize :py:class:`citylearn.agents.base.Agent` super class.
+
+    Notes
+    -----
+    Random exploration actions, and the fallback action for observations whose Q-values are all still NaN, are
+    sampled from the action spaces. Spaces that are not already seeded are seeded from :attr:`random_seed`, the
+    environment's seed, so runs with the same seed are repeatable.
     """
     
     def __init__(
@@ -45,6 +52,7 @@ class TabularQLearning(Agent):
         self.learning_rate = 0.05 if learning_rate is None else learning_rate
         self.discount_factor = 0.90 if discount_factor is None else discount_factor
         self.q_init_value = np.nan if q_init_value is None else q_init_value
+        self._seed_action_spaces()
         self.q, self.q_exploration, self.q_exploitation = self.__initialize_q()
         self.__explored = False
 
@@ -70,11 +78,8 @@ class TabularQLearning(Agent):
         
         deterministic = False if deterministic is None else deterministic
         actions = None
-        seed = self.random_seed if self.random_seed is None else self.random_seed + self.time_step
-        nprs = np.random.RandomState(seed)
-        
 
-        if deterministic or nprs.random() > self.epsilon:
+        if deterministic or self.__exploration_draw() > self.epsilon:
             # Use q-function to decide action
             actions = self.__exploit(observations)
             self.__explored = False
@@ -91,6 +96,19 @@ class TabularQLearning(Agent):
         self.actions = actions
         self.next_time_step()
         return actions
+
+    def __exploration_draw(self) -> float:
+        """Uniform draw that decides between exploration and exploitation at this time step.
+
+        With ``random_stream_version='v1'`` it is the first value of ``RandomState(random_seed + time_step)``, as in
+        CityLearn 3.6.0, so seed ``s`` at time step ``t + 1`` repeats seed ``s + 1`` at time step ``t``. With ``'v2'``
+        it is the next value of one generator per episode, derived from :py:attr:`random_seed` and the episode.
+        """
+
+        if self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
+            return np.random.RandomState(self.random_seed + self.time_step).random()
+
+        return self.episode_random_generator(random_streams.AGENT_EXPLORATION).random()
 
     def __exploit(self, observations: List[List[float]]) -> List[List[float]]:
         """Select deterministic actions from Q-Table i.e. action with max Q-value for given observations."""

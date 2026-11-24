@@ -122,7 +122,7 @@ def _family_audit(root: Path) -> Mapping[str, Any]:
         occupancy_rows.append(occupancy)
         signatures.append(hashlib.sha256(load.tobytes()).hexdigest())
     load_matrix = np.vstack(load_rows)
-    pv_matrix = np.vstack(pv_rows)
+    np.vstack(pv_rows)
     occupancy_matrix = np.vstack(occupancy_rows)
 
     load_by_category = {}

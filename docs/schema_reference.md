@@ -33,6 +33,7 @@ Portuguese version: [pt/schema_reference.md](pt/schema_reference.md).
 | `random_episode_split` | bool/null | no | Random episode windows. |
 | `time_step_ratio_mode` | `reject`/`compress`/null | no | `reject` (default) refuses a `seconds_per_time_step` that differs from the dataset step; `compress` keeps the 3.6.0 behaviour of reading one data row per control step and scaling energies. |
 | `episode_split_boundary` | `shared`/`disjoint`/null | no | How consecutive episode splits meet. `shared` (default) starts each split on the terminal row of the previous one, so every interval is simulated; `disjoint` keeps the 3.6.0 splits, which skip the interval between two episodes. |
+| `ev_soc_carryover` | bool/null | no | Start each EV of an episode that continues the previous one in time (it starts on the previous episode's last row, or on the row after it) from its SOC at the end of that episode, instead of the schedule SOC. Default `false`. |
 | `reward_function` | object/string | yes | Reward class and kwargs. |
 | `observations` | object | yes | Flat observation catalog and flags. |
 | `actions` | object | yes | Flat action catalog and flags. |
@@ -57,6 +58,7 @@ Portuguese version: [pt/schema_reference.md](pt/schema_reference.md).
 | `check_observation_limits` | bool | no | Validate observation bounds. |
 | `physics_invariant_checks` | bool | no | Runtime physical invariant checks. |
 | `physics_version` | int | no | Physics version, `1` or `2` (default). `1` reproduces the physics of CityLearn 3.6.0; see the [migration guide](migration.md#physics-version). The `physics_version` argument of `CityLearnEnv` takes precedence. |
+| `baseline_version` | int | no | Definition of the default KPI baseline, `1`, `2` (default) or `3`. `3` (opt-in) keeps the baseline of `2` and makes the native BAU deliver the dataset heating and cooling demand instead of sending zero to the HVAC actions; see [HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version). `2` removes the battery, the thermal storage and the EV charging of the controlled run and adds back the EV charging of the native BAU with the `'full'` target; `1` adds nothing back, as in CityLearn 3.6.0; see the [migration guide](migration.md#ev-charging-in-the-default-baseline). The `baseline_version` argument of `CityLearnEnv` takes precedence. |
 | `metrics_log_interval` | int | no | Runtime metric log cadence. |
 
 ### Calendar and dataset metadata keys
@@ -193,6 +195,7 @@ load or PV truth.
 | `occupant` | object | no | Occupant interaction model. |
 | `power_outage` | object | no | Outage configuration. |
 | `set_point_hold_time_steps` | int | no | Hold time for occupant interaction. |
+| `set_point_limits` | [float, float] | no | Range, in °C, an occupant can move a heating or cooling set point to; default `[15, 30]`. Physics version 2 and later; see the [migration guide](migration.md#occupant-set-point-limits). |
 
 `power_outage` keys:
 
@@ -251,10 +254,75 @@ Common classes:
 
 | `generation_mode` | Aliases | Interprets `energy_simulation.solar_generation` as | Formula |
 |---|---|---|---|
-| `per_kw` | `profile`, `w_per_kw` | Normalized profile per installed kW in `W/kW`. | `generation_kwh = nominal_power * value / 1000`. |
+| `per_kw` | `profile`, `w_per_kw` | Normalized profile per installed kW in `W/kW`. | `generation_kwh = nominal_power * value / 1000 * seconds_per_time_step / 3600`. |
 | `absolute` | `absolute_kwh`, `kwh`, `kwh_step`, `energy` | Absolute generation already in `kWh/step`. | `generation_kwh = value`. |
 
 Use `absolute` for real measured generation or converter-generated energy series. Use `per_kw` for normalized PV profiles.
+
+For example, `nominal_power=4.0` and a value of 1000 W/kW give 4.0 kWh per hourly step and
+1.0 kWh per 900 s step.
+
+## Battery
+
+```json
+"electrical_storage": {
+  "type": "citylearn.energy_model.Battery",
+  "attributes": {
+    "capacity": 6.4,
+    "nominal_power": 5.0,
+    "efficiency": 0.9,
+    "depth_of_discharge": 0.9,
+    "initial_soc": 0.1,
+    "capacity_loss_coefficient": 1e-5,
+    "loss_coefficient": 0.0,
+    "power_efficiency_curve": [[0, 0.83], [0.3, 0.83], [0.7, 0.9], [0.8, 0.9], [1, 0.85]],
+    "capacity_power_curve": [[0.0, 1.0], [0.8, 1.0], [1.0, 0.2]]
+  }
+}
+```
+
+The stationary battery model works on energy per control step at the battery terminals, the
+building side of the battery. The state of charge (SOC) is a fraction of `capacity`.
+
+| Attribute | Unit | Default | Meaning |
+|---|---:|---|---|
+| `capacity` | kWh | 0 | Rated storage capacity, before fade. |
+| `nominal_power` | kW | 0 | Power that the curves scale. |
+| `efficiency` | ratio | drawn in [0.90, 0.98] | Round-trip efficiency. A generated `power_efficiency_curve` is built around it; during the simulation the curve gives the efficiency at each step. |
+| `power_efficiency_curve` | `[[x, y], ...]` | drawn, see below | Round-trip efficiency `y` against terminal power divided by `nominal_power` (`x` in [0, 1]). |
+| `capacity_power_curve` | `[[x, y], ...]` | drawn, see below | Maximum charging power as a fraction of `nominal_power` (`y`) against SOC (`x`). |
+| `discharge_power_curve` | `[[x, y], ...]` | `[[0, 1], [1, 1]]` | Maximum discharging power as a fraction of `nominal_power` against SOC. Physics version 1 uses `capacity_power_curve` instead. |
+| `depth_of_discharge` | ratio | 1.0 | Fraction of `capacity` that may be discharged. |
+| `initial_soc` | ratio | `1 - depth_of_discharge` | SOC at the start of the episode, in [0, 1]. |
+| `capacity_loss_coefficient` | ratio | drawn in [1e-5, 1e-4] | Fraction of `capacity` lost per equivalent full cycle. |
+| `loss_coefficient` | ratio per hour | drawn in [0.001, 0.009] | Standby loss of the stored energy, see [EV definitions](#ev-definitions) for the per-step formula. |
+
+A default shown as "drawn" is taken from the environment's random stream when the attribute is
+omitted, so it depends on the seed and on `random_stream_version`. The 2022 challenge datasets
+omit both curves, so each seed gets different curves. Set the attributes explicitly to fix them.
+
+- **Efficiency.** `efficiency` and every value of `power_efficiency_curve` are round-trip
+  efficiencies: energy charged and later discharged keeps `efficiency` of its value. Each
+  conversion uses the square root. Charging `E` kWh at the terminals stores `E * sqrt(eta)`,
+  and delivering `E` kWh takes `E / sqrt(eta)` from storage, where `eta` is read from
+  `power_efficiency_curve` at the applied terminal power. A datasheet one-way efficiency of
+  0.95 must be entered as 0.95² = 0.9025; entered as 0.95, it gives a one-way efficiency of
+  about 0.975.
+- **Power curves.** `capacity_power_curve` and `discharge_power_curve` are evaluated at the SOC
+  at the start of the step, and their values are multiplied by `nominal_power`. Between points
+  the curves are interpolated linearly.
+- **Depth of discharge.** Discharging stops at a SOC of `1 - depth_of_discharge`, a floor
+  measured on the rated `capacity`. Charging stops at the degraded capacity.
+- **Capacity fade.** After each charge or discharge the capacity falls by
+  `capacity_loss_coefficient * capacity * |terminal energy| / (2 * degraded capacity)`. A full
+  charge and discharge of the degraded capacity is one equivalent full cycle and loses
+  `capacity_loss_coefficient * capacity`.
+- **Generated curves.** Without `power_efficiency_curve`, five points are drawn at `x` near 0,
+  0.3, 0.7, 0.8 and 1, with values between 0.85 and 1.0 times `efficiency` (the point near 0.8
+  equals `efficiency`). Without `capacity_power_curve`, three points are drawn: 0.95 to 1.0 at
+  SOC 0, 0.90 to 0.95 at a SOC near 0.8, and 0.20 to 0.30 at SOC 1.
+- With the default `initial_soc`, a battery starts at its reserve: empty when
+  `depth_of_discharge` is 1. Set `initial_soc` to start elsewhere.
 
 ## Electrical Service
 
@@ -328,14 +396,25 @@ interval, so they reflect the limit that was in force then.
 | Field | Unit | Purpose |
 |---|---:|---|
 | `charger_simulation` | path or `{"source": "external"}` | Charger schedule file, or `{"source": "external"}` for a schedule written at runtime by a [mobility provider](mobility_provider.md). |
-| `max_charging_power` | kW | Charging upper limit. |
-| `min_charging_power` | kW | Technical minimum charging power. |
-| `max_discharging_power` | kW | V2G upper limit. |
-| `min_discharging_power` | kW | Technical minimum V2G power. |
-| `efficiency` | ratio | Fixed/default efficiency. |
-| `charge_efficiency_curve` | ratio vs normalized power | Optional charging efficiency curve. |
-| `discharge_efficiency_curve` | ratio vs normalized power | Optional discharging efficiency curve. |
-| `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | Electrical phase assignment. |
+| `soc_unit` | `percent`, `fraction` | Optional, next to `charger_simulation`: the unit of the SOC columns of the schedule file. Omitted, it is inferred once per column from the whole file (see [SOC unit](dataset_reference.md#soc-unit)). |
+| `attributes.nominal_power` | kW | Rated power. Default of `max_charging_power`. |
+| `attributes.charger_type` | any | Descriptive label (for example 0 for AC, 1 for DC). No effect on the simulation. |
+| `attributes.max_charging_power` | kW | Charging upper limit. Defaults to `nominal_power`, or to 50 kW with a warning. |
+| `attributes.min_charging_power` | kW | Technical minimum charging power. Default 0. |
+| `attributes.max_discharging_power` | kW | V2G upper limit. Default 0: the charger cannot discharge unless this is set (a warning says so). |
+| `attributes.min_discharging_power` | kW | Technical minimum V2G power. Default 0. |
+| `attributes.efficiency` | ratio | Fixed/default efficiency, used in a direction without an efficiency curve. Default 1.0, with a warning when it is used. |
+| `attributes.charge_efficiency_curve` | ratio vs normalized power | Optional charging efficiency curve. |
+| `attributes.discharge_efficiency_curve` | ratio vs normalized power | Optional discharging efficiency curve. |
+| `attributes.phase_connection` | `L1`, `L2`, `L3`, `all_phases` | Electrical phase assignment. |
+
+Any other name in `attributes` raises a `ValueError` that names the charger and suggests the
+closest valid name, so a misspelt `max_discharge_power` no longer falls back to a default
+([#369](https://github.com/citylearn-project/CityLearn/issues/369)). A charger key other than
+`type`, `charger_simulation`, `attributes`, `autosize`, `noise_std` and `soc_unit` is ignored
+with a warning that suggests the closest key. Under physics version 1
+an omitted `max_charging_power` or `max_discharging_power` is 50 kW, as in CityLearn 3.6.0,
+and `nominal_power` is not used.
 | `start_delay_seconds` | s | Optional. Time after a vehicle connects before energy flows. |
 | `setpoint_delay_seconds` | s | Optional. Delay before a step's command takes effect. |
 | `ramp_up_kw_per_second` | kW/s | Optional. Largest rise rate of the power magnitude. |
@@ -379,7 +458,7 @@ EV battery standby loss is intentionally isolated from stationary storage defaul
 
 - Missing or `null` `battery.attributes.loss_coefficient` defaults to `0.0` for EVs.
 - Explicit EV `loss_coefficient` values are interpreted as hourly loss ratios.
-- All `StorageDevice` implementations, including stationary `Battery` and `StorageTank`, convert hourly `loss_coefficient` values to effective per-step loss with `loss_coefficient * seconds_per_time_step / 3600`.
+- All `StorageDevice` implementations, including stationary `Battery` and `StorageTank`, convert hourly `loss_coefficient` values to an effective per-step loss compounded over the step: `1 - (1 - loss_coefficient) ** (seconds_per_time_step / 3600)`.
 - Stationary storage default parameter ranges are unchanged.
 
 ## Deferrable Appliances
@@ -589,20 +668,37 @@ Metadata is exposed under `observations["meta"]["robustness"]`.
 | Field | Default | Purpose |
 |---|---:|---|
 | `enabled` | `false` | Enables local settlement. |
-| `local_price_ratio_to_grid_import` | `0.8` | Local price relative to grid import price. |
-| `intra_community_sell_ratio` | alias | Legacy name for the same ratio. |
-| `settlement_version` | `1` | `2` enables `grid_export_price`; with `1`, residual grid exports earn nothing. |
-| `grid_export_price` | `0.0` | EUR/kWh paid for residual grid exports when `settlement_version` is `2`. Must be finite. |
+| `local_price_ratio_to_grid_import` | `0.8` | Local price relative to grid import price. A number from 0 to 1. |
+| `intra_community_sell_ratio` | alias | Legacy name for the same ratio. If both keys are set, they must be equal. |
+| `settlement_version` | `1` | `1` or `2`, as a number (`2.0` is accepted, the string `"2"` is not). `2` enables `grid_export_price`; with `1`, residual grid exports earn nothing. |
+| `grid_export_price` | `0.0` | EUR/kWh paid for residual grid exports. A finite number; a non-zero value requires `"settlement_version": 2`. |
 | `tariff_files` | `{}` | Per-member CSV tariffs, `{"<building>": "<file inside the dataset>"}`. Each file has one row per global time step with `grid_export_price`, `community_buy_price` and `community_sell_price` (EUR/kWh) and must cover the episode. A member with a file uses these prices instead of the ratio and `grid_export_price`. |
 | `local_trading_enabled` | `true` | `false` keeps the market's settlement and KPIs but trades no energy locally. Booleans or `"true"`/`"false"`. |
-| `import_member_weights` | `{}` | Weights for allocating local energy among importers. |
+| `import_member_weights` | `{}` | Weights for allocating local energy among importers, `{"<building>": weight}`. Each building must be in the schema and each weight a finite number of at least 0. |
 | `kpis.community_local_traded_enabled` | `true` | Enables local traded energy KPI. |
 | `kpis.community_self_consumption_enabled` | `true` | Enables local import-share KPI. |
+| `matching_granularity` | `"aggregate_building"` | The only supported value; recorded in the metadata. |
+| `counterfactual` | `"grid_only"` | The only supported value: savings compare each member with buying and selling on the grid alone. Written by the annual REC suite generator. |
 
 ## Important Combinations
 
-The local price ratio is clipped to `[0, 1]`. The legacy
-`intra_community_sell_ratio` key is an alias. Local settlement values
+The settings are checked when the env is built, even with `enabled: false`.
+An unknown key (for example `enable`), a ratio that is not a number or is
+outside `[0, 1]`, a `settlement_version` other than `1` or `2`
+(the string `"2"` included), a non-zero `grid_export_price` without
+`"settlement_version": 2`, and a member weight or tariff file for a building
+that is not in the schema raise a `ValueError`. Earlier releases ignored these
+settings or replaced them with defaults. The legacy
+`intra_community_sell_ratio` key is an alias.
+
+The settings are read from the schema at construction. Setting the market
+attributes on the env afterwards (`community_market_enabled`,
+`community_market_sell_ratio`,
+`community_market_grid_export_price`, `community_market_import_member_weights`,
+`community_market_local_enabled`, `community_tariffs`) is not supported: the
+native BAU reference is rebuilt from the schema, so `evaluate_v2()` with the
+BAU comparison raises a `ValueError` when they differ. To change the market,
+edit `schema['community_market']` and build a new env. Local settlement values
 same-timestep member imports and exports; it does not change the physical
 device dispatch.
 

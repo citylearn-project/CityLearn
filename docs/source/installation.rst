@@ -84,8 +84,11 @@ then keeps that PyTorch:
 A dataset or controller that needs a missing extra raises an ``ImportError``
 that names the command to install it. Stable Baselines3 and RLlib are not
 extras: install Stable Baselines3 2.4 or newer to use
-``StableBaselines3Wrapper`` (see :doc:`usage/rl_training`), and a Ray release
-that supports your Python version to use the RLlib wrappers.
+``StableBaselines3Wrapper`` (see :doc:`usage/rl_training`), and ``ray[rllib]`` to
+use the RLlib wrappers (see :doc:`usage/rllib_training`). The RLlib wrappers are
+tested with Ray 2.60.0 (requiring a checkout of ``master`` or a release newer than
+3.6.0), which supports Python 3.10 to 3.14 and pins gymnasium
+1.2.2; other Ray releases pin other gymnasium versions.
 
 Datasets, cache and offline use
 *******************************

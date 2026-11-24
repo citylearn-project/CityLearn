@@ -262,7 +262,8 @@
     "attributes": {
       "band": 1.0,
       "lower_exponent": 2.0,
-      "higher_exponent": 3.0
+      "higher_exponent": 3.0,
+      "version": 2
     }
   },
   "buildings": {

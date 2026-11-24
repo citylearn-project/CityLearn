@@ -8,6 +8,7 @@ from typing import Mapping
 import numpy as np
 import pandas as pd
 import pytest
+from private_access import demand_response_service
 
 pytest.importorskip("gymnasium")
 
@@ -158,7 +159,7 @@ def test_demand_response_settlement_uses_load_perspective_direction(tmp_path: Pa
         expected_baseline_kw = float(np.mean(env.net_electricity_consumption[0:4])) / step_hours
 
         env.step(_zero_entity_actions(env))
-        row = env._demand_response_service.settlement_history[-1]
+        row = demand_response_service(env).settlement_history[-1]
         actual_kw = env.net_electricity_consumption[4] / step_hours
         expected_delivered_kw = (
             actual_kw - expected_baseline_kw
@@ -183,7 +184,7 @@ def test_demand_response_kpis_and_building_allocation_for_single_building(tmp_pa
     try:
         _advance_to(env, 4)
         env.step(_zero_entity_actions(env))
-        row = env._demand_response_service.settlement_history[-1]
+        row = demand_response_service(env).settlement_history[-1]
         kpis = env.evaluate_v2(include_business_as_usual=False)
 
         def value(name: str, level: str = "district", entity_name: str = "District"):
@@ -220,7 +221,7 @@ def test_demand_response_invalid_baseline_is_counted_without_settlement_economic
     try:
         env.reset(seed=0)
         env.step(_zero_entity_actions(env))
-        row = env._demand_response_service.settlement_history[-1]
+        row = demand_response_service(env).settlement_history[-1]
 
         assert row["baseline_valid"] is False
         assert row["revenue_eur"] == pytest.approx(0.0)

@@ -66,7 +66,7 @@ MultiCommunityEnv(
 )
 ```
 
-`community_id` must be unique, non-empty and safe as a relative path component. It may contain only letters, numbers, `_`, `-` and `.`. `weight` defaults to `1.0`, must be finite and non-negative, and at least one community must have a positive weight.
+`community_id` must be unique, non-empty and safe as a relative path component. It may contain only letters, numbers, `_`, `-` and `.`. `weight` defaults to `1.0`, must be finite and non-negative, and at least one community must have a positive weight. Only `community_id`, `schema`, `env_kwargs` and `weight` are accepted in an entry: any other key raises a `ValueError` that names it, and `weight` cannot be a boolean.
 
 `env_kwargs` are passed to the child `CityLearnEnv`. The wrapper sets each child export session to `<render_session_name>/<community_id>` so render and KPI files are separated by community.
 
@@ -77,6 +77,19 @@ MultiCommunityEnv(
 ```python
 observations = {"community_a": child_observations, "community_b": child_observations}
 info = {"communities": {...}, "time_step": 0}
+```
+
+`reset(seed=..., options=...)` passes `seed` to every child. `options` can hold one
+mapping per community, keyed by `community_id`; a community without its own entry
+receives the whole `options` mapping:
+
+```python
+# community_a replays episode 2. community_b has no entry, so it receives the
+# whole mapping and replays episode 0.
+env.reset(options={"community_a": {"episode_index": 2}, "episode_index": 0})
+
+# The same options for every child.
+env.reset(options={"episode_index": 2})
 ```
 
 `step(actions)` expects one child action payload per community:
@@ -117,8 +130,16 @@ All child environments must use:
 | Same effective episode length | Keeps training batches rectangular. |
 | Same `interface` | Keeps observation/action payload contracts stable. |
 | Same `central_agent` mode | Avoids mixing centralized and decentralized reward/action semantics. |
+| Same `physics_version` | Portfolio totals add up district values, so every community must simulate the same physics. |
+| Same `random_stream_version` | Randomly drawn defaults (battery curves, efficiencies, noise) must come from the same stream definition for the totals to be comparable. |
+| Same `baseline_version` | Portfolio baseline KPIs add up district baselines, so the baseline definition must match. |
 
-The wrapper validates these conditions at construction and again after reset.
+The wrapper validates these conditions at construction and again after reset, and
+raises a `ValueError` that names the setting, for example:
+
+```text
+ValueError: MultiCommunityEnv requires all communities to share physics_version, got {'A': 2, 'B': 1}.
+```
 
 Calendar windows are not part of the contract. Each child selects its episode
 split from its own simulation window, `random_episode_split` setting and
@@ -144,7 +165,7 @@ Only district-level child KPIs are aggregated:
 
 | KPI suffix | Portfolio rule |
 |---|---|
-| `_kwh`, `_eur`, `_kgco2`, `_count` | Sum across communities. |
+| `_kwh`, `_eur`, `_kgco2`, other `_count` | Sum across communities. |
 | `_ratio` of a control total to a reference total | Ratio of the summed totals, e.g. `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
 | Rates and means with additive denominators | Pooled: mean weighted by the denominator, e.g. `portfolio_ev_events_departure_met_count / portfolio_ev_events_departure_count`. |
 | Other `_ratio`, `_percent` | Weighted mean using community `weight`. |
@@ -156,7 +177,7 @@ net exchange, and the `ratio_to_business_as_usual` ratios of solar generation
 and export, EV charge and V2G export, battery charge, discharge and throughput,
 and deferrable-appliance cycle and energy counts. They use only communities that
 report both totals, ignore `weight` like the summed totals, and keep the
-lower-is-better rule of the [KPI reference](kpis_reference.md#core-equations)
+lower-is-better rule of the [KPI reference](kpis_reference.md#shared-rules)
 for negative net-exchange and cost totals. A one-community portfolio ratio
 equals the district ratio.
 
@@ -171,16 +192,37 @@ equal the ratio of the pooled numerator and denominator and ignore `weight`:
 | Deferrable-appliance average start delay (control and BAU) | Completed cycles |
 | Escalator service level | Requested passengers |
 | Solar self-consumption (control and BAU) | Solar generation |
+| Community-market local share of demand (`*_local_share_of_demand_ratio`, `*_import_share_ratio`) | Local import plus grid import after local trading |
+| Community-market local share of export | Local export plus grid export after local trading |
+| Demand-response compliance | `demand_response_valid_requested_total_kwh` |
+| Demand-response audit compliance, requested-energy coverage and baseline coverage, per purpose | The audit's valid requested energy, requested energy and active intervals |
+| Stationary-battery equivalent full cycles (control and BAU) | Nominal stationary-battery capacity |
 
-The BAU deltas and ratios of the pooled deferrable service level, start delay
-and self-consumption are taken between the pooled control and BAU values.
-Communities whose value is undefined carry no weight.
+The BAU deltas and ratios of the pooled deferrable service level, start delay,
+self-consumption and equivalent full cycles compare the pooled control and BAU
+values. Communities whose value is undefined carry no weight.
+
+For stationary batteries, the portfolio cycle count is total throughput divided
+by twice the total nominal capacity. Installed batteries contribute their capacity
+even if they are idle. The result is undefined when the total capacity is zero.
 
 Ratios without additive totals stay weighted means: grid-shape ratios (peaks,
-ramping and load-factor penalties), comfort and resilience proportions, shares,
-equity, audit and coverage ratios, demand-response compliance, battery capacity
-fade, and the `ratio_to_business_as_usual` ratios of battery capacity fade and
-equivalent full cycles.
+ramping and load-factor penalties), comfort and resilience proportions, equity,
+the thermal-service, EV-departure and other audit ratios, battery capacity fade,
+and the ratio of battery capacity fade to its BAU value.
+
+Communities without a community market report zeros in their market rows. In a
+portfolio where some communities have a market and others do not, a community
+without a market enters the portfolio market rows
+(`portfolio_energy_grid_community_market_*`, `portfolio_cost_community_market_*`
+and `portfolio_solar_self_consumption_community_market_*`) with its plain grid
+settlement: no local trade, its members' grid import and export as grid import
+and export after local trading, its `cost_total_control_eur` as settled and
+counterfactual cost, and zero savings and operator balance. The portfolio
+market rows then cover every community, and the shares are those of the whole
+portfolio. The community's own district rows do not change, and neither do
+portfolios where every community has a market or none has
+([#373](https://github.com/citylearn-project/CityLearn/issues/373)).
 
 Portfolio KPI names replace a leading `district_` prefix with `portfolio_`, for example `district_demand_response_revenue_total_eur` becomes `portfolio_demand_response_revenue_total_eur`.
 
@@ -195,4 +237,6 @@ Portfolio KPI names replace a leading `district_` prefix with `portfolio_`, for 
   community_b/exported_kpis.csv
 ```
 
-The global CSV keeps the long `evaluate_v2()` format with local and portfolio rows.
+The global CSV keeps the long `evaluate_v2()` format with local and portfolio
+rows and the `unit` and `description` columns. Each child keeps its wide
+numeric table and stores its KPI definitions in `exported_kpis.manifest.json`.

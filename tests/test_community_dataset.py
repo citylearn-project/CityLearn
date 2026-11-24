@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 from citylearn.citylearn import CityLearnEnv
 from test_electrical_service_and_market import _build_two_building_market_schema
+from private_access import market_settlement_history
 
 
 def test_explicit_tariffs_and_operator_balance(tmp_path):
@@ -16,7 +17,7 @@ def test_explicit_tariffs_and_operator_balance(tmp_path):
     path.write_text(json.dumps(schema))
     env=CityLearnEnv(str(path));env.reset()
     env.step([np.zeros(len(env.action_names[0]))])
-    rows=env._community_market_settlement_history[-1]
+    rows=market_settlement_history(env)[-1]
     a,b=rows
     assert a['settled_cost_eur']==pytest.approx(.6)
     assert b['settled_cost_eur']==pytest.approx(-.5)
@@ -28,7 +29,7 @@ def test_explicit_tariffs_and_operator_balance(tmp_path):
     schema['community_market']['local_trading_enabled']=False
     path.write_text(json.dumps(schema));env=CityLearnEnv(str(path));env.reset()
     env.step([np.zeros(len(env.action_names[0]))])
-    rows=env._community_market_settlement_history[-1]
+    rows=market_settlement_history(env)[-1]
     assert rows[0]['settled_cost_eur']==pytest.approx(1)
     assert rows[1]['settled_cost_eur']==pytest.approx(-.2)
     assert all(r['market_savings_eur']==pytest.approx(0.) for r in rows)

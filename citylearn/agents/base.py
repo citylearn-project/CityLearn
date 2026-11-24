@@ -2,10 +2,21 @@ import logging
 from typing import Any, List, Mapping
 from gymnasium import spaces
 import numpy as np
+from citylearn import random_streams
 from citylearn.base import Environment
 from citylearn.citylearn import CityLearnEnv
 
 LOGGER = logging.getLogger(__name__)
+
+
+def __getattr__(name: str):
+    # Deprecated names of renamed classes resolve to the same class, also for unpickling and import paths.
+    if name == 'BaselineAgent':
+        from citylearn.agents._renamed import renamed
+
+        return renamed(__name__, 'BaselineAgent', 'NoControlAgent', NoControlAgent)
+
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
 
 def get_env_attr(env, name: str):
     """Read an attribute from the outermost wrapper that defines it, else from the base environment.
@@ -78,6 +89,12 @@ class Agent(Environment):
             episode_tracker=self.env.unwrapped.episode_tracker,
             time_step_ratio=self.env.unwrapped.time_step_ratio
         )
+        # The agent's own random streams follow the derivation of its environment's streams. The default is not
+        # stored, so agents saved before the setting existed load with the same attributes as new ones.
+        random_stream_version = getattr(self.env.unwrapped, 'random_stream_version', None)
+
+        if random_stream_version != random_streams.DEFAULT_RANDOM_STREAM_VERSION:
+            self._set_random_stream(random_stream_version=random_stream_version)
         self.reset()
 
     @property
@@ -334,6 +351,44 @@ class Agent(Environment):
 
         pass
 
+    def _get_seed(self, *key: int) -> int:
+        """Seed of one of the agent's random streams, derived from :attr:`random_seed` and `key`.
+
+        Keys in use: ``(0, i)`` for action space ``i`` (see :meth:`_seed_action_spaces`), ``(1, i)`` for the SAC
+        replay buffer of action space ``i``, ``(2,)`` for the SAC policy noise and ``(3, i)`` for the MARLISA PCA of
+        action space ``i``.
+        """
+
+        return int(np.random.SeedSequence(int(self.random_seed), spawn_key=key).generate_state(1)[0])
+
+    def _seed_action_spaces(self):
+        """Seed the action spaces that exploration samples from, unless they are already seeded.
+
+        An unseeded gymnasium space seeds itself from OS entropy on first use, so its samples would differ between
+        runs with the same :attr:`random_seed`. Space ``i`` is seeded with :meth:`_get_seed` ``(0, i)``. Spaces the
+        caller has seeded keep their stream.
+        """
+
+        for i, space in enumerate(self.action_space):
+            if getattr(space, '_np_random', None) is None:
+                space.seed(self._get_seed(0, i))
+
+    def episode_random_generator(self, purpose: str) -> np.random.Generator:
+        """Generator of `purpose` for the current episode (``random_stream_version='v2'``).
+
+        The generator is derived from :py:attr:`random_seed`, `purpose` and the episode key of the shared
+        episode tracker, and persists for the rest of the episode, so draws within an episode come from one
+        stream and every episode starts a new, independent stream. Generators of earlier episodes are dropped.
+        """
+
+        episode = self.episode_tracker.random_stream_episode
+        generators = getattr(self, '_random_generators', None) or {}
+
+        for key in [k for k in generators if k[0] == purpose and k[1:] != (episode,)]:
+            del generators[key]
+
+        return self.random_generator(purpose, episode)
+
     def next_time_step(self):
         super().next_time_step()
 
@@ -349,8 +404,12 @@ class Agent(Environment):
         count = len(self.__action_history_ids) if getattr(env, 'topology_mode', 'static') == 'dynamic' else len(self.action_space)
         self.__actions = [[[]] for _ in range(count)]
 
-class BaselineAgent(Agent):
-    r"""Passive no-control baseline where active control actions are disabled.
+class NoControlAgent(Agent):
+    r"""Passive no-control agent: every active control action is disabled.
+
+    Up to CityLearn 3.6.0 this class was called ``BaselineAgent``. That name is a deprecated alias that will be
+    removed in a later release: in CityLearn, "baseline" names the KPI counterfactual (the same buildings without
+    storage, with PV), while this agent controls nothing.
 
     This agent will provide results for when there is no storage for load shifting and no heat pump partial load. 
     The storage actions prescribed will be 0.0 and the heat pump will have no action, i.e. `None`, causing it to 
@@ -382,16 +441,38 @@ class BaselineAgent(Agent):
         Agent.env.fset(self, self.__deactivate_actions(env))
 
     def __deactivate_actions(self, env: CityLearnEnv) -> CityLearnEnv:
-        for b in env.unwrapped.buildings:
+        unwrapped = env.unwrapped
+        buildings = {id(b): b for b in list(getattr(unwrapped, '_all_buildings', None) or []) + list(unwrapped.buildings)}
+        changed = False
+
+        for b in buildings.values():
+            if not b.active_actions:
+                continue
+
+            # The native BAU reference is rebuilt with the loaded actions; its configuration check compares them.
+            if getattr(b, '_no_control_loaded_active_actions', None) is None:
+                b._no_control_loaded_active_actions = sorted(b.active_actions)
+
             for a in b.action_metadata:
                 b.action_metadata[a] = False
 
             b.action_space = b.estimate_action_space()
             b.observation_space = b.estimate_observation_space()
+            changed = True
+
+        if changed and hasattr(unwrapped, '_refresh_action_cache'):
+            unwrapped._refresh_action_cache()
+
+            if getattr(unwrapped, '_entity_service', None) is not None:
+                unwrapped._entity_service.invalidate()
 
         return env
 
     def predict(self, observations: List[List[float]], deterministic: bool = None) -> List[List[float]]:
+        # A dynamic topology restores the schema's actions at reset and enables those of members and assets that
+        # join; disable them again before acting (CityLearn #309).
+        self.__deactivate_actions(self.env)
+        self._follow_entity_topology()
         actions = [[] for _ in self.action_names]
         self.actions = actions
         self.next_time_step()
