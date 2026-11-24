@@ -33,6 +33,7 @@ Versão em inglês: [../schema_reference.md](../schema_reference.md).
 | `random_episode_split` | bool/null | não | Janelas de episódio aleatórias. |
 | `time_step_ratio_mode` | `reject`/`compress`/null | não | `reject` (predefinido) recusa um `seconds_per_time_step` diferente do passo do dataset; `compress` mantém o comportamento da 3.6.0, que lê uma linha de dados por passo de controlo e escala as energias. |
 | `episode_split_boundary` | `shared`/`disjoint`/null | não | Como se ligam divisões de episódio consecutivas. `shared` (predefinido) começa cada divisão na linha terminal da anterior, pelo que todos os intervalos são simulados; `disjoint` mantém as divisões da 3.6.0, que saltam o intervalo entre dois episódios. |
+| `ev_soc_carryover` | bool/null | não | Começa cada VE de um episódio que continua o anterior no tempo (começa na última linha do episódio anterior, ou na linha seguinte) com o SOC que tinha no fim desse episódio, em vez do SOC do calendário. Por omissão `false`. |
 | `reward_function` | object/string | sim | Classe da recompensa e kwargs. |
 | `observations` | object | sim | Catálogo flat de observações e flags. |
 | `actions` | object | sim | Catálogo flat de ações e flags. |
