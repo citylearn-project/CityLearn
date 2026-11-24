@@ -25,6 +25,7 @@ diferença, prevalece a versão inglesa.
 | [Catálogo de KPIs](KPI_V2_TREE.md) | Todos os nomes de KPI emitidos por `evaluate_v2()`. |
 | [Várias comunidades](multi_community_reference.md) | Sincronização e indicadores agregados. |
 | [Robustez](robustness_reference.md) | Eventos nos dados, ações e disponibilidade dos equipamentos. |
+| [Fornecedores de mobilidade](mobility_provider.md) | Ligações de veículos escritas em runtime por um simulador de tráfego. |
 | [Validação e desempenho](validation.md) | Escolher auditorias e consultar resultados medidos. |
 | [Migração](migration.md) | Atualizar um projeto existente para o CityLearn v3. |
 | [Desenvolvimento](developer_guide.md) | Ambiente local, testes e arquitetura. |
