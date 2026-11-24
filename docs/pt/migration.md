@@ -357,6 +357,39 @@ rácios de partidas de execuções anteriores com episódios curtos ou divididos
 devem ser recalculados antes de comparar
 ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
 
+### SOC dos VE transportado entre divisões de episódios
+
+Nada muda sem `ev_soc_carryover=True`. Com esta definição, um episódio que
+continua o anterior no tempo (começa na última linha do episódio anterior, ou
+na linha seguinte, e o episódio anterior chegou ao fim) começa cada VE com o
+SOC que atingiu no fim desse episódio, e uma sessão ligada através da fronteira
+é avaliada onde realmente parte, com essa carga, como descreve a
+[referência dos KPIs](kpis_reference.md#partidas). Só o SOC dos VE é transportado: as baterias, o armazenamento térmico e as temperaturas interiores continuam a começar cada episódio no seu estado inicial. A definição é um compromisso. Desligada, cada episódio é independente dos anteriores, mas uma sessão que atravessa uma fronteira perde a carga que recebeu. Ligada, essa carga mantém-se, mas um episódio que continua o anterior depende do que o controlador anterior fez, pelo que os seus KPIs deixam de ser os de um episódio independente. As partidas cumpridas das
+execuções divididas aproximam-se então das de uma execução única, pelo que os
+resultados com e sem a definição não são comparáveis, e `compare_exports`
+indica-os como incompatíveis. Com `'disjoint'`, a linha entre dois episódios
+nunca é controlada, pelo que uma sessão ligada através dela pode ficar até um
+passo de carregamento atrás da execução única. Um episódio transportado começa
+com o SOC deixado pelo controlador anterior, que entra no seu inventário
+inicial, pelo que o mesmo episódio transportado corrido por dois controladores
+não é comparável, e `compare_exports` indica-o como incompatível: com
+transporte, compare execuções divididas inteiras, não episódios isolados. As divisões aleatórias e
+rolantes nunca transportam, e o ambiente avisa uma vez que a definição não tem
+efeito nesse caso; uma lista explícita só transporta quando uma janela começa
+exatamente onde a anterior termina para a fronteira escolhida, pelo que, com o
+`'shared'` por omissão, uma lista sem intervalo, como
+`[(1900, 1949), (1950, 1999)]`, não transporta (transporta com `'disjoint'`,
+ou com `'shared'` quando a janela seguinte começa na última linha da
+anterior), e um
+`reset(options={'episode_index': ...})` que salta para outro lado mantém o SOC
+do calendário. Só a sessão ligada através da fronteira é transportada; todas
+as chegadas seguintes usam o SOC de chegada do ficheiro, e uma chegada sem ele
+mantém o SOC simulado do VE, tal como na execução única. Somadas sobre os
+episódios, as partidas, as partidas cumpridas e as classes de viabilidade
+coincidem com a execução única, mas o ganho de SOC ligado da contabilidade
+energética é o ganho de cada episódio, pelo que a sua soma é menor do que na
+execução única, e os totais de energia podem diferir ligeiramente ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
+
 ### Os espaços de observação seguem as observações
 
 Os valores das observações, a sua ordem e `observation_names` não mudam, nem as

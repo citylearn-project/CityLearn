@@ -186,6 +186,7 @@ def context(env, data_files):
     return dict(temporal=temporal,definition_version=DEFINITION_VERSION,
                 physics_version=getattr(env, 'physics_version', None),
                 baseline_version=getattr(env, 'baseline_version', None),
+                ev_soc_carryover=bool(getattr(env, 'ev_soc_carryover', False)),
                 engine=dict(version=__version__, source_sha256=source_sha256(Path(__file__).resolve().parents[1]),
                             runtime_versions=runtime_versions()),
                 physical_configuration_sha256=digest(canonical(physical, root, files)),
@@ -263,6 +264,9 @@ def compare_manifests(left, right, mode='controller'):
                     declared.append('sharing_enabled_flags')
             elif a[key] != b[key]:
                 mismatches.append(key)
+        # Exports from before the setting existed ran without it.
+        if bool(a.get('ev_soc_carryover', False)) != bool(b.get('ev_soc_carryover', False)):
+            mismatches.append('ev_soc_carryover')
     for manifest in (left, right):
         identity = manifest.get('controller_identity') or {}
         if not identity.get('implementation') or not identity.get('version') or identity.get('parameters') is None or not identity.get('observation_access'):

@@ -115,6 +115,8 @@ class CityLearnBusinessAsUsualBaselineService:
         if ev_charge_target != 'full':
             # Its own baseline takes the EV charging from this env's 'full' run (`ev_charging`).
             baseline_env._baseline_ev_charging_parent = env
+        # Start from the same carried EV SOC and count departures as the evaluated episode does.
+        baseline_env._ev_soc_carryover_inherited = deepcopy(getattr(env, '_ev_soc_carryover_context', None))
         agent = BusinessAsUsualAgent(baseline_env, ev_charge_target=ev_charge_target, hvac=hvac)
         baseline_env.reset()
 
@@ -302,6 +304,7 @@ class CityLearnBusinessAsUsualBaselineService:
             physics_invariant_checks=bool(getattr(env, 'physics_invariant_checks', False)),
             physics_version=getattr(env, 'physics_version', None),
             baseline_version=getattr(env, 'baseline_version', None),
+            ev_soc_carryover=bool(getattr(env, 'ev_soc_carryover', False)),
             # The effective setting, which a constructor override may have changed from the schema's.
             energy_provenance=bool(getattr(env, 'energy_provenance', True)),
             **deepcopy(getattr(env, '_constructor_overrides', {})),
