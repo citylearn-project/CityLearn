@@ -76,6 +76,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Actions Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#general-contract">General Contract</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#flat-actions">Flat Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#out-of-range-actions">Out-of-Range Actions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#physical-conversion">Physical Conversion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#deferrable-appliance-start-logic">Deferrable Appliance Start Logic</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#escalator-control">Escalator Control</a></li>
@@ -172,7 +173,7 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Bounds</p></td>
-<td><p>Read from <code class="docutils literal notranslate"><span class="pre">env.action_space</span></code> and <code class="docutils literal notranslate"><span class="pre">env.action_names</span></code>.</p></td>
+<td><p>Read from <code class="docutils literal notranslate"><span class="pre">env.action_space</span></code> and <code class="docutils literal notranslate"><span class="pre">env.action_names</span></code>. An action outside its bounds is clipped to them; see <a class="reference internal" href="#out-of-range-actions"><span class="std std-ref">Out-of-range actions</span></a>.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Storage actions</p></td>
 <td><p>Positive charges, negative discharges.</p></td>
@@ -261,6 +262,19 @@
 </tr>
 </tbody>
 </table>
+</section>
+<section id="out-of-range-actions">
+<h2>Out-of-Range Actions<a class="headerlink" href="#out-of-range-actions" title="Link to this heading"></a></h2>
+<p>Both interfaces apply one rule to an action outside <code class="docutils literal notranslate"><span class="pre">env.action_space</span></code>: it is
+clipped to the nearest bound before it reaches the device. This holds for flat
+action vectors, flat vectors sent to an entity environment, and entity <code class="docutils literal notranslate"><span class="pre">tables</span></code>
+and <code class="docutils literal notranslate"><span class="pre">map</span></code> payloads. An action inside the bounds is applied as sent, bit for bit.
+<code class="docutils literal notranslate"><span class="pre">NaN</span></code> and infinite actions are not clipped: <code class="docutils literal notranslate"><span class="pre">step()</span></code> rejects them with a
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. Under <code class="docutils literal notranslate"><span class="pre">physics_version=1</span></code> flat actions are applied as given, as in
+CityLearn 3.6.0, and only entity tables and maps are clipped.</p>
+<p>For example, with <code class="docutils literal notranslate"><span class="pre">cooling_storage</span></code> bounded by <code class="docutils literal notranslate"><span class="pre">[-0.25,</span> <span class="pre">0.25]</span></code>, an action of
+<code class="docutils literal notranslate"><span class="pre">0.75</span></code> charges the tank as <code class="docutils literal notranslate"><span class="pre">0.25</span></code> does. The device limits (power, capacity, SOC)
+then apply as usual.</p>
 </section>
 <section id="physical-conversion">
 <h2>Physical Conversion<a class="headerlink" href="#physical-conversion" title="Link to this heading"></a></h2>

@@ -136,6 +136,11 @@ Schema helper keys are expanded per charger.
 | `remaining_duration_steps` | steps | Remaining cycle duration. |
 | `remaining_average_power_kw`, `current_step_power_kw` | kW | Remaining average and current step power. |
 
+The `*_kwh` bounds come from the cycle definitions of the building's appliances:
+`cycle_energy_kwh` and `remaining_energy_kwh` lie in [0, largest cycle energy],
+`current_step_energy_kwh` in [0, largest step energy]. See
+[observation bounds](interfaces_flat_entity.md#observation-bounds).
+
 ### Escalator Flat Observations
 
 `escalator_*` helper keys are expanded per escalator in the flat interface.

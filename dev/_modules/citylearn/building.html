@@ -2595,6 +2595,58 @@
         <span class="k">return</span> <span class="n">peak</span>
 
     <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deferrable_appliance_observation_energy_limits</span><span class="p">(</span><span class="n">appliance</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Largest values of an appliance's deferrable `*_kwh` observations [kWh].</span>
+
+<span class="sd">        Returns the largest cycle energy, the bound of `cycle_energy_kwh` and `remaining_energy_kwh`, and the</span>
+<span class="sd">        largest step energy of a cycle profile, the bound of `current_step_energy_kwh`. The cycle energy is</span>
+<span class="sd">        the larger of `total_energy_kwh` and the energy left in a running cycle's profile, summed as the</span>
+<span class="sd">        appliance sums it, because the profile sum may differ from `total_energy_kwh` by rounding.</span>
+<span class="sd">        """</span>
+
+        <span class="n">simulation</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">appliance</span><span class="p">,</span> <span class="s1">'deferrable_appliance_simulation'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">cycles</span> <span class="o">=</span> <span class="nb">list</span><span class="p">((</span><span class="nb">getattr</span><span class="p">(</span><span class="n">simulation</span><span class="p">,</span> <span class="s1">'cycle_profiles'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">cycles</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">simulation</span><span class="p">,</span> <span class="s1">'flexibility_schedule'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[])</span>
+        <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">cycle_high</span><span class="p">,</span> <span class="n">step_high</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+
+        <span class="k">for</span> <span class="n">cycle</span> <span class="ow">in</span> <span class="n">cycles</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">cycle_high</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">cycle_high</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">cycle</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'total_energy_kwh'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+                <span class="k">pass</span>
+
+            <span class="n">profile</span> <span class="o">=</span> <span class="n">cycle</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'load_profile'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">profile</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">id</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span> <span class="ow">in</span> <span class="n">seen</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">profile</span><span class="p">))</span>
+            <span class="n">step_high</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">step_high</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">))))</span>
+
+            <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">)):</span>
+                <span class="n">cycle_high</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">cycle_high</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">profile</span><span class="p">[</span><span class="n">offset</span><span class="p">:])))</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">cycle_high</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">cycle_high</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">step_high</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">step_high</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deferrable_energy_observation_high_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Upper bounds of the deferrable `*_kwh` observations: (cycle and remaining energy, current-step energy) [kWh].</span>
+
+<span class="sd">        Each is the largest value any of the building's appliances can report, from their cycle definitions, as</span>
+<span class="sd">        `_deferrable_power_observation_high_limit` does for the `*_kw` observations. A bound with no positive</span>
+<span class="sd">        cycle energy to derive it from is 1.0, so that the range is not empty.</span>
+<span class="sd">        """</span>
+
+        <span class="n">limits</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_deferrable_appliance_observation_energy_limits</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">deferrable_appliances</span> <span class="ow">or</span> <span class="p">[]]</span>
+        <span class="n">cycle_high</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">limits</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">step_high</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">limits</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">cycle_high</span> <span class="k">if</span> <span class="n">cycle_high</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="n">step_high</span> <span class="k">if</span> <span class="n">step_high</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_series_bound</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">upper</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -2680,6 +2732,7 @@
             <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="n">escalator</span><span class="o">.</span><span class="n">normal_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">escalator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">escalators</span> <span class="ow">or</span> <span class="p">[]</span>
         <span class="p">)</span>
+        <span class="n">deferrable_energy_high_limits</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">observation_names</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'charging_phase_one_hot_'</span><span class="p">):</span>
@@ -2810,8 +2863,17 @@
                 <span class="n">low_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
                 <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'_ratio'</span><span class="p">)</span> <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s1">'pending'</span><span class="p">,</span> <span class="s1">'running'</span><span class="p">,</span> <span class="s1">'can_start'</span><span class="p">,</span> <span class="s1">'deadline_missed'</span><span class="p">)):</span>
                     <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
-                <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'_kwh'</span><span class="p">):</span>
+                <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'_kwh'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="c1"># The placeholder of CityLearn 3.6.0, kept to reproduce it.</span>
                     <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0e6</span>
+                <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'_kwh'</span><span class="p">):</span>
+                    <span class="c1"># Energies are never negative (0 without a cycle); the bound is the largest value the</span>
+                    <span class="c1"># appliances' cycles can report, so that normalisation keeps the signal.</span>
+                    <span class="k">if</span> <span class="n">deferrable_energy_high_limits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">deferrable_energy_high_limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_deferrable_energy_observation_high_limits</span><span class="p">()</span>
+                    <span class="n">low_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                    <span class="n">cycle_energy_high</span><span class="p">,</span> <span class="n">step_energy_high</span> <span class="o">=</span> <span class="n">deferrable_energy_high_limits</span>
+                    <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">step_energy_high</span> <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'current_step_energy_kwh'</span><span class="p">)</span> <span class="k">else</span> <span class="n">cycle_energy_high</span>
                 <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'_kw'</span><span class="p">):</span>
                     <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_deferrable_power_observation_high_limit</span><span class="p">()</span>
                 <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'_time_step'</span><span class="p">):</span>
