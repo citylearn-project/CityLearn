@@ -187,3 +187,26 @@ def test_battery_discharge_must_stop_at_the_depth_of_discharge_reserve():
         assert battery.soc[t] < reserve_soc
     finally:
         env.close()
+
+
+def test_battery_check_reads_only_the_last_efficiency_entries():
+    # The battery history gets one efficiency entry per step. The check copied all of it at every step, so
+    # its cost grew with the episode; it needs only the entries of the step's operations.
+    from array import array
+
+    class History(array):
+        def __iter__(self):
+            raise AssertionError('the whole efficiency history was copied')
+
+    env = _env(MINUTE_EV_DEMO, central_agent=False, episode_time_steps=8)
+    battery = env.buildings[0].electrical_storage
+    battery._efficiency_history = History('d', battery._efficiency_history)
+    names = env.action_names[0]
+    try:
+        for value in (0.5, -0.5, 0.5):
+            action = [0.0]*len(names)
+            action[names.index('electrical_storage')] = value
+            env.step([action])
+        assert isinstance(battery.efficiency_history, History) and len(battery.efficiency_history) > 3
+    finally:
+        env.close()
