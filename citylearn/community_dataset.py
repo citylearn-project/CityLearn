@@ -64,6 +64,12 @@ class InventoryBattery(Battery):
             return min(self.max_discharge_kw, Battery.get_max_input_power(self, energy_init))
         return min(self.max_discharge_kw, Battery.get_max_output_power(self, energy_init))
 
+    def _step_share_power(self, charging, energy_init):
+        if charging:
+            # The charge power limits only: the SOC headroom limits the energy, not the transfer rate.
+            return min(self.max_charge_kw, Battery.get_max_input_power(self, energy_init))
+        return super()._step_share_power(charging, energy_init)
+
     def get_current_efficiency(self, power):
         return (self.charging_efficiency if self._charging else self.discharging_efficiency)**2
 
