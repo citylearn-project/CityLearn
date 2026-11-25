@@ -15,7 +15,8 @@ they change.
    * - :py:mod:`citylearn.citylearn`
      - ``CityLearnEnv``, the environment: ``reset``, ``step``, ``evaluate_v2``,
        ``scorecard`` and the exports. ``EvaluationCondition`` selects the series
-       ``evaluate_v2`` reads.
+       ``evaluate_v2`` reads. ``set_experiment_identity`` declares the controller
+       recorded in the export manifest, which ``compare_exports`` needs to pair two runs.
    * - :py:mod:`citylearn.multi_community`
      - ``MultiCommunityEnv``, several communities run in step, with portfolio KPIs.
    * - :py:mod:`citylearn.agents`

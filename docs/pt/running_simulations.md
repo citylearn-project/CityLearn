@@ -349,6 +349,76 @@ As séries temporais normais do episódio são controladas por `render_mode`/`re
 
 Para escolhas exatas no episódio final, mantenha `export_kpis_on_episode_end=False` e chame `export_final_kpis()` depois de o episódio terminar.
 
+### Comparar duas execuções exportadas
+
+`export_final_kpis()` escreve `exported_kpis.manifest.json` ao lado do ficheiro de KPIs. `compare_exports(left, right)`
+lê dois ficheiros de KPIs e os respetivos manifestos; `compare_manifests(left, right)` faz a mesma verificação
+sobre manifestos já carregados como dicionários. Ambos estão em `citylearn.internal.comparison`. Indicam se a
+diferença entre as duas execuções pode ser lida como uma diferença de controlador:
+
+| `status` | Significado |
+|---|---|
+| `'paired'` | Só o controlador difere. `permitted_claim` é `'controller_difference'`. |
+| `'incompatible'` | Difere uma definição que muda os resultados; fica listada em `mismatches`. |
+| `'unknown'` | Falta evidência num manifesto; fica listada em `missing_evidence`. |
+
+O simulador não sabe que controlador escolheu as ações, pelo que cada execução o declara com
+`env.set_experiment_identity(implementation, version, parameters, observation_access='agent_payload')`.
+**Sem isso, duas execuções iguais em tudo o resto comparam-se como `status='unknown'` com
+`missing_evidence=['controller_identity']`.**
+
+| Argumento | O que regista |
+|---|---|
+| `implementation` | O nome do controlador, por exemplo o caminho de importação. Obrigatório. |
+| `version` | A versão do código do controlador ou dos pesos treinados. Obrigatório. |
+| `parameters` | Um dicionário com as definições que identificam este controlador. Tem de ser serializável em JSON, com números finitos; use `{}` quando não houver nenhuma. |
+| `observation_access` | O que o controlador observa. A predefinição `'agent_payload'` são as observações devolvidas por `reset()` e `step()`. Duas execuções com valores diferentes são `incompatible` (`controller_observation_access`). |
+
+A identidade fica no manifesto como `controller_identity`. Mantém-se no ambiente entre chamadas a `reset()`,
+pelo que basta chamá-la uma vez depois de criar o ambiente; tem de estar definida antes de `export_final_kpis()`
+correr, incluindo a exportação automática no fim do episódio quando `export_kpis_on_episode_end=True`. As
+referências baseadas em regras declaram a sua própria identidade através de `agent.comparison_identity()`:
+passe o agente a `env.export_final_kpis(model=agent)` e ela fica registada, com
+`observation_access='entity_observations'`. Com `MultiCommunityEnv`, chame-a em cada comunidade de `mc.envs`,
+cujas exportações próprias contêm os manifestos. `compare_exports(left, right, mode='sharing')` compara o mesmo
+controlador com a partilha ativa e desativa, e exige também que as duas identidades sejam iguais.
+
+Este exemplo corre um controlador simples com dois valores de parâmetro, exporta as duas execuções e compara-as:
+
+```python
+from pathlib import Path
+
+from citylearn.citylearn import CityLearnEnv
+from citylearn.internal.comparison import compare_exports
+
+
+def run(name, battery_action):
+    env = CityLearnEnv(
+        "citylearn_challenge_2022_phase_all_plus_evs", central_agent=True, episode_time_steps=24,
+        render_directory="runs", render_session_name=name, export_kpis_on_episode_end=False,
+    )
+    env.set_experiment_identity(
+        implementation="my_project.ConstantBattery", version="1.0",
+        parameters={"battery_action": battery_action},
+    )
+    env.reset()
+    while not env.terminated:
+        actions = [[battery_action if n.startswith("electrical_storage") else 0.0 for n in env.action_names[0]]]
+        env.step(actions)
+    env.export_final_kpis(export_business_as_usual_timeseries=False)
+    path = Path(env.new_folder_path) / "exported_kpis.csv"
+    env.close()
+    return path
+
+
+report = compare_exports(run("idle", 0.0), run("charge", 0.2))
+print(report["status"], report["missing_evidence"], report["mismatches"])
+```
+
+```text
+paired [] []
+```
+
 ## Teste rápido de um dataset grande
 
 Para datasets grandes de 15 s, execute sempre primeiro uma janela curta:
