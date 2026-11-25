@@ -682,14 +682,56 @@ class Building(Environment):
         return self._with_archived_storage_electricity(self.electrical_storage.electricity_consumption[:self.time_step + 1], 0)
 
     def _with_archived_storage_electricity(self, values: np.ndarray, start: int) -> np.ndarray:
-        """Overlay on `values`, which begin at time step `start`, the storage consumption archived by a recommissioning."""
+        """Overlay on `values`, which begin at time step `start`, the storage consumption archived when the
+        `electrical_storage` instance was replaced (asset removal or installation, or a member rejoining)."""
 
-        prefix = getattr(self, '_archived_storage_electricity', None)
+        return self._overlay_archived_storage(getattr(self, '_archived_storage_electricity', None), values, start)
+
+    def _with_archived_storage_energy_balance(self, values: np.ndarray, start: int) -> np.ndarray:
+        """Overlay on `values`, which begin at time step `start`, the storage energy balance archived when the
+        `electrical_storage` instance was replaced."""
+
+        return self._overlay_archived_storage(getattr(self, '_archived_storage_energy_balance', None), values, start)
+
+    @staticmethod
+    def _overlay_archived_storage(prefix: Optional[np.ndarray], values: np.ndarray, start: int) -> np.ndarray:
         if prefix is not None:
             values = values.copy()
             size = max(min(len(prefix) - start, len(values)), 0)
             values[:size] = prefix[start:start + size]
         return values
+
+    def _electrical_storage_history_prefix(self, time_step: int) -> Tuple[np.ndarray, np.ndarray]:
+        """The building's `electrical_storage` electricity consumption and energy balance before `time_step`.
+
+        Both include what earlier instances archived, so they can be archived again when the current
+        instance is replaced. Steps the series do not cover are zero.
+        """
+
+        time_step = max(int(time_step), 0)
+        prefixes = []
+        for values in (
+            self.electrical_storage_electricity_consumption,
+            self._with_archived_storage_energy_balance(self.electrical_storage.energy_balance[:self.time_step + 1], 0),
+        ):
+            prefix = np.zeros(time_step, dtype=float)
+            size = min(time_step, len(values))
+            prefix[:size] = values[:size]
+            prefixes.append(prefix)
+
+        return prefixes[0], prefixes[1]
+
+    def _archive_electrical_storage_history(self, time_step: int) -> None:
+        """Keep the `electrical_storage` history before `time_step` in the building's series.
+
+        Called before the instance is replaced at `time_step`, so the building's battery series, the
+        baselines without storage and the district sums keep the energy the replaced battery moved
+        while it was installed.
+        """
+
+        self._archived_storage_electricity, self._archived_storage_energy_balance = (
+            self._electrical_storage_history_prefix(time_step)
+        )
     
     @property
     def pv_curtailment(self) -> np.ndarray:
@@ -742,7 +784,9 @@ class Building(Environment):
     def energy_to_electrical_storage(self) -> np.ndarray:
         """Energy supply from `electrical_device` to building time series, in [kWh]."""
 
-        return self.electrical_storage.energy_balance[:self.time_step + 1].clip(min=0)
+        return self._with_archived_storage_energy_balance(
+            self.electrical_storage.energy_balance[:self.time_step + 1], 0
+        ).clip(min=0)
 
     @property
     def energy_from_cooling_device(self) -> np.ndarray:
@@ -790,7 +834,9 @@ class Building(Environment):
     def energy_from_electrical_storage(self) -> np.ndarray:
         """Energy supply from `electrical_storage` to building time series, in [kWh]."""
 
-        return self._energy_from_storage(self.electrical_storage, slice(None, self.time_step + 1))
+        return self._with_archived_storage_energy_balance(
+            self.electrical_storage.energy_balance[:self.time_step + 1], 0
+        ).clip(max=0) * -1
 
     @staticmethod
     def _energy_from_storage(storage: StorageDevice, time_steps: slice) -> np.ndarray:
@@ -1675,6 +1721,22 @@ class Building(Environment):
 
         return self._ops_service.get_observations_data(include_all=include_all)
 
+    _OBSERVATION_SOURCE_CACHES = (
+        '_energy_simulation_observation_sources', '_weather_observation_sources', '_pricing_observation_sources',
+        '_carbon_observation_sources', '_additional_observation_sources',
+    )
+
+    def __getstate__(self) -> Dict[str, Any]:
+        state = self.__dict__.copy()
+        # The observation-source caches hold views of the time series arrays. Copied (deepcopy or pickle), they
+        # become arrays of their own, frozen at copy time, while the copy keeps writing its series (the LSTM
+        # indoor temperature, for example). The copy rebuilds them from its own series before it next reads them.
+        if any(state.get(name) for name in self._OBSERVATION_SOURCE_CACHES):
+            for name in self._OBSERVATION_SOURCE_CACHES:
+                state[name] = []
+            state['_observation_source_cache_stale'] = True
+        return state
+
     def _refresh_observation_source_cache(self):
         """Cache episode-sliced observation sources to avoid per-step dynamic lookups."""
 
@@ -1703,6 +1765,7 @@ class Building(Environment):
             for name, series in _collect(source)
             if name in self.observation_metadata
         ]
+        self._observation_source_cache_stale = False
 
     def _additional_observation_data_sources(self) -> List[Any]:
         """Time series data objects, beyond the building's own, whose declared observations subclasses expose."""
@@ -3195,6 +3258,7 @@ class Building(Environment):
         # object reset
         super().reset()
         self._archived_storage_electricity = None
+        self._archived_storage_energy_balance = None
         # Row of the agent-facing terminal observation; set by the runtime after the last transition.
         self._terminal_observation_time_step = None
         # End uses whose device shortfall has been reported this episode.

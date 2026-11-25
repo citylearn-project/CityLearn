@@ -18,6 +18,8 @@ Versions
     EV charging, and adds nothing back, so on EV datasets it is a community whose cars never charge (#365).
     The native BAU sends zero to the HVAC actions, as in 3.6.0, so on datasets whose buildings have HVAC
     actions (temperature dynamics) the BAU buildings are neither heated nor cooled (#362).
+    With dynamic topology, a battery removed or replaced by an event loses its history from the building's
+    series, as in 3.6.0, so the baseline keeps that battery's dispatch before the event.
 2
     The default. The baseline removes the battery, the thermal storage and the EV charging of the
     controlled run, and adds back the EV charging of the native BAU of the same scenario with the
@@ -26,7 +28,8 @@ Versions
     controller does with the cars or the storage, so a controller that leaves the cars short does not
     lower its own baseline. The deferrable appliances stay as the controller ran them. So does the
     HVAC, except in buildings with temperature dynamics (LSTM), where the default condition uses the
-    dataset's ideal-load heating and cooling demand.
+    dataset's ideal-load heating and cooling demand. With dynamic topology, a battery removed or replaced
+    by an event keeps what it moved before the event in the building's series, so the baseline removes it.
 
     The BAU charging comes from the BAU sidecar
     (:py:meth:`citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline`), which is therefore run

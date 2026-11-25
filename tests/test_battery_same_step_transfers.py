@@ -260,7 +260,6 @@ def test_repeated_transfers_share_one_power_budget_per_step(legacy_discharge_pow
     battery = _make_battery(nominal_power=5.0, capacity_loss_coefficient=0.0,
                             legacy_discharge_power_limit=legacy_discharge_power_limit)
     input_budget = battery.get_max_input_power()
-    output_budget = battery.get_max_output_power()
     assert input_budget == pytest.approx(4.5)
 
     for _ in range(3):
@@ -271,12 +270,12 @@ def test_repeated_transfers_share_one_power_budget_per_step(legacy_discharge_pow
     assert battery.gross_energy_charge[0] == pytest.approx(input_budget, rel=1e-6)
     assert battery.preview_charge(1.0) == pytest.approx(0.0, abs=1e-6)
 
-    # The discharge budget is separate and read at the energy before the step's first transfer.
+    # The charges used the whole step, so nothing is left to discharge in it either.
     for _ in range(3):
         battery.charge(-5.0)
 
-    assert battery.gross_energy_discharge[0] == pytest.approx(output_budget, rel=1e-6)
-    assert battery.energy_balance[0] == pytest.approx(input_budget - output_budget, rel=1e-6)
+    assert battery.gross_energy_discharge[0] == pytest.approx(0.0, abs=1e-6)
+    assert battery.energy_balance[0] == pytest.approx(input_budget, rel=1e-6)
     assert battery.preview_charge(-1.0) == pytest.approx(0.0, abs=1e-6)
 
     # The next step starts with a full budget.
@@ -330,10 +329,10 @@ def test_storage_tank_repeated_transfers_share_one_power_budget_per_step():
         tank.charge(5.0)
     assert tank.energy_balance[0] == pytest.approx(5.0, rel=1e-6)
 
-    # The discharge budget (4 kW) is separate from the charge budget.
+    # The charges used the whole step, so nothing is left to discharge in it either.
     for _ in range(3):
         tank.charge(-5.0)
-    assert tank.energy_balance[0] == pytest.approx(1.0, rel=1e-6)
+    assert tank.energy_balance[0] == pytest.approx(5.0, rel=1e-6)
 
     # A split transfer moves the same energy as one transfer, and the next step starts with a full budget.
     tank.next_time_step()
@@ -353,3 +352,62 @@ def test_storage_tank_subhourly_repeated_transfers_share_the_control_step_budget
     for _ in range(3):
         tank.charge(4.0)
     assert tank.energy_balance[0] == pytest.approx(1.25, rel=1e-6)
+
+
+@pytest.mark.parametrize("legacy_discharge_power_limit", [False, True])
+@pytest.mark.parametrize(("first_share", "first_sign"), [(1.0, 1.0), (0.5, 1.0), (1.0, -1.0), (0.25, -1.0)])
+def test_opposite_transfers_in_one_step_share_the_step(legacy_discharge_power_limit, first_share, first_sign):
+    # A charge and a discharge in the same step each used to get a full budget: +5 then -5 kWh moved 9.5 kWh
+    # through a 5 kW battery in one hour. A transfer takes its share of the step, |E|/(P*dt), and the shares
+    # of the step's transfers add up to at most one.
+    battery = _make_battery(nominal_power=5.0, capacity_loss_coefficient=0.0,
+                            legacy_discharge_power_limit=legacy_discharge_power_limit)
+    input_budget, output_budget = battery.get_max_input_power(), battery.get_max_output_power()
+    first_budget, second_budget = (input_budget, output_budget) if first_sign > 0 else (output_budget, input_budget)
+
+    battery.charge(first_sign*first_share*first_budget)
+    assert battery.preview_charge(-first_sign*10.0) == pytest.approx(-first_sign*(1.0 - first_share)*second_budget,
+                                                                     abs=1e-6)
+    for _ in range(2):
+        battery.charge(-first_sign*10.0)
+        battery.charge(first_sign*10.0)
+
+    used = battery.gross_energy_charge[0]/input_budget + battery.gross_energy_discharge[0]/output_budget
+    assert used == pytest.approx(1.0, abs=1e-6)
+    second_moved = battery.gross_energy_discharge[0] if first_sign > 0 else battery.gross_energy_charge[0]
+    assert second_moved == pytest.approx((1.0 - first_share)*second_budget, abs=1e-6)
+
+    # The next step has the whole step again.
+    battery.next_time_step()
+    battery.charge(-10.0)
+    assert battery.gross_energy_discharge[1] == pytest.approx(
+        battery.get_max_output_power(energy_init=battery.soc[0]*100.0), rel=1e-6
+    )
+
+
+def test_storage_tank_opposite_transfers_in_one_step_share_the_step():
+    tank = _make_tank()  # 5 kW in, 4 kW out
+    tank.charge(2.5)
+    tank.charge(-10.0)
+    tank.charge(10.0)
+    assert tank.energy_balance[0] == pytest.approx(2.5 - 2.0, rel=1e-6)
+
+    subhourly = _make_tank(seconds_per_time_step=900, time_step_ratio=0.25)
+    subhourly.charge(-2.0)  # 0.5 kWh of control-step energy, half of 4 kW x 0.25 h
+    subhourly.charge(10.0)
+    assert subhourly.energy_balance[0] == pytest.approx(-0.5 + 0.625, rel=1e-6)
+
+
+def test_inventory_battery_shares_the_step_by_power_not_by_soc_headroom():
+    tracker = EpisodeTracker(0, 3)
+    tracker.next_episode(4, rolling_episode_split=False, random_episode_split=False, random_seed=0)
+    battery = InventoryBattery(
+        capacity=50.0, max_charge_kw=20.0, max_discharge_kw=20.0, min_soc=0.1, max_soc=0.9, initial_soc=0.88,
+        charging_efficiency=1.0, discharging_efficiency=1.0, capacity_loss_coefficient=0.0,
+        seconds_per_time_step=3600, episode_tracker=tracker, random_seed=0,
+    )
+    battery.reset()
+    battery.charge(10.0)  # 1 kWh of SOC headroom: 1/20 of the step at 20 kW
+    assert battery.gross_energy_charge[0] == pytest.approx(1.0, rel=1e-6)
+    battery.charge(-30.0)
+    assert battery.gross_energy_discharge[0] == pytest.approx(19.0, rel=1e-6)

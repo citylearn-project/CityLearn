@@ -1307,8 +1307,10 @@ first one is activated).
 | `overrides` | no | Attributes set on the cloned object; each must exist on it. Ignored for remove operations. |
 
 Adding PV or storage replaces the building's current one. Removing a deferrable appliance cancels pending/running
-cycles and clears future consumption. Removing PV creates a zero PV. Removing storage creates a zero BESS. A schema with
-`topology_events` raises `ValueError` unless `topology_mode` is `dynamic`.
+cycles and clears future consumption. Removing PV creates a zero PV. Removing storage creates a zero BESS. What a
+replaced or removed PV or battery produced or consumed before the event stays in the building's series, so the
+baselines without storage and the district sums keep it (for the battery, from `baseline_version` 2). A schema with `topology_events` raises `ValueError` unless
+`topology_mode` is `dynamic`.
 
 A member's time-series files (energy simulation, chargers, escalators) are either full-horizon, with one row per dataset time step, or member-window files, shorter than the dataset, whose first row is the time step of the member's `add_member` event. A member-window file should cover the member's active steps in the simulation window (otherwise its last row is repeated, with a warning), and a member that joins again after leaving needs full-horizon files. A member that joins mid-episode starts its battery and thermal storage at `initial_soc`.
 
@@ -1349,7 +1351,8 @@ replaced by those of the wrapper. See the [multi-community reference](multi_comm
 
 On datasets without HVAC actions the BAU, its definition and its identity are the same under both versions. Any other
 value raises `ValueError`. With version 2, evaluating a dataset with chargers runs the native BAU; if it cannot run, `ValueError` suggests
-`baseline_version=1`. See [Baselines](baselines.md#hvac-and-the-baseline-version).
+`baseline_version=1`. See [Baselines](baselines.md#hvac-and-the-baseline-version). With dynamic topology, version 2 also keeps a
+removed or replaced battery's past in the building's series; version 1 loses it, as 3.6.0 did.
 
 ### `random_stream_version`
 

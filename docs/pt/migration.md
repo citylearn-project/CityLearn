@@ -574,6 +574,14 @@ Estas alterações afetam apenas `topology_mode='dynamic'`:
   que os nomes das observações, ações e entidades do clone mudam; atualize os
   agentes guardados e os eventos de robustez que identificam os carregadores do
   clone pelo id da origem.
+- Com a predefinição `baseline_version=2`, uma bateria removida ou substituída
+  por `remove_asset` ou `add_asset` mantém nas séries da bateria do edifício o
+  que transferiu antes do evento, pelo que as referências sem armazenamento
+  desse edifício e do distrito deixam de manter o seu despacho e de depender do
+  controlador. Só mudam as linhas de referência (`*_baseline_*`, rácios e deltas
+  à referência) das execuções que removem ou substituem uma bateria. Use
+  `baseline_version=1` para manter as séries do CityLearn 3.6.0, em que o
+  histórico se perdia.
 
 ### Passo de controlo diferente do passo do dataset
 
