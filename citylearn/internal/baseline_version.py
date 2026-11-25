@@ -24,7 +24,9 @@ Versions
     ``'full'`` target: each car is charged on arrival at maximum power until it is full, and never
     discharged. The cars get the energy they need, without V2G, and the baseline is the same whatever the
     controller does with the cars or the storage, so a controller that leaves the cars short does not
-    lower its own baseline. The deferrable appliances and the HVAC stay as the controller ran them.
+    lower its own baseline. The deferrable appliances stay as the controller ran them. So does the
+    HVAC, except in buildings with temperature dynamics (LSTM), where the default condition uses the
+    dataset's ideal-load heating and cooling demand.
 
     The BAU charging comes from the BAU sidecar
     (:py:meth:`citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline`), which is therefore run

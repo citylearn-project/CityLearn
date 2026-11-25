@@ -383,10 +383,13 @@ nativo com o alvo `'full'`: cada carro é carregado quando chega, à potência
 máxima, até ficar cheio, e nunca é descarregado. Os carros recebem a energia de
 que precisam, sem V2G, e a baseline não depende de como o controlador os
 carregou, pelo que um controlador que deixa os carros com menos carga não baixa
-a sua própria baseline. Os aparelhos diferíveis e o AVAC ficam como o
-controlador os operou. As linhas `baseline` creditam assim ao controlador o
+a sua própria baseline. Os aparelhos diferíveis ficam como o controlador os
+operou. O AVAC também, exceto nos edifícios com dinâmica de temperatura (LSTM):
+aí a condição predefinida usa a procura de aquecimento e de arrefecimento de
+carga ideal do dataset, em vez do AVAC que o controlador operou. As linhas `baseline` creditam assim ao controlador o
 despacho do armazenamento, o carregamento dos VE e o V2G, face a carregar à
-chegada. Com `baseline_version=1` nada é somado, como no CityLearn 3.6.0, pelo
+chegada, e nos edifícios com dinâmica de temperatura também o controlo do AVAC.
+Com `baseline_version=1` nada é somado, como no CityLearn 3.6.0, pelo
 que nos datasets com VE a baseline é uma comunidade cujos carros nunca
 carregam.
 
