@@ -55,7 +55,7 @@ def _remaining_step_budget(budget: float, used: float, other_budget: Optional[fl
     in this and in the opposite direction (`None`: no limit), and `used` and `other_used` the terminal
     energy already moved in each direction this step. A transfer in one direction takes the share of the
     step its energy is of that direction's budget, so the shares of both directions add up to at most
-    one step: |E_in|/P_in + |E_out|/P_out <= step duration. Without transfers in the other direction, this
+    one step: ``|E_in|/P_in + |E_out|/P_out <= step duration``. Without transfers in the other direction, this
     is `budget - used`.
     """
 
@@ -1233,8 +1233,7 @@ class StorageTank(StorageDevice):
         `max_input_power` and `max_output_power` limit the terminal energy of a control step to power times
         step duration. The first call in a step can use all of it; a later call in the same step gets only
         what the earlier calls left: a transfer in one direction uses up its share of the step, so charging
-        and discharging in the same step share it (|E_in|/`max_input_power` + |E_out|/`max_output_power`
-        <= step duration).
+        and discharging in the same step share it (``|E_in|/max_input_power + |E_out|/max_output_power <= step duration``).
 
         If charging, soc = min(`soc_init` + energy*`efficiency`, `capacity`), with energy limited by the
         remaining charge budget.
@@ -1649,7 +1648,7 @@ class Battery(StorageDevice, ElectricDevice):
         The power curves limit the terminal energy of a control step, read at the stored energy before the
         step's first transfer. The first call in a step can use all of it; a later call in the same step gets
         only what the earlier calls left: a transfer in one direction uses up its share of the step, so
-        charging and discharging in the same step share it (|E_in|/P_in + |E_out|/P_out <= step duration).
+        charging and discharging in the same step share it (``|E_in|/P_in + |E_out|/P_out <= step duration``).
         Capacity and depth-of-discharge limits use the current stored energy.
         """
         _require_finite_energy(energy, self)
