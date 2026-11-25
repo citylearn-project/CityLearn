@@ -404,3 +404,28 @@ def test_multi_community_synchronization_table_matches_in_portuguese():
     portuguese = _synchronization_settings(ROOT / "docs/pt/multi_community_reference.md", "## Contrato de sincronização")
     assert english == portuguese
     assert ["evaluation_window"] in english
+
+
+@pytest.mark.parametrize("page, portfolio", [
+    ("docs/kpis_reference.md", "**Portfolio.**"),
+    ("docs/pt/kpis_reference.md", "**Portefólio.**"),
+])
+def test_kpi_reference_sections_are_whole(page, portfolio):
+    """Each KPI family has one portfolio paragraph, and every heading starts a new block."""
+    lines = (ROOT / page).read_text(encoding="utf-8").splitlines()
+    fenced = False
+    sections = {}
+    current = None
+    for index, line in enumerate(lines):
+        if line.startswith("```"):
+            fenced = not fenced
+        if fenced:
+            continue
+        if line.startswith("#"):
+            assert index == 0 or not lines[index - 1].strip(), f"{page}:{index + 1} heading without a blank line"
+        if line.startswith("## "):
+            current = line
+        if line.startswith(portfolio):
+            sections[current] = sections.get(current, 0) + 1
+    assert sections
+    assert {name: count for name, count in sections.items() if count > 1} == {}
