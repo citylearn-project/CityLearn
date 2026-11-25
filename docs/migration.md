@@ -392,7 +392,11 @@ environment, is now clipped to the nearest bound, as entity `tables` and `map`
 payloads already were. Actions inside the space are applied exactly as before.
 A controller that sends actions beyond the bounds, for example a scripted
 thermal-storage rule above `±limit`, now gets the clipped simulation, and its
-earlier results are not comparable with new runs. `physics_version=1` keeps
+earlier results are not comparable with new runs. This includes the hour RBCs
+(`BasicRBC`, `OptimizedRBC`, `BasicBatteryRBC`) on `baeda_3dem`, the
+`citylearn_challenge_2020_climate_zone_*` datasets and
+`citylearn_challenge_2021`, whose storage rule exceeds the thermal storage
+bound of some buildings. `physics_version=1` keeps
 the 3.6.0 rule, flat actions applied as given, to reproduce such runs. Read the
 bounds from `env.action_space`. See
 [out-of-range actions](actions_reference.md#out-of-range-actions).

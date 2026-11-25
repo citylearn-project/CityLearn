@@ -414,7 +414,11 @@ payloads entity `tables` e `map`. As ações dentro do espaço são aplicadas
 exatamente como antes. Um controlador que envie ações para além dos limites, por
 exemplo uma regra de armazenamento térmico acima de `±limit`, passa a obter a
 simulação cortada, e os seus resultados anteriores não são comparáveis com
-corridas novas. `physics_version=1` mantém a regra da versão 3.6.0, ações flat
+corridas novas. Isto inclui os RBC horários (`BasicRBC`, `OptimizedRBC`,
+`BasicBatteryRBC`) em `baeda_3dem`, nos datasets
+`citylearn_challenge_2020_climate_zone_*` e em `citylearn_challenge_2021`,
+cuja regra de armazenamento excede o limite do armazenamento térmico de alguns
+edifícios. `physics_version=1` mantém a regra da versão 3.6.0, ações flat
 aplicadas tal como são enviadas, para reproduzir essas corridas. Leia os limites
 de `env.action_space`. Ver
 [ações fora dos limites](actions_reference.md#ações-fora-dos-limites).
