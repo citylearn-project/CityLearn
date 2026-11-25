@@ -197,6 +197,16 @@
     pt: Número de passos executados com excesso de importação ou de exportação líquida do distrito acima de 1e-9 kWh,
       na execução controlada, na execução BAU, e controlo menos BAU; só é emitida quando
       `district_electrical_service.enabled` é verdadeiro e fica indefinida numa direção não configurada.
+  - names: energy_grid_window_average_power_{control,business_as_usual,delta_to_business_as_usual}_kw
+    levels:
+    - building
+    - district
+    unit: kW
+    en: Mean signed net grid power inside the recurring local `evaluation_window` for the controlled run, the BAU
+      run, and control minus BAU; emitted only when `evaluation_window.enabled` is true.
+    pt: Potência líquida média com sinal na rede dentro da janela local recorrente `evaluation_window` na execução
+      controlada, na execução BAU, e controlo menos BAU; só é emitida quando `evaluation_window.enabled` é
+      verdadeiro.
 - id: emissions
   title:
     en: Emissions
@@ -505,10 +515,12 @@
     en: Electric vehicles
     pt: Veículos elétricos
   intro:
-    en: Departure service, charging and V2G energy of electric vehicles at the members' chargers. Every member emits
-      these rows; without chargers, counts and energies are 0 and rates are undefined.
-    pt: Serviço à partida, energia de carregamento e V2G dos veículos elétricos (VE) nos carregadores dos membros.
-      Todos os membros emitem estas linhas; sem carregadores, as contagens e energias são 0 e as taxas ficam indefinidas.
+    en: Departure service, charging and V2G energy of electric vehicles at the members' chargers, and opt-in EV battery
+      health and wear (`evaluate_v2(include_battery_health_audit=True)`). Every member emits the departure and energy
+      rows; without chargers, counts and energies are 0 and rates are undefined.
+    pt: Serviço à partida, energia de carregamento e V2G dos veículos elétricos (VE) nos carregadores dos membros, e
+      saúde e desgaste opt-in das baterias dos VE (`evaluate_v2(include_battery_health_audit=True)`). Todos os membros
+      emitem as linhas de partida e energia; sem carregadores, as contagens e energias são 0 e as taxas ficam indefinidas.
   kpis:
   - names: ev_events_departure_count
     levels:
@@ -615,6 +627,69 @@
       is the sum of the member values.'
     pt: 'Por membro, max(ganho de SOC − total de carga, 0): ganho de SOC não explicado pela carga medida; o valor
       do distrito é a soma dos valores dos membros.'
+  - names: ev_window_net_exchange_control_kwh
+    levels:
+    - building
+    - district
+    unit: kWh
+    en: Signed net AC energy across EV chargers inside the recurring local `evaluation_window` (positive for
+      charging draw, negative for V2X delivery); emitted only when `evaluation_window.enabled` is true.
+    pt: Energia AC líquida com sinal nos carregadores de VE dentro da janela local recorrente `evaluation_window`
+      (positiva no carregamento, negativa na entrega V2X); só é emitida quando `evaluation_window.enabled` é
+      verdadeiro.
+  - names: ev_battery_health_terminal_soh_ratio
+    levels:
+    - building
+    - district
+    unit: ratio
+    en: Opt-in capacity-weighted terminal EV battery state of health in [0, 1] (`include_battery_health_audit=True`).
+      At building level, read at the end of each connected EV's last realized connection, including wear received at
+      other buildings, so building SOH can be below 1 − ev_battery_health_capacity_fade_ratio; at district and portfolio
+      levels, pooled over unique eligible fleet EVs by nominal capacity (equal to 1 − fade ratio); undefined when
+      nominal capacity ≤ 0.
+    pt: Estado de saúde terminal opt-in das baterias dos VE ponderado pela capacidade em [0, 1]
+      (`include_battery_health_audit=True`). Ao nível do edifício, é lido no fim da última ligação efetiva de cada VE
+      ligado e inclui o desgaste recebido noutros edifícios, pelo que o SOH do edifício pode ser inferior a
+      1 − ev_battery_health_capacity_fade_ratio; no distrito e no portefólio, é agregado sobre os VE elegíveis únicos da
+      frota pela capacidade nominal (igual a 1 − rácio de perda); indefinido quando a capacidade nominal ≤ 0.
+  - names: ev_battery_health_capacity_fade_kwh
+    levels:
+    - building
+    - district
+    unit: kWh
+    en: Opt-in cumulative EV battery capacity lost to degradation in [kWh] (`include_battery_health_audit=True`),
+      attributed to executed transfers at the member's chargers at building level and summed over unique eligible fleet
+      EVs at district and portfolio levels.
+    pt: Capacidade acumulada opt-in das baterias dos VE perdida por degradação em [kWh]
+      (`include_battery_health_audit=True`), atribuída às transferências executadas nos carregadores do membro ao nível
+      do edifício e somada sobre os VE elegíveis únicos da frota no distrito e no portefólio.
+  - names: ev_battery_health_capacity_fade_ratio
+    levels:
+    - building
+    - district
+    unit: ratio
+    en: Opt-in fraction of nominal EV battery capacity lost to degradation in [0, 1]
+      (`include_battery_health_audit=True`), from executed transfers over realized connected EV capacity at building
+      level and pooled over unique eligible fleet EV nominal capacity at district and portfolio levels; undefined when
+      nominal capacity ≤ 0.
+    pt: Fração opt-in da capacidade nominal das baterias dos VE perdida por degradação em [0, 1]
+      (`include_battery_health_audit=True`), a partir das transferências executadas sobre a capacidade dos VE
+      efetivamente ligados no edifício e agregada pela capacidade nominal dos VE elegíveis únicos da frota no distrito e
+      no portefólio; indefinida quando a capacidade nominal ≤ 0.
+  - names: ev_battery_health_equivalent_full_cycles_count
+    levels:
+    - building
+    - district
+    unit: count
+    en: Opt-in equivalent full cycles of EV batteries from accepted gross battery-terminal throughput over (2 · nominal
+      capacity) (`include_battery_health_audit=True`), attributed to executed transfers over realized connected EV
+      capacity at building level and pooled over unique eligible fleet EV nominal capacity at district and portfolio
+      levels; undefined when nominal capacity ≤ 0 (whereas `Battery.equivalent_full_cycles` returns `0.0`).
+    pt: Ciclos completos equivalentes opt-in das baterias dos VE a partir da energia bruta aceite nos terminais da
+      bateria sobre (2 · capacidade nominal) (`include_battery_health_audit=True`), atribuídos às transferências
+      executadas sobre a capacidade dos VE efetivamente ligados no edifício e agregados pela capacidade nominal dos VE
+      elegíveis únicos da frota no distrito e no portefólio; indefinido quando a capacidade nominal ≤ 0 (enquanto
+      `Battery.equivalent_full_cycles` devolve `0.0`).
 - id: ev_departure_audit
   title:
     en: EV departure audit

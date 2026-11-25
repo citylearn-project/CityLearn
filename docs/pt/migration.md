@@ -52,6 +52,33 @@ versão e o histórico da linha de desenvolvimento.
 
 ## Por publicar
 
+### Cache de datasets identificada pelo conteúdo
+
+As cópias locais dos datasets passam a ficar em cache sob a chave do seu
+conteúdo, em `datasets_by_content/<chave>/<dataset>` de
+`DataSet().cache_directory`, em vez de `datasets/<dataset>`. O código que
+carrega datasets pelo nome ou pelo caminho devolvido por
+`DataSet().get_dataset()` não precisa de mudar.
+
+- As cópias guardadas em cache por corridas anteriores em `datasets/<dataset>`
+  deixam de ser lidas enquanto existir uma cópia local completa, e ficam
+  intactas. Uma corrida que usava um schema desatualizado da cache passa a
+  carregar o local, o que pode mudar os seus resultados; para reproduzir essa
+  corrida, passe explicitamente o caminho do `schema.json` antigo.
+- Cada conteúdo diferente de um dataset tem a sua própria cópia, pelo que os
+  checkouts que mudam de branch acumulam cópias. `DataSet().clear_cache()`
+  remove-as todas.
+- O código que construía à mão o caminho da cache a partir de
+  `cache_directory`, `datasets` e do nome do dataset deve usar o caminho
+  devolvido por `DataSet().get_dataset(name)`.
+- As descargas, usadas quando não existe cópia local, continuam em cache em
+  `datasets/<dataset>` da tag da versão.
+
+O `IndependentBalanceAudit` aceita `flow_relative_tolerance` (1e-8 por
+omissão), que ajusta a tolerância dos resíduos de balanço do distrito ao seu
+fluxo bruto; o relatório regista o valor. Passe `flow_relative_tolerance=0`
+para manter a tolerância fixa anterior.
+
 ### Carregamento dos VE na baseline por omissão
 
 A baseline por omissão dos KPIs (`EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV`,
@@ -69,7 +96,9 @@ controlador que carregasse os carros parecia pior do que a baseline
   sem V2G, e a baseline é a mesma para todos os controladores, pelo que as
   linhas `baseline` creditam ao controlador o despacho do armazenamento, o
   carregamento dos VE e o V2G, face a carregar à chegada. Os aparelhos
-  diferíveis e o AVAC ficam como o controlador os operou.
+  diferíveis ficam como o controlador os operou. O AVAC também, exceto nos
+  edifícios com dinâmica de temperatura (LSTM), onde a condição predefinida usa
+  a procura de aquecimento e de arrefecimento de carga ideal do dataset.
 - Nos datasets com carregadores de VE, cada avaliação executa o sidecar do BAU
   para obter esse carregamento, também o `evaluate()` antigo e
   `evaluate_v2(include_business_as_usual=False)`, e usa o alvo `'full'` qualquer
@@ -79,50 +108,64 @@ controlador que carregasse os carros parecia pior do que a baseline
   O manifesto dessa execução regista a referência do BAU como avaliada.
 - Só mudam os datasets com carregadores de VE: `citylearn_challenge_2022_phase_all_plus_evs`,
   os datasets `pt_rec_*` e os demos trifásicos. A simulação, as linhas do
-  controlo, as linhas do BAU e as recompensas não mudam. Os KPIs de equidade,
+  controlo e as recompensas não mudam, nem as linhas do BAU nos datasets sem
+  ações de AVAC (ver [AVAC no BAU](#avac-no-bau)). Os KPIs de equidade,
   calculados a partir do benefício de cada membro face à baseline, mudam com ela.
 - Defina `baseline_version` como `1` (argumento do construtor ou chave do
-  schema) para reproduzir a baseline do CityLearn 3.6.0. A versão fica em
+  schema) para reproduzir a baseline do CityLearn 3.6.0, incluindo o seu BAU
+  que não usa o AVAC. A versão fica em
   `env.get_metadata()` e no manifesto de exportação, no nível de topo e em
   `comparison_context`; `compare_exports()` dá como `incompatible` duas
   execuções com versões diferentes. O `MultiCommunityEnv` exige que todas as
   comunidades usem a mesma versão.
 
-### AVAC no BAU (`baseline_version=3`, opcional)
+### AVAC no BAU
 
-Nos datasets com ações de AVAC (dinâmica de temperatura), o BAU envia zero a
+Nos datasets com ações de AVAC (dinâmica de temperatura), o BAU enviava zero a
 `heating_device`, `cooling_device` e `cooling_or_heating_device`, pelo que os
-seus edifícios não são aquecidos nem arrefecidos e as linhas
-`*_business_as_usual` comparam o controlador com casas sem aquecimento ou sem
+seus edifícios não eram aquecidos nem arrefecidos e as linhas
+`*_business_as_usual` comparavam o controlador com casas sem aquecimento ou sem
 arrefecimento ([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
 
-- Por omissão nada muda: `baseline_version=2` continua a ser a predefinida, e as
-  versões 1 e 2 dão os mesmos resultados de antes.
-- Defina `baseline_version=3` para o BAU fornecer, em cada passo, a procura de
-  aquecimento e de arrefecimento do próprio dataset, limitada aos limites da
-  ação e do equipamento. As linhas do BAU e os deltas e rácios face ao BAU
-  mudam nos datasets com ações de AVAC; nos outros datasets a versão 3 é igual
-  à versão 2. A definição do BAU passa a
+- Com `baseline_version=2`, a predefinida, o BAU passa a fornecer, em cada
+  passo, a procura de aquecimento e de arrefecimento do próprio dataset,
+  limitada aos limites da ação e do equipamento. Nesses datasets, a definição do BAU passa a
   `immediate-full-charge-v4+hvac-dataset-demand-v1` (ou
   `immediate-user-target-v3+hvac-dataset-demand-v1`). Consulte
   [AVAC e a versão da baseline](baselines.md#avac-e-a-versão-da-baseline).
+- Nos datasets com ações de AVAC (`quebec_neighborhood_with_demand_response_set_points`,
+  `quebec_neighborhood_without_demand_response_set_points`,
+  `tx_travis_county_neighborhood`, `vt_chittenden_county_neighborhood`,
+  `ca_alameda_county_neighborhood`, `baeda_3dem` e os
+  datasets `citylearn_challenge_2023_*`), as linhas
+  `*_business_as_usual` predefinidas, e os deltas e rácios face ao BAU, mudam.
+  No `quebec_neighborhood_without_demand_response_set_points` (passos 0–335), o custo do BAU passa de 631,8 para 4403,8 EUR, a sua
+  temperatura interior média de 3,4 para 20,6 °C, e o rácio de custo do
+  `RBCSmartPolicy` face ao BAU de 6,970 para 1,000.
+- Nos datasets sem ações de AVAC nada muda, bit a bit.
+- `baseline_version=1` mantém o BAU com o AVAC a zero, como no CityLearn 3.6.0,
+  para reproduzir resultados anteriores.
 - Um `BusinessAsUsualAgent` executado por si segue a versão do ambiente;
   `hvac='off'` ou `hvac='dataset_demand'` substitui-a.
+- Um controlador que não comande o AVAC, como o `ZeroActionAgent`, parece agora
+  muito mais barato do que o BAU nestes datasets, porque o BAU paga o
+  aquecimento e o arrefecimento. Leia os seus rácios face ao BAU em conjunto com
+  os KPIs de conforto.
 
 ### As referências baseadas em regras usam o AVAC
 
 `RBCBasicPolicy`, `RBCSmartPolicy` e `RBCCommunityPolicy` passam a fornecer a
 procura de aquecimento e de arrefecimento do dataset através das ações de AVAC,
-com a regra do BAU de `baseline_version=3`.
+com a regra do BAU predefinido.
 
 - Datasets sem ações de AVAC: nada muda, bit a bit, incluindo a
   `comparison_identity()`.
 - Datasets com ações de AVAC: as referências baseadas em regras aquecem e
-  arrefecem, pelo que os seus KPIs de energia, custo e conforto mudam.
-  Compare-as com o BAU de `baseline_version=3`; face ao BAU da versão 2,
-  predefinida, que não aquece nem arrefece, os seus rácios face ao BAU comparam
-  casas aquecidas com casas sem aquecimento. A sua identidade regista
-  `hvac='dataset_demand'` e a definição ganha o sufixo `+hvac-dataset-demand-v1`.
+  arrefecem, pelo que os seus KPIs de energia, custo e conforto mudam. Com a
+  `baseline_version=2` predefinida, o BAU também aquece e arrefece, pelo que os
+  seus rácios face ao BAU comparam casas aquecidas e arrefecidas da mesma forma.
+  A sua identidade regista `hvac='dataset_demand'` e a definição ganha o sufixo
+  `+hvac-dataset-demand-v1`.
 - As regras do armazenamento, dos VE e dos aparelhos não mudam, mas, num dataset
   com ações de AVAC que também tenha baterias, as ações das baterias podem mudar:
   a carga a que as regras reagem passa a incluir o AVAC.
@@ -499,6 +542,11 @@ Estas alterações afetam apenas `topology_mode='dynamic'`:
   `net_electricity_consumption`. Este ponto não altera os KPIs.
 - Um evento no passo terminal já não move os edifícios para a linha terminal não
   executada, pelo que as suas séries guardam apenas intervalos executados.
+- Um membro clonado com `source_member_id` dá aos seus carregadores ids próprios
+  (`charger_1_1` de `Building_1` passa a `charger_19_1` em `Building_19`), pelo
+  que os nomes das observações, ações e entidades do clone mudam; atualize os
+  agentes guardados e os eventos de robustez que identificam os carregadores do
+  clone pelo id da origem.
 
 ### Passo de controlo diferente do passo do dataset
 
@@ -610,6 +658,31 @@ todas as linhas alteradas e o nome que mantém o seu valor da 3.6.0.
   longo do episódio; a soma é publicada como `*_ramping_total_*_kw`
   ([#245](https://github.com/citylearn-project/CityLearn/issues/245)). O rácio
   face ao BAU não muda.
+- **O cumprimento do alvo do VE** usa uma tolerância de 0,005 de SOC em vez de
+  1e-6, nas taxas de cumprimento, nas contagens de viabilidade do alvo e nas
+  linhas do alvo da auditoria de partidas. As baselines baseadas em regras, que
+  param 0,001 abaixo do alvo, passam a cumpri-lo: no ano completo de
+  `citylearn_challenge_2022_phase_all_plus_evs`,
+  `district_ev_performance_departure_success_ratio` passa de 0,988 para 0,994
+  (BAU), de 0,598 para 0,994 (`RBCBasicPolicy`), de 0,495 para 0,994
+  (`RBCSmartPolicy`) e de 0,130 para 0,134 (ações aleatórias). Volte a executar a
+  avaliação antes de comparar taxas de cumprimento com tabelas anteriores; a
+  `definition_version` da auditoria de partidas passa a `ev-departure-audit-v2`,
+  pelo que `compare_exports` indica como incompatíveis as exportações antigas. Use as
+  médias do défice ou da insuficiência, que continuam exatas, para medir quanto
+  falta aos carros.
+- **Os KPIs de conforto de edifícios sem colunas de set points** são indefinidos
+  em vez de avaliados contra o valor por omissão de 0 °C; nos datasets
+  `pt_rec_*` os rácios de desconforto passam de 1 a indefinidos para todos os
+  controladores, e o distrito ignora esses edifícios. O código que lê estas
+  células tem de tratar `None`/NaN. Os datasets com set points não mudam, nem os
+  dos desafios de 2020 a 2022 e as demos trifásicas, que não têm colunas de set
+  points mas também não têm ocupantes, pelo que os seus KPIs de conforto já eram
+  indefinidos.
+- **Os rácios de custo e de emissões com dois totais a zero** são indefinidos em
+  vez de 1, por exemplo os rácios de emissões em Quebec (intensidade carbónica
+  nula) e os rácios de custo nos datasets `citylearn_challenge_2020_climate_zone_*`
+  e `citylearn_challenge_2021` (sem preços), para todos os controladores.
 
 ### Versão da física
 

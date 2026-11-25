@@ -232,12 +232,12 @@ class CityLearnEnv(Environment, Env):
         Physics definitions: ``2`` (default) or ``1``, which reproduces the physics of CityLearn 3.6.0. Overrides the
         schema key. The migration guide lists the corrections of version 2.
     baseline_version: int, optional
-        Definition of the default KPI baseline (the ``*_without_storage`` series): ``2`` (default) removes the battery,
-        the thermal storage and the EV charging of the controlled run, and adds back the EV charging of the native BAU
-        with the ``'full'`` target, so it is the same for every controller and has no V2G; ``1`` adds nothing back, as
-        in CityLearn 3.6.0. ``3`` (opt-in) keeps the baseline of ``2``, and the native BAU also runs the HVAC so that it
-        delivers the dataset's own heating and cooling demand, instead of sending zero to the HVAC actions. Overrides
-        the schema key. See :py:mod:`citylearn.internal.baseline_version`.
+        Definition of the default KPI baseline (the ``*_without_storage`` series) and of the native BAU HVAC: ``2``
+        (default) removes the battery, the thermal storage and the EV charging of the controlled run, and adds back the
+        EV charging of the native BAU with the ``'full'`` target, so it is the same for every controller and has no V2G;
+        its native BAU also runs the HVAC so that it delivers the dataset's own heating and cooling demand. ``1`` adds
+        nothing back and its BAU sends zero to the HVAC actions, as in CityLearn 3.6.0. Overrides the schema key. See
+        :py:mod:`citylearn.internal.baseline_version`.
     debug_timing: bool, optional
         Log runtime timings. Defaults to the schema value, else ``False``.
     check_observation_limits: bool, optional
@@ -256,6 +256,12 @@ class CityLearnEnv(Environment, Env):
         district import and export exceedances without curtailing or altering device dispatch. Either ``import_kw``
         or ``export_kw`` may be omitted or ``None`` (unmonitored in that direction), or set to a non-negative scalar
         or dataset-step-0 anchored sequence in [kW]. Defaults to the schema value, else disabled.
+    evaluation_window: Union[bool, Mapping[str, Any]], optional
+        Opt-in recurring local evaluation window for ``evaluate_v2()`` and KPI exports. Disabled by default.
+        Pass ``True`` or ``{'enabled': True}`` to use the ``16:00:00`` to ``19:00:00`` starter window in the
+        scenario's local time, or pass ``{'enabled': True, 'start': 'HH:MM', 'end': 'HH:MM', 'timezone': ...}``
+        to override the bounds (including sub-hour boundaries and midnight wrap when ``start > end``). Overrides
+        ``evaluation_window`` in the schema.
     **kwargs : dict
         Only the options listed above are accepted; any other keyword argument raises a `TypeError` that suggests
         the closest valid name.
@@ -278,9 +284,8 @@ class CityLearnEnv(Environment, Env):
         'reward_function', 'reward_function_kwargs', 'central_agent', 'shared_observations', 'active_observations',
         'inactive_observations', 'active_actions', 'inactive_actions', 'simulate_power_outage', 'solar_generation',
         'random_seed', 'offline', 'time_step_ratio', 'interface', 'topology_mode', 'start_date',
-        'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version', 'physics_version',
+        'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version', 'physics_version', 'evaluation_window',
         'district_electrical_service',
-
         'baseline_version', 'ev_soc_carryover',
     )
 
@@ -321,6 +326,7 @@ class CityLearnEnv(Environment, Env):
         business_as_usual_ev_charge_target = kwargs.pop('business_as_usual_ev_charge_target', None)
         random_stream_version = kwargs.pop('random_stream_version', None)
         district_electrical_service = kwargs.pop('district_electrical_service', None)
+        evaluation_window = kwargs.pop('evaluation_window', None)
         kw_render_mode = kwargs.pop('render_mode', None)
         requested_render_mode = render_mode if kw_render_mode is None else kw_render_mode
         requested_render_mode = 'none' if requested_render_mode is None else str(requested_render_mode).lower()
@@ -492,6 +498,11 @@ class CityLearnEnv(Environment, Env):
                 if district_electrical_service is not None
                 else {}
             ),
+            **(
+                {'evaluation_window': evaluation_window}
+                if evaluation_window is not None
+                else {}
+            ),
         })
         self._loading_service = CityLearnLoadingService(self)
         self._runtime_service = CityLearnRuntimeService(self)
@@ -545,6 +556,25 @@ class CityLearnEnv(Environment, Env):
         self.district_electrical_service_enabled = bool(self._district_electrical_service_parsed['enabled'])
         if isinstance(self.schema, dict) and resolved_district_service is not None:
             self.schema['district_electrical_service'] = deepcopy(self._district_electrical_service_effective)
+        from citylearn.internal.evaluation_window import (
+            parse_evaluation_window_config,
+            serialize_evaluation_window_config,
+        )
+        resolved_evaluation_window = (
+            evaluation_window
+            if evaluation_window is not None
+            else (self.schema.get('evaluation_window') if isinstance(self.schema, dict) else None)
+        )
+        schema_timezone = self.schema.get('timezone') if isinstance(self.schema, dict) else None
+        self._evaluation_window_config = deepcopy(resolved_evaluation_window) if resolved_evaluation_window is not None else None
+        self._evaluation_window_parsed = parse_evaluation_window_config(
+            resolved_evaluation_window,
+            schema_timezone=schema_timezone,
+        )
+        self._evaluation_window_effective = serialize_evaluation_window_config(self._evaluation_window_parsed)
+        self.evaluation_window_enabled = bool(self._evaluation_window_parsed['enabled'])
+        if isinstance(self.schema, dict) and resolved_evaluation_window is not None:
+            self.schema['evaluation_window'] = deepcopy(self._evaluation_window_effective)
         self._all_buildings = list(buildings)
         self._all_electric_vehicles = list(electric_vehicles)
         if self.topology_mode == 'dynamic':
@@ -709,7 +739,7 @@ class CityLearnEnv(Environment, Env):
 
     @property
     def baseline_version(self) -> int:
-        """Definition of the default KPI baseline and, from version 3, of the native BAU HVAC; see
+        """Definition of the default KPI baseline and, from version 2, of the native BAU HVAC; see
         :py:mod:`citylearn.internal.baseline_version`."""
 
         from citylearn.internal.baseline_version import baseline_version_of
@@ -1676,6 +1706,10 @@ class CityLearnEnv(Environment, Env):
         """Return executed appliance service, including partial and excluded requests."""
         return self._kpi_service.deferrable_service_audit()
 
+    def get_outage_resilience_audit(self) -> Mapping[str, Any]:
+        """Return per-outage-event, per-building and district service resilience metrics."""
+        return self._kpi_service.outage_resilience_audit()
+
     def get_robustness_audit(self):
         """Return versioned fault coverage, telemetry and completed-interval counters."""
         return self._robustness_service.audit_summary()
@@ -1725,6 +1759,7 @@ class CityLearnEnv(Environment, Env):
             'demand_response': self._demand_response_service.get_metadata(),
             'robustness': self._robustness_service.get_metadata(),
             'district_electrical_service': deepcopy(self._district_electrical_service_effective),
+            'evaluation_window': deepcopy(self._evaluation_window_effective),
             'entity_specs': self._entity_service.specs if self.interface == 'entity' else None,
             'buildings': [b.get_metadata() for b in self.buildings],
         }
@@ -1829,6 +1864,7 @@ class CityLearnEnv(Environment, Env):
         baseline_condition: EvaluationCondition = None,
         comfort_band: float = None,
         include_business_as_usual: bool = True,
+        include_battery_health_audit: bool = False,
         *,
         progress_callback=None,
     ) -> pd.DataFrame:
@@ -1853,6 +1889,9 @@ class CityLearnEnv(Environment, Env):
             The reference is rebuilt from the schema and the constructor arguments; a `ValueError` names the
             setting when it differs from this environment as captured at its last `reset()`. See the baselines
             guide for the settings that are compared.
+        include_battery_health_audit: bool, default: False
+            Opt-in flag to append EV battery terminal state-of-health (SOH), capacity fade (kWh and ratio), and
+            equivalent full cycles. Defaults to ``False`` so default KPI tables remain unchanged.
         progress_callback: callable, optional
             Keyword-only. Receives scalar stage events while the table is computed. A callback that raises is
             logged and disabled; the table is unaffected, and no events or timings are added to it.
@@ -1881,6 +1920,7 @@ class CityLearnEnv(Environment, Env):
             baseline_condition=baseline_condition,
             comfort_band=comfort_band,
             include_business_as_usual=include_business_as_usual,
+            include_battery_health_audit=include_battery_health_audit,
             evaluation_condition_cls=EvaluationCondition,
             dynamics_building_cls=DynamicsBuilding,
             progress_callback=progress_callback,
@@ -1934,6 +1974,10 @@ class CityLearnEnv(Environment, Env):
         """Return observed populations, thermal service and equity audit evidence."""
         return self._kpi_service.family_audit(comfort_band=comfort_band,
             control_condition=control_condition, baseline_condition=baseline_condition)
+
+    def evaluate_outage_events(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Return `(events_df, summary_df)` per-outage-event resilience tables for static topology."""
+        return self._kpi_service.evaluate_outage_events()
 
     def _baseline_ev_charging(self, building: Building) -> np.ndarray:
         """EV charging that the version 2 KPI baseline keeps for `building`: its charging in the ``'full'`` BAU."""

@@ -180,6 +180,8 @@ examples/*
 !examples/*.ipynb
 # expected output of the quickstart examples, shown in the documentation
 !examples/*.out
+# complete reference schema, documented in docs/schema_full_reference.md
+!examples/schema_full_reference.json
 
 # ignore folder
 .ignore

@@ -86,6 +86,7 @@ def experiment_manifest(env):
                 kpi_family_audit=metadata['kpi_family_audit'],
                 demand_response=metadata['demand_response'],
                 district_electrical_service=metadata['district_electrical_service'],
+                evaluation_window=metadata['evaluation_window'],
                 reward=metadata['reward_evidence'],
                 energy_provenance=provenance.enabled,
                 provenance_summary=provenance_summary,

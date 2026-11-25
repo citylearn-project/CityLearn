@@ -23,7 +23,7 @@ restrições elétricas. Não é um cenário com todos os equipamentos desligado
 | Ligação elétrica | O simulador aplica os limites de importação/exportação totais e por fase configurados; as restrições dos equipamentos e do simulador determinam a energia aplicada. |
 | Partilha local | As regras de liquidação do cenário valorizam a trajetória resultante. O BAU não otimiza a repartição nem o preço do mercado local. |
 | Resposta à procura | Funciona no cenário, mas não tem uma política que otimize um alvo de ativação, um pagamento ou uma penalização. |
-| AVAC (`heating_device`, `cooling_device`, `cooling_or_heating_device`) | Com `baseline_version` 1 ou 2 (predefinida): pede zero, pelo que nos edifícios com dinâmica de temperatura o BAU não aquece nem arrefece. Com `baseline_version=3`: pede, em cada passo, a ação que fornece a procura de aquecimento ou de arrefecimento do próprio dataset (ver [AVAC e a versão da baseline](#avac-e-a-versão-da-baseline)). |
+| AVAC (`heating_device`, `cooling_device`, `cooling_or_heating_device`) | Com `baseline_version=2` (predefinida): pede, em cada passo, a ação que fornece a procura de aquecimento ou de arrefecimento do próprio dataset (ver [AVAC e a versão da baseline](#avac-e-a-versão-da-baseline)). Com `baseline_version=1`: pede zero, como no CityLearn 3.6.0, pelo que nos edifícios com dinâmica de temperatura o BAU não aquece nem arrefece. |
 | Outras ações ativas | Pede zero, limitado aos limites da ação. Não é uma política dedicada de armazenamento térmico ou de escadas rolantes; o efeito de zero segue o contrato de ação de cada equipamento. |
 
 ### Escolher o alvo de carregamento do BAU
@@ -73,18 +73,11 @@ fica disponível. Os datasets incluídos com uma ação de AVAC ativa são
 `ca_alameda_county_neighborhood`, `baeda_3dem` e os datasets
 `citylearn_challenge_2023_*`.
 
-Até `baseline_version=2`, o BAU pede zero nessas ações, pelo que, terminado o
-aquecimento inicial do LSTM, os seus edifícios não são aquecidos nem
-arrefecidos: as temperaturas interiores afastam-se dos set points e todas as
-linhas `*_business_as_usual` comparam o controlador com casas sem aquecimento
-(ou sem arrefecimento)
-([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
-
-Com `baseline_version=3`, o BAU funciona com o AVAC como um edifício sem
-otimização. Em cada passo pede a ação que fornece a procura de aquecimento ou
-de arrefecimento do próprio dataset, a `heating_demand` e a `cooling_demand`
-simuladas do ficheiro do edifício (as séries `*_demand_without_control` da
-simulação energética):
+Com `baseline_version=2`, a predefinida, o BAU funciona com o AVAC como um
+edifício sem otimização. Em cada passo pede a ação que fornece a procura de
+aquecimento ou de arrefecimento do próprio dataset, a `heating_demand` e a
+`cooling_demand` simuladas do ficheiro do edifício (as séries
+`*_demand_without_control` da simulação energética):
 
     ação = energia de entrada do equipamento para a procura / (potência nominal × passo do dataset em horas)
 
@@ -94,30 +87,46 @@ exterior e, durante um corte de energia, a alimentação local. Cada serviço s�
 usado nos passos em que o `hvac_mode` o permite; com `cooling_or_heating_device`,
 a maior das duas procuras define o sinal. O BAU não pré-aquece, não
 pré-arrefece, não segue preços nem usa o armazenamento térmico, que continua a
-receber zero. Tudo o resto (VE, bateria, aparelhos) é o BAU da versão 2, e a
-baseline dos KPIs (linhas `*_baseline_*`) é também a da versão 2.
+receber zero.
+
+`baseline_version=1` reproduz o CityLearn 3.6.0: o BAU pede zero nessas ações,
+pelo que, terminado o aquecimento inicial do LSTM, os seus edifícios não são
+aquecidos nem arrefecidos. As temperaturas interiores afastam-se dos set points
+e todas as linhas `*_business_as_usual` comparam o controlador com casas sem
+aquecimento (ou sem arrefecimento)
+([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
 
 | `baseline_version` | Baseline dos KPIs | AVAC do BAU | Definição do BAU |
 |---|---|---|---|
-| `1` | 3.6.0: não volta a somar o carregamento dos VE | zero | `immediate-full-charge-v4` |
-| `2` (predefinida) | volta a somar o carregamento dos VE do BAU `'full'` | zero | `immediate-full-charge-v4` |
-| `3` (opcional) | igual a `2` | fornece a procura de aquecimento e de arrefecimento do dataset | `immediate-full-charge-v4+hvac-dataset-demand-v1` |
+| `1` | 3.6.0: sem carregamento de VE reposto | zero | `immediate-full-charge-v4` |
+| `2` (predefinida) | repõe o carregamento de VE do BAU `'full'` | fornece a procura de aquecimento e de arrefecimento do dataset | `immediate-full-charge-v4+hvac-dataset-demand-v1` nos datasets com ações de AVAC, `immediate-full-charge-v4` nos outros |
 
 (Com `business_as_usual_ev_charge_target='requested'`, a definição começa por
 `immediate-user-target-v3`.)
 
-Use a versão 3 quando comparar controladores com o BAU num dataset com ações de
-AVAC e quiser que o BAU mantenha as casas aquecidas e arrefecidas como no
-dataset; as linhas `*_business_as_usual` e os valores
-`*_delta_to_business_as_usual_*` e `*_ratio_to_business_as_usual_*` mudam nesses
-datasets. Nos datasets sem ações de AVAC, a versão 3 dá exatamente os resultados
-da versão 2. A versão 2 continua a ser a predefinida para que os resultados
-existentes não mudem; as comparações tratam como incompatíveis corridas com
-versões da baseline diferentes.
+A regra do AVAC muda as linhas `*_business_as_usual` e os valores
+`*_delta_to_business_as_usual_*` e `*_ratio_to_business_as_usual_*` apenas nos
+datasets com ações de AVAC. Nos datasets sem ações de AVAC, o BAU, a sua
+definição e identidade, e todos os KPIs são iguais, bit a bit, aos de antes da
+regra do AVAC. As comparações dão como
+incompatíveis execuções com versões da baseline diferentes.
+
+No Quebec (`quebec_neighborhood_without_demand_response_set_points`, passos
+0–335), o BAU predefinido passa a aquecer as casas:
+
+| Quebec, passos 0–335 | Antes (AVAC do BAU a zero) | Agora (predefinido) |
+|---|---|---|
+| Temperatura interior média / mínima do BAU (°C) | 3,4 / −12,8 | 20,6 / 17,2 |
+| `comfort_resilience_discomfort_overall_ratio` do BAU | 0,183 | 0,026 |
+| `district_cost_total_business_as_usual_eur` | 631,8 | 4403,8 |
+| `cost_ratio_to_business_as_usual_total_ratio` do `RBCSmartPolicy` | 6,970 | 1,000 |
+| `cost_ratio_to_business_as_usual_total_ratio` do `ZeroActionAgent` | 1,000 | 0,143 |
 
 ```python
-env = CityLearnEnv('quebec_neighborhood_without_demand_response_set_points', baseline_version=3)
+env = CityLearnEnv('quebec_neighborhood_without_demand_response_set_points')
 agent = BusinessAsUsualAgent(env)  # hvac='dataset_demand', a partir do env
+
+legacy = CityLearnEnv('quebec_neighborhood_without_demand_response_set_points', baseline_version=1)
 ```
 
 `BusinessAsUsualAgent(env, hvac=...)` substitui a definição do ambiente para esse
@@ -126,17 +135,15 @@ BAU nativo do `evaluate_v2()` segue sempre a `baseline_version` do ambiente.
 
 **As referências baseadas em regras usam o AVAC da mesma forma.**
 `RBCBasicPolicy`, `RBCSmartPolicy` e `RBCCommunityPolicy` fornecem a procura de
-aquecimento e de arrefecimento do dataset com a mesma regra do BAU da versão 3,
-qualquer que seja a `baseline_version` (ver [AVAC das referências baseadas em
-regras](#avac-das-referências-baseadas-em-regras)), pelo que, com a versão 3, os
-seus rácios face ao BAU comparam casas aquecidas e arrefecidas da mesma forma.
-Com a versão 2, predefinida, o BAU não aquece nem arrefece, pelo que os seus
-rácios face ao BAU comparam casas aquecidas com casas sem aquecimento: use a
-versão 3 nestes datasets. O `ZeroActionAgent` continua a enviar zero, tal como
-qualquer controlador próprio que não comande o AVAC: com a versão 3, os seus
-valores `*_ratio_to_business_as_usual_*` parecem muito melhores apenas porque o
-BAU paga o aquecimento e o arrefecimento e ele não. Leia os rácios face ao BAU
-em conjunto com os KPIs de conforto (`*_comfort_resilience_discomfort_*`). O
+aquecimento e de arrefecimento do dataset com a mesma regra do BAU, qualquer que
+seja a `baseline_version` (ver [AVAC das referências baseadas em
+regras](#avac-das-referências-baseadas-em-regras)). Com a versão predefinida, os
+seus rácios face ao BAU comparam, por isso, casas aquecidas e arrefecidas da
+mesma forma. O `ZeroActionAgent` continua a enviar zero, tal como qualquer
+controlador próprio que não comande o AVAC: os seus valores
+`*_ratio_to_business_as_usual_*` parecem muito melhores apenas porque o BAU paga
+o aquecimento e o arrefecimento e ele não. Leia os rácios face ao BAU em
+conjunto com os KPIs de conforto (`*_comfort_resilience_discomfort_*`). O
 `evaluate_v2()` não tem linhas de conforto `*_business_as_usual`; para ver o
 conforto do BAU, execute o `BusinessAsUsualAgent` como controlador e leia os
 seus KPIs de conforto.
@@ -228,7 +235,7 @@ seguem `hvac`:
 
 | `hvac` | Ações de AVAC |
 |---|---|
-| `'dataset_demand'` (predefinido) | Fornecem, em cada passo, a procura de aquecimento e de arrefecimento do próprio dataset, com a regra do BAU da versão 3 (ver [AVAC e a versão da baseline](#avac-e-a-versão-da-baseline)): um termóstato que satisfaz a carga, sem otimização. |
+| `'dataset_demand'` (predefinido) | Fornecem, em cada passo, a procura de aquecimento e de arrefecimento do próprio dataset, com a regra do BAU predefinido (ver [AVAC e a versão da baseline](#avac-e-a-versão-da-baseline)): um termóstato que satisfaz a carga, sem otimização. |
 | `'off'` | Zero, como antes. Nos datasets com dinâmica de temperatura, as casas não são aquecidas nem arrefecidas. |
 
 Nos datasets sem ações de AVAC, os dois dão os mesmos resultados, bit a bit, e a
@@ -238,15 +245,15 @@ regista `hvac='dataset_demand'` e a versão da definição ganha o sufixo
 versões anteriores. O armazenamento térmico continua a receber zero.
 
 No Quebec (`quebec_neighborhood_without_demand_response_set_points`, passos
-0–335), as três referências baseadas em regras aquecem as casas como o BAU da
-versão 3. A temperatura interior média é de 20,6 °C em vez de 3,4 °C, a mínima de
-17,2 °C em vez de −12,8 °C, e
+0–335), as três referências baseadas em regras aquecem as casas como o BAU
+predefinido. A temperatura interior média é de 20,6 °C em vez de 3,4 °C, a mínima
+de 17,2 °C em vez de −12,8 °C, e
 `district_comfort_resilience_discomfort_overall_ratio` passa de 0,183 para
 0,026. O Quebec não tem baterias nem VE, pelo que funcionam então exatamente como
-o BAU da versão 3: custo de 4403,8 EUR e rácio de custo de 1,000. Com
-`hvac='off'` custam 631,8 EUR, um rácio de 0,143. Face ao BAU da versão 2,
-predefinida, que não aquece, o seu rácio de custo é de 6,970; nos datasets com
-ações de AVAC, compare-as com o BAU da versão 3.
+o BAU: custo de 4403,8 EUR e rácio de custo de 1,000. Com `hvac='off'` custam
+631,8 EUR, um rácio de 0,143. Com `baseline_version=1`, cujo BAU não aquece, o
+seu rácio de custo é de 6,970; para reproduzir o rácio anterior de 1,000 com essa
+versão, passe também `hvac='off'`.
 
 ```python
 smart = RBCSmartPolicy(env)               # AVAC satisfaz a procura do dataset
@@ -376,10 +383,13 @@ nativo com o alvo `'full'`: cada carro é carregado quando chega, à potência
 máxima, até ficar cheio, e nunca é descarregado. Os carros recebem a energia de
 que precisam, sem V2G, e a baseline não depende de como o controlador os
 carregou, pelo que um controlador que deixa os carros com menos carga não baixa
-a sua própria baseline. Os aparelhos diferíveis e o AVAC ficam como o
-controlador os operou. As linhas `baseline` creditam assim ao controlador o
+a sua própria baseline. Os aparelhos diferíveis ficam como o controlador os
+operou. O AVAC também, exceto nos edifícios com dinâmica de temperatura (LSTM):
+aí a condição predefinida usa a procura de aquecimento e de arrefecimento de
+carga ideal do dataset, em vez do AVAC que o controlador operou. As linhas `baseline` creditam assim ao controlador o
 despacho do armazenamento, o carregamento dos VE e o V2G, face a carregar à
-chegada. Com `baseline_version=1` nada é somado, como no CityLearn 3.6.0, pelo
+chegada, e nos edifícios com dinâmica de temperatura também o controlo do AVAC.
+Com `baseline_version=1` nada é somado, como no CityLearn 3.6.0, pelo
 que nos datasets com VE a baseline é uma comunidade cujos carros nunca
 carregam.
 

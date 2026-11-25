@@ -26,6 +26,7 @@ SCENARIOS = (
         24,
         {"district_electrical_service": {"enabled": True, "limits": {"import_kw": 20.0, "export_kw": 10.0}}},
     ),
+    ("citylearn_challenge_2022_phase_all_plus_evs", 24, {"central_agent": True, "evaluation_window": {"enabled": True}}),
     ("citylearn_three_phase_electrical_service_demo", 24, {}),
     ("citylearn_challenge_2022_phase_all_demand_response", 24, {}),
     ("citylearn_challenge_2022_phase_all_robustness", 24, {}),
@@ -59,6 +60,8 @@ def emitted():
             while not env.terminated:
                 observations, *_ = env.step(agent.predict(observations))
             names |= _names(env.evaluate_v2())
+            if dataset == "citylearn_challenge_2022_phase_all_plus_evs":
+                names |= _names(env.evaluate_v2(include_business_as_usual=False, include_battery_health_audit=True))
         finally:
             env.close()
 
@@ -79,6 +82,7 @@ def emitted():
                 for community_id, env in portfolio.envs.items()
             })
         names |= _names(portfolio.evaluate_v2())
+        names |= _names(portfolio.evaluate_v2(include_business_as_usual=False, include_battery_health_audit=True))
     finally:
         portfolio.close()
 

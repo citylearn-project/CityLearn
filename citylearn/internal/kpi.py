@@ -8,8 +8,14 @@ from citylearn.internal.evaluation_progress import EvaluationProgress, run, span
 from types import SimpleNamespace
 from array import array
 
+from citylearn.electric_vehicle import EV_SERVICE_SOC_TOLERANCE
 from citylearn.energy_model import Battery
-from citylearn.internal import ev_departure_audit, deferrable_service_audit, grid_availability
+from citylearn.internal import (
+    ev_departure_audit,
+    deferrable_service_audit,
+    grid_availability,
+    outage_resilience,
+)
 from citylearn.internal import kpi_energy, kpi_equipment, kpi_community, kpi_service_metrics
 from citylearn.internal.kpi_catalogue import attach_kpi_metadata
 from citylearn.internal.service_energy import service_energy_components
@@ -48,6 +54,8 @@ class CityLearnKPIService:
     EV_DEPARTURE_WITHIN_TOLERANCE_DEFAULT = 0.05
     EV_DEPARTURE_SERVICE_TOLERANCE_DEFAULT = 0.05
     EV_DEPARTURE_EPS = 1.0e-6
+    # Margin of the met and target-feasibility tests.
+    EV_TARGET_SOC_TOLERANCE = EV_SERVICE_SOC_TOLERANCE
     ELECTRICAL_RESIDUAL_EPS_KW = 1.0e-5
     SCORECARD_DEFAULT_KPIS: Tuple[str, ...] = (
         'district_thermal_service_audit_discomfort_ratio',
@@ -201,14 +209,15 @@ class CityLearnKPIService:
         return c / b
 
     @staticmethod
-    def _signed_ratio(control_value: float, baseline_value: float):
+    def _signed_ratio(control_value: float, baseline_value: float, zero_over_zero: Optional[float] = 1.0):
         """Lower-is-better ratio for totals that can be negative, e.g. net exchange.
 
         Equals `control / baseline` for a positive baseline. For a negative
         baseline (a net exporter) it is `1 + (control - baseline) / |baseline|`,
-        so a higher control total never reads as an improvement.
+        so a higher control total never reads as an improvement. Both totals
+        zero give `zero_over_zero`, as in `_safe_div`.
         """
-        ratio = CityLearnKPIService._safe_div(control_value, baseline_value)
+        ratio = CityLearnKPIService._safe_div(control_value, baseline_value, zero_over_zero=zero_over_zero)
         b = CityLearnKPIService._to_scalar(baseline_value, 0.0)
 
         if ratio is None or b >= -float(ZERO_DIVISION_PLACEHOLDER):
@@ -801,6 +810,10 @@ class CityLearnKPIService:
             0.0,
         )
 
+    def _ev_departure_target_tolerance(self) -> float:
+        # Capped by the service tolerance so that met never exceeds min_acceptable.
+        return min(self.EV_TARGET_SOC_TOLERANCE, self._ev_departure_service_tolerance())
+
     @staticmethod
     def _metric(cost_function: str, value, name: str, level: str) -> Dict[str, object]:
         return {
@@ -1178,6 +1191,7 @@ class CityLearnKPIService:
         v2g_export_total_kwh = 0.0
         connected_soc_gain_total_kwh = 0.0
         eps = self.EV_DEPARTURE_EPS
+        target_tolerance = self._ev_departure_target_tolerance()
 
         for charger in self._chargers_for_metrics(building):
             consumption = np.array(charger.electricity_consumption[t_start:t_final + 1], dtype='float64')
@@ -1317,10 +1331,12 @@ class CityLearnKPIService:
                 shortfall_beyond_tolerance = max(target_soc - service_tolerance - actual_soc, 0.0)
                 min_acceptable_threshold = max(target_soc - service_tolerance, 0.0)
                 within_tolerance_threshold = max(target_soc - within_tolerance, 0.0)
+                target_threshold = max(target_soc - target_tolerance, 0.0)
+                target_met = deficit <= target_tolerance + eps
                 target_feasible, min_acceptable_feasible, within_tolerance_feasible = (
                     self._ev_departure_thresholds_feasible(
                         building, charger, sim, ev, states, t,
-                        (target_soc, min_acceptable_threshold, within_tolerance_threshold),
+                        (target_threshold, min_acceptable_threshold, within_tolerance_threshold),
                     )
                 )
 
@@ -1332,12 +1348,12 @@ class CityLearnKPIService:
                 departure_surplus_sum += surplus
                 departure_absolute_error_sum += absolute_error
                 departure_shortfall_beyond_tolerance_sum += shortfall_beyond_tolerance
-                if deficit <= eps:
+                if target_met:
                     departures_met += 1
 
                 if target_feasible:
                     departures_target_feasible += 1
-                    if deficit <= eps:
+                    if target_met:
                         departures_met_target_feasible += 1
                 else:
                     departures_target_infeasible += 1
@@ -1427,6 +1443,12 @@ class CityLearnKPIService:
 
     def deferrable_service_audit(self):
         return deferrable_service_audit.environment_audit(self)
+
+    def outage_resilience_audit(self):
+        return outage_resilience.environment_audit(self)
+
+    def evaluate_outage_events(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        return outage_resilience.to_dataframes(self.outage_resilience_audit())
 
     def _deferrable_appliances_for_metrics(self, building) -> Sequence:
         topology_service = getattr(self.env, '_topology_service', None)
@@ -1713,6 +1735,21 @@ class CityLearnKPIService:
                 indices = indices[population.mask(building.name, upper)[indices]]
         return array[indices]
 
+    def _comfort_set_points(self, building, t_start=0, t_final=None):
+        """Cooling and heating set points for the comfort KPIs.
+
+        A building whose dataset has no set-point columns gets NaN set points, so every comfort KPI reports it as
+        not evaluated instead of judging it against the 0 C default that the simulation uses.
+        """
+        cooling, heating = (
+            self._thermal_values(building, getattr(building, name), t_start, t_final)
+            for name in ('indoor_dry_bulb_temperature_cooling_set_point', 'indoor_dry_bulb_temperature_heating_set_point')
+        )
+        simulation = getattr(building, 'energy_simulation', None)
+        if not getattr(simulation, 'set_point_data_available', True):
+            cooling, heating = np.full(cooling.shape, np.nan), np.full(heating.shape, np.nan)
+        return cooling, heating
+
     def _service_energy(self, building, t_start=0, t_final=None):
         """Demand/device histories use dataset energy; tank balances already use control kWh."""
         take = lambda name: self._thermal_values(building, getattr(building, name), t_start, t_final)
@@ -1732,8 +1769,8 @@ class CityLearnKPIService:
                 take = lambda name: self._thermal_values(building, getattr(building, name))
                 expected, served = self._service_energy(building)
                 bands = take('comfort_band') if comfort_band is None else comfort_band
-                count = thermal_counts(take('indoor_dry_bulb_temperature'),take('indoor_dry_bulb_temperature_cooling_set_point'),
-                    take('indoor_dry_bulb_temperature_heating_set_point'),bands,take('occupant_count'),expected,served,
+                cooling, heating = self._comfort_set_points(building)
+                count = thermal_counts(take('indoor_dry_bulb_temperature'),cooling,heating,bands,take('occupant_count'),expected,served,
                     take('power_outage_signal'),self.env.seconds_per_time_step/3600.)
                 counts.append(count); rows[building.name] = thermal_metrics(count)
                 dynamic = isinstance(building, DynamicsBuilding)
@@ -2133,9 +2170,33 @@ class CityLearnKPIService:
 
         Deferrable-appliance ratios are undefined (None) when their own two totals
         are zero, even if cycles were due (for example the missed-cycle ratio when
-        neither run missed a cycle); every other ratio reads 1.0, "no change".
+        neither run missed a cycle). Cost and emissions ratios are undefined too:
+        two zero totals mean that nothing was priced or emitted, as on a dataset
+        with zero carbon intensity, not that the controller matched the reference.
+        Every other ratio reads 1.0, "no change".
         """
-        return None if '_deferrable_appliance_' in f'_{ratio_name}' else 1.0
+        name = f'_{ratio_name}'
+        undefined = ('_deferrable_appliance_', '_cost_ratio_to_', '_emissions_ratio_to_')
+        return None if any(token in name for token in undefined) else 1.0
+
+    def _undefine_zero_over_zero_ratios(self, records) -> None:
+        """Apply `ratio_zero_over_zero` to the total ratios after every row is built.
+
+        Some of these ratios come from rows that keep their 3.6.0 definition, so
+        the rule is applied once here, on the two totals the ratio divides.
+        """
+        eps = float(ZERO_DIVISION_PLACEHOLDER)
+        components = {}
+        for (level, name, metric), record in records.items():
+            if level not in components:
+                components[level] = self.total_ratio_components(level)
+            if metric not in components[level] or self.ratio_zero_over_zero(metric) is not None:
+                continue
+            control_name, reference_name, _ = components[level][metric]
+            totals = [self._defined_scalar(records.get((level, name, key), {}).get('value'))
+                      for key in (control_name, reference_name)]
+            if all(value is not None and abs(value) <= eps for value in totals):
+                record['value'] = None
 
     @classmethod
     def pooled_mean_components(cls, level: str) -> Dict[str, Tuple[str, ...]]:
@@ -2539,6 +2600,18 @@ class CityLearnKPIService:
                 )
 
         self._add_business_as_usual_shape_records(records, result.env, v2, simulated_days)
+        if getattr(env, 'evaluation_window_enabled', False):
+            for level, names in names_by_level.items():
+                control_win_key = f'{level}_energy_grid_window_average_power_control_kw'
+                bau_win_key = f'{level}_energy_grid_window_average_power_business_as_usual_kw'
+                delta_win_key = f'{level}_energy_grid_window_average_power_delta_to_business_as_usual_kw'
+                for name in names:
+                    if (level, name, control_win_key) not in records:
+                        continue
+                    c_val = current(level, name, control_win_key)
+                    b_val = bau(level, name, control_win_key)
+                    put(level, name, bau_win_key, b_val)
+                    put(level, name, delta_win_key, finite_delta(c_val, b_val))
         return bau_df.attrs.get(BATTERY_NOMINAL_CAPACITY_ATTR, {}).get('control')
 
     def _add_business_as_usual_shape_records(
@@ -2639,13 +2712,16 @@ class CityLearnKPIService:
     @settled_cost_scope
     def evaluate_v2(
         self, control_condition=None, baseline_condition=None, comfort_band=None,
-        include_business_as_usual=True, *, evaluation_condition_cls,
+        include_business_as_usual=True, *,
+        include_battery_health_audit: bool = False,
+        evaluation_condition_cls,
         dynamics_building_cls, progress_callback=None,
     ) -> pd.DataFrame:
         progress = None if progress_callback is None else EvaluationProgress(progress_callback)
         return run(progress, 'evaluation', self._evaluate_v2,
                    control_condition=control_condition, baseline_condition=baseline_condition,
                    comfort_band=comfort_band, include_business_as_usual=include_business_as_usual,
+                   include_battery_health_audit=include_battery_health_audit,
                    evaluation_condition_cls=evaluation_condition_cls,
                    dynamics_building_cls=dynamics_building_cls, progress=progress)
 
@@ -2656,6 +2732,7 @@ class CityLearnKPIService:
         comfort_band: float = None,
         include_business_as_usual: bool = True,
         *,
+        include_battery_health_audit: bool = False,
         evaluation_condition_cls,
         dynamics_building_cls,
         progress=None,
@@ -3220,6 +3297,14 @@ class CityLearnKPIService:
                 put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_energy_total', 'control', 'kwh'), energy_total_kwh)
                 put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_peak', 'control', 'kw'), peak_kw)
                 put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_step', 'control', 'count'), step_count)
+        if getattr(env, 'evaluation_window_enabled', False):
+            from citylearn.internal.evaluation_window import compute_evaluation_window_control_records
+            for row in compute_evaluation_window_control_records(
+                self,
+                kpi_buildings=kpi_buildings,
+                building_windows=building_windows,
+            ):
+                put(str(row['level']), str(row['name']), str(row['cost_function']), row['value'])
 
         capacities = all_metrics.attrs[BATTERY_NOMINAL_CAPACITY_ATTR]
         if include_business_as_usual and not bool(getattr(env, '_business_as_usual_sidecar', False)):
@@ -3231,6 +3316,22 @@ class CityLearnKPIService:
                 dynamics_building_cls=dynamics_building_cls,
             )
 
+        if bool(include_battery_health_audit):
+            from citylearn.internal import battery_health_audit
+
+            health_rows, d_ev_cap_kwh = run(
+                progress,
+                'battery_health_audit',
+                battery_health_audit.compute_battery_health_audit_records,
+                self,
+                kpi_buildings=kpi_buildings,
+                building_windows=building_windows,
+            )
+            capacities['ev_control'] = d_ev_cap_kwh
+            for row in health_rows:
+                put(str(row['level']), str(row['name']), str(row['cost_function']), row['value'])
+
+        self._undefine_zero_over_zero_ratios(records)
         output = pd.DataFrame(list(records.values()))
         if getattr(robustness_service, 'enabled', False):
             output.attrs['robustness_audit'] = robustness_service.audit_summary()

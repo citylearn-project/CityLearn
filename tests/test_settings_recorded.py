@@ -102,8 +102,8 @@ def test_metadata_and_manifest_record_split_boundary_and_ratio_mode(tmp_path):
     ('time_step_ratio_mode', 'squash', 'time_step_ratio_mode must be one of'),
     ('physics_version', 3, r'physics_version must be one of \[1, 2\]'),
     ('physics_version', True, r'physics_version must be one of \[1, 2\]'),
-    ('baseline_version', 4, r'baseline_version must be one of \[1, 2, 3\]'),
-    ('baseline_version', 1.5, r'baseline_version must be one of \[1, 2, 3\]'),
+    ('baseline_version', 3, r'baseline_version must be one of \[1, 2\]'),
+    ('baseline_version', 1.5, r'baseline_version must be one of \[1, 2\]'),
     ('random_stream_version', 'v9', 'random_stream_version'),
 ])
 def test_invalid_setting_values_are_rejected(tmp_path, option, value, match):
