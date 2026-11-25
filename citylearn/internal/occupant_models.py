@@ -168,15 +168,100 @@ class _TreeArrays:
             child = np.where(go_left, self.left[node], self.right[node])
             node = np.where(internal, child, node)
 
-    def proba(self, x: np.ndarray, n_classes: int) -> np.ndarray:
-        proba = self.value[self.leaves(x), :n_classes].copy()
+    def depth(self) -> int:
+        """Number of splits on the longest root-to-leaf path."""
 
+        frontier = np.array([0], dtype='int64')
+        level = 0
+
+        while True:
+            frontier = frontier[self.left[frontier] != -1]
+
+            if frontier.size == 0:
+                return level
+
+            level += 1
+            frontier = np.concatenate([self.left[frontier], self.right[frontier]])
+
+    def proba_of_nodes(self, n_classes: int) -> np.ndarray:
+        """:py:meth:`proba` of an input that ends at each node, for every node."""
+
+        return self._normalized(self.value[:, :n_classes].copy())
+
+    def proba(self, x: np.ndarray, n_classes: int) -> np.ndarray:
+        return self._normalized(self.value[self.leaves(x), :n_classes].copy())
+
+    def _normalized(self, proba: np.ndarray) -> np.ndarray:
         if self.normalize:
             normalizer = proba.sum(axis=1)[:, np.newaxis]
             normalizer[normalizer == 0.0] = 1.0
             proba /= normalizer
 
         return proba
+
+
+class _PackedForest:
+    """All trees of a forest in one set of node arrays, walked together.
+
+    The occupant models are called with one input row at a time, so walking 100 to 300 trees one after
+    the other spent most of its time in NumPy call overhead. Here the node arrays of every tree are
+    concatenated, a leaf points to itself, and all trees advance one level per iteration. Each tree
+    takes the same path as in :py:meth:`_TreeArrays.leaves` (the same float64 comparisons and missing-value
+    routes), each leaf holds the row :py:meth:`_TreeArrays.proba` returns for it, and the per-tree rows are
+    added in estimator order starting from zero, so the result is bit-identical to the tree-by-tree sum.
+    """
+
+    def __init__(self, trees: List[_TreeArrays], n_classes: int):
+        sizes = [len(tree.left) for tree in trees]
+        offsets = np.concatenate([[0], np.cumsum(sizes)[:-1]]).astype('int64')
+        left, right, feature, threshold, table, depth = [], [], [], [], [], 0
+
+        for tree, offset in zip(trees, offsets):
+            index = np.arange(len(tree.left), dtype='int64') + offset
+            leaf = tree.left == -1
+            left.append(np.where(leaf, index, tree.left + offset))
+            right.append(np.where(leaf, index, tree.right + offset))
+            feature.append(np.maximum(tree.feature, 0))
+            threshold.append(tree.threshold)
+            # The same operations as _TreeArrays.proba, applied to every node at once.
+            table.append(tree.proba_of_nodes(n_classes))
+            depth = max(depth, tree.depth())
+
+        self.n_trees = len(trees)
+        self.roots = offsets
+        self.left = np.concatenate(left)
+        self.right = np.concatenate(right)
+        self.feature = np.concatenate(feature)
+        self.threshold = np.concatenate(threshold)
+        # NaN inputs reach the walk only when every tree stores missing-value routes (see _validate).
+        self.missing_go_to_left = (
+            np.concatenate([tree.missing_go_to_left for tree in trees])
+            if all(tree.missing_go_to_left is not None for tree in trees) else None
+        )
+        self.table = np.concatenate(table)
+        self.depth = depth
+
+    def proba_sum(self, x: np.ndarray) -> np.ndarray:
+        """Sum over trees, in estimator order, of the per-tree class probabilities of each row of `x`."""
+
+        n_rows = x.shape[0]
+        node = np.repeat(self.roots, n_rows)
+        rows = np.tile(np.arange(n_rows), self.n_trees)
+        route_missing = self.missing_go_to_left is not None and np.isnan(x).any()
+
+        for _ in range(self.depth):
+            value = x[rows, self.feature[node]]
+            go_left = value <= self.threshold[node]
+
+            if route_missing:
+                go_left = np.where(np.isnan(value), self.missing_go_to_left[node], go_left)
+
+            node = np.where(go_left, self.left[node], self.right[node])
+
+        per_tree = self.table[node].reshape(self.n_trees, n_rows, -1)
+        # Start from zeros and add tree by tree, as `proba += tree.proba(...)` does.
+        terms = np.concatenate([np.zeros((1, *per_tree.shape[1:]), dtype='float64'), per_tree])
+        return np.add.accumulate(terms, axis=0)[-1]
 
 
 class TreeClassifierModel:
@@ -189,6 +274,8 @@ class TreeClassifierModel:
         self.n_features_in_ = n_features
         self.forest = forest
         self._accepts_missing = accepts_missing and all(tree.missing_go_to_left is not None for tree in trees)
+        # Built on the first forest prediction: most loaded models are never asked.
+        self._packed = None
 
     @classmethod
     def from_pickle(cls, filepath: Union[str, Path]) -> 'TreeClassifierModel':
@@ -247,11 +334,10 @@ class TreeClassifierModel:
         if not self.forest:
             return self.trees[0].proba(x, n_classes)
 
-        proba = np.zeros((x.shape[0], n_classes), dtype='float64')
+        if self._packed is None:
+            self._packed = _PackedForest(self.trees, n_classes)
 
-        for tree in self.trees:
-            proba += tree.proba(x, n_classes)
-
+        proba = self._packed.proba_sum(x)
         proba /= len(self.trees)
         return proba
 
