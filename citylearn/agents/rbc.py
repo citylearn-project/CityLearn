@@ -2,6 +2,7 @@ from typing import Any, Mapping, List, Union
 from citylearn.agents.base import Agent
 from citylearn.citylearn import CityLearnEnv
 from citylearn.building import Building
+from citylearn.internal.scalars import clip_action
 
 class RBC(Agent):
     r"""Base rule based controller class.
@@ -101,7 +102,7 @@ class HourRBC(RBC):
             actions = super().predict(observations, deterministic=deterministic)
         
         else:
-            for m, a, n, o in zip(self.action_map, self.action_names, self.observation_names, observations):
+            for m, a, n, o, s in zip(self.action_map, self.action_names, self.observation_names, observations, self.action_space):
                 hour_observation = o[n.index('hour')]
                 hour = int(round(hour_observation))
                 # Support both 0-23 and 1-24 hour encodings.
@@ -122,7 +123,16 @@ class HourRBC(RBC):
                             break
                     else:
                         raise KeyError(f'Hour {hour_observation} not defined in action map for action {a_}.')
-                
+
+                # The storage rule also reaches EV chargers, and a charger that cannot discharge has the
+                # action space [0, 1]: keep EV actions inside their space. A negative action had no effect
+                # on such a charger, so the simulation does not change.
+                if s.shape[0] == len(actions_):
+                    actions_ = [
+                        clip_action(v, lo, hi) if name.startswith('electric_vehicle_storage_') else v
+                        for name, v, lo, hi in zip(a, actions_, s.low.tolist(), s.high.tolist())
+                    ]
+
                 actions.append(actions_)
 
             self.actions = actions

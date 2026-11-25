@@ -34,7 +34,10 @@ Versions
     * each SOC column of a charger file has one unit, percent if any value is above 1, decided
       from the whole column, so 1 in a percent column is 1 % and not 100 % (#368);
     * a charger without `max_discharging_power` cannot discharge (V2G off), and one without
-      `max_charging_power` charges up to its `nominal_power`; version 1 gives both 50 kW (#369).
+      `max_charging_power` charges up to its `nominal_power`; version 1 gives both 50 kW (#369);
+    * flat actions outside the action space, and flat vectors sent to an entity environment, are
+      clipped to the space, as entity table and map payloads always were; version 1 applies them as
+      given.
 """
 
 from typing import Any
