@@ -458,6 +458,7 @@
   "render_session_name": null,
   "export_kpis_on_episode_end": false,
   "evaluation_window": {"enabled": false},
+  "district_electrical_service": {"enabled": false, "limits": {"import_kw": null, "export_kw": null}},
   "export_only_final_episode": true,
   "debug_timing": false,
   "check_observation_limits": false,

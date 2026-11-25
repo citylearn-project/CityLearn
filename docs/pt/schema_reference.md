@@ -329,8 +329,9 @@ Consulte a [visão geral das funções de recompensa](https://www.citylearn.net/
 | `physics_invariant_checks` | bool | `false` | Verifica os balanços de energia em cada passo e lança `PhysicsInvariantError` numa violação. Mais lento. | 3.0.0 |
 | `energy_provenance` | bool | `true` | Mantém o registo por passo da proveniência da energia e os seus KPIs. `false` é mais rápido e não altera nenhum valor simulado; as auditorias de proveniência passam a lançar erro. | 3.2.0 |
 | `metrics_log_interval` | int | `0` | A cada N passos, e no fim, regista uma linha INFO com energia, custo e emissões. `0` desliga-o. | 3.0.0 |
+| `district_electrical_service` | objeto | desligado | Monitorização opcional dos limites de importação e exportação do alimentador do distrito, sobre a potência líquida do distrito. Reporta os excessos e não corta nenhum equipamento. Ver [Serviço elétrico do distrito](#servico-eletrico-do-distrito). | depois da 3.6.0 |
 
-As cinco têm um argumento do construtor com o mesmo nome.
+As seis têm um argumento do construtor com o mesmo nome.
 
 ### Definições da avaliação dos VE
 
@@ -815,6 +816,30 @@ tem `electrical_service`.
 | `observations.headroom_export` | `false` | Sem efeito: aqui não há limites de exportação. |
 
 Só o carregamento é limitado; a descarga (V2G) não é. Os pedidos acima de um limite são reduzidos proporcionalmente.
+
+## Servico Eletrico do Distrito
+
+`district_electrical_service` monitoriza os limites partilhados de potencia de importacao e exportacao do alimentador sobre a potencia liquida do distrito, sem impor cortes nem alterar o despacho dos equipamentos (ver [referencia de KPIs](kpis_reference.md#excessos-nos-limites-do-alimentador-do-distrito)). Todas as grandezas simuladas permanecem identicas a uma execucao sem `district_electrical_service`.
+
+```json
+{
+  "district_electrical_service": {
+    "enabled": true,
+    "limits": {
+      "import_kw": 50.0,
+      "export_kw": 20.0
+    }
+  }
+}
+```
+
+| Campo | Default | O que faz |
+|---|---:|---|
+| `enabled` | `false` | Ativa o registo por step dos excessos do alimentador (`env.feeder_import_exceedance_kw`, `env.feeder_export_exceedance_kw`) e os KPIs de excesso do alimentador em `evaluate_v2()`. |
+| `limits.import_kw` | `null` | Escalar nao negativo em `kW`, sequencia indexada desde o step `0` do dataset com valores `kW`/`null` cobrindo todos os steps executados (`episode_start_time_step + time_step`), ou `null` quando a importacao nao e monitorizada. |
+| `limits.export_kw` | `null` | Escalar nao negativo em `kW`, sequencia indexada desde o step `0` do dataset com valores `kW`/`null` cobrindo todos os steps executados (`episode_start_time_step + time_step`), ou `null` quando a exportacao nao e monitorizada. |
+
+`limits.total.{import_kw,export_kw}` tambem e aceite como alias equivalente ao `electrical_service` dos edificios. Quando ativo, a configuracao normalizada fica registada em `effective_schema`, `physical_configuration_sha256` e `comparison_context`, e `compare_manifests()` assinala como `incompatible` execucoes com configuracoes `district_electrical_service` diferentes.
 
 ## Veículos elétricos e carregadores
 

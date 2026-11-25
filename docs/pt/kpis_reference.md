@@ -285,6 +285,25 @@ Dois conjuntos de linhas usam séries diferentes:
 
 Note a ordem das palavras nos nomes com sinal: `load_factor_penalty_daily_average_to_baseline_signed_net_ratio`, mas `load_factor_penalty_daily_average_signed_net_to_business_as_usual_ratio`.
 
+### Excessos nos limites do alimentador do distrito
+
+Quando `district_electrical_service.enabled` é verdadeiro (ver a [referência do esquema](schema_reference.md#servico-eletrico-do-distrito)), `evaluate_v2()` mede e reporta os excessos face aos limites do alimentador na potência líquida do distrito sem impor cortes nem alterar o despacho dos equipamentos:
+
+```text
+Δh = duração do passo em horas
+P_t = N_t / Δh                             potência líquida do distrito no passo executado t, em kW
+excesso importação_t = max(P_t − limite_importação,t, 0)
+excesso exportação_t = max(−P_t − limite_exportação,t, 0)
+excesso ≤ 1e-5 kW é posto a 0
+
+exceedance_energy_total_control_kwh = Σ_t Δh · excesso_t
+exceedance_peak_control_kw          = max_t excesso_t
+exceedance_step_control_count       = número de passos executados com Δh · excesso_t > 1e-9 kWh
+```
+
+As séries por passo ficam expostas em `env.feeder_import_exceedance_kw` e `env.feeder_export_exceedance_kw` (vazias logo após `reset()` até `step()` correr, e `0.0` nos passos sem limite nessa direção). Cada métrica publica `_control`, `_business_as_usual` e `_delta_to_business_as_usual` (`control − business_as_usual`); com `evaluate_v2(include_business_as_usual=False)`, apenas `_control` é emitido. Se `district_electrical_service` estiver ativo com apenas uma direção configurada, a direção não configurada fica indefinida (`NaN`). Quando `district_electrical_service` está desativado, estas linhas não são emitidas.
+
+**Portefólio.** Os totais de energia e as médias diárias são somados sobre as comunidades. Os rácios de importação, exportação e troca líquida são rácios dos totais somados (com sinal para a troca líquida). Os rácios de forma e os rácios `building_mean` são médias ponderadas pelo `weight` de cada comunidade. As linhas de forma em kW não passam para o portefólio. As energias (`_kwh`) e contagens de passos (`_count`) de excesso no alimentador são somadas sobre as comunidades, enquanto os picos (`_kw`) não passam para o portefólio.
 ### Janela de avaliação recorrente
 
 Quando `evaluation_window.enabled` é verdadeiro (ver a [referência do esquema](schema_reference.md#janela-de-avaliacao)), `evaluate_v2()` e as exportações de KPIs incluem linhas de potência na janela local recorrente aos níveis de edifício, distrito e portefólio:

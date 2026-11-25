@@ -2579,6 +2579,26 @@ class CityLearnKPIService:
             put('district', 'District', v2('district', 'emissions', 'total', 'business_as_usual', 'member_sum', 'kgco2'),
                 bau('district', 'District', member_sum_key))
 
+        for direction in ('import', 'export'):
+            sub = f'feeder_limit_{direction}'
+            for metric, unit in (
+                ('exceedance_energy_total', 'kwh'),
+                ('exceedance_peak', 'kw'),
+                ('exceedance_step', 'count'),
+            ):
+                c_key = v2('district', 'energy_grid', sub, metric, 'control', unit)
+                if ('district', 'District', c_key) not in records:
+                    continue
+                c_val = current('district', 'District', c_key)
+                b_val = bau('district', 'District', c_key)
+                put('district', 'District', v2('district', 'energy_grid', sub, metric, 'business_as_usual', unit), b_val)
+                put(
+                    'district',
+                    'District',
+                    v2('district', 'energy_grid', sub, metric, 'delta_to_business_as_usual', unit),
+                    finite_delta(c_val, b_val),
+                )
+
         self._add_business_as_usual_shape_records(records, result.env, v2, simulated_days)
         if getattr(env, 'evaluation_window_enabled', False):
             for level, names in names_by_level.items():
@@ -3238,6 +3258,45 @@ class CityLearnKPIService:
             for metric, value in district.items():
                 put('district', 'District', f'district_energy_provenance_{metric}', value)
 
+        if getattr(env, 'district_electrical_service_enabled', False):
+            from citylearn.internal.electrical_limits import district_feeder_direction_configured
+
+            executed_steps = min(
+                len(getattr(env, 'net_electricity_consumption', []) or []),
+                max(int(getattr(env, 'time_step', 0) or 0), 0),
+            )
+            step_hours = max(float(getattr(env, 'seconds_per_time_step', 3600.0) or 3600.0) / 3600.0, 1.0e-12)
+            ep_start = int(getattr(getattr(env, 'episode_tracker', None), 'episode_start_time_step', 0) or 0)
+            parsed_feeder = getattr(env, '_district_electrical_service_parsed', None)
+
+            for direction, raw_series in (
+                ('import', getattr(env, 'feeder_import_exceedance_kw', None)),
+                ('export', getattr(env, 'feeder_export_exceedance_kw', None)),
+            ):
+                sub = f'feeder_limit_{direction}'
+                if not district_feeder_direction_configured(
+                    parsed_feeder,
+                    direction,
+                    executed_steps,
+                    episode_start_time_step=ep_start,
+                ):
+                    put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_energy_total', 'control', 'kwh'), None)
+                    put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_peak', 'control', 'kw'), None)
+                    put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_step', 'control', 'count'), None)
+                    continue
+
+                arr = (
+                    np.asarray(raw_series[:executed_steps], dtype='float64')
+                    if executed_steps > 0 and raw_series is not None
+                    else np.zeros(0, dtype='float64')
+                )
+                finite = arr[np.isfinite(arr)]
+                energy_total_kwh = float(np.sum(finite) * step_hours) if finite.size > 0 else 0.0
+                peak_kw = float(np.max(finite)) if finite.size > 0 else 0.0
+                step_count = float(int(np.count_nonzero(finite * step_hours > 1.0e-9))) if finite.size > 0 else 0.0
+                put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_energy_total', 'control', 'kwh'), energy_total_kwh)
+                put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_peak', 'control', 'kw'), peak_kw)
+                put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_step', 'control', 'count'), step_count)
         if getattr(env, 'evaluation_window_enabled', False):
             from citylearn.internal.evaluation_window import compute_evaluation_window_control_records
             for row in compute_evaluation_window_control_records(
