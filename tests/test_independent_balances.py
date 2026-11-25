@@ -11,6 +11,8 @@ from citylearn.internal.balance_audit import (
     BalanceAuditError,
     weighted_imports,
     FlowNetwork,
+    LabelSpace,
+    total,
 )
 from test_deferrable_appliance_integration import (
     _schema_with_deferrable_appliance,
@@ -596,3 +598,111 @@ def test_a_1e_3_kwh_district_imbalance_fails_the_audit(tmp_path):
                 audit.finish()
     finally:
         env.close()
+
+
+def _sequential(audit, label, actual, expected, scale=0.0):
+    for k, (a, e) in enumerate(zip(actual, expected)):
+        audit.check(label(k) if callable(label) else label, a, e, scale)
+
+
+@pytest.mark.parametrize("bad", [None, 0, 3, 5])
+def test_vectorised_checks_match_one_check_per_value(tmp_path, bad):
+    # #401: the per-step residual and cohort checks are vectorised; the rule, the count, the
+    # maxima and the first failing value must be those of one `check` call per value.
+    env = scenario(tmp_path)
+    try:
+        env.reset()
+        actual = np.array([1.0, -2.0, 3.0, 0.5, 1e-7, 4.0])
+        expected = actual + np.array([1e-7, -3e-6, 2e-6, 0.0, -1e-6, 5e-6])
+        if bad is not None:
+            expected[bad] += 1e-3
+        if bad is not None and bad < 5:
+            expected[5] += 1.0  # a later failure must not be the one reported
+        results = []
+        for method in ("sequential", "vectorised"):
+            audit = IndependentBalanceAudit(env)
+            start = audit.check_count
+            run = (lambda *a: _sequential(audit, *a)) if method == "sequential" else audit.check_many
+            try:
+                run(lambda k: f"value_{k}", actual, expected)
+                error = None
+            except BalanceAuditError as e:
+                error = str(e)
+            results.append((error, audit.check_count - start, audit.max_error, audit.max_scaled_error))
+        assert results[0] == results[1]
+        assert (results[0][0] is None) == (bad is None)
+        if bad is not None:
+            assert results[0][0].startswith(f"value_{bad}:")
+    finally:
+        env.close()
+
+
+def test_flow_network_node_imbalance_is_reported_with_the_same_label():
+    graph = FlowNetwork()
+    a = graph.node(2.0, {("pv", "A"): np.array([2.0, 0.0])})
+    b = graph.node(1.0)
+    graph.edge(a, b, 1.0)
+    graph.sink(a, ("A", "load"), 1.0)
+    graph.sink(b, ("B", "load"), 0.9)  # b receives 1.0 but only 0.9 leaves it
+
+    def check(label, actual, expected):
+        if abs(actual - expected) > 1e-9:
+            raise BalanceAuditError(label)
+
+    with pytest.raises(BalanceAuditError, match="^node_1_output$"):
+        graph.solve(check)
+    env_free = IndependentBalanceAudit.__new__(IndependentBalanceAudit)
+    env_free.atol, env_free.rtol, env_free.flow_rtol = 1e-9, 0.0, 0.0
+    env_free.check_count, env_free.max_error, env_free.max_scaled_error = 0, 0.0, 0.0
+    with pytest.raises(BalanceAuditError, match="^node_1_output: actual=0.9"):
+        graph.solve(env_free.check, env_free.check_many)
+
+
+def test_a_provenance_error_injected_mid_run_fails_at_that_step(tmp_path):
+    env = scenario(tmp_path)
+    try:
+        env.reset()
+        with IndependentBalanceAudit(env):
+            env.step(commands(env, [0.5, -0.4], start=True))
+            source = provenance_service(env).source_destinations
+
+            def wrong():
+                rows = source()
+                rows[-1]["carbon_kgco2"] += 1e-3
+                return rows
+
+            provenance_service(env).source_destinations = wrong
+            with pytest.raises(BalanceAuditError, match=r"^provenance \(.* kgco2: "):
+                env.step(commands(env, [0.5, -0.4]))
+    finally:
+        env.close()
+
+
+def test_array_bags_match_the_dict_bags_of_the_flow_network():
+    # #401: the audit keeps its bags as arrays over a LabelSpace; the network must give the same energy
+    # and carbon per sink and label as with dict bags.
+    def build(space=None):
+        graph = FlowNetwork(space)
+        pv = graph.node(5.0, {("pv", "new"): np.array([5.0, 0.0])})
+        old = graph.node(2.0, {("grid", "old"): np.array([2.0, 0.4]), ("unknown", "x"): np.array([0.0, 0.0])})
+        stored = graph.node(6.0)
+        graph.edge(pv, stored, 4.0)
+        graph.edge(old, stored, 2.0)
+        graph.sink(pv, ("M", "loss"), 1.0)
+        graph.sink(stored, ("M", "stored"), 4.0)
+        graph.sink(stored, ("M", "stored"), 2.0)
+        return graph
+
+    def check(label, a, b):
+        assert a == pytest.approx(b, abs=1e-10), label
+
+    dense = build().solve(check)[0]
+    space = LabelSpace()
+    arrays = build(space).solve(check)[0]
+    assert set(arrays) == set(dense)
+    for key, bag in dense.items():
+        values = space.fit(arrays[key])
+        for label, value in bag.items():
+            expected = values[space.index[label]] if label in space.index else np.zeros(2)
+            np.testing.assert_allclose(expected, value, rtol=0, atol=1e-15)
+        assert total(values) == pytest.approx(total(bag), abs=1e-15)
