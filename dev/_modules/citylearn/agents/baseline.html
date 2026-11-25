@@ -567,6 +567,9 @@
 
     <span class="c1">#: Suffix of the definition identifier when the HVAC delivers the dataset demand on a dataset with HVAC.</span>
     <span class="n">HVAC_DEFINITION_SUFFIX</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'+hvac-dataset-demand-v1'</span>
+    <span class="c1"># Plan the battery, EV and appliance budget from the load and PV of the step being planned, as the BAU</span>
+    <span class="c1"># does, instead of the settled observations of the previous step (#400).</span>
+    <span class="n">_use_current_step_load</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">hvac</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'dataset_demand'</span><span class="p">,</span> <span class="o">**</span><span class="n">hyperparameters</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hvac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_hvac</span><span class="p">(</span><span class="n">hvac</span><span class="p">)</span>
@@ -598,7 +601,7 @@
 <span class="sd">    """</span>
 
     <span class="n">ENGINE_CLASS</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">RBCBasicPolicy</span>
-    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'basic-v3'</span></div>
+    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'basic-v4'</span></div>
 
 
 
@@ -613,7 +616,7 @@
 <span class="sd">    """</span>
 
     <span class="n">ENGINE_CLASS</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">RBCSmartLocalPolicy</span>
-    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'smart-local-v3'</span></div>
+    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'smart-local-v4'</span></div>
 
 
 
@@ -631,7 +634,7 @@
 <span class="sd">    """</span>
 
     <span class="n">ENGINE_CLASS</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">RBCCommunityPolicy</span>
-    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'community-v3'</span></div>
+    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'community-v4'</span></div>
 
 
 

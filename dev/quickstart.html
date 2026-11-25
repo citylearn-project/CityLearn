@@ -277,19 +277,19 @@ are urgent or cheap.</p>
 </div>
 <p>Expected output:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>                                                    cost_function      value
-                                  district_cost_total_control_eur  95.293315
+                                  district_cost_total_control_eur  92.182353
                         district_cost_total_business_as_usual_eur 124.753286
-               district_cost_total_delta_to_business_as_usual_eur -29.459971
+               district_cost_total_delta_to_business_as_usual_eur -32.570933
 district_ev_departure_audit_min_acceptable_service_feasible_ratio   1.000000
- district_battery_total_throughput_delta_to_business_as_usual_kwh   1.109245
-                    district_energy_grid_total_import_control_kwh 562.038030
+ district_battery_total_throughput_delta_to_business_as_usual_kwh   6.095019
+                    district_energy_grid_total_import_control_kwh 566.791422
           district_energy_grid_total_import_business_as_usual_kwh 739.823959
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>, which <code class="docutils literal notranslate"><span class="pre">scorecard()</span></code> calls, runs the BAU on the same day and
 reports it next to the controller: <code class="docutils literal notranslate"><span class="pre">*_control_*</span></code> rows are this run,
 <code class="docutils literal notranslate"><span class="pre">*_business_as_usual_*</span></code> rows the BAU and <code class="docutils literal notranslate"><span class="pre">*_delta_to_business_as_usual_*</span></code> rows
-their difference. Here the controller imports less energy and costs about 25%
+their difference. Here the controller imports less energy and costs about 26%
 less than the BAU, while every EV still leaves with its minimum acceptable charge.</p>
 <p><code class="docutils literal notranslate"><span class="pre">env.scorecard()</span></code> returns the default selection of the KPI table
 (<code class="docutils literal notranslate"><span class="pre">CityLearnEnv.SCORECARD_DEFAULT_KPIS</span></code>); pass <code class="docutils literal notranslate"><span class="pre">level=&quot;building&quot;</span></code> for the

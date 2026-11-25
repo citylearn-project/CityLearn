@@ -117,6 +117,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#ev-soc-carried-across-episode-splits">EV SOC carried across episode splits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#observation-spaces-follow-the-observations">Observation spaces follow the observations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-native-bau-uses-current-step-load-and-solar">The native BAU uses current-step load and solar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-rule-based-baselines-use-current-step-load-and-solar">The rule-based baselines use current-step load and solar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#numeric-and-configuration-hygiene">Numeric and configuration hygiene</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#recorded-settings">Recorded settings</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#consecutive-episode-splits-share-their-boundary-row">Consecutive episode splits share their boundary row</a></li>
@@ -673,6 +674,31 @@ Re-evaluate both runs with the current release and the same EV charging target
 before comparing them. To reproduce a result using the previous BAU, use the
 CityLearn release or commit recorded in its original manifest. See the
 <a class="reference internal" href="baselines.html#known-limits"><span class="std std-ref">BAU reference</span></a>.</p>
+</section>
+<section id="the-rule-based-baselines-use-current-step-load-and-solar">
+<h3>The rule-based baselines use current-step load and solar<a class="headerlink" href="#the-rule-based-baselines-use-current-step-load-and-solar" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> now plan the battery,
+EV and appliance budget with the load and PV of the step being planned, as the
+native BAU does, instead of the settled observations of the previous step.
+<code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> also stop charging the battery from the
+grid at a cheap price when PV is forecast and no PV-surplus forecast is observed
+(no <code class="docutils literal notranslate"><span class="pre">entity_forecasts_derived</span></code> bundle).
+Their definitions become <code class="docutils literal notranslate"><span class="pre">basic-v4</span></code>, <code class="docutils literal notranslate"><span class="pre">smart-local-v4</span></code> and <code class="docutils literal notranslate"><span class="pre">community-v4</span></code>.</p>
+<ul class="simple">
+<li><p>Their actions and KPIs change on every dataset with a battery. The default
+<code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code> battery now follows the BAU rule exactly, so on datasets
+without EVs or flexible appliances it gives the BAU results.</p></li>
+<li><p>The grid-charge change acts only on datasets with a solar forecast and without
+<code class="docutils literal notranslate"><span class="pre">entity_forecasts_derived</span></code>, for example <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all</span></code>
+and <code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo</span></code>; on <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> and
+<code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code> only the current-step change
+applies.</p></li>
+<li><p>Run them again before comparing a controller with them. To reproduce a result
+of the earlier definitions, use the CityLearn release or commit recorded in its
+manifest, as for the BAU. See
+<a class="reference internal" href="baselines.html#rule-based-baselines"><span class="std std-ref">the rule-based baselines</span></a> and
+<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/400">#400</a>.</p></li>
+</ul>
 </section>
 <section id="numeric-and-configuration-hygiene">
 <h3>Numeric and configuration hygiene<a class="headerlink" href="#numeric-and-configuration-hygiene" title="Link to this heading"></a></h3>
