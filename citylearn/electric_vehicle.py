@@ -9,6 +9,10 @@ from citylearn.preprocessing import (
 )
 
 ZERO_DIVISION_PLACEHOLDER = 0.000001
+# A departure SOC within this margin below its target counts as meeting the target in the
+# met and target-feasibility KPIs. The rule-based engines stop charging 0.001 below the target,
+# well inside it. The SOC deficit and shortfall KPIs stay exact.
+EV_SERVICE_SOC_TOLERANCE = 0.005
 LOGGER = logging.getLogger(__name__)
 
 class ElectricVehicle(Environment):

@@ -71,7 +71,8 @@ def test_shared_split_with_carryover_scores_like_one_run():
             if key not in set(full.cost_function):
                 continue
             assert sum(_value(f, name, key) for f in frames) == pytest.approx(_value(full, name, key)), (name, key)
-    assert sum(_value(f, 'District', 'district_ev_events_departure_met_count') for f in frames) == 67
+    # 67 with the exact target test; 70 since a departure within 0.005 SOC of its target meets it.
+    assert sum(_value(f, 'District', 'district_ev_events_departure_met_count') for f in frames) == 70
 
     # The carried SOC is the session's start SOC for feasibility and the energy accounting too: the
     # feasible classes add up to one run, and no episode counts the previous episode's charge again.

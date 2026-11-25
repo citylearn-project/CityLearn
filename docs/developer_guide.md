@@ -46,8 +46,9 @@ these files, so the hashes then agree on all platforms. A checkout made before
 data files as modified. Make a fresh clone and set it up as in
 [Local Environment](#local-environment): the clone applies the new checkout
 rules and leaves the existing working copy, including uncommitted changes,
-untouched. Then clear the dataset cache, which may hold copies made from the old
-checkout:
+untouched. The dataset cache keys local copies by the content of their files, so
+copies made from the old checkout are not read; clear it to free the space they
+take:
 
 ```console
 git clone https://github.com/citylearn-project/CityLearn.git

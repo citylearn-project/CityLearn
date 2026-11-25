@@ -1,4 +1,5 @@
 import ast
+import hashlib
 import logging
 import os
 import posixpath
@@ -32,6 +33,8 @@ LOCAL_DATA_DATASETS_DIRECTORY = os.path.join(LOCAL_DATA_DIRECTORY, 'datasets')
 LOCAL_DATA_MISC_DIRECTORY = os.path.normpath(
     os.path.join(LOCAL_DATA_DIRECTORY, 'misc')
 )
+# Content keys of local dataset folders computed in this process: real path -> (file signature, key).
+_LOCAL_DATASET_CONTENT_KEYS: Dict[str, tuple] = {}
 
 
 class OfflineDataError(RuntimeError):
@@ -94,6 +97,8 @@ class DataSet:
         'DataSet.DEFAULT_CACHE_DIRECTORY is deprecated and unused; it is not the folder datasets are cached in. '
         'Use DataSet().cache_directory.',
     )
+    # Folder of `cache_directory` that holds copies of local dataset folders, one subfolder per content key.
+    CONTENT_CACHE_DIRECTORY = 'datasets_by_content'
     BATTERY_CHOICES_FILENAME = 'battery_choices.yaml'
     PV_CHOICES_FILENAME = 'lbl-tracking_the_sun-res-pv.csv'
 
@@ -367,26 +372,98 @@ class DataSet:
 
         return schema
 
+    @staticmethod
+    def _directory_signature(directory: Union[Path, str]) -> tuple:
+        """Return `(relative path, size, mtime in ns)` of every file under `directory`, sorted by path."""
+
+        directory = str(directory)
+        entries = []
+
+        for root, _, filenames in os.walk(directory, followlinks=True):
+            for filename in filenames:
+                filepath = os.path.join(root, filename)
+                stat = os.stat(filepath)
+                relative_path = os.path.relpath(filepath, directory).replace(os.sep, '/')
+                entries.append((relative_path, stat.st_size, stat.st_mtime_ns))
+
+        return tuple(sorted(entries))
+
+    @staticmethod
+    def _hash_directory(directory: Union[Path, str], signature: tuple) -> str:
+        """Return the content key of the files in `signature`: a digest of their relative paths and bytes."""
+
+        digest = hashlib.sha256()
+
+        for relative_path, _, _ in signature:
+            file_digest = hashlib.sha256()
+
+            with open(os.path.join(str(directory), *relative_path.split('/')), 'rb') as f:
+                for chunk in iter(lambda: f.read(1 << 20), b''):
+                    file_digest.update(chunk)
+
+            digest.update(relative_path.encode('utf-8') + b'\0' + file_digest.digest())
+
+        return digest.hexdigest()[:16]
+
+    @classmethod
+    def _content_key(cls, directory: Union[Path, str]) -> str:
+        """Return the content key of the local dataset folder `directory`.
+
+        The key is a digest of the relative path and bytes of every file in the folder, so two folders get
+        the same key exactly when they hold the same files. Hashing a large dataset takes a moment, so the
+        key is kept for the rest of the process and computed again only when the size or modification
+        time of a file changes, or a file is added or removed; a cache hit then costs one `stat` per file.
+        """
+
+        directory = os.path.realpath(str(directory))
+        signature = cls._directory_signature(directory)
+        known = _LOCAL_DATASET_CONTENT_KEYS.get(directory)
+
+        if known is not None and known[0] == signature:
+            return known[1]
+
+        key = cls._hash_directory(directory, signature)
+        _LOCAL_DATASET_CONTENT_KEYS[directory] = (signature, key)
+
+        return key
+
     def get_dataset(self, name: str, directory: Union[Path, str] = None) -> str:
         dataset_name = Path(str(name).rstrip('/')).name
         datasets_directory = os.path.join(self.cache_directory, 'datasets')
-        root_directory = os.path.join(datasets_directory, dataset_name)
-        schema_filepath = os.path.join(root_directory, 'schema.json')
         path = FileHandler.join_url(self.datasets_path, dataset_name)
+        local_root_directory = self._find_local_dataset_root(str(name))
 
-        # The cached dataset is complete when its schema and every input file the schema loads exist. An
-        # interrupted download by an earlier version can leave schema.json without the files it names.
-        missing_files = self._missing_dataset_files(root_directory)
+        if local_root_directory is not None:
+            # A complete local copy, such as `data/datasets` of a checkout, is cached under the key of its
+            # content, not only under the release tag. Checkouts or versions with different files then never
+            # read each other's copy, even when they share the tag, and a published copy is never replaced:
+            # different content goes to a new folder, so environments that read the old one are not disturbed.
+            key = self._content_key(local_root_directory)
+            root_directory = os.path.join(self.cache_directory, self.CONTENT_CACHE_DIRECTORY, key, dataset_name)
 
-        if len(missing_files) > 0:
-            local_root_directory = self._find_local_dataset_root(str(name))
+            if len(self._missing_dataset_files(root_directory)) > 0:
+                def copy(staging: str):
+                    shutil.copytree(local_root_directory, staging, dirs_exist_ok=True)
+                    copied_key = self._hash_directory(staging, self._directory_signature(staging))
 
-            if local_root_directory is not None:
-                self._publish_directory(
-                    root_directory, lambda staging: shutil.copytree(local_root_directory, staging, dirs_exist_ok=True)
-                )
+                    if copied_key != key:
+                        raise RuntimeError(
+                            f"The local dataset '{local_root_directory}' changed while it was being cached. Try again."
+                        )
 
-            else:
+                self._publish_directory(root_directory, copy)
+
+            schema_filepath = os.path.join(root_directory, 'schema.json')
+
+        else:
+            # Downloads are cached under the release tag that `cache_directory` is named after.
+            root_directory = os.path.join(datasets_directory, dataset_name)
+            schema_filepath = os.path.join(root_directory, 'schema.json')
+            # The cached dataset is complete when its schema and every input file the schema loads exist. An
+            # interrupted download by an earlier version can leave schema.json without the files it names.
+            missing_files = self._missing_dataset_files(root_directory)
+
+            if len(missing_files) > 0:
                 if self.offline:
                     local_directories = self.local_datasets_directories
                     local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
@@ -540,7 +617,9 @@ class DataSet:
         input file the schema loads exist; a process that loses the race to publish keeps the complete
         copy that won. Publishing, including the replacement of an incomplete folder left by an earlier
         version, holds a lock and checks again for a complete copy first, so a complete published
-        dataset is never removed.
+        dataset is never removed. Copies of local datasets are published under their content key, so a
+        complete copy is never replaced by different files either; only a damaged one, with input files
+        missing, is moved aside.
         """
 
         parent = os.path.dirname(target_directory)
@@ -1117,6 +1196,12 @@ class EnergySimulation(TimeSeriesData):
         self.occupant_count = np.zeros(len(solar_generation), dtype='float32') if occupant_count is None else np.array(occupant_count, dtype='float32')
         self.indoor_dry_bulb_temperature_cooling_set_point = np.zeros(len(solar_generation), dtype='float32') if indoor_dry_bulb_temperature_cooling_set_point is None else np.array(indoor_dry_bulb_temperature_cooling_set_point, dtype='float32')
         self.indoor_dry_bulb_temperature_heating_set_point = np.zeros(len(solar_generation), dtype='float32') if indoor_dry_bulb_temperature_heating_set_point is None else np.array(indoor_dry_bulb_temperature_heating_set_point, dtype='float32')
+        # A missing set-point column defaults to 0 C for the physics and the observations. The comfort KPIs
+        # cannot judge comfort against that default, so they report such a building as not evaluated.
+        self.set_point_data_available = (
+            indoor_dry_bulb_temperature_cooling_set_point is not None
+            and indoor_dry_bulb_temperature_heating_set_point is not None
+        )
         self.power_outage = np.zeros(len(solar_generation), dtype='float32') if power_outage is None else np.array(power_outage, dtype='float32')
         self.comfort_band = np.zeros(len(solar_generation), dtype='float32') + self.DEFUALT_COMFORT_BAND if comfort_band is None else np.array(comfort_band, dtype='float32')
 

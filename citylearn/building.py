@@ -526,7 +526,9 @@ class Building(Environment):
         (:py:meth:`citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline` with the ``'full'`` target,
         whatever `business_as_usual_ev_charge_target` is), so it is run when a building has EV chargers.
         Buildings without chargers need no sidecar. The deferrable appliances and the HVAC stay as the
-        controller ran them.
+        controller ran them in this series. The default KPI condition adds, for buildings with temperature
+        dynamics (LSTM), the difference to the dataset's ideal-load heating and cooling demand
+        (:py:attr:`net_electricity_consumption_without_storage_and_partial_load`).
 
         With `baseline_version` 1 (CityLearn 3.6.0 and earlier) no charging is added back, so on EV datasets the
         baseline is a community whose cars never charge. See :py:mod:`citylearn.internal.baseline_version`.
