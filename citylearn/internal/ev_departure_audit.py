@@ -7,7 +7,7 @@ from citylearn.data import ChargerSimulation
 from citylearn.energy_model import Battery
 
 
-DEFINITION_VERSION = 'ev-departure-audit-v1'
+DEFINITION_VERSION = 'ev-departure-audit-v2'
 THRESHOLDS = ('target', 'min_acceptable', 'within_tolerance')
 # A departure receives the first applicable reason, so reason counts reconcile.
 UNKNOWN_REASONS = (

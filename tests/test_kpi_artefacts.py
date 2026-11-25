@@ -20,6 +20,7 @@ from citylearn.agents import _baseline_engine
 from citylearn.citylearn import CityLearnEnv
 from citylearn.data import EnergySimulation
 from citylearn.electric_vehicle import EV_SERVICE_SOC_TOLERANCE
+from citylearn.internal import ev_departure_audit
 from citylearn.internal.kpi import CityLearnKPIService
 from citylearn.multi_community import MultiCommunityEnv
 
@@ -75,7 +76,10 @@ def test_kpis_use_one_ev_service_tolerance_wider_than_the_rule_engines():
     assert EV_SERVICE_SOC_TOLERANCE == 0.005
     assert CityLearnKPIService.EV_TARGET_SOC_TOLERANCE is EV_SERVICE_SOC_TOLERANCE
     # The engines stop charging inside the KPI tolerance.
-    assert _baseline_engine.NORMAL_DEFAULTS["ev_service_soc_tolerance"] < EV_SERVICE_SOC_TOLERANCE
+    assert _baseline_engine.EV_CHARGE_STOP_SOC_TOLERANCE == 0.001
+    assert _baseline_engine.NORMAL_DEFAULTS["ev_service_soc_tolerance"] == _baseline_engine.EV_CHARGE_STOP_SOC_TOLERANCE
+    assert _baseline_engine.EV_CHARGE_STOP_SOC_TOLERANCE < EV_SERVICE_SOC_TOLERANCE
+    assert not hasattr(_baseline_engine, "EV_SERVICE_SOC_TOLERANCE")
 
 
 def test_departure_within_the_service_tolerance_meets_the_target():
@@ -112,6 +116,14 @@ def test_target_tolerance_never_exceeds_the_service_tolerance():
 
     assert service._ev_departure_target_tolerance() == 0.0
     assert metrics["departures_met"] == metrics["departures_min_acceptable"] == 0.0
+
+
+def test_departure_audit_label_records_the_new_target_test(quebec_env):
+    """Exports from before the 0.005 tolerance carry v1, so comparing them with new ones is flagged."""
+
+    assert ev_departure_audit.DEFINITION_VERSION == "ev-departure-audit-v2"
+    audit = quebec_env._provenance_service.get_metadata()["ev_departure_audit"]
+    assert audit["definition_version"] == ev_departure_audit.DEFINITION_VERSION
 
 
 # Comfort without set points (P4)

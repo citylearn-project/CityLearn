@@ -956,8 +956,10 @@ Only occupied steps are evaluated. A step is comfortable when
 of 0 °C. The comfort KPIs do not judge comfort against that default: they read `T_heat` and `T_cool` as
 undefined, so no step of the building is evaluated. Every discomfort ratio, delta and outage ratio of the
 building is then undefined, in `evaluate_v2()`, `evaluate()` and the
-[thermal-service audit](kpis_reference.md#thermal-service-audit), and the district skips the building. The
-bundled `pt_rec_*` datasets have no set-point columns.
+[thermal-service audit](kpis_reference.md#thermal-service-audit), and the district skips the building. Among the
+bundled datasets, `pt_rec_*` have no set-point columns and have occupants, so their comfort KPIs are
+undefined. The 2020–2022 challenge datasets and the three-phase demos have no set-point columns either,
+but their buildings have no occupants, so their comfort KPIs were already undefined.
 
 **Discomfort ratios.**
 
@@ -1579,7 +1581,7 @@ datasets with EV chargers (last row), which `baseline_version=1` restores.
 | `*_deferrable_appliance_service_average_start_delay_hours` | Undefined when no cycle completed (was 0). | none |
 | Ratios with an undefined control or reference | Undefined (were read as 0, or 1 when both were undefined). | none |
 | `*_deferrable_appliance_ratio_to_business_as_usual_*_ratio` with both totals zero | Undefined (was 1). | none |
-| `*_ev_performance_departure_success_ratio`, `*_ev_performance_departure_success_feasible_ratio`, `*_ev_events_departure_target_{feasible,infeasible}_count`, `*_ev_departure_audit_target_*` | A departure meets its target within 0.005 SOC (was 1e-6), so a car that the rule-based baselines stop 0.001 short of its target counts as served. | none |
+| `*_ev_events_departure_met_count` (legacy `ev_departure_met_events_count`), `*_ev_performance_departure_success_ratio`, `*_ev_performance_departure_success_feasible_ratio`, `*_ev_events_departure_target_{feasible,infeasible}_count`, `*_ev_departure_audit_target_*` | A departure meets its target within 0.005 SOC (was 1e-6), so a car that the rule-based baselines stop 0.001 short of its target counts as served. | none |
 | Comfort rows (`*_comfort_resilience_*`, `*_thermal_service_audit_*` discomfort rows, legacy `discomfort_*` and `one_minus_thermal_resilience_proportion`) of a building without set-point columns | Undefined (was judged against a 0 °C cooling set point). | none |
 | `*_{cost,emissions}_ratio_to_{baseline,business_as_usual}_total_ratio` with both totals zero, and their portfolio values | Undefined (was 1). | none |
 | `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Allocated from the district settlement. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostic) |

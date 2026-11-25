@@ -583,15 +583,21 @@ lists every changed row and the name that keeps its 3.6.0 value.
   `district_ev_performance_departure_success_ratio` goes from 0.988 to 0.994
   (BAU), 0.598 to 0.994 (`RBCBasicPolicy`), 0.495 to 0.994 (`RBCSmartPolicy`)
   and 0.130 to 0.134 (random actions). Rerun the evaluation before comparing
-  met rates with earlier tables. Use the deficit or shortfall means, which stay
+  met rates with earlier tables; the departure audit's `definition_version` is
+  now `ev-departure-audit-v2`, so `compare_exports` reports older exports as
+  incompatible. Use the deficit or shortfall means, which stay
   exact, to measure how far short a controller leaves the cars.
 - **Comfort KPIs of buildings without set-point columns** are undefined instead
   of judged against the 0 °C default; on the `pt_rec_*` datasets the discomfort
   ratios go from 1 to undefined for every controller, and the district skips
   those buildings. Code that reads these cells must handle `None`/NaN. Datasets
-  with set points do not change.
+  with set points do not change, nor do the 2020–2022 challenge datasets and the
+  three-phase demos, which have no set-point columns but no occupants either, so
+  their comfort KPIs were already undefined.
 - **Cost and emissions ratios of two zero totals** are undefined instead of 1,
-  for example the emissions ratios on Quebec (zero carbon intensity).
+  for example the emissions ratios on Quebec (zero carbon intensity) and the
+  cost ratios on the `citylearn_challenge_2020_climate_zone_*` and
+  `citylearn_challenge_2021` datasets (no prices), for every controller.
 
 ### Physics version
 

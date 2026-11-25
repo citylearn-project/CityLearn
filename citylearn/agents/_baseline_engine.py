@@ -17,7 +17,9 @@ import numpy as np
 from citylearn.agents._rule_engine import ChargerInfo, RulePolicyBase, StorageInfo
 
 
-EV_SERVICE_SOC_TOLERANCE = 0.001
+# The engines stop charging an EV this far below its target SOC. It sits inside the KPI tolerance,
+# citylearn.electric_vehicle.EV_SERVICE_SOC_TOLERANCE, so their departures meet the target.
+EV_CHARGE_STOP_SOC_TOLERANCE = 0.001
 
 # Fixed reference tariff: Core30 2023 OMIE terciles, rounded to 4 decimals.
 # Selection uses prices only, never controller outcomes or 2024 data.
@@ -33,7 +35,7 @@ NORMAL_DEFAULTS = {
     "storage_discharge_rate": 1.0,
     "pv_surplus_threshold_kw": 0.05,
     "normal_storage_discharge_import_threshold_kw": 0.05,
-    "ev_service_soc_tolerance": EV_SERVICE_SOC_TOLERANCE,
+    "ev_service_soc_tolerance": EV_CHARGE_STOP_SOC_TOLERANCE,
 }
 
 SMART_DEFAULTS = {"price_charge_rate": 0.0}
@@ -188,7 +190,7 @@ class _OperationalBaselinePolicy(RulePolicyBase):
         )
         self.ev_service_soc_tolerance: float = max(
             0.0,
-            float(hyper.get("ev_service_soc_tolerance", EV_SERVICE_SOC_TOLERANCE)),
+            float(hyper.get("ev_service_soc_tolerance", EV_CHARGE_STOP_SOC_TOLERANCE)),
         )
         self.deferrable_safety_margin_steps: float = max(
             0.0,

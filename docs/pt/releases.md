@@ -261,7 +261,10 @@ lista cada linha alterada e o nome que guarda o seu valor da 3.6.0.
   cumprimento, a viabilidade do alvo e o alvo da auditoria de partidas usam agora
   uma tolerância de 0,005 de SOC, a constante `EV_SERVICE_SOC_TOLERANCE` em
   `citylearn.electric_vehicle`, limitada por `ev_departure_service_tolerance`. As
-  médias do défice e da insuficiência continuam exatas. Isto muda os KPIs de
+  médias do défice e da insuficiência continuam exatas. A `definition_version` da
+  auditoria de partidas nos metadados da exportação passa a
+  `ev-departure-audit-v2`, pelo que `compare_exports` indica como incompatíveis
+  exportações de antes e de depois desta alteração. Isto muda os KPIs de
   cumprimento de todos os controladores. Em
   `citylearn_challenge_2022_phase_all_plus_evs`, no ano completo (2791 partidas),
   `district_ev_performance_departure_success_ratio` passa de 0,988 para 0,994
@@ -289,11 +292,15 @@ lista cada linha alterada e o nome que guarda o seu valor da 3.6.0.
   `district_thermal_service_audit_discomfort_ratio` passa de 1,0 a indefinido no
   BAU, nas duas baselines baseadas em regras e com ações aleatórias, e o rácio de
   cobertura térmica de 1,0 para 0. Os datasets com set points, como Quebec, dão os
-  mesmos valores.
+  mesmos valores. Os datasets dos desafios de 2020 a 2022 e as demos trifásicas
+  também não têm colunas de set points, mas os seus edifícios não têm ocupantes,
+  pelo que os seus KPIs de conforto já eram indefinidos e não mudam.
 - **Rácios de custo e de emissões com dois totais a zero.**
   `*_cost_ratio_to_*_total_ratio` e `*_emissions_ratio_to_*_total_ratio` valiam 1
   quando os dois totais eram zero, por exemplo os rácios de emissões em Quebec,
-  que tem intensidade carbónica nula. Passam a indefinidos ao nível do edifício,
+  que tem intensidade carbónica nula, e os rácios de custo nos datasets
+  `citylearn_challenge_2020_climate_zone_*` e `citylearn_challenge_2021`, que
+  não têm preços. Passam a indefinidos ao nível do edifício,
   do distrito e do portefólio, como já acontecia com os rácios dos aparelhos
   diferíveis. Os outros rácios continuam a valer 1 com dois totais a zero.
 

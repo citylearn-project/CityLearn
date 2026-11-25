@@ -962,7 +962,10 @@ Os KPIs de conforto não avaliam o conforto contra esse valor por omissão: leem
 indefinidos, pelo que nenhum passo do edifício é avaliado. Todas as razões, deltas e razões de falha de
 energia do desconforto desse edifício ficam então indefinidas, no `evaluate_v2()`, no `evaluate()` e na
 auditoria do serviço térmico, e o distrito ignora o
-edifício. Os datasets `pt_rec_*` incluídos não têm colunas de set points.
+edifício. Entre os datasets incluídos, os `pt_rec_*` não têm colunas de set points e têm ocupantes, pelo
+que os seus KPIs de conforto ficam indefinidos. Os datasets dos desafios de 2020 a 2022 e as demos
+trifásicas também não têm colunas de set points, mas os seus edifícios não têm ocupantes, pelo que os
+seus KPIs de conforto já eram indefinidos.
 
 **Razões de desconforto.**
 
@@ -1586,7 +1589,7 @@ A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_
 | `*_deferrable_appliance_service_average_start_delay_hours` | Indefinido quando nenhum ciclo foi completado (era 0). | nenhum |
 | Ratios com control ou referencia indefinidos | Indefinidos (eram lidos como 0, ou 1 quando ambos eram indefinidos). | nenhum |
 | `*_deferrable_appliance_ratio_to_business_as_usual_*_ratio` com os dois totais a zero | Indefinido (era 1). | nenhum |
-| `*_ev_performance_departure_success_ratio`, `*_ev_performance_departure_success_feasible_ratio`, `*_ev_events_departure_target_{feasible,infeasible}_count`, `*_ev_departure_audit_target_*` | Uma partida cumpre o alvo a menos de 0,005 de SOC (era 1e-6), pelo que um carro que as baselines baseadas em regras param 0,001 abaixo do alvo conta como servido. | nenhum |
+| `*_ev_events_departure_met_count` (antigo `ev_departure_met_events_count`), `*_ev_performance_departure_success_ratio`, `*_ev_performance_departure_success_feasible_ratio`, `*_ev_events_departure_target_{feasible,infeasible}_count`, `*_ev_departure_audit_target_*` | Uma partida cumpre o alvo a menos de 0,005 de SOC (era 1e-6), pelo que um carro que as baselines baseadas em regras param 0,001 abaixo do alvo conta como servido. | nenhum |
 | Linhas de conforto (`*_comfort_resilience_*`, linhas de desconforto `*_thermal_service_audit_*`, `discomfort_*` e `one_minus_thermal_resilience_proportion` antigos) de um edifício sem colunas de set points | Indefinidas (eram avaliadas contra um set point de arrefecimento de 0 °C). | nenhum |
 | `*_{cost,emissions}_ratio_to_{baseline,business_as_usual}_total_ratio` com os dois totais a zero, e os seus valores de portfólio | Indefinido (era 1). | nenhum |
 | `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Alocados a partir do settlement district. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostico) |
