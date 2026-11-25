@@ -512,6 +512,10 @@ These changes only affect `topology_mode='dynamic'`:
   `net_electricity_consumption`. KPIs are unchanged by this item.
 - An event at the terminal step no longer moves the buildings onto the
   unexecuted terminal row, so their series hold executed intervals only.
+- A member cloned with `source_member_id` gives its chargers ids of their own
+  (`charger_1_1` of `Building_1` becomes `charger_19_1` in `Building_19`), so
+  the clone's observation, action and entity names change; update saved agents
+  and robustness events that name the clone's chargers by the source's id.
 
 ### Control step different from the dataset step
 
@@ -613,6 +617,28 @@ lists every changed row and the name that keeps its 3.6.0 value.
   over the episode; the sum is published as `*_ramping_total_*_kw`
   ([#245](https://github.com/citylearn-project/CityLearn/issues/245)). The ratio
   to the BAU is unchanged.
+- **EV target met** uses a tolerance of 0.005 SOC instead of 1e-6, for the met
+  rates, the target feasibility counts and the departure-audit target rows. The
+  rule-based baselines, which stop 0.001 short, now count as meeting the target:
+  on full-year `citylearn_challenge_2022_phase_all_plus_evs`,
+  `district_ev_performance_departure_success_ratio` goes from 0.988 to 0.994
+  (BAU), 0.598 to 0.994 (`RBCBasicPolicy`), 0.495 to 0.994 (`RBCSmartPolicy`)
+  and 0.130 to 0.134 (random actions). Rerun the evaluation before comparing
+  met rates with earlier tables; the departure audit's `definition_version` is
+  now `ev-departure-audit-v2`, so `compare_exports` reports older exports as
+  incompatible. Use the deficit or shortfall means, which stay
+  exact, to measure how far short a controller leaves the cars.
+- **Comfort KPIs of buildings without set-point columns** are undefined instead
+  of judged against the 0 °C default; on the `pt_rec_*` datasets the discomfort
+  ratios go from 1 to undefined for every controller, and the district skips
+  those buildings. Code that reads these cells must handle `None`/NaN. Datasets
+  with set points do not change, nor do the 2020–2022 challenge datasets and the
+  three-phase demos, which have no set-point columns but no occupants either, so
+  their comfort KPIs were already undefined.
+- **Cost and emissions ratios of two zero totals** are undefined instead of 1,
+  for example the emissions ratios on Quebec (zero carbon intensity) and the
+  cost ratios on the `citylearn_challenge_2020_climate_zone_*` and
+  `citylearn_challenge_2021` datasets (no prices), for every controller.
 
 ### Physics version
 

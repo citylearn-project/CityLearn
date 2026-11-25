@@ -358,7 +358,7 @@ class CityLearnProvenanceService:
         metadata = dict(definition_version=DEFINITION_VERSION, kpi_definition_version=KPI_DEFINITION_VERSION,
                     ev_feasibility='individual_conditioned_on_service_headroom_physical_replay_v2',
                     ev_departure_audit=dict(
-                        definition_version='ev-departure-audit-v1',
+                        definition_version='ev-departure-audit-v2',
                         legacy_feasibility='unchanged_permissive_missing_data',
                         population='active_charger_departures_in_evaluated_member_window',
                         scope='individual_replay_from_observed_session_boundary_not_joint_scheduling',

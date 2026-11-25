@@ -540,6 +540,11 @@ Estas alterações afetam apenas `topology_mode='dynamic'`:
   `net_electricity_consumption`. Este ponto não altera os KPIs.
 - Um evento no passo terminal já não move os edifícios para a linha terminal não
   executada, pelo que as suas séries guardam apenas intervalos executados.
+- Um membro clonado com `source_member_id` dá aos seus carregadores ids próprios
+  (`charger_1_1` de `Building_1` passa a `charger_19_1` em `Building_19`), pelo
+  que os nomes das observações, ações e entidades do clone mudam; atualize os
+  agentes guardados e os eventos de robustez que identificam os carregadores do
+  clone pelo id da origem.
 
 ### Passo de controlo diferente do passo do dataset
 
@@ -651,6 +656,31 @@ todas as linhas alteradas e o nome que mantém o seu valor da 3.6.0.
   longo do episódio; a soma é publicada como `*_ramping_total_*_kw`
   ([#245](https://github.com/citylearn-project/CityLearn/issues/245)). O rácio
   face ao BAU não muda.
+- **O cumprimento do alvo do VE** usa uma tolerância de 0,005 de SOC em vez de
+  1e-6, nas taxas de cumprimento, nas contagens de viabilidade do alvo e nas
+  linhas do alvo da auditoria de partidas. As baselines baseadas em regras, que
+  param 0,001 abaixo do alvo, passam a cumpri-lo: no ano completo de
+  `citylearn_challenge_2022_phase_all_plus_evs`,
+  `district_ev_performance_departure_success_ratio` passa de 0,988 para 0,994
+  (BAU), de 0,598 para 0,994 (`RBCBasicPolicy`), de 0,495 para 0,994
+  (`RBCSmartPolicy`) e de 0,130 para 0,134 (ações aleatórias). Volte a executar a
+  avaliação antes de comparar taxas de cumprimento com tabelas anteriores; a
+  `definition_version` da auditoria de partidas passa a `ev-departure-audit-v2`,
+  pelo que `compare_exports` indica como incompatíveis as exportações antigas. Use as
+  médias do défice ou da insuficiência, que continuam exatas, para medir quanto
+  falta aos carros.
+- **Os KPIs de conforto de edifícios sem colunas de set points** são indefinidos
+  em vez de avaliados contra o valor por omissão de 0 °C; nos datasets
+  `pt_rec_*` os rácios de desconforto passam de 1 a indefinidos para todos os
+  controladores, e o distrito ignora esses edifícios. O código que lê estas
+  células tem de tratar `None`/NaN. Os datasets com set points não mudam, nem os
+  dos desafios de 2020 a 2022 e as demos trifásicas, que não têm colunas de set
+  points mas também não têm ocupantes, pelo que os seus KPIs de conforto já eram
+  indefinidos.
+- **Os rácios de custo e de emissões com dois totais a zero** são indefinidos em
+  vez de 1, por exemplo os rácios de emissões em Quebec (intensidade carbónica
+  nula) e os rácios de custo nos datasets `citylearn_challenge_2020_climate_zone_*`
+  e `citylearn_challenge_2021` (sem preços), para todos os controladores.
 
 ### Versão da física
 

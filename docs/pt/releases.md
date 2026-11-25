@@ -184,6 +184,8 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 - **Ambientes copiados.** Depois de `copy.deepcopy(env)` ou de uma ida e volta com `pickle`, o registo de proveniência da energia perdia o rasto das baterias, porque identifica os stocks pela identidade do objeto: no passo seguinte contabilizava toda a energia armazenada como `asset_exit` ou `mobility` e abria novos stocks `unknown`, e os KPIs `*_energy_provenance_*` da cópia diferiam dos de uma execução sem cópia (centenas de linhas de `evaluate_v2()` em `citylearn_challenge_2022_phase_all_plus_evs`). O registo passa a reindexar os stocks quando é copiado ou recarregado. O `copy.deepcopy` também falhava nos datasets com dinâmica térmica LSTM (desafio 2023, Quebec e `baeda_3dem`) depois da primeira previsão do modelo, porque o estado oculto guardava o grafo do autograd; o modelo passa a guardar um estado oculto separado do grafo, e as previsões são idênticas, bit a bit, às anteriores. As execuções sem cópia não mudam ([#307](https://github.com/citylearn-project/CityLearn/issues/307)).
 - **Engenharia.** Os testes copiam os datasets para uma cache temporária própria de cada processo, e não para a cache do utilizador, o que evitava corridas concorrentes a falhar com `FileNotFoundError`; novos testes do COP da bomba de calor e do saldo do operador; o workflow de publicação pode usar a publicação confiável do PyPI (OIDC), preparada mas desligada; documentação do mercado (`settlement_version`, `grid_export_price`, `tariff_files`, `local_trading_enabled`) e correções de fórmulas e docstrings ([#256](https://github.com/citylearn-project/CityLearn/issues/256)).
 - **Carregar um modelo do Stable Baselines3 na CLI.** O `simulate -fa <modelo>.zip` chamava `load` na classe abstrata `BaseAlgorithm` do SB3 e falhava sempre com `TypeError: Can't instantiate abstract class BaseAlgorithm`. A CLI carrega agora o modelo com o algoritmo indicado em `-a` e lança um `ValueError` quando `-a` não é um algoritmo do SB3. Também recusa correr quando a pasta de saída, que o `simulate` esvazia primeiro, contém o modelo a carregar; antes apagava o modelo e depois não o encontrava. Um novo teste corre o `check_env`, algumas atualizações do SAC e do PPO, o `predict` num episódio com cada observação dentro do seu espaço, o `evaluate_v2()` e a CLI a guardar e a carregar um modelo num dia de `citylearn_challenge_2022_phase_all_plus_evs`. O [guia de simulações](running_simulations.md) indica o que a integração suporta: um agente central na interface flat. Os resultados das simulações não mudam ([#311](https://github.com/citylearn-project/CityLearn/issues/311)).
+- **Modelo de set point dos ocupantes mais rápido (sem mudança de resultados).** As florestas dos ocupantes são avaliadas uma linha de entrada de cada vez, e cada previsão percorria as suas 100 a 300 árvores uma a uma, cerca de 10 a 16 ms por previsão. Com o AVAC desligado (o BAU com `baseline_version=1`, ações aleatórias ou qualquer controlador que deixe o AVAC parado), os edifícios frios do Quebec pedem o modelo cerca de 40 vezes mais, pelo que estas corridas eram 3 a 6 vezes mais lentas do que com o AVAC ligado. As árvores de uma floresta passam a ser percorridas em conjunto, um nível por iteração, com as mesmas comparações, rotas de valores em falta, valores das folhas e ordem da soma, pelo que as previsões são bit-idênticas; uma previsão demora cerca de 0,1 ms. Em duas semanas de `quebec_neighborhood_without_demand_response_set_points`, uma corrida mais o `evaluate_v2()` demora 17 a 22 s em vez de 134 a 158 s com o BAU sem AVAC (agora `baseline_version=1`), 25 a 32 s em vez de 119 a 144 s com ações aleatórias, e 17 a 20 s em vez de 27 s com o BAU que liga o AVAC (agora o `baseline_version=2` predefinido) (duas corridas intercaladas de cada, numa máquina partilhada). As observações, as ações, todas as séries dos edifícios e a tabela do `evaluate_v2()` são bit-idênticas às anteriores no Quebec com o BAU com e sem AVAC, o `RBCSmartPolicy` e ações aleatórias.
+- **Os carregadores dos membros clonados têm ids próprios.** Quando um evento `add_member` clonava um membro a partir de `source_member_id`, os carregadores do clone mantinham os ids da origem, pelo que o aviso de dupla marcação dizia "already plugged into charger 'charger_1_1'; 'charger_1_1' stays idle", e os nomes das observações e ações, os ids entity e os ficheiros exportados por carregador do clone usavam o id da origem. Os carregadores do clone passam a ter o nome do clone, seguindo a nomenclatura do dataset: o nome do membro de origem no id, ou então o identificador que o termina, passa a ser o do destino (`charger_1_1` do `Building_1` passa a `charger_19_1` no `Building_19`, `CHG-M001-01` do `Member_001` passa a `CHG-M009-01` no `Member_009`); caso contrário, é acrescentado `_<membro de destino>`. **Os nomes mudam só nos membros clonados:** a ação `electric_vehicle_storage_<id>` do clone, as observações do carregador, do VE ligado, do VE a chegar e a codificação one-hot da fase, os ids entity (`Building_19/charger_19_1`) e o ficheiro `exported_data_<membro>_<carregador>_ep<n>.csv` usam o novo id, e um evento de robustez dirigido ao carregador do clone tem de o usar. Nenhum dataset incluído clona membros, e os valores simulados não mudam.
 
 ### Topologia dinâmica e alinhamento de dados
 
@@ -257,6 +259,54 @@ lista cada linha alterada e o nome que guarda o seu valor da 3.6.0.
   a soma das rampas ascendentes no episódio. Passa a ser a média por transição
   de passo; a soma fica em `*_ramping_total_*_kw`.
   ([#245](https://github.com/citylearn-project/CityLearn/issues/245))
+- **Alvo do VE cumprido a menos de 0,005 de SOC.** Uma partida só cumpria o alvo
+  a menos de 1e-6 de SOC, mas as baselines baseadas em regras param de carregar
+  0,001 abaixo do alvo, pelo que os seus carros contavam como falhados. O teste de
+  cumprimento, a viabilidade do alvo e o alvo da auditoria de partidas usam agora
+  uma tolerância de 0,005 de SOC, a constante `EV_SERVICE_SOC_TOLERANCE` em
+  `citylearn.electric_vehicle`, limitada por `ev_departure_service_tolerance`. As
+  médias do défice e da insuficiência continuam exatas. A `definition_version` da
+  auditoria de partidas nos metadados da exportação passa a
+  `ev-departure-audit-v2`, pelo que `compare_exports` indica como incompatíveis
+  exportações de antes e de depois desta alteração. Isto muda os KPIs de
+  cumprimento de todos os controladores. Em
+  `citylearn_challenge_2022_phase_all_plus_evs`, no ano completo (2791 partidas),
+  `district_ev_performance_departure_success_ratio` passa de 0,988 para 0,994
+  no BAU, de 0,598 para 0,994 no `RBCBasicPolicy`, de 0,495 para 0,994 no
+  `RBCSmartPolicy` e de 0,130 para 0,134 com ações aleatórias uniformes; o rácio
+  viável passa de 0,606 para 1,000 (Basic) e de 0,501 para 1,000 (Smart), e fica
+  em 1,000 no BAU. Em `pt_rec_15`, em duas semanas, passa de 0,4 para 1,0 (Basic)
+  e de 0,6 para 1,0 (Smart). As contagens de partidas cumpridas indicadas acima
+  para as partidas no fim do episódio (#370) e para o SOC dos VE transportado
+  (#388) foram medidas com o teste exato. Com 0,005, no mesmo dataset com a BAU a
+  partir do passo 1900, uma execução única nos passos 1900–1999 cumpre 33 das
+  suas 35 partidas (30 antes). Em dois episódios de 100 passos, a execução única
+  cumpre 70 de 72; as divisões cumprem 67 com `shared` e 70 com `disjoint` sem
+  transporte, e 70 com as duas fronteiras com transporte. As divisões 30 × 24
+  cumprem 197 (`shared`) e 168 (`disjoint`) sem transporte, e 216 e 224 com
+  transporte, tal como a execução única.
+- **Conforto sem set points.** Um edifício cujo dataset não tem colunas de set
+  points tem um set point de 0 °C na simulação, e os KPIs de conforto avaliavam-no
+  contra esse valor, pelo que cada passo ocupado estava 21 °C acima: em todos os
+  datasets `pt_rec_*`, todos os controladores tinham um rácio de desconforto de 1.
+  Os KPIs de conforto desse edifício (`comfort_resilience`, as linhas de
+  desconforto de `thermal_service_audit` e as linhas antigas `discomfort_*`)
+  passam a indefinidos, e o distrito ignora-o. A física e as observações não
+  mudam. Em `pt_rec_15`, em duas semanas,
+  `district_thermal_service_audit_discomfort_ratio` passa de 1,0 a indefinido no
+  BAU, nas duas baselines baseadas em regras e com ações aleatórias, e o rácio de
+  cobertura térmica de 1,0 para 0. Os datasets com set points, como Quebec, dão os
+  mesmos valores. Os datasets dos desafios de 2020 a 2022 e as demos trifásicas
+  também não têm colunas de set points, mas os seus edifícios não têm ocupantes,
+  pelo que os seus KPIs de conforto já eram indefinidos e não mudam.
+- **Rácios de custo e de emissões com dois totais a zero.**
+  `*_cost_ratio_to_*_total_ratio` e `*_emissions_ratio_to_*_total_ratio` valiam 1
+  quando os dois totais eram zero, por exemplo os rácios de emissões em Quebec,
+  que tem intensidade carbónica nula, e os rácios de custo nos datasets
+  `citylearn_challenge_2020_climate_zone_*` e `citylearn_challenge_2021`, que
+  não têm preços. Passam a indefinidos ao nível do edifício,
+  do distrito e do portefólio, como já acontecia com os rácios dos aparelhos
+  diferíveis. Os outros rácios continuam a valer 1 com dois totais a zero.
 
 ### Física
 

@@ -819,7 +819,7 @@ class MultiCommunityEnv(Env):
 
         control, reference = float(paired["control"].sum()), float(paired["reference"].sum())
         if signed:
-            value = CityLearnKPIService._signed_ratio(control, reference)
+            value = CityLearnKPIService._signed_ratio(control, reference, zero_over_zero=zero_over_zero)
         else:
             value = CityLearnKPIService._safe_div(control, reference, zero_over_zero=zero_over_zero)
         return np.nan if value is None else float(value)

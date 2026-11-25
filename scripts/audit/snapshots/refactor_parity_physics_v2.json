@@ -49,7 +49,7 @@
           "equipment_throughput": "gross_terminal_movements_before_interval_netting",
           "ev_departure_audit": {
             "coverage_denominator": "all_detected_departures",
-            "definition_version": "ev-departure-audit-v1",
+            "definition_version": "ev-departure-audit-v2",
             "empty_denominator": null,
             "feasible_service_denominator": "confirmed_feasible_departures_with_observed_service",
             "legacy_feasibility": "unchanged_permissive_missing_data",
@@ -13017,7 +13017,7 @@
           "equipment_throughput": "gross_terminal_movements_before_interval_netting",
           "ev_departure_audit": {
             "coverage_denominator": "all_detected_departures",
-            "definition_version": "ev-departure-audit-v1",
+            "definition_version": "ev-departure-audit-v2",
             "empty_denominator": null,
             "feasible_service_denominator": "confirmed_feasible_departures_with_observed_service",
             "legacy_feasibility": "unchanged_permissive_missing_data",
@@ -26006,7 +26006,7 @@
           "equipment_throughput": "gross_terminal_movements_before_interval_netting",
           "ev_departure_audit": {
             "coverage_denominator": "all_detected_departures",
-            "definition_version": "ev-departure-audit-v1",
+            "definition_version": "ev-departure-audit-v2",
             "empty_denominator": null,
             "feasible_service_denominator": "confirmed_feasible_departures_with_observed_service",
             "legacy_feasibility": "unchanged_permissive_missing_data",
@@ -38965,7 +38965,7 @@
           "equipment_throughput": "gross_terminal_movements_before_interval_netting",
           "ev_departure_audit": {
             "coverage_denominator": "all_detected_departures",
-            "definition_version": "ev-departure-audit-v1",
+            "definition_version": "ev-departure-audit-v2",
             "empty_denominator": null,
             "feasible_service_denominator": "confirmed_feasible_departures_with_observed_service",
             "legacy_feasibility": "unchanged_permissive_missing_data",
@@ -57346,7 +57346,7 @@
           "equipment_throughput": "gross_terminal_movements_before_interval_netting",
           "ev_departure_audit": {
             "coverage_denominator": "all_detected_departures",
-            "definition_version": "ev-departure-audit-v1",
+            "definition_version": "ev-departure-audit-v2",
             "empty_denominator": null,
             "feasible_service_denominator": "confirmed_feasible_departures_with_observed_service",
             "legacy_feasibility": "unchanged_permissive_missing_data",
@@ -70309,7 +70309,7 @@
           "equipment_throughput": "gross_terminal_movements_before_interval_netting",
           "ev_departure_audit": {
             "coverage_denominator": "all_detected_departures",
-            "definition_version": "ev-departure-audit-v1",
+            "definition_version": "ev-departure-audit-v2",
             "empty_denominator": null,
             "feasible_service_denominator": "confirmed_feasible_departures_with_observed_service",
             "legacy_feasibility": "unchanged_permissive_missing_data",

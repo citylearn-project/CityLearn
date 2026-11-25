@@ -1196,6 +1196,12 @@ class EnergySimulation(TimeSeriesData):
         self.occupant_count = np.zeros(len(solar_generation), dtype='float32') if occupant_count is None else np.array(occupant_count, dtype='float32')
         self.indoor_dry_bulb_temperature_cooling_set_point = np.zeros(len(solar_generation), dtype='float32') if indoor_dry_bulb_temperature_cooling_set_point is None else np.array(indoor_dry_bulb_temperature_cooling_set_point, dtype='float32')
         self.indoor_dry_bulb_temperature_heating_set_point = np.zeros(len(solar_generation), dtype='float32') if indoor_dry_bulb_temperature_heating_set_point is None else np.array(indoor_dry_bulb_temperature_heating_set_point, dtype='float32')
+        # A missing set-point column defaults to 0 C for the physics and the observations. The comfort KPIs
+        # cannot judge comfort against that default, so they report such a building as not evaluated.
+        self.set_point_data_available = (
+            indoor_dry_bulb_temperature_cooling_set_point is not None
+            and indoor_dry_bulb_temperature_heating_set_point is not None
+        )
         self.power_outage = np.zeros(len(solar_generation), dtype='float32') if power_outage is None else np.array(power_outage, dtype='float32')
         self.comfort_band = np.zeros(len(solar_generation), dtype='float32') + self.DEFUALT_COMFORT_BAND if comfort_band is None else np.array(comfort_band, dtype='float32')
 
