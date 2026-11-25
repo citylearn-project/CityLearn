@@ -42,7 +42,8 @@ def run_work_order(work_order_filepath, max_workers=None, start_index=None, end_
             virtual_environment_command = f'call "{os.path.join(virtual_environment_path, "Scripts", "activate.bat")}"'
         
         else:
-            virtual_environment_command = f'source "{os.path.join(virtual_environment_path, "bin", "activate")}"'
+            # subprocess uses /bin/sh, where the POSIX dot command is portable.
+            virtual_environment_command = f'. "{os.path.join(virtual_environment_path, "bin", "activate")}"'
     
     else:
         virtual_environment_command = 'echo "No virtual environment"'

@@ -1,11 +1,13 @@
 """Regression tests for the BAU time-series export, charger export columns, CLI simulator and file encodings."""
 
 import datetime
+from functools import partial
 import json
 import os
 import sys
 from pathlib import Path
 import shutil
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -186,6 +188,24 @@ def test_simulator_timestamps_do_not_require_datetime_utc(tmp_path, monkeypatch)
 
     summary = FileHandler.read_json(tmp_path / 'simulation' / 'utc-train.json')
     assert summary['train_start_timestamp'].endswith('+00:00')
+
+
+@pytest.mark.skipif(os.name == 'nt' or shutil.which('dash') is None, reason='requires a POSIX shell without source')
+def test_run_work_order_runs_jobs_inside_the_posix_virtual_environment(tmp_path, monkeypatch):
+    venv = tmp_path / 'test venv'
+    (venv / 'bin').mkdir(parents=True)
+    (venv / 'bin' / 'activate').write_text('export CITYLEARN_WORK_ORDER_VENV=active\n', encoding='ascii')
+    work_order = tmp_path / 'work_order.txt'
+    work_order.write_text('printf "%s" "$CITYLEARN_WORK_ORDER_VENV" > job.txt\n', encoding='ascii')
+
+    # Run the real command in dash even on platforms whose /bin/sh accepts source.
+    run_in_dash = partial(cli.subprocess.run, executable=shutil.which('dash'))
+    monkeypatch.setattr(cli, 'subprocess', SimpleNamespace(run=run_in_dash))
+    monkeypatch.setattr(cli.concurrent.futures, 'ProcessPoolExecutor', cli.concurrent.futures.ThreadPoolExecutor)
+    monkeypatch.chdir(tmp_path)
+
+    assert run_work_order(work_order, max_workers=1, virtual_environment_path=venv) == 0
+    assert (tmp_path / 'job.txt').read_text(encoding='ascii') == 'active'
 
 
 def test_run_work_order_activates_windows_virtual_environments_with_activate_bat(tmp_path, monkeypatch):
