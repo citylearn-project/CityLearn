@@ -71,7 +71,10 @@ class _RuleBaselineAgent(Agent):
         'storage_discharge_import_threshold_kw': 0.25,
     }
 
-    def __init__(self, env: CityLearnEnv, **hyperparameters: Any):
+    def __init__(self, env: CityLearnEnv, *, random_seed: Optional[int] = None, **hyperparameters: Any):
+        # Like every CityLearn agent, the rule agents take their seed from the environment, and they draw no
+        # random numbers. `random_seed` is accepted for the same keywords as the other agents (the CLI's
+        # -rs passes it) and is not an engine hyperparameter.
         self._hyperparameters: Dict[str, Any] = dict(hyperparameters)
         self._engine = None
         self._flattener: Optional[EntityObservationFlattener] = None
