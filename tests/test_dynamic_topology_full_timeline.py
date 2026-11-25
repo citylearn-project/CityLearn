@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import warnings
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -472,5 +473,77 @@ def test_dynamic_topology_reset_discards_runtime_cloned_members_before_replay():
         env.step(_zero_entity_actions(env))
         assert "Building_clone" in topology_service(env).active_member_ids
         assert env.topology_event_log[-1]["applied"] is True
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("source,target,charger_id,expected", [
+    ("Building_1", "Building_19", "charger_1_1", "charger_19_1"),
+    ("Building_10", "Building_2", "charger_10_1", "charger_2_1"),
+    ("Building_1", "Building_clone", "charger_1_1", "charger_clone_1"),
+    ("Member_001", "Member_009", "CHG-M001-01", "CHG-M009-01"),
+    ("Building_1", "Building_2", "Building_1_ev", "Building_2_ev"),
+    # Nothing in the id names the source member, or the target's identifier is the same.
+    ("Building_1", "Building_2", "fast", "fast_Building_2"),
+    ("Building_1", "Clone_1", "charger_1_1", "charger_1_1_Clone_1"),
+])
+def test_cloned_charger_id_follows_the_member_naming(source, target, charger_id, expected):
+    assert topology_service_class().cloned_charger_id(charger_id, source, target) == expected
+
+
+def topology_service_class():
+    from citylearn.internal.topology import CityLearnTopologyService
+
+    return CityLearnTopologyService
+
+
+def test_cloned_member_chargers_take_the_clone_ids():
+    """A cloned member's chargers are named after the clone, not its source."""
+    schema = _load_schema()
+    schema["buildings"]["Building_1"]["charging_constraints"] = {
+        "building_limit_kw": 22.0,
+        "phases": [{"name": "L1", "limit_kw": 11.0, "chargers": ["charger_1_1"]}],
+        "observations": {"phase_encoding": True},
+    }
+    schema["topology_events"] = [{
+        "id": "evt_clone_member", "time_step": 1, "operation": "add_member",
+        "target_member_id": "Building_19", "source_member_id": "Building_1",
+    }]
+    env = CityLearnEnv(
+        schema, interface="entity", topology_mode="dynamic", episode_time_steps=[(0, 30)], random_seed=0,
+        render_mode="none", export_kpis_on_episode_end=False,
+    )
+
+    try:
+        for episode in range(2):  # the clone is rebuilt on reset
+            env.reset(seed=0)
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always")
+                while not (env.terminated or env.truncated):
+                    env.step(_zero_entity_actions(env))
+            if episode == 0:  # each charger pair is reported once per environment
+                assert [str(w.message) for w in caught if "already plugged" in str(w.message)] == [
+                    "Charger 'charger_19_1' is scheduled to connect 'Electric_Vehicle_7' at time step 1, but it is "
+                    "already plugged into charger 'charger_1_1'; 'charger_19_1' stays idle while that session lasts."
+                ]
+
+            source, clone = member_pool(env)["Building_1"], member_pool(env)["Building_19"]
+            assert [c.charger_id for c in source.electric_vehicle_chargers] == ["charger_1_1"]
+            assert [c.charger_id for c in clone.electric_vehicle_chargers] == ["charger_19_1"]
+            assert list(clone._charger_lookup) == ["charger_19_1"]
+            assert clone._charger_phase_map == {"charger_19_1": "L1"}
+            assert [phase["chargers"] for phase in clone._phase_limits] == [["charger_19_1"]]
+            assert source._charger_phase_map == {"charger_1_1": "L1"}
+            names = list(clone.observation_metadata) + list(clone.action_metadata)
+            assert not [name for name in names if "charger_1_1" in name]
+            assert clone.action_metadata["electric_vehicle_storage_charger_19_1"]
+            assert clone.observation_metadata["electric_vehicle_charger_charger_19_1_connected_state"]
+            assert clone.observation_metadata["charging_phase_one_hot_charger_19_1_L1"]
+            ids = env.entity_specs["tables"]["charger"]["ids"]
+            assert "Building_19/charger_19_1" in ids and "Building_19/charger_1_1" not in ids
+            assert "Building_19/charger_19_1" in env.entity_specs["actions"]["charger"]["ids"]
+
+        kpis = env.evaluate_v2(include_business_as_usual=False)
+        assert not kpis.astype(str).apply(lambda column: column.str.contains("Building_19/charger_1_1")).any().any()
     finally:
         env.close()

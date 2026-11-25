@@ -384,6 +384,38 @@ def test_declared_view_does_not_mutate_the_runtime_inventory(tmp_path):
         env.close()
 
 
+def _cloned_charger_event_env(tmp_path, target_id):
+    schema = _copy_schema(tmp_path, interface="entity")
+    schema.update(topology_mode="dynamic", topology_events=[
+        dict(id="clone", time_step=2, operation="add_member", target_member_id="Building_9", source_member_id="Building_1"),
+    ])
+    _write_events(schema, [_event(
+        target_type="charger", target_id=target_id, target_feature="connected_state", mode="bias", value=0.25,
+        start=3, end=5,
+    )])
+    return _load(schema)
+
+
+def test_event_on_a_cloned_member_charger_uses_the_clone_id(tmp_path):
+    """The declared view names a cloned member's chargers as the topology service does."""
+    env = _cloned_charger_event_env(tmp_path, "Building_9/charger_9_1")
+    try:
+        for _ in range(2):
+            env.reset(seed=7)
+            while not env.terminated:
+                env.step(_zero_actions(env))
+            assert [c.charger_id for c in member_pool(env)["Building_9"].electric_vehicle_chargers] == ["charger_9_1"]
+            assert set(robustness_service(env).history) == {3, 4, 5}
+            assert env.get_robustness_audit()["district"]["applied_observation_event_step_count"] == 3
+    finally:
+        env.close()
+
+
+def test_event_on_a_cloned_member_charger_rejects_the_source_id(tmp_path):
+    with pytest.raises(ValueError, match="does not match any declared observation target"):
+        _cloned_charger_event_env(tmp_path, "Building_9/charger_1_1")
+
+
 @pytest.mark.parametrize("mode", ["known_faults", "hidden_faults"])
 def test_feature_only_exposed_by_a_future_member_is_valid_across_its_lifecycle(tmp_path, mode):
     schema = _copy_schema(tmp_path, interface="entity")
