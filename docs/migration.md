@@ -682,6 +682,18 @@ lists every changed row and the name that keeps its 3.6.0 value.
   for example the emissions ratios on Quebec (zero carbon intensity) and the
   cost ratios on the `citylearn_challenge_2020_climate_zone_*` and
   `citylearn_challenge_2021` datasets (no prices), for every controller.
+- **Total ratios with a negligible reference** are undefined instead of a
+  finite but arbitrarily large quotient: a `*_ratio_to_baseline_*_total_ratio`
+  or `*_ratio_to_business_as_usual_*_ratio` whose reference total is at most 1%
+  of the mean |reference| of the building rows
+  ([#403](https://github.com/citylearn-project/CityLearn/issues/403)). Only
+  building rows changed on the bundled datasets: 8 of 8,774 rows on
+  `citylearn_challenge_2022_phase_all_plus_evs` (336 steps, RBCSmart or random
+  actions), 3 over the full year with zero actions, 3 of 8,789 on
+  `citylearn_three_phase_electrical_service_demo`, none on `pt_rec_4`; no
+  district row changed. Code that reads these cells must handle `None`/NaN. The
+  control and reference totals and their delta stay in the table; divide them
+  if you need the raw quotient.
 
 ### Physics version
 

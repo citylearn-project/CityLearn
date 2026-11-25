@@ -727,6 +727,18 @@ todas as linhas alteradas e o nome que mantém o seu valor da 3.6.0.
   vez de 1, por exemplo os rácios de emissões em Quebec (intensidade carbónica
   nula) e os rácios de custo nos datasets `citylearn_challenge_2020_climate_zone_*`
   e `citylearn_challenge_2021` (sem preços), para todos os controladores.
+- **Os rácios de totais com uma referência desprezável** são indefinidos em vez
+  de um quociente finito mas arbitrariamente grande: um
+  `*_ratio_to_baseline_*_total_ratio` ou `*_ratio_to_business_as_usual_*_ratio`
+  cujo total de referência é no máximo 1% da média de |referência| das linhas
+  de edifício ([#403](https://github.com/citylearn-project/CityLearn/issues/403)).
+  Nos datasets incluídos só mudaram linhas de edifício: 8 de 8774 linhas em
+  `citylearn_challenge_2022_phase_all_plus_evs` (336 passos, RBCSmart ou ações
+  aleatórias), 3 no ano completo com ações nulas, 3 de 8789 em
+  `citylearn_three_phase_electrical_service_demo`, nenhuma em `pt_rec_4`; nenhuma
+  linha do distrito mudou. O código que lê estas células tem de tratar
+  `None`/NaN. Os totais control e de referência e o seu delta continuam na
+  tabela; divida-os se precisar do quociente bruto.
 
 ### Versão da física
 

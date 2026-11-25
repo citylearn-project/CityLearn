@@ -2190,23 +2190,62 @@ class CityLearnKPIService:
         undefined = ('_deferrable_appliance_', '_cost_ratio_to_', '_emissions_ratio_to_')
         return None if any(token in name for token in undefined) else 1.0
 
-    def _undefine_zero_over_zero_ratios(self, records) -> None:
-        """Apply `ratio_zero_over_zero` to the total ratios after every row is built.
+    # A total ratio is undefined when its reference total is below this share of the community's
+    # per-member scale of that reference (the mean |reference total| of the building rows). See
+    # `_undefine_zero_over_zero_ratios` and the "Undefined values" section of the KPI reference.
+    NEGLIGIBLE_REFERENCE_SHARE = 0.01
 
-        Some of these ratios come from rows that keep their 3.6.0 definition, so
-        the rule is applied once here, on the two totals the ratio divides.
+    @staticmethod
+    def _building_level_name(level: str, metric: str) -> Optional[str]:
+        prefix = f'{level}_'
+        return f'building_{metric[len(prefix):]}' if metric.startswith(prefix) else None
+
+    def _undefine_zero_over_zero_ratios(self, records) -> None:
+        """Undefine the total ratios whose reference is zero or negligible, after every row is built.
+
+        Two rules, applied to the ratios of `total_ratio_components` on the two totals each one
+        divides (some of these ratios come from rows that keep their 3.6.0 definition, so this is
+        done once here):
+
+        - 0/0: both totals within the zero tolerance give `ratio_zero_over_zero` (None for
+          deferrable-appliance, cost and emissions ratios; the 1.0 "no change" is kept otherwise).
+        - Negligible reference (#403): otherwise, a reference total with
+          ``|reference| <= NEGLIGIBLE_REFERENCE_SHARE * scale`` makes the ratio undefined (None).
+          ``scale`` is the mean of ``|reference total|`` over the building rows, the size of that
+          reference for a typical member of the community. Below 1% of it the ratio measures how
+          small the reference is rather than what the controller did: Building_15's battery
+          throughput was about 2,400 times its BAU on plus_evs. The scale is the same for the district row,
+          so a district ratio is undefined only if the district reference is itself below 1% of a
+          member's (a signed total, e.g. net exchange, whose members cancel). Using absolute values
+          keeps the scale of signed totals positive. A single-building env, or a reference that is
+          zero for every member, leaves only the 0/0 rule.
         """
         eps = float(ZERO_DIVISION_PLACEHOLDER)
+        share = float(self.NEGLIGIBLE_REFERENCE_SHARE)
+        magnitudes: Dict[str, List[float]] = {}
+        for (level, _, metric), record in records.items():
+            if level == 'building':
+                value = self._defined_scalar(record.get('value'))
+                if value is not None:
+                    magnitudes.setdefault(metric, []).append(abs(value))
+        scales = {metric: float(np.mean(values)) for metric, values in magnitudes.items()}
         components = {}
         for (level, name, metric), record in records.items():
             if level not in components:
                 components[level] = self.total_ratio_components(level)
-            if metric not in components[level] or self.ratio_zero_over_zero(metric) is not None:
+            if metric not in components[level]:
                 continue
             control_name, reference_name, _ = components[level][metric]
-            totals = [self._defined_scalar(records.get((level, name, key), {}).get('value'))
-                      for key in (control_name, reference_name)]
-            if all(value is not None and abs(value) <= eps for value in totals):
+            control, reference = [self._defined_scalar(records.get((level, name, key), {}).get('value'))
+                                  for key in (control_name, reference_name)]
+            if control is None or reference is None:
+                continue
+            if abs(control) <= eps and abs(reference) <= eps:
+                if self.ratio_zero_over_zero(metric) is None:
+                    record['value'] = None
+                continue
+            scale = scales.get(self._building_level_name(level, reference_name), 0.0)
+            if scale > eps and abs(reference) <= share * scale:
                 record['value'] = None
 
     @classmethod

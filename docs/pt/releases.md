@@ -347,6 +347,25 @@ lista cada linha alterada e o nome que guarda o seu valor da 3.6.0.
   não têm preços. Passam a indefinidos ao nível do edifício,
   do distrito e do portefólio, como já acontecia com os rácios dos aparelhos
   diferíveis. Os outros rácios continuam a valer 1 com dois totais a zero.
+- **Rácios de totais com uma referência desprezável.** Um rácio de um edifício
+  face à baseline ou ao BAU tornava-se um número grande sem significado quando o
+  seu total de referência era próximo de zero sem ser zero: em
+  `citylearn_challenge_2022_phase_all_plus_evs`, o rácio de exportação do
+  Building_14 face ao BAU era 3961 (ações aleatórias) e o rácio de throughput da
+  bateria do Building_15 era 2443, e no ano completo com ações nulas o rácio de
+  net exchange do Building_1 face à baseline era -720. Um rácio de totais
+  (`*_ratio_to_baseline_*_total_ratio`, `*_ratio_to_business_as_usual_*_ratio`)
+  passa a indefinido quando a sua referência é no máximo 1% da média de
+  |referência| das linhas de edifício, a dimensão dessa referência para um
+  membro típico; a regra 0/0 não muda. Nos datasets incluídos só mudam linhas
+  de edifício, todas de finitas para indefinidas: 8 de 8774 linhas em plus_evs
+  (336 passos, RBCSmart ou aleatório), 3 no seu ano completo com ações nulas, 3
+  de 8789 em `citylearn_three_phase_electrical_service_demo` (RBCSmart ou
+  aleatório), nenhuma em `pt_rec_4`; nenhuma linha do distrito muda. Duas delas
+  eram valores banais de um edifício quase sem referência (o rácio de geração
+  PV de 1,0 do Building_15 com 2 kWh, e o seu rácio de exportação face à
+  baseline de 0,90 com RBCSmart); os totais e os deltas continuam na tabela
+  ([#403](https://github.com/citylearn-project/CityLearn/issues/403)).
 
 ### Física
 
