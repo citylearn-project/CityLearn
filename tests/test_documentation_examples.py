@@ -337,3 +337,39 @@ def test_dataset_catalogue_lists_every_public_dataset():
     assert "power outages" in rows["citylearn_challenge_2023_phase_1"]["features"]
     page = module.dataset_catalogue(ROOT)
     assert all(f"| `{name}` |" in page for name in rows)
+
+
+ENTITY_MAP_PAGES = [
+    "docs/interfaces_flat_entity.md", "docs/actions_reference.md",
+    "docs/pt/interfaces_flat_entity.md", "docs/pt/actions_reference.md",
+]
+
+
+@pytest.fixture(scope="module")
+def plus_evs_entity_env():
+    from citylearn.citylearn import CityLearnEnv
+    env = CityLearnEnv(
+        str(ROOT / "data/datasets/citylearn_challenge_2022_phase_all_plus_evs/schema.json"),
+        interface="entity", simulation_start_time_step=0, simulation_end_time_step=3, episode_time_steps=4,
+    )
+    try:
+        yield env
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("page", ENTITY_MAP_PAGES)
+def test_documented_entity_action_map_ids_run(page, plus_evs_entity_env):
+    """The entity "map" examples use real ids (``<building>/<device>``) that the parser accepts."""
+    blocks = [block for block in python_blocks(ROOT / page) if '"map"' in block]
+    assert blocks, page
+    env = plus_evs_entity_env
+    for block in blocks:
+        scope = {}
+        exec(compile(block, page, "exec"), scope)
+        action_map = scope["actions"]["map"]
+        for key in action_map:
+            kind, entity_id = key.split(":", 1)
+            assert entity_id in env.entity_specs["actions"][kind]["ids"], (page, key)
+        env.reset()
+        env.step(scope["actions"])

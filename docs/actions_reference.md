@@ -93,14 +93,15 @@ actions = {
 }
 ```
 
-Map payload:
+Map payload (keys are `<kind>:<id>`, with the ids listed in `env.entity_specs["actions"][<kind>]["ids"]`;
+charger and deferrable appliance ids are `<building>/<device>`, here from `citylearn_challenge_2022_phase_all_plus_evs`):
 
 ```python
 actions = {
     "map": {
         "building:Building_1": {"electrical_storage": 0.1},
-        "charger:Building_1:AC001": {"electric_vehicle_storage": 0.7},
-        "deferrable_appliance:Building_1:washer_1": {"start": 1.0}
+        "charger:Building_1/charger_1_1": {"electric_vehicle_storage": 0.7},
+        "deferrable_appliance:Building_1/deferrable_appliance_1": {"start": 1.0}
     }
 }
 ```
