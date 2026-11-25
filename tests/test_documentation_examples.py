@@ -429,3 +429,24 @@ def test_kpi_reference_sections_are_whole(page, portfolio):
             sections[current] = sections.get(current, 0) + 1
     assert sections
     assert {name: count for name, count in sections.items() if count > 1} == {}
+
+
+@pytest.mark.parametrize("directory", ["docs", "docs/pt"])
+def test_comparison_example_pairs_runs_with_an_experiment_identity(directory, monkeypatch, tmp_path, capsys):
+    """compare_exports needs set_experiment_identity(); the documented example must pair its two runs."""
+    monkeypatch.chdir(tmp_path)
+    block = next(b for b in python_blocks(ROOT / directory / "running_simulations.md") if "compare_exports" in b)
+    assert "set_experiment_identity(" in block
+    scope = {}
+    exec(compile(block, "running_simulations.md", "exec"), scope)
+    report = scope["report"]
+    assert (report["status"], report["missing_evidence"], report["mismatches"]) == ("paired", [], [])
+    assert capsys.readouterr().out.strip() == "paired [] []"
+
+
+@pytest.mark.parametrize("page", [
+    "docs/running_simulations.md", "docs/pt/running_simulations.md",
+    "docs/schema_reference.md", "docs/pt/schema_reference.md", "docs/source/python_api.rst",
+])
+def test_experiment_identity_is_documented(page):
+    assert "set_experiment_identity" in (ROOT / page).read_text(encoding="utf-8")
