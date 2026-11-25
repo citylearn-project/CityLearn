@@ -850,6 +850,9 @@ class CityLearnTopologyService:
         building._archived_storage_electricity, building._archived_storage_energy_balance = (
             storage_prefix if storage_prefix is not None else (None, None)
         )
+        if not self._keeps_replaced_storage_history():
+            # CityLearn 3.6.0 archived the rejoining battery's consumption only.
+            building._archived_storage_energy_balance = None
         self._set_building_time_step(building, time_step)
         self._initialize_storage_at_activation(building, thermal_storage=True)
         self._skip_expired_deferrable_requests(
@@ -900,6 +903,19 @@ class CityLearnTopologyService:
         }
         storage_prefix = building._electrical_storage_history_prefix(time_step)
         return prefixes, storage_prefix, phase_prefix
+
+    def _keeps_replaced_storage_history(self) -> bool:
+        """Whether a removed or replaced battery keeps its history in the building's series.
+
+        From `baseline_version` 2. Version 1 reproduces CityLearn 3.6.0, where the history was lost, so the
+        baselines without storage kept the removed battery's dispatch.
+        """
+
+        return int(getattr(self.env, 'baseline_version', 2) or 2) >= 2
+
+    def _archive_replaced_storage(self, building: Building, time_step: int) -> None:
+        if self._keeps_replaced_storage_history():
+            building._archive_electrical_storage_history(time_step)
 
     def _global_time_step(self, local_time_step: int) -> int:
         tracker = getattr(self.env, 'episode_tracker', None)
@@ -995,7 +1011,7 @@ class CityLearnTopologyService:
         if asset_type == 'electrical_storage':
             source_building = self._resolve_source_building(event)
             # The replaced instance's history stays in the building's series (see _remove_asset).
-            building._archive_electrical_storage_history(time_step)
+            self._archive_replaced_storage(building, time_step)
             building.electrical_storage = deepcopy(self._resolve_source_storage(source_building))
             self._apply_object_overrides(building.electrical_storage, event.overrides, event)
             self._bind_building_runtime_context(building)
@@ -1071,7 +1087,7 @@ class CityLearnTopologyService:
             # The removed battery's consumption before `time_step` is part of the building's past net
             # consumption: keep it in the building's series, as removed PV keeps its past production.
             # Otherwise the baselines without storage would add back a dispatch that no longer appears.
-            building._archive_electrical_storage_history(time_step)
+            self._archive_replaced_storage(building, time_step)
             building.electrical_storage = Battery(
                 0.0, 0.0, seconds_per_time_step=building.seconds_per_time_step, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED,
                 random_stream_version=building.random_stream_version,
