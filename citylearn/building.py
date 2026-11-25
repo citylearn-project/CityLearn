@@ -2306,6 +2306,58 @@ class Building(Environment):
         return peak
 
     @staticmethod
+    def _deferrable_appliance_observation_energy_limits(appliance) -> Tuple[float, float]:
+        """Largest values of an appliance's deferrable `*_kwh` observations [kWh].
+
+        Returns the largest cycle energy, the bound of `cycle_energy_kwh` and `remaining_energy_kwh`, and the
+        largest step energy of a cycle profile, the bound of `current_step_energy_kwh`. The cycle energy is
+        the larger of `total_energy_kwh` and the energy left in a running cycle's profile, summed as the
+        appliance sums it, because the profile sum may differ from `total_energy_kwh` by rounding.
+        """
+
+        simulation = getattr(appliance, 'deferrable_appliance_simulation', None)
+        cycles = list((getattr(simulation, 'cycle_profiles', None) or {}).values())
+        cycles += list(getattr(simulation, 'flexibility_schedule', None) or [])
+        seen = set()
+        cycle_high, step_high = 0.0, 0.0
+
+        for cycle in cycles:
+            try:
+                cycle_high = max(cycle_high, float(cycle.get('total_energy_kwh', 0.0)))
+            except (TypeError, ValueError):
+                pass
+
+            profile = cycle.get('load_profile', None)
+
+            if profile is None or id(profile) in seen or len(profile) == 0:
+                continue
+
+            seen.add(id(profile))
+            step_high = max(step_high, float(np.nanmax(np.asarray(profile, dtype='float64'))))
+
+            for offset in range(len(profile)):
+                cycle_high = max(cycle_high, float(np.sum(profile[offset:])))
+
+        return (
+            cycle_high if np.isfinite(cycle_high) else 0.0,
+            step_high if np.isfinite(step_high) else 0.0,
+        )
+
+    def _deferrable_energy_observation_high_limits(self) -> Tuple[float, float]:
+        """Upper bounds of the deferrable `*_kwh` observations: (cycle and remaining energy, current-step energy) [kWh].
+
+        Each is the largest value any of the building's appliances can report, from their cycle definitions, as
+        `_deferrable_power_observation_high_limit` does for the `*_kw` observations. A bound with no positive
+        cycle energy to derive it from is 1.0, so that the range is not empty.
+        """
+
+        limits = [self._deferrable_appliance_observation_energy_limits(a) for a in self.deferrable_appliances or []]
+        cycle_high = max((c for c, _ in limits), default=0.0)
+        step_high = max((s for _, s in limits), default=0.0)
+
+        return (cycle_high if cycle_high > 0.0 else 1.0), (step_high if step_high > 0.0 else 1.0)
+
+    @staticmethod
     def _series_bound(values: Iterable[float], *, upper: bool, default: float = 0.0) -> float:
         arr = np.asarray(values)
         if arr.size == 0:
@@ -2389,6 +2441,7 @@ class Building(Environment):
             power_kw_to_energy_kwh(escalator.normal_power, self.seconds_per_time_step)
             for escalator in self.escalators or []
         )
+        deferrable_energy_high_limits = None
 
         for key in observation_names:
             if key.startswith('charging_phase_one_hot_'):
@@ -2520,7 +2573,13 @@ class Building(Environment):
                 if key.endswith('_ratio') or key.endswith(('pending', 'running', 'can_start', 'deadline_missed')):
                     high_limit[key] = 1.0
                 elif key.endswith('_kwh'):
-                    high_limit[key] = 1.0e6
+                    # Energies are never negative (0 without a cycle); the bound is the largest value the
+                    # appliances' cycles can report, so that normalisation keeps the signal.
+                    if deferrable_energy_high_limits is None:
+                        deferrable_energy_high_limits = self._deferrable_energy_observation_high_limits()
+                    low_limit[key] = 0.0
+                    cycle_energy_high, step_energy_high = deferrable_energy_high_limits
+                    high_limit[key] = step_energy_high if key.endswith('current_step_energy_kwh') else cycle_energy_high
                 elif key.endswith('_kw'):
                     high_limit[key] = self._deferrable_power_observation_high_limit()
                 elif key.endswith('_time_step'):
