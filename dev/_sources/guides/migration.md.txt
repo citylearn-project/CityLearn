@@ -87,8 +87,10 @@ baseline ([#365](https://github.com/citylearn-project/CityLearn/issues/365)).
   full, and never discharged. The cars get the energy they need, without V2G,
   and the baseline is the same for every controller, so the `baseline` rows
   credit a controller with its storage dispatch, its EV charging and its V2G
-  against charging on arrival. The deferrable appliances and the HVAC stay as
-  the controller ran them.
+  against charging on arrival. The deferrable appliances stay as the controller
+  ran them. So does the HVAC, except in buildings with temperature dynamics
+  (LSTM), where the default condition uses the dataset's ideal-load heating and
+  cooling demand.
 - On datasets with EV chargers, every evaluation runs the BAU sidecar for that
   charging, also the legacy `evaluate()` and
   `evaluate_v2(include_business_as_usual=False)`, and uses the `'full'` target

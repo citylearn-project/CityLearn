@@ -848,7 +848,9 @@ the cars. The BAU charging comes from the native BAU sidecar of the same scenari
 (<a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline" title="citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline()</span></code></a> with the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target,
 whatever <cite>business_as_usual_ev_charge_target</cite> is), so it is run when a building has EV chargers.
 Buildings without chargers need no sidecar. The deferrable appliances and the HVAC stay as the
-controller ran them.</p>
+controller ran them in this series. The default KPI condition adds, for buildings with temperature
+dynamics (LSTM), the difference to the dataset’s ideal-load heating and cooling demand
+(<code class="xref py py-attr docutils literal notranslate"><span class="pre">net_electricity_consumption_without_storage_and_partial_load</span></code>).</p>
 <p>With <cite>baseline_version</cite> 1 (CityLearn 3.6.0 and earlier) no charging is added back, so on EV datasets the
 baseline is a community whose cars never charge. See <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.baseline_version</span></code>.</p>
 <p>Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.</p>
