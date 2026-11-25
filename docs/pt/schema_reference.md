@@ -172,7 +172,7 @@ Uma chave obrigatória em falta lança `KeyError`.
 |---|---|---|---|---|---|---|
 | `seconds_per_time_step` | número | obrigatória | s, pelo menos 1 | Duração de um passo de controlo. Tem de ser igual ao passo do dataset, salvo se `time_step_ratio_mode` for `compress`. | `seconds_per_time_step` | original |
 | `simulation_start_time_step` | int | obrigatória | linha dos dados | Primeira linha lida de cada ficheiro de séries temporais. | `simulation_start_time_step` | original |
-| `simulation_end_time_step` | int | obrigatória | linha dos dados | Última linha lida, inclusive. A janela tem `end - start + 1` linhas; as linhas fora dela não são carregadas. | `simulation_end_time_step` | original |
+| `simulation_end_time_step` | int | obrigatória | linha dos dados | Última linha lida, inclusive. A janela tem `end - start + 1` linhas; as linhas fora dela não são carregadas. Tem de ser uma linha de todos os ficheiros de séries temporais: um valor posterior gera `ValueError` na construção, que indica o ficheiro e o último passo final válido (mais um com `terminal_observation_padding`). | `simulation_end_time_step` | original |
 | `time_step_ratio_mode` | string | `reject` | `reject`, `compress` | O que fazer quando `seconds_per_time_step` difere do passo do dataset. `reject` lança `ValueError`. `compress` mantém o comportamento da 3.6.0: uma linha de dados por passo de controlo, energias escaladas pela razão, e é impresso um aviso. | `time_step_ratio_mode` | depois da 3.6.0 |
 
 O passo do dataset é lido, por esta ordem, de `dataset_seconds_per_time_step`, do ficheiro de calendário, ou das

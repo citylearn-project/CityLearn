@@ -236,6 +236,7 @@ class CityLearnLoadingService:
         self._shared_timeseries_cache = {}
 
         if dynamic_mode:
+            self._validate_dynamic_simulation_window(schema)
             self._dynamic_member_windows = self._build_dynamic_member_windows(schema, self._dynamic_expected_rows)
             self._dynamic_charger_windows = self._build_dynamic_charger_windows(
                 schema,
@@ -911,20 +912,35 @@ class CityLearnLoadingService:
         filepath: Union[str, os.PathLike],
         *,
         csv_dtypes: Optional[Mapping[str, Any]] = None,
+        require_window: bool = True,
     ) -> pd.DataFrame:
-        """Read only the configured simulation window from a CSV or Parquet time series file."""
+        """Read only the configured simulation window from a CSV or Parquet time series file.
 
+        With `require_window`, a file that ends before `simulation_end_time_step` raises a
+        `ValueError` that names the last valid end step, instead of failing with an `IndexError`
+        at the last step of the run. Dynamic topology passes `False` for member files, which may
+        end early when the member leaves or is never active.
+        """
+
+        padding = parse_bool(
+            schema.get('terminal_observation_padding', False),
+            default=False,
+            path='terminal_observation_padding',
+        )
         dataframe = self._read_timeseries_dataframe(
             filepath,
             start_time_step=int(schema['simulation_start_time_step']),
             end_time_step=int(schema['simulation_end_time_step']),
             csv_dtypes=csv_dtypes,
         )
-        if not parse_bool(
-            schema.get('terminal_observation_padding', False),
-            default=False,
-            path='terminal_observation_padding',
-        ):
+        if require_window:
+            window_rows = int(schema['simulation_end_time_step']) - int(schema['simulation_start_time_step']) + 1
+            if dataframe.empty or len(dataframe) < (window_rows - 1 if padding else window_rows):
+                raise self._window_past_data_error(
+                    schema, self._timeseries_row_count(filepath), f'{filepath}', padding=bool(padding),
+                )
+
+        if not padding:
             return dataframe
 
         expected_rows = (
@@ -991,6 +1007,33 @@ class CityLearnLoadingService:
         return pd.concat(
             [dataframe, terminal_frame],
             ignore_index=True,
+        )
+
+    @staticmethod
+    def _window_past_data_error(schema: Mapping[str, Any], rows: int, source: str, *, padding: bool) -> ValueError:
+        """`ValueError` for a simulation window that ends after the last row of `source`."""
+
+        start = int(schema['simulation_start_time_step'])
+        end = int(schema['simulation_end_time_step'])
+        rows = int(rows)
+        last_end = rows if padding else rows - 1
+        padding_note = (
+            ' with terminal_observation_padding, which may add exactly one terminal state after the available data'
+            if padding else ''
+        )
+        data = f'{source} has {rows} rows (dataset time steps 0 to {rows - 1})'
+
+        if start > rows - 1:
+            return ValueError(
+                f'simulation_start_time_step={start} is past the end of the data: {data}, so the last valid '
+                f'simulation_start_time_step is {max(rows - 1, 0)} and the last valid simulation_end_time_step '
+                f'is {last_end}{padding_note}.'
+            )
+
+        return ValueError(
+            f'simulation_end_time_step={end} is past the end of the data: {data}, so the last valid '
+            f'simulation_end_time_step is {last_end}{padding_note}. The terminal observation of an episode '
+            'reads the row at its end time step.'
         )
 
     def _read_timeseries_dataframe(
@@ -1339,7 +1382,11 @@ class CityLearnLoadingService:
         """
 
         if not self._dynamic_mode or window is None:
-            return self._read_simulation_dataframe(schema, filepath, csv_dtypes=csv_dtypes)
+            # In dynamic topology a member that is never active, such as a template for add_asset or
+            # add_member events, may have a shorter file; load() checks the window against the dataset.
+            return self._read_simulation_dataframe(
+                schema, filepath, csv_dtypes=csv_dtypes, require_window=not self._dynamic_mode,
+            )
 
         expected_rows = int(expected_rows)
         simulation_start = int(schema['simulation_start_time_step'])
@@ -1347,7 +1394,10 @@ class CityLearnLoadingService:
         join, end = int(join), int(end)
 
         if not self._is_member_window_file(schema, filepath, window):
-            dataframe = self._read_simulation_dataframe(schema, filepath, csv_dtypes=csv_dtypes)
+            # A member that leaves may have a file that ends early; the dataset length is checked in load().
+            dataframe = self._read_simulation_dataframe(
+                schema, filepath, csv_dtypes=csv_dtypes, require_window=False,
+            )
 
             if len(dataframe) >= expected_rows:
                 dataframe = dataframe.iloc[:expected_rows]
@@ -1522,6 +1572,27 @@ class CityLearnLoadingService:
             self._timeseries_row_counts[key] = count
 
         return self._timeseries_row_counts[key]
+
+    def _validate_dynamic_simulation_window(self, schema: Mapping[str, Any]):
+        """Reject a dynamic-topology simulation window that ends after the dataset.
+
+        Member files may end early in dynamic topology, so the window is checked against the
+        dataset length (the longest building energy simulation file) instead of each file.
+        """
+
+        padding = bool(parse_bool(
+            schema.get('terminal_observation_padding', False),
+            default=False,
+            path='terminal_observation_padding',
+        ))
+        rows = self._dataset_row_count(schema)
+        start = int(schema['simulation_start_time_step'])
+        end = int(schema['simulation_end_time_step'])
+
+        if start > rows - 1 or end > (rows if padding else rows - 1):
+            raise self._window_past_data_error(
+                schema, rows, 'the dataset (longest building energy_simulation file)', padding=padding,
+            )
 
     def _dataset_row_count(self, schema: Mapping[str, Any]) -> int:
         """Number of dataset time steps: the longest building energy simulation file of the schema."""

@@ -171,7 +171,7 @@ A missing required key raises `KeyError`.
 |---|---|---|---|---|---|---|
 | `seconds_per_time_step` | number | required | s, at least 1 | Duration of one control step. Must equal the dataset step unless `time_step_ratio_mode` is `compress`. | `seconds_per_time_step` | original |
 | `simulation_start_time_step` | int | required | data row | First row read from every time-series file. | `simulation_start_time_step` | original |
-| `simulation_end_time_step` | int | required | data row | Last row read, inclusive. The window has `end - start + 1` rows; rows outside it are not loaded. | `simulation_end_time_step` | original |
+| `simulation_end_time_step` | int | required | data row | Last row read, inclusive. The window has `end - start + 1` rows; rows outside it are not loaded. It must be a row of every time series file: a later value raises `ValueError` at construction that names the file and the last valid end step (one more with `terminal_observation_padding`). | `simulation_end_time_step` | original |
 | `time_step_ratio_mode` | string | `reject` | `reject`, `compress` | What to do when `seconds_per_time_step` differs from the dataset step. `reject` raises `ValueError`. `compress` keeps the 3.6.0 behaviour: one data row per control step, energies scaled by the ratio, and a notice is printed. | `time_step_ratio_mode` | after 3.6.0 |
 
 The dataset step is read, in this order, from `dataset_seconds_per_time_step`, from the calendar file, or from the
