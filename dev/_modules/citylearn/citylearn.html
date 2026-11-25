@@ -188,6 +188,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.provenance</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnProvenanceService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnRuntimeService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.entity_interface</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEntityInterfaceService</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.histories</span><span class="w"> </span><span class="kn">import</span> <span class="n">RowHistory</span><span class="p">,</span> <span class="n">ScalarHistory</span><span class="p">,</span> <span class="n">default_history</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.topology</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnTopologyService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.demand_response</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnDemandResponseService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.robustness</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnRobustnessService</span>
@@ -621,7 +622,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_start_date</span><span class="o">.</span><span class="n">year</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_final_kpis_exported</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_final_export_episode_index</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__rewards</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rewards_history</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_history</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_cost_history</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_emission_history</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buildings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># Set before the seed and the buildings, which draw from streams of this version.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_random_stream</span><span class="p">(</span><span class="n">random_streams</span><span class="o">.</span><span class="n">parse_random_stream_version</span><span class="p">(</span>
@@ -988,9 +992,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rewards</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">"""Reward time series"""</span>
+<span class="w">        </span><span class="sd">"""Reward time series, one list per executed step after the leading empty list.</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rewards</span>
+<span class="sd">        Stored in a preallocated float64 buffer; the public ``list`` view is materialized lazily and</span>
+<span class="sd">        extended incrementally per step while detaching before any in-place edit so caller changes never</span>
+<span class="sd">        alter stored history. Read the latest row with ``env.rewards[-1]``.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rewards_history</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rewards_history</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">episode_rewards</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]]:</span>
@@ -1406,21 +1415,33 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">net_electricity_consumption_emission</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Summed `Building.net_electricity_consumption_emission` time series, in [kg_co2]."""</span>
+<span class="w">        </span><span class="sd">"""Summed `Building.net_electricity_consumption_emission` time series, in [kg_co2].</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption_emission</span>
+<span class="sd">        Materialized lazily and extended incrementally per step while detaching on mutation; read the latest</span>
+<span class="sd">        value with ``env.net_electricity_consumption_emission[-1]``.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_emission_history</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_emission_history</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">net_electricity_consumption_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Summed `Building.net_electricity_consumption_cost` time series, in [$]."""</span>
+<span class="w">        </span><span class="sd">"""Summed `Building.net_electricity_consumption_cost` time series, in [$].</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption_cost</span>
+<span class="sd">        Materialized lazily and extended incrementally per step while detaching on mutation; read the latest</span>
+<span class="sd">        value with ``env.net_electricity_consumption_cost[-1]``.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_cost_history</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_cost_history</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">net_electricity_consumption</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Summed `Building.net_electricity_consumption` time series, in [kWh]."""</span>
+<span class="w">        </span><span class="sd">"""Summed `Building.net_electricity_consumption` time series, in [kWh].</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption</span>
+<span class="sd">        Materialized lazily and extended incrementally per step while detaching on mutation; read the latest</span>
+<span class="sd">        value with ``env.net_electricity_consumption[-1]``.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_history</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_history</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">feeder_import_exceedance_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -1431,7 +1452,7 @@
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'district_electrical_service_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feeder_import_exceedance_kw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feeder_import_exceedance_kw</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_feeder_recorded_length</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">executed</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">executed</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_history</span> <span class="ow">or</span> <span class="p">()),</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">executed</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -1443,7 +1464,7 @@
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'district_electrical_service_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feeder_export_exceedance_kw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feeder_export_exceedance_kw</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_feeder_recorded_length</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">executed</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">executed</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_history</span> <span class="ow">or</span> <span class="p">()),</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">executed</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_sum_building_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -2008,7 +2029,17 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">%</span> <span class="n">interval</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">terminated</span><span class="p">:</span>
             <span class="k">return</span>
 
-        <span class="n">idx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">net_series</span> <span class="o">=</span> <span class="n">default_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'net_electricity_consumption'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">net_series</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">net_series</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption</span> <span class="ow">or</span> <span class="p">()</span>
+        <span class="n">cost_series</span> <span class="o">=</span> <span class="n">default_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'net_electricity_consumption_cost'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cost_series</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cost_series</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption_cost</span> <span class="ow">or</span> <span class="p">()</span>
+        <span class="n">emission_series</span> <span class="o">=</span> <span class="n">default_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'net_electricity_consumption_emission'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">emission_series</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">emission_series</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption_emission</span> <span class="ow">or</span> <span class="p">()</span>
+
+        <span class="n">idx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">net_series</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span>
@@ -2018,9 +2049,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">time_steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
-            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption</span><span class="p">[</span><span class="n">idx</span><span class="p">]),</span>
-            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption_cost</span><span class="p">[</span><span class="n">idx</span><span class="p">]),</span>
-            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption_emission</span><span class="p">[</span><span class="n">idx</span><span class="p">]),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">net_series</span><span class="p">[</span><span class="n">idx</span><span class="p">]),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">cost_series</span><span class="p">[</span><span class="n">idx</span><span class="p">]),</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">emission_series</span><span class="p">[</span><span class="n">idx</span><span class="p">]),</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
@@ -2415,10 +2446,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">reward_function</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
         <span class="c1"># variable reset</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__rewards</span> <span class="o">=</span> <span class="p">[[]]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption_cost</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption_emission</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Histories are preallocated for the episode; they grow by doubling if a run exceeds it.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rewards_history</span> <span class="o">=</span> <span class="n">RowHistory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_steps</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rewards_history</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_history</span> <span class="o">=</span> <span class="n">ScalarHistory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_steps</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_cost_history</span> <span class="o">=</span> <span class="n">ScalarHistory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_steps</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_emission_history</span> <span class="o">=</span> <span class="n">ScalarHistory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_steps</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'district_electrical_service_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.electrical_limits</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_district_feeder_schedule_bounds</span>
             <span class="n">validate_district_feeder_schedule_bounds</span><span class="p">(</span>
@@ -2764,10 +2797,20 @@
 <span class="sd">        dict</span>
 <span class="sd">            Dictionary with energy and environmental metrics for the current step.</span>
 <span class="sd">        """</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">net_series</span> <span class="o">=</span> <span class="n">default_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'net_electricity_consumption'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">net_series</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">net_series</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption</span> <span class="ow">or</span> <span class="p">()</span>
+        <span class="n">emission_series</span> <span class="o">=</span> <span class="n">default_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'net_electricity_consumption_emission'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">emission_series</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">emission_series</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption_emission</span> <span class="ow">or</span> <span class="p">()</span>
+        <span class="n">cost_series</span> <span class="o">=</span> <span class="n">default_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'net_electricity_consumption_cost'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cost_series</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cost_series</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption_cost</span> <span class="ow">or</span> <span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">net_series</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">idx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">net_series</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">_safe_value</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="n">index</span><span class="p">])</span> <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span>
@@ -2787,12 +2830,12 @@
             <span class="n">total_solar_generation</span> <span class="o">+=</span> <span class="n">_safe_value</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">solar_generation</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">"Net Electricity Consumption-kWh"</span><span class="p">:</span> <span class="n">_safe_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption</span><span class="p">,</span> <span class="n">idx</span><span class="p">),</span>
+            <span class="s2">"Net Electricity Consumption-kWh"</span><span class="p">:</span> <span class="n">_safe_value</span><span class="p">(</span><span class="n">net_series</span><span class="p">,</span> <span class="n">idx</span><span class="p">),</span>
             <span class="s2">"Self Consumption-kWh"</span><span class="p">:</span> <span class="n">self_consumption</span><span class="p">,</span>
             <span class="s2">"Stored energy by community- kWh"</span><span class="p">:</span> <span class="n">stored_energy</span><span class="p">,</span>
             <span class="s2">"Total Solar Generation-kWh"</span><span class="p">:</span> <span class="n">total_solar_generation</span><span class="p">,</span>
-            <span class="s2">"CO2-kg_co2"</span><span class="p">:</span> <span class="n">_safe_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption_emission</span><span class="p">,</span> <span class="n">idx</span><span class="p">),</span>
-            <span class="s2">"Price-$"</span><span class="p">:</span> <span class="n">_safe_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption_cost</span><span class="p">,</span> <span class="n">idx</span><span class="p">),</span>
+            <span class="s2">"CO2-kg_co2"</span><span class="p">:</span> <span class="n">_safe_value</span><span class="p">(</span><span class="n">emission_series</span><span class="p">,</span> <span class="n">idx</span><span class="p">),</span>
+            <span class="s2">"Price-$"</span><span class="p">:</span> <span class="n">_safe_value</span><span class="p">(</span><span class="n">cost_series</span><span class="p">,</span> <span class="n">idx</span><span class="p">),</span>
         <span class="p">}</span></div>
 </div>
 

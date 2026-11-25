@@ -73,6 +73,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#extra-kwargs">Extra <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reward-observation-payloads">Reward Observation Payloads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#macro-steps-action-repeat">Macro-Steps / Action Repeat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reading-latest-step-values">Reading Latest Step Values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cli">CLI</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#stable-baselines3-agent">Stable Baselines3 agent</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#evaluation-window">Evaluation window</a></li>
@@ -574,6 +575,17 @@ follows each device’s action contract.</p>
 </pre></div>
 </div>
 <p>When <code class="docutils literal notranslate"><span class="pre">return_substeps=True</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code> also includes <code class="docutils literal notranslate"><span class="pre">substep_rewards</span></code>, <code class="docutils literal notranslate"><span class="pre">substep_infos</span></code> and <code class="docutils literal notranslate"><span class="pre">substep_actions_applied</span></code> for debugging. Keep it disabled in long training runs.</p>
+</section>
+<section id="reading-latest-step-values">
+<h2>Reading Latest Step Values<a class="headerlink" href="#reading-latest-step-values" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> stores episode rewards and the three district net-consumption series in preallocated <code class="docutils literal notranslate"><span class="pre">float64</span></code> buffers. Accessing a full-history list property (<code class="docutils literal notranslate"><span class="pre">env.rewards</span></code>, <code class="docutils literal notranslate"><span class="pre">env.net_electricity_consumption</span></code>, <code class="docutils literal notranslate"><span class="pre">env.net_electricity_consumption_cost</span></code>, <code class="docutils literal notranslate"><span class="pre">env.net_electricity_consumption_emission</span></code>) lazily materializes a tracked Python <code class="docutils literal notranslate"><span class="pre">list</span></code> that extends incrementally per step and detaches before any in-place mutation, so existing <code class="docutils literal notranslate"><span class="pre">[-1]</span></code> monitoring loops remain <code class="docutils literal notranslate"><span class="pre">O(1)</span></code> per step while caller edits stay isolated.</p>
+<p>Read the latest value with <code class="docutils literal notranslate"><span class="pre">[-1]</span></code>. Each read takes constant time per step. Once read, the list is kept for the rest of the episode, so the memory saving of the buffers holds only while nothing reads these properties during the episode. In training loops, use the reward returned by <code class="docutils literal notranslate"><span class="pre">env.step()</span></code>, as the CityLearn agents do, and read the histories at the end of the episode.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">latest_reward_row</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rewards</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">latest_net_kwh</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">net_electricity_consumption</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">latest_cost_eur</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">net_electricity_consumption_cost</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">latest_emission_kgco2</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">net_electricity_consumption_emission</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
 </section>
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading"></a></h2>

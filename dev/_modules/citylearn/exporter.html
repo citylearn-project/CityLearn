@@ -159,6 +159,8 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.histories</span><span class="w"> </span><span class="kn">import</span> <span class="n">default_history</span>
+
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
@@ -487,13 +489,26 @@
                 <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buildings_for_time_step</span><span class="p">(</span><span class="n">time_step</span><span class="p">,</span> <span class="n">baseline_env</span><span class="p">)</span>
             <span class="p">]</span>
 
+        <span class="n">net_series</span> <span class="o">=</span> <span class="n">default_history</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">,</span> <span class="s1">'net_electricity_consumption'</span><span class="p">)</span>
+        <span class="n">cost_series</span> <span class="o">=</span> <span class="n">default_history</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">,</span> <span class="s1">'net_electricity_consumption_cost'</span><span class="p">)</span>
+        <span class="n">emission_series</span> <span class="o">=</span> <span class="n">default_history</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">,</span> <span class="s1">'net_electricity_consumption_emission'</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">'time_step'</span><span class="p">:</span> <span class="n">time_step</span><span class="p">,</span>
             <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'District'</span><span class="p">,</span>
             <span class="s1">'level'</span><span class="p">:</span> <span class="s1">'district'</span><span class="p">,</span>
-            <span class="s1">'net_electricity_consumption_kwh'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span><span class="n">baseline_env</span><span class="o">.</span><span class="n">net_electricity_consumption</span><span class="p">,</span> <span class="n">time_step</span><span class="p">),</span>
-            <span class="s1">'net_electricity_consumption_cost'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span><span class="n">baseline_env</span><span class="o">.</span><span class="n">net_electricity_consumption_cost</span><span class="p">,</span> <span class="n">time_step</span><span class="p">),</span>
-            <span class="s1">'net_electricity_consumption_emission_kgco2'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span><span class="n">baseline_env</span><span class="o">.</span><span class="n">net_electricity_consumption_emission</span><span class="p">,</span> <span class="n">time_step</span><span class="p">),</span>
+            <span class="s1">'net_electricity_consumption_kwh'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span>
+                <span class="n">baseline_env</span><span class="o">.</span><span class="n">net_electricity_consumption</span> <span class="k">if</span> <span class="n">net_series</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">net_series</span><span class="p">,</span>
+                <span class="n">time_step</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s1">'net_electricity_consumption_cost'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span>
+                <span class="n">baseline_env</span><span class="o">.</span><span class="n">net_electricity_consumption_cost</span> <span class="k">if</span> <span class="n">cost_series</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">cost_series</span><span class="p">,</span>
+                <span class="n">time_step</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s1">'net_electricity_consumption_emission_kgco2'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span>
+                <span class="n">baseline_env</span><span class="o">.</span><span class="n">net_electricity_consumption_emission</span> <span class="k">if</span> <span class="n">emission_series</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">emission_series</span><span class="p">,</span>
+                <span class="n">time_step</span><span class="p">,</span>
+            <span class="p">),</span>
             <span class="s1">'solar_generation_kwh'</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'solar_generation_kwh'</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">),</span>
             <span class="s1">'bess_electricity_consumption_kwh'</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'bess_electricity_consumption_kwh'</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">),</span>
             <span class="s1">'bess_soc'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>

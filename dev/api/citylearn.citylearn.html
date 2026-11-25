@@ -766,12 +766,16 @@ When <cite>agent</cite> is not provided, these update the schema:agent:attribute
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.net_electricity_consumption">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">net_electricity_consumption</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.net_electricity_consumption" title="Link to this definition"></a></dt>
 <dd><p>Summed <cite>Building.net_electricity_consumption</cite> time series, in [kWh].</p>
+<p>Materialized lazily and extended incrementally per step while detaching on mutation; read the latest
+value with <code class="docutils literal notranslate"><span class="pre">env.net_electricity_consumption[-1]</span></code>.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.net_electricity_consumption_cost">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">net_electricity_consumption_cost</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.net_electricity_consumption_cost" title="Link to this definition"></a></dt>
 <dd><p>Summed <cite>Building.net_electricity_consumption_cost</cite> time series, in [$].</p>
+<p>Materialized lazily and extended incrementally per step while detaching on mutation; read the latest
+value with <code class="docutils literal notranslate"><span class="pre">env.net_electricity_consumption_cost[-1]</span></code>.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -802,6 +806,8 @@ When <cite>agent</cite> is not provided, these update the schema:agent:attribute
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.net_electricity_consumption_emission">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">net_electricity_consumption_emission</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.net_electricity_consumption_emission" title="Link to this definition"></a></dt>
 <dd><p>Summed <cite>Building.net_electricity_consumption_emission</cite> time series, in [kg_co2].</p>
+<p>Materialized lazily and extended incrementally per step while detaching on mutation; read the latest
+value with <code class="docutils literal notranslate"><span class="pre">env.net_electricity_consumption_emission[-1]</span></code>.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -992,7 +998,10 @@ Override :meth”<cite>get_info</cite> to get custom key-value pairs in <cite>in
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.rewards">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rewards</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.rewards" title="Link to this definition"></a></dt>
-<dd><p>Reward time series</p>
+<dd><p>Reward time series, one list per executed step after the leading empty list.</p>
+<p>Stored in a preallocated float64 buffer; the public <code class="docutils literal notranslate"><span class="pre">list</span></code> view is materialized lazily and
+extended incrementally per step while detaching before any in-place edit so caller changes never
+alter stored history. Read the latest row with <code class="docutils literal notranslate"><span class="pre">env.rewards[-1]</span></code>.</p>
 </dd></dl>
 
 <dl class="py property">
