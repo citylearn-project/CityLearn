@@ -315,10 +315,11 @@ limitations, losses to the environment quantified by <cite>efficiency</cite>, <c
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>The power curves give one terminal-energy budget per control step and direction, read at the stored
-energy before the step’s first transfer. The first call in a step can use all of it; a later call in
-the same step gets only what the earlier calls in that direction left. Capacity and depth-of-discharge
-limits use the current stored energy.</p>
+<p>The power curves limit the terminal energy of a control step, read at the stored energy before the
+step’s first transfer. The first call in a step can use all of it; a later call in the same step gets
+only what the earlier calls left: a transfer in one direction uses up its share of the step, so
+charging and discharging in the same step share it (<code class="docutils literal notranslate"><span class="pre">|E_in|/P_in</span> <span class="pre">+</span> <span class="pre">|E_out|/P_out</span> <span class="pre">&lt;=</span> <span class="pre">step</span> <span class="pre">duration</span></code>).
+Capacity and depth-of-discharge limits use the current stored energy.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1407,9 +1408,10 @@ standby losses and exogenous SOC assignments such as vehicle arrivals.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p><cite>max_input_power</cite> and <cite>max_output_power</cite> give one terminal-energy budget per control step and
-direction, power times step duration. The first call in a step can use all of it; a later call in
-the same step gets only what the earlier calls in that direction left.</p>
+<p><cite>max_input_power</cite> and <cite>max_output_power</cite> limit the terminal energy of a control step to power times
+step duration. The first call in a step can use all of it; a later call in the same step gets only
+what the earlier calls left: a transfer in one direction uses up its share of the step, so charging
+and discharging in the same step share it (<code class="docutils literal notranslate"><span class="pre">|E_in|/max_input_power</span> <span class="pre">+</span> <span class="pre">|E_out|/max_output_power</span> <span class="pre">&lt;=</span> <span class="pre">step</span> <span class="pre">duration</span></code>).</p>
 <p>If charging, soc = min(<cite>soc_init</cite> + energy*`efficiency`, <cite>capacity</cite>), with energy limited by the
 remaining charge budget.
 If discharging, soc = max(0, <cite>soc_init</cite> + energy/<cite>efficiency</cite>), with energy limited by the

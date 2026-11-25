@@ -183,10 +183,11 @@ limitations, losses to the environment quantified by <cite>efficiency</cite>, <c
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>The power curves give one terminal-energy budget per control step and direction, read at the stored
-energy before the step’s first transfer. The first call in a step can use all of it; a later call in
-the same step gets only what the earlier calls in that direction left. Capacity and depth-of-discharge
-limits use the current stored energy.</p>
+<p>The power curves limit the terminal energy of a control step, read at the stored energy before the
+step’s first transfer. The first call in a step can use all of it; a later call in the same step gets
+only what the earlier calls left: a transfer in one direction uses up its share of the step, so
+charging and discharging in the same step share it (<code class="docutils literal notranslate"><span class="pre">|E_in|/P_in</span> <span class="pre">+</span> <span class="pre">|E_out|/P_out</span> <span class="pre">&lt;=</span> <span class="pre">step</span> <span class="pre">duration</span></code>).
+Capacity and depth-of-discharge limits use the current stored energy.</p>
 </dd></dl>
 
 <dl class="py method">

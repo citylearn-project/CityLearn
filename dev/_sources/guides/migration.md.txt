@@ -475,6 +475,7 @@ These changes require no dataset, schema or KPI migration. Valid runs give the s
 - **Non-finite actions raise.** `env.step()` raises `ValueError` for NaN or infinite actions. A training loop that used to continue with a diverged policy now stops at the first bad action; check the policy output or replace non-finite values before stepping.
 - **Unknown constructor arguments raise.** `CityLearnEnv(..., **kwargs)` raises `TypeError` for an unknown keyword argument, with the closest valid name. Remove or correct arguments that were silently ignored before.
 - **Topology events are validated at construction.** An event that names a member missing from the schema, or an asset override with an unknown key or an invalid value, raises when the environment is built. Members declared in the schema but not loaded (`buildings=[...]`) are still accepted.
+- **Run settings beyond the data or mixed across communities raise.** A `simulation_end_time_step` or `simulation_start_time_step` past the end of the data raises `ValueError` at construction, with the last valid end step; such runs used to fail with an `IndexError` at their last step, so lower the value to the one in the message. `MultiCommunityEnv` raises when communities differ in `business_as_usual_ev_charge_target` or `ev_soc_carryover`; set the same value in every `env_kwargs`. A community `weight` given as a string, such as `'2'`, raises; pass a number. `district_electrical_service` with `enabled: true` and no `import_kw` or `export_kw` raises; add a limit or set `enabled` to false. `compare_manifests()` now pairs a run with the feeder monitor and the same run without it, with `'district_electrical_service_one_sided'` in `declared_differences`, where it used to report them as `incompatible`; `physical_configuration_sha256` no longer includes the feeder setting, so it changes for runs that enable it. Different feeder limits on both sides are still `incompatible`.
 - **Logging.** CityLearn no longer configures the root logger. Warnings still print; to see INFO messages, configure logging in your script, for example `logging.basicConfig(level=logging.INFO)`. `learn(logging_level=...)` and `DataSet(logging_level=...)` set the level of the `citylearn` logger only when passed.
 - **Export location.** Exports go to `./render_logs` in the working directory by default, and relative `render_directory` values resolve against the working directory. Pass an absolute `render_directory` to keep the previous location.
 - **Physics invariants** raise `PhysicsInvariantError`, which is an `AssertionError`, so existing handlers keep working.
@@ -541,6 +542,14 @@ These changes only affect `topology_mode='dynamic'`:
   (`charger_1_1` of `Building_1` becomes `charger_19_1` in `Building_19`), so
   the clone's observation, action and entity names change; update saved agents
   and robustness events that name the clone's chargers by the source's id.
+- Under the default `baseline_version=2`, a battery removed or replaced by
+  `remove_asset` or `add_asset` keeps what it moved before the event in the
+  building's battery series, so the baselines without storage of that building
+  and the district no longer keep its dispatch and no longer depend on the
+  controller. Only the baseline rows (`*_baseline_*`, ratios and deltas to the
+  baseline) of runs that remove or replace a battery change. Set
+  `baseline_version=1` to keep the CityLearn 3.6.0 series, where the history
+  was lost.
 
 ### Control step different from the dataset step
 

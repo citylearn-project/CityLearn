@@ -839,14 +839,56 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_archived_storage_electricity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">electricity_consumption</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_with_archived_storage_electricity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Overlay on `values`, which begin at time step `start`, the storage consumption archived by a recommissioning."""</span>
+<span class="w">        </span><span class="sd">"""Overlay on `values`, which begin at time step `start`, the storage consumption archived when the</span>
+<span class="sd">        `electrical_storage` instance was replaced (asset removal or installation, or a member rejoining)."""</span>
 
-        <span class="n">prefix</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_archived_storage_electricity'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_overlay_archived_storage</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_archived_storage_electricity'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">values</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_with_archived_storage_energy_balance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Overlay on `values`, which begin at time step `start`, the storage energy balance archived when the</span>
+<span class="sd">        `electrical_storage` instance was replaced."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_overlay_archived_storage</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_archived_storage_energy_balance'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">values</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_overlay_archived_storage</span><span class="p">(</span><span class="n">prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)),</span> <span class="mi">0</span><span class="p">)</span>
             <span class="n">values</span><span class="p">[:</span><span class="n">size</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefix</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">start</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">values</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_electrical_storage_history_prefix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""The building's `electrical_storage` electricity consumption and energy balance before `time_step`.</span>
+
+<span class="sd">        Both include what earlier instances archived, so they can be archived again when the current</span>
+<span class="sd">        instance is replaced. Steps the series do not cover are zero.</span>
+<span class="sd">        """</span>
+
+        <span class="n">time_step</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time_step</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">prefixes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">values</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage_electricity_consumption</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_with_archived_storage_energy_balance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">energy_balance</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">time_step</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">time_step</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+            <span class="n">prefix</span><span class="p">[:</span><span class="n">size</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:</span><span class="n">size</span><span class="p">]</span>
+            <span class="n">prefixes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">prefixes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">prefixes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_archive_electrical_storage_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Keep the `electrical_storage` history before `time_step` in the building's series.</span>
+
+<span class="sd">        Called before the instance is replaced at `time_step`, so the building's battery series, the</span>
+<span class="sd">        baselines without storage and the district sums keep the energy the replaced battery moved</span>
+<span class="sd">        while it was installed.</span>
+<span class="sd">        """</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_archived_storage_electricity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_archived_storage_energy_balance</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_electrical_storage_history_prefix</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="p">)</span>
     
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">pv_curtailment</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -899,7 +941,9 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">energy_to_electrical_storage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Energy supply from `electrical_device` to building time series, in [kWh]."""</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">energy_balance</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_archived_storage_energy_balance</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">energy_balance</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">0</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">energy_from_cooling_device</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -947,7 +991,9 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">energy_from_electrical_storage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Energy supply from `electrical_storage` to building time series, in [kWh]."""</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_energy_from_storage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_archived_storage_energy_balance</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">energy_balance</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">0</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="nb">max</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_energy_from_storage</span><span class="p">(</span><span class="n">storage</span><span class="p">:</span> <span class="n">StorageDevice</span><span class="p">,</span> <span class="n">time_steps</span><span class="p">:</span> <span class="nb">slice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -1856,6 +1902,22 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ops_service</span><span class="o">.</span><span class="n">get_observations_data</span><span class="p">(</span><span class="n">include_all</span><span class="o">=</span><span class="n">include_all</span><span class="p">)</span>
 
+    <span class="n">_OBSERVATION_SOURCE_CACHES</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">'_energy_simulation_observation_sources'</span><span class="p">,</span> <span class="s1">'_weather_observation_sources'</span><span class="p">,</span> <span class="s1">'_pricing_observation_sources'</span><span class="p">,</span>
+        <span class="s1">'_carbon_observation_sources'</span><span class="p">,</span> <span class="s1">'_additional_observation_sources'</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c1"># The observation-source caches hold views of the time series arrays. Copied (deepcopy or pickle), they</span>
+        <span class="c1"># become arrays of their own, frozen at copy time, while the copy keeps writing its series (the LSTM</span>
+        <span class="c1"># indoor temperature, for example). The copy rebuilds them from its own series before it next reads them.</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_OBSERVATION_SOURCE_CACHES</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_OBSERVATION_SOURCE_CACHES</span><span class="p">:</span>
+                <span class="n">state</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">state</span><span class="p">[</span><span class="s1">'_observation_source_cache_stale'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">state</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_refresh_observation_source_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Cache episode-sliced observation sources to avoid per-step dynamic lookups."""</span>
 
@@ -1884,6 +1946,7 @@
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">series</span> <span class="ow">in</span> <span class="n">_collect</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_metadata</span>
         <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_observation_source_cache_stale</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_additional_observation_data_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Time series data objects, beyond the building's own, whose declared observations subclasses expose."""</span>
@@ -3456,6 +3519,7 @@
         <span class="c1"># object reset</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_archived_storage_electricity</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_archived_storage_energy_balance</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># Row of the agent-facing terminal observation; set by the runtime after the last transition.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_terminal_observation_time_step</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># End uses whose device shortfall has been reported this episode.</span>

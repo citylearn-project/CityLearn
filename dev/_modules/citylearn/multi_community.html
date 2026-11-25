@@ -151,6 +151,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
@@ -610,6 +611,12 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"communities[</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">].weight must be a non-negative finite number, not a boolean."</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">):</span>
+            <span class="c1"># float() would also accept numeric strings such as '2'.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"communities[</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">].weight must be a non-negative finite number, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
@@ -670,7 +677,15 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"MultiCommunityEnv requires all communities to share the same effective episode length."</span><span class="p">)</span>
 
         <span class="c1"># Portfolio KPIs add up district totals, so every community must use the same definitions.</span>
-        <span class="k">for</span> <span class="n">setting</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"physics_version"</span><span class="p">,</span> <span class="s2">"random_stream_version"</span><span class="p">,</span> <span class="s2">"baseline_version"</span><span class="p">):</span>
+        <span class="c1"># The BAU EV target and the EV SoC carry-over change each community's BAU reference and EV</span>
+        <span class="c1"># state, so portfolio BAU totals and ratios would otherwise mix two definitions.</span>
+        <span class="k">for</span> <span class="n">setting</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="s2">"physics_version"</span><span class="p">,</span>
+            <span class="s2">"random_stream_version"</span><span class="p">,</span>
+            <span class="s2">"baseline_version"</span><span class="p">,</span>
+            <span class="s2">"business_as_usual_ev_charge_target"</span><span class="p">,</span>
+            <span class="s2">"ev_soc_carryover"</span><span class="p">,</span>
+        <span class="p">):</span>
             <span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="n">community_id</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">setting</span><span class="p">)</span> <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>

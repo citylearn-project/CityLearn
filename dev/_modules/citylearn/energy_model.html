@@ -197,6 +197,24 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">.charge() received non-finite energy </span><span class="si">{</span><span class="n">energy</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_remaining_step_budget</span><span class="p">(</span><span class="n">budget</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">used</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">other_budget</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">other_used</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Terminal energy a storage device can still move in one direction in the current control step.</span>
+
+<span class="sd">    `budget` and `other_budget` are the energies the device moves at its power limit over the whole step</span>
+<span class="sd">    in this and in the opposite direction (`None`: no limit), and `used` and `other_used` the terminal</span>
+<span class="sd">    energy already moved in each direction this step. A transfer in one direction takes the share of the</span>
+<span class="sd">    step its energy is of that direction's budget, so the shares of both directions add up to at most</span>
+<span class="sd">    one step: ``|E_in|/P_in + |E_out|/P_out &lt;= step duration``. Without transfers in the other direction, this</span>
+<span class="sd">    is `budget - used`.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">other_used</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">other_budget</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">share</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">other_used</span><span class="o">/</span><span class="n">other_budget</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">if</span> <span class="n">other_budget</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="mf">1.0</span>
+        <span class="n">budget</span> <span class="o">=</span> <span class="n">budget</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">share</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">budget</span> <span class="o">-</span> <span class="n">used</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_available_over_step</span><span class="p">(</span><span class="n">available_nominal_power</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">step_hours</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""`available_nominal_power` in [kW], or the energy in [kWh] it delivers over `step_hours` when given."""</span>
 
@@ -1458,9 +1476,10 @@
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        `max_input_power` and `max_output_power` give one terminal-energy budget per control step and</span>
-<span class="sd">        direction, power times step duration. The first call in a step can use all of it; a later call in</span>
-<span class="sd">        the same step gets only what the earlier calls in that direction left.</span>
+<span class="sd">        `max_input_power` and `max_output_power` limit the terminal energy of a control step to power times</span>
+<span class="sd">        step duration. The first call in a step can use all of it; a later call in the same step gets only</span>
+<span class="sd">        what the earlier calls left: a transfer in one direction uses up its share of the step, so charging</span>
+<span class="sd">        and discharging in the same step share it (``|E_in|/max_input_power + |E_out|/max_output_power &lt;= step duration``).</span>
 
 <span class="sd">        If charging, soc = min(`soc_init` + energy*`efficiency`, `capacity`), with energy limited by the</span>
 <span class="sd">        remaining charge budget.</span>
@@ -1468,21 +1487,29 @@
 <span class="sd">        remaining discharge budget.</span>
 <span class="sd">        """</span>
         <span class="n">_require_finite_energy</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
-        <span class="c1"># The power limits are one terminal-energy budget per control step and direction: a later transfer</span>
-        <span class="c1"># in the same step gets only what the earlier transfers in that direction left of it.</span>
+        <span class="c1"># The power limits give one control step of transfer time: a later transfer in the same step gets</span>
+        <span class="c1"># only what the earlier transfers, in either direction, left of it.</span>
         <span class="n">same_step_transfer</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_balance_time_step'</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span>
+        <span class="n">max_input_energy</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_input_power</span> <span class="ow">is</span> <span class="kc">None</span> \
+            <span class="k">else</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_input_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
+        <span class="n">max_output_energy</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_output_power</span> <span class="ow">is</span> <span class="kc">None</span> \
+            <span class="k">else</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_output_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">energy</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_input_power</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">max_input_energy</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_input_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">max_input_energy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">same_step_transfer</span><span class="p">:</span>
-                    <span class="n">max_input_energy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_input_energy</span> <span class="o">-</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_step_transfer_input_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+                    <span class="n">max_input_energy</span> <span class="o">=</span> <span class="n">_remaining_step_budget</span><span class="p">(</span>
+                        <span class="n">max_input_energy</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_step_transfer_input_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                        <span class="n">max_output_energy</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_step_transfer_output_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                    <span class="p">)</span>
                 <span class="n">energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">([</span><span class="n">energy</span><span class="p">,</span> <span class="n">to_dataset_resolution_energy</span><span class="p">(</span><span class="n">max_input_energy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span><span class="p">)])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_output_power</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">max_output_energy</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_output_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">max_output_energy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">same_step_transfer</span><span class="p">:</span>
-                    <span class="n">max_output_energy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_output_energy</span> <span class="o">-</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_step_transfer_output_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+                    <span class="n">max_output_energy</span> <span class="o">=</span> <span class="n">_remaining_step_budget</span><span class="p">(</span>
+                        <span class="n">max_output_energy</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_step_transfer_output_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                        <span class="n">max_input_energy</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_step_transfer_input_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                    <span class="p">)</span>
                 <span class="n">energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">([</span><span class="o">-</span><span class="n">to_dataset_resolution_energy</span><span class="p">(</span><span class="n">max_output_energy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span><span class="p">),</span> <span class="n">energy</span><span class="p">])</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">same_step_transfer</span><span class="p">:</span>
@@ -1879,10 +1906,11 @@
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        The power curves give one terminal-energy budget per control step and direction, read at the stored</span>
-<span class="sd">        energy before the step's first transfer. The first call in a step can use all of it; a later call in</span>
-<span class="sd">        the same step gets only what the earlier calls in that direction left. Capacity and depth-of-discharge</span>
-<span class="sd">        limits use the current stored energy.</span>
+<span class="sd">        The power curves limit the terminal energy of a control step, read at the stored energy before the</span>
+<span class="sd">        step's first transfer. The first call in a step can use all of it; a later call in the same step gets</span>
+<span class="sd">        only what the earlier calls left: a transfer in one direction uses up its share of the step, so</span>
+<span class="sd">        charging and discharging in the same step share it (``|E_in|/P_in + |E_out|/P_out &lt;= step duration``).</span>
+<span class="sd">        Capacity and depth-of-discharge limits use the current stored energy.</span>
 <span class="sd">        """</span>
         <span class="n">_require_finite_energy</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
@@ -1946,9 +1974,9 @@
 <span class="sd">        efficiency is evaluated twice, at the requested and then at the limited power, as the battery</span>
 <span class="sd">        model always has; only the last value is returned.</span>
 
-<span class="sd">        The power curves give one energy budget per control step and direction, read at the energy before</span>
-<span class="sd">        the step's first transfer. A later transfer in the same step gets only what the earlier transfers</span>
-<span class="sd">        in that direction left of it.</span>
+<span class="sd">        The power curves limit the energy of a control step, read at the energy before the step's first</span>
+<span class="sd">        transfer. A later transfer in the same step gets only what the earlier transfers left of it, in</span>
+<span class="sd">        either direction (see :py:func:`_remaining_step_budget`).</span>
 <span class="sd">        """</span>
 
         <span class="c1"># Public control paths pass dataset-resolution kWh; physical limits are per control step.</span>
@@ -1963,7 +1991,13 @@
             <span class="n">max_input_power</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_max_input_power</span><span class="p">(</span><span class="n">energy_init</span><span class="o">=</span><span class="n">budget_energy</span><span class="p">)),</span> <span class="mf">0.0</span><span class="p">)</span>
             <span class="n">max_input_energy</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="n">max_input_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">same_step_transfer</span><span class="p">:</span>
-                <span class="n">max_input_energy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_input_energy</span> <span class="o">-</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_step_transfer_input_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">output_used</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_step_transfer_output_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">max_output_energy</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span>
+                    <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_step_share_power</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">budget_energy</span><span class="p">)),</span> <span class="mf">0.0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span>
+                <span class="p">)</span> <span class="k">if</span> <span class="n">output_used</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="n">max_input_energy</span> <span class="o">=</span> <span class="n">_remaining_step_budget</span><span class="p">(</span>
+                    <span class="n">max_input_energy</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_step_transfer_input_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">max_output_energy</span><span class="p">,</span> <span class="n">output_used</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="n">limited_energy</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">requested_energy</span><span class="p">,</span> <span class="n">max_input_energy</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
@@ -1977,7 +2011,13 @@
         <span class="n">max_output_power</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_max_output_power</span><span class="p">(</span><span class="n">energy_init</span><span class="o">=</span><span class="n">budget_energy</span><span class="p">)),</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="n">max_output_energy</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="n">max_output_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">same_step_transfer</span><span class="p">:</span>
-            <span class="n">max_output_energy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_output_energy</span> <span class="o">-</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_step_transfer_output_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">input_used</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_step_transfer_input_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">max_input_energy</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span>
+                <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_step_share_power</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">budget_energy</span><span class="p">)),</span> <span class="mf">0.0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span>
+            <span class="p">)</span> <span class="k">if</span> <span class="n">input_used</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">max_output_energy</span> <span class="o">=</span> <span class="n">_remaining_step_budget</span><span class="p">(</span>
+                <span class="n">max_output_energy</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_step_transfer_output_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">max_input_energy</span><span class="p">,</span> <span class="n">input_used</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="n">requested_output</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">requested_energy</span><span class="p">)</span>
         <span class="n">limited_output</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">requested_output</span><span class="p">,</span> <span class="n">max_output_energy</span><span class="p">)</span>
 
@@ -1989,6 +2029,12 @@
             <span class="n">limited_output</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">requested_output</span><span class="p">,</span> <span class="n">max_output_energy</span><span class="p">,</span> <span class="n">dod_limited_output</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="o">-</span><span class="n">limited_output</span> <span class="o">/</span> <span class="n">ratio</span><span class="p">,</span> <span class="n">efficiency</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_step_share_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charging</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">energy_init</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Power limit, in [kW], that sets the share of a control step a transfer in one direction takes."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_max_input_power</span><span class="p">(</span><span class="n">energy_init</span><span class="o">=</span><span class="n">energy_init</span><span class="p">)</span> <span class="k">if</span> <span class="n">charging</span> \
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_max_output_power</span><span class="p">(</span><span class="n">energy_init</span><span class="o">=</span><span class="n">energy_init</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_validated_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">efficiency</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""`efficiency` as the `efficiency` setter would store it, without storing it."""</span>

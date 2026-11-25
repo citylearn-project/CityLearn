@@ -230,6 +230,12 @@
         <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_discharge_kw</span><span class="p">,</span> <span class="n">Battery</span><span class="o">.</span><span class="n">get_max_output_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_init</span><span class="p">))</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_step_share_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charging</span><span class="p">,</span> <span class="n">energy_init</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">charging</span><span class="p">:</span>
+            <span class="c1"># The charge power limits only: the SOC headroom limits the energy, not the transfer rate.</span>
+            <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_charge_kw</span><span class="p">,</span> <span class="n">Battery</span><span class="o">.</span><span class="n">get_max_input_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_init</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_step_share_power</span><span class="p">(</span><span class="n">charging</span><span class="p">,</span> <span class="n">energy_init</span><span class="p">)</span>
+
 <div class="viewcode-block" id="InventoryBattery.get_current_efficiency">
 <a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.InventoryBattery.get_current_efficiency">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_current_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">power</span><span class="p">):</span>
