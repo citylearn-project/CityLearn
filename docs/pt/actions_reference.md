@@ -109,14 +109,15 @@ actions = {
 }
 ```
 
-Payload por mapa:
+Payload por mapa (as chaves são `<tipo>:<id>`, com os IDs listados em `env.entity_specs["actions"][<tipo>]["ids"]`;
+os IDs de carregadores e equipamentos diferíveis são `<edifício>/<equipamento>`, aqui de `citylearn_challenge_2022_phase_all_plus_evs`):
 
 ```python
 actions = {
     "map": {
         "building:Building_1": {"electrical_storage": 0.1},
-        "charger:Building_1:AC001": {"electric_vehicle_storage": 0.7},
-        "deferrable_appliance:Building_1:washer_1": {"start": 1.0}
+        "charger:Building_1/charger_1_1": {"electric_vehicle_storage": 0.7},
+        "deferrable_appliance:Building_1/deferrable_appliance_1": {"start": 1.0}
     }
 }
 ```

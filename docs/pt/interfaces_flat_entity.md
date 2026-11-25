@@ -264,13 +264,17 @@ Também são suportadas substituições indexadas por ID:
 actions = {
     "map": {
         "building:Building_1": {"electrical_storage": 0.2},
-        "charger:Building_1:AC001": {"electric_vehicle_storage": 0.5},
-        "deferrable_appliance:Building_1:washer_1": {"start": 1.0}
+        "charger:Building_1/charger_1_1": {"electric_vehicle_storage": 0.5},
+        "deferrable_appliance:Building_1/deferrable_appliance_1": {"start": 1.0}
     }
 }
 ```
 
-Use IDs com prefixo para integrações robustas com GraphRL e Transformers.
+Cada chave tem a forma `<tipo>:<id>`. `<tipo>` é `building`, `charger` ou `deferrable_appliance`,
+e `<id>` é um dos IDs listados em `env.entity_specs["actions"][<tipo>]["ids"]`: o nome do edifício
+para edifícios, e `<edifício>/<equipamento>` para carregadores e equipamentos diferíveis (repare na
+`/`). O exemplo usa os IDs do `Building_1` em `citylearn_challenge_2022_phase_all_plus_evs`. Use estes
+IDs com prefixo para integrações robustas com GraphRL e Transformers.
 
 Depois de um passo em modo entity, `info["entity_action_execution"]` contém
 entradas por ID estável com o comando pedido, o valor depois das perturbações

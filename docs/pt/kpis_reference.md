@@ -285,6 +285,20 @@ Dois conjuntos de linhas usam séries diferentes:
 
 Note a ordem das palavras nos nomes com sinal: `load_factor_penalty_daily_average_to_baseline_signed_net_ratio`, mas `load_factor_penalty_daily_average_signed_net_to_business_as_usual_ratio`.
 
+**Portefólio.** Os totais de energia e as médias diárias são somados sobre as comunidades. Os rácios de importação, exportação e troca líquida são rácios dos totais somados (com sinal para a troca líquida). Os rácios de forma e os rácios `building_mean` são médias ponderadas pelo `weight` de cada comunidade. As linhas de forma em kW não passam para o portefólio. As energias (`_kwh`) e contagens de passos (`_count`) de excesso no alimentador são somadas sobre as comunidades, enquanto os picos (`_kw`) não passam para o portefólio ([excessos nos limites do alimentador do distrito](kpis_reference.md#excessos-nos-limites-do-alimentador-do-distrito)). Quando `evaluation_window` está ativo, `energy_grid_window_average_power_*_kw` soma com sinal as comunidades que partilham essa janela e fica indefinido quando algum valor de comunidade é indefinido ([janela de avaliação recorrente](kpis_reference.md#janela-de-avaliação-recorrente)).
+
+**Que KPI usar.**
+- Use o rácio do distrito `ratio_to_baseline_import_total_ratio`. `*_building_mean_ratio` é a média dos rácios dos edifícios, mantida apenas para comparar com resultados até à versão 3.6.0.
+- Use a penalização do fator de carga baseada na importação. As linhas `_signed_net` mantêm a definição da versão 3.6.0.
+- Use `ramping_average`, que não cresce com a duração do episódio. `ramping_total` mantém o valor da versão 3.6.0.
+- Leia em conjunto a importação, a exportação e a troca líquida: a troca líquida, sozinha, pode esconder grandes importações e exportações.
+
+**Limitações conhecidas.**
+- As linhas de forma BAU ignoram `control_condition`; os rácios ao contrafactual respeitam-na.
+- `ramping_average_to_baseline_ratio` é um rácio de rampas totais, apesar do nome.
+- Não é calculado nenhum pico mensal.
+- As janelas de forma contam-se a partir do início do episódio, e não da meia-noite ou do início do mês.
+
 ### Excessos nos limites do alimentador do distrito
 
 Quando `district_electrical_service.enabled` é verdadeiro (ver a [referência do esquema](schema_reference.md#servico-eletrico-do-distrito)), `evaluate_v2()` mede e reporta os excessos face aos limites do alimentador na potência líquida do distrito sem impor cortes nem alterar o despacho dos equipamentos:
@@ -301,9 +315,8 @@ exceedance_peak_control_kw          = max_t excesso_t
 exceedance_step_control_count       = número de passos executados com Δh · excesso_t > 1e-9 kWh
 ```
 
-As séries por passo ficam expostas em `env.feeder_import_exceedance_kw` e `env.feeder_export_exceedance_kw` (vazias logo após `reset()` até `step()` correr, e `0.0` nos passos sem limite nessa direção). Cada métrica publica `_control`, `_business_as_usual` e `_delta_to_business_as_usual` (`control − business_as_usual`); com `evaluate_v2(include_business_as_usual=False)`, apenas `_control` é emitido. Se `district_electrical_service` estiver ativo com apenas uma direção configurada, a direção não configurada fica indefinida (`NaN`). Quando `district_electrical_service` está desativado, estas linhas não são emitidas.
+As séries por passo ficam expostas em `env.feeder_import_exceedance_kw` e `env.feeder_export_exceedance_kw` (vazias logo após `reset()` até `step()` correr, e `0.0` nos passos sem limite nessa direção). Cada métrica publica `_control`, `_business_as_usual` e `_delta_to_business_as_usual` (`control − business_as_usual`); com `evaluate_v2(include_business_as_usual=False)`, apenas `_control` é emitido. Se `district_electrical_service` estiver ativo com apenas uma direção configurada, a direção não configurada fica indefinida (`NaN`); ativá-lo sem nenhum limite gera `ValueError`. Quando `district_electrical_service` está desativado, estas linhas não são emitidas.
 
-**Portefólio.** Os totais de energia e as médias diárias são somados sobre as comunidades. Os rácios de importação, exportação e troca líquida são rácios dos totais somados (com sinal para a troca líquida). Os rácios de forma e os rácios `building_mean` são médias ponderadas pelo `weight` de cada comunidade. As linhas de forma em kW não passam para o portefólio. As energias (`_kwh`) e contagens de passos (`_count`) de excesso no alimentador são somadas sobre as comunidades, enquanto os picos (`_kw`) não passam para o portefólio.
 ### Janela de avaliação recorrente
 
 Quando `evaluation_window.enabled` é verdadeiro (ver a [referência do esquema](schema_reference.md#janela-de-avaliacao)), `evaluate_v2()` e as exportações de KPIs incluem linhas de potência na janela local recorrente aos níveis de edifício, distrito e portefólio:
@@ -359,20 +372,6 @@ for path in sorted(export_dir.glob("exported_data_*_ep0.csv")):
         ac = np.maximum(df["Charger Consumption-kWh"], 0.0) - np.maximum(df["Charger Production-kWh"], 0.0)
         ev_net_kwh += float((weights * ac).sum())
 ```
-
-**Portefólio.** Os totais de energia e as médias diárias são somados sobre as comunidades. Os rácios de importação, exportação e troca líquida são rácios dos totais somados (com sinal para a troca líquida). Os rácios de forma e os rácios `building_mean` são médias ponderadas pelo `weight` de cada comunidade. As linhas de forma em kW não passam para o portefólio. Quando `evaluation_window` está ativo, `energy_grid_window_average_power_*_kw` soma com sinal as comunidades que partilham essa janela e fica indefinido quando algum valor de comunidade é indefinido.
-
-**Que KPI usar.**
-- Use o rácio do distrito `ratio_to_baseline_import_total_ratio`. `*_building_mean_ratio` é a média dos rácios dos edifícios, mantida apenas para comparar com resultados até à versão 3.6.0.
-- Use a penalização do fator de carga baseada na importação. As linhas `_signed_net` mantêm a definição da versão 3.6.0.
-- Use `ramping_average`, que não cresce com a duração do episódio. `ramping_total` mantém o valor da versão 3.6.0.
-- Leia em conjunto a importação, a exportação e a troca líquida: a troca líquida, sozinha, pode esconder grandes importações e exportações.
-
-**Limitações conhecidas.**
-- As linhas de forma BAU ignoram `control_condition`; os rácios ao contrafactual respeitam-na.
-- `ramping_average_to_baseline_ratio` é um rácio de rampas totais, apesar do nome.
-- Não é calculado nenhum pico mensal.
-- As janelas de forma contam-se a partir do início do episódio, e não da meia-noite ou do início do mês.
 
 ## Emissões
 

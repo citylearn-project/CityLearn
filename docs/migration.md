@@ -473,6 +473,30 @@ before comparing them. To reproduce a result using the previous BAU, use the
 CityLearn release or commit recorded in its original manifest. See the
 [BAU reference](baselines.md#known-limits).
 
+### The rule-based baselines use current-step load and solar
+
+`RBCBasicPolicy`, `RBCSmartPolicy` and `RBCCommunityPolicy` now plan the battery,
+EV and appliance budget with the load and PV of the step being planned, as the
+native BAU does, instead of the settled observations of the previous step.
+`RBCSmartPolicy` and `RBCCommunityPolicy` also stop charging the battery from the
+grid at a cheap price when PV is forecast and no PV-surplus forecast is observed
+(no `entity_forecasts_derived` bundle).
+Their definitions become `basic-v4`, `smart-local-v4` and `community-v4`.
+
+- Their actions and KPIs change on every dataset with a battery. The default
+  `RBCBasicPolicy` battery now follows the BAU rule exactly, so on datasets
+  without EVs or flexible appliances it gives the BAU results.
+- The grid-charge change acts only on datasets with a solar forecast and without
+  `entity_forecasts_derived`, for example `citylearn_challenge_2022_phase_all`
+  and `citylearn_three_phase_electrical_service_demo`; on `pt_rec_*` and
+  `citylearn_challenge_2022_phase_all_plus_evs` only the current-step change
+  applies.
+- Run them again before comparing a controller with them. To reproduce a result
+  of the earlier definitions, use the CityLearn release or commit recorded in its
+  manifest, as for the BAU. See
+  [the rule-based baselines](baselines.md#rule-based-baselines) and
+  [#400](https://github.com/citylearn-project/CityLearn/issues/400).
+
 ### Numeric and configuration hygiene
 
 These changes require no dataset, schema or KPI migration. Valid runs give the same results; a few silent mistakes now raise.
@@ -480,6 +504,7 @@ These changes require no dataset, schema or KPI migration. Valid runs give the s
 - **Non-finite actions raise.** `env.step()` raises `ValueError` for NaN or infinite actions. A training loop that used to continue with a diverged policy now stops at the first bad action; check the policy output or replace non-finite values before stepping.
 - **Unknown constructor arguments raise.** `CityLearnEnv(..., **kwargs)` raises `TypeError` for an unknown keyword argument, with the closest valid name. Remove or correct arguments that were silently ignored before.
 - **Topology events are validated at construction.** An event that names a member missing from the schema, or an asset override with an unknown key or an invalid value, raises when the environment is built. Members declared in the schema but not loaded (`buildings=[...]`) are still accepted.
+- **Run settings beyond the data or mixed across communities raise.** A `simulation_end_time_step` or `simulation_start_time_step` past the end of the data raises `ValueError` at construction, with the last valid end step; such runs used to fail with an `IndexError` at their last step, so lower the value to the one in the message. `MultiCommunityEnv` raises when communities differ in `business_as_usual_ev_charge_target` or `ev_soc_carryover`; set the same value in every `env_kwargs`. A community `weight` given as a string, such as `'2'`, raises; pass a number. `district_electrical_service` with `enabled: true` and no `import_kw` or `export_kw` raises; add a limit or set `enabled` to false. `compare_manifests()` now pairs a run with the feeder monitor and the same run without it, with `'district_electrical_service_one_sided'` in `declared_differences`, where it used to report them as `incompatible`; `physical_configuration_sha256` no longer includes the feeder setting, so it changes for runs that enable it. Different feeder limits on both sides are still `incompatible`.
 - **Logging.** CityLearn no longer configures the root logger. Warnings still print; to see INFO messages, configure logging in your script, for example `logging.basicConfig(level=logging.INFO)`. `learn(logging_level=...)` and `DataSet(logging_level=...)` set the level of the `citylearn` logger only when passed.
 - **Export location.** Exports go to `./render_logs` in the working directory by default, and relative `render_directory` values resolve against the working directory. Pass an absolute `render_directory` to keep the previous location.
 - **Physics invariants** raise `PhysicsInvariantError`, which is an `AssertionError`, so existing handlers keep working.

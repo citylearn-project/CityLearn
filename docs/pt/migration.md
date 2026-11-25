@@ -496,6 +496,31 @@ carregamento dos VE antes de as comparar. Para reproduzir um resultado com o BAU
 anterior, use a versão ou o commit do CityLearn registado no seu manifesto
 original. Consulte a [referência do BAU](baselines.md#limitações-conhecidas).
 
+### As referências baseadas em regras usam a carga e a produção solar do passo atual
+
+`RBCBasicPolicy`, `RBCSmartPolicy` e `RBCCommunityPolicy` planeiam agora o
+orçamento da bateria, dos VE e dos aparelhos com a carga e a produção FV do passo
+que estão a planear, como o BAU nativo, em vez das observações já liquidadas do
+passo anterior. `RBCSmartPolicy` e `RBCCommunityPolicy` deixam também de carregar
+a bateria a partir da rede a preço baixo quando há produção FV prevista e nenhuma
+previsão de excedente FV é observada (sem o grupo `entity_forecasts_derived`).
+As suas definições passam a `basic-v4`, `smart-local-v4` e `community-v4`.
+
+- As suas ações e KPIs mudam em todos os datasets com bateria. A bateria do
+  `RBCBasicPolicy` por omissão segue agora exatamente a regra do BAU; nos
+  datasets sem VE nem aparelhos flexíveis, dá os resultados do BAU.
+- A alteração do carregamento a partir da rede só atua em datasets com previsão
+  solar e sem `entity_forecasts_derived`, por exemplo
+  `citylearn_challenge_2022_phase_all` e
+  `citylearn_three_phase_electrical_service_demo`; em `pt_rec_*` e
+  `citylearn_challenge_2022_phase_all_plus_evs` só se aplica a alteração do passo
+  atual.
+- Volte a executá-las antes de comparar um controlador com elas. Para reproduzir
+  um resultado das definições anteriores, use a versão ou o commit do CityLearn
+  registado no seu manifesto, tal como para o BAU. Consulte
+  [as referências baseadas em regras](baselines.md#referências-baseadas-em-regras)
+  e a [#400](https://github.com/citylearn-project/CityLearn/issues/400).
+
 ### Higiene numérica e de configuração
 
 Estas alterações não exigem migração de datasets, schemas ou KPIs. As execuções válidas dão os mesmos resultados; alguns erros silenciosos passam a gerar exceções.
@@ -503,6 +528,7 @@ Estas alterações não exigem migração de datasets, schemas ou KPIs. As execu
 - **Ações não finitas geram exceção.** `env.step()` gera `ValueError` para ações NaN ou infinitas. Um ciclo de treino que antes continuava com uma política divergente para agora na primeira ação inválida; verifique a saída da política ou substitua os valores não finitos antes de avançar o passo.
 - **Argumentos desconhecidos do construtor geram exceção.** `CityLearnEnv(..., **kwargs)` gera `TypeError` para um argumento nomeado desconhecido, com o nome válido mais próximo. Remova ou corrija os argumentos que antes eram ignorados em silêncio.
 - **Os eventos de topologia são validados na construção.** Um evento que indica um membro ausente do schema, ou uma substituição de ativo com uma chave desconhecida ou um valor inválido, gera uma exceção quando o ambiente é construído. Os membros declarados no schema mas não carregados (`buildings=[...]`) continuam a ser aceites.
+- **Definições para lá dos dados ou diferentes entre comunidades geram exceção.** Um `simulation_end_time_step` ou `simulation_start_time_step` para lá do fim dos dados gera `ValueError` na construção, com o último passo final válido; estas execuções falhavam com um `IndexError` no último passo, pelo que deve baixar o valor para o indicado na mensagem. O `MultiCommunityEnv` gera uma exceção quando as comunidades diferem em `business_as_usual_ev_charge_target` ou `ev_soc_carryover`; defina o mesmo valor em todos os `env_kwargs`. Um `weight` de comunidade dado como texto, como `'2'`, gera uma exceção; passe um número. `district_electrical_service` com `enabled: true` e sem `import_kw` nem `export_kw` gera uma exceção; acrescente um limite ou defina `enabled` como false. O `compare_manifests()` passa a emparelhar uma execução com a monitorização do alimentador e a mesma execução sem ela, com `'district_electrical_service_one_sided'` em `declared_differences`, quando antes as dava como `incompatible`; `physical_configuration_sha256` deixa de incluir a definição do alimentador, pelo que muda nas execuções que a ativam. Limites diferentes dos dois lados continuam `incompatible`.
 - **Registo (logging).** O CityLearn já não configura o logger raiz. Os avisos continuam a ser impressos; para ver as mensagens INFO, configure o registo no seu script, por exemplo `logging.basicConfig(level=logging.INFO)`. `learn(logging_level=...)` e `DataSet(logging_level=...)` definem o nível do logger `citylearn` apenas quando são passados.
 - **Localização dos exports.** Por omissão, os exports vão para `./render_logs` no diretório de trabalho, e os valores relativos de `render_directory` são resolvidos face ao diretório de trabalho. Passe um `render_directory` absoluto para manter a localização anterior.
 - **Invariantes físicos** geram `PhysicsInvariantError`, que é um `AssertionError`, pelo que os handlers existentes continuam a funcionar.

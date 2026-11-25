@@ -337,3 +337,116 @@ def test_dataset_catalogue_lists_every_public_dataset():
     assert "power outages" in rows["citylearn_challenge_2023_phase_1"]["features"]
     page = module.dataset_catalogue(ROOT)
     assert all(f"| `{name}` |" in page for name in rows)
+
+
+ENTITY_MAP_PAGES = [
+    "docs/interfaces_flat_entity.md", "docs/actions_reference.md",
+    "docs/pt/interfaces_flat_entity.md", "docs/pt/actions_reference.md",
+]
+
+
+@pytest.fixture(scope="module")
+def plus_evs_entity_env():
+    from citylearn.citylearn import CityLearnEnv
+    env = CityLearnEnv(
+        str(ROOT / "data/datasets/citylearn_challenge_2022_phase_all_plus_evs/schema.json"),
+        interface="entity", simulation_start_time_step=0, simulation_end_time_step=3, episode_time_steps=4,
+    )
+    try:
+        yield env
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("page", ENTITY_MAP_PAGES)
+def test_documented_entity_action_map_ids_run(page, plus_evs_entity_env):
+    """The entity "map" examples use real ids (``<building>/<device>``) that the parser accepts."""
+    blocks = [block for block in python_blocks(ROOT / page) if '"map"' in block]
+    assert blocks, page
+    env = plus_evs_entity_env
+    for block in blocks:
+        scope = {}
+        exec(compile(block, page, "exec"), scope)
+        action_map = scope["actions"]["map"]
+        for key in action_map:
+            kind, entity_id = key.split(":", 1)
+            assert entity_id in env.entity_specs["actions"][kind]["ids"], (page, key)
+        env.reset()
+        env.step(scope["actions"])
+
+
+def test_markdown_tables_are_not_split_by_blank_lines():
+    """A blank line inside a table turns the rows after it into plain text."""
+    separator = re.compile(r"^\|\s*:?-{3,}")
+    problems = []
+    for path in sorted((ROOT / "docs").rglob("*.md")):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        fenced = False
+        for index, line in enumerate(lines):
+            if line.startswith("```"):
+                fenced = not fenced
+            if fenced or index < 2:
+                continue
+            if line.startswith("|") and not lines[index - 1].strip() and lines[index - 2].startswith("|"):
+                following = lines[index + 1] if index + 1 < len(lines) else ""
+                if not separator.match(following):
+                    problems.append(f"{path.relative_to(ROOT)}:{index + 1}")
+    assert problems == []
+
+
+def _synchronization_settings(path, heading):
+    section = path.read_text(encoding="utf-8").split(heading, 1)[1].split("\n## ", 1)[0]
+    return [re.findall(r"`([a-z_]+)`", line) for line in section.splitlines() if line.startswith("| ")][1:]
+
+
+def test_multi_community_synchronization_table_matches_in_portuguese():
+    english = _synchronization_settings(ROOT / "docs/multi_community_reference.md", "## Synchronization Contract")
+    portuguese = _synchronization_settings(ROOT / "docs/pt/multi_community_reference.md", "## Contrato de sincronização")
+    assert english == portuguese
+    assert ["evaluation_window"] in english
+
+
+@pytest.mark.parametrize("page, portfolio", [
+    ("docs/kpis_reference.md", "**Portfolio.**"),
+    ("docs/pt/kpis_reference.md", "**Portefólio.**"),
+])
+def test_kpi_reference_sections_are_whole(page, portfolio):
+    """Each KPI family has one portfolio paragraph, and every heading starts a new block."""
+    lines = (ROOT / page).read_text(encoding="utf-8").splitlines()
+    fenced = False
+    sections = {}
+    current = None
+    for index, line in enumerate(lines):
+        if line.startswith("```"):
+            fenced = not fenced
+        if fenced:
+            continue
+        if line.startswith("#"):
+            assert index == 0 or not lines[index - 1].strip(), f"{page}:{index + 1} heading without a blank line"
+        if line.startswith("## "):
+            current = line
+        if line.startswith(portfolio):
+            sections[current] = sections.get(current, 0) + 1
+    assert sections
+    assert {name: count for name, count in sections.items() if count > 1} == {}
+
+
+@pytest.mark.parametrize("directory", ["docs", "docs/pt"])
+def test_comparison_example_pairs_runs_with_an_experiment_identity(directory, monkeypatch, tmp_path, capsys):
+    """compare_exports needs set_experiment_identity(); the documented example must pair its two runs."""
+    monkeypatch.chdir(tmp_path)
+    block = next(b for b in python_blocks(ROOT / directory / "running_simulations.md") if "compare_exports" in b)
+    assert "set_experiment_identity(" in block
+    scope = {}
+    exec(compile(block, "running_simulations.md", "exec"), scope)
+    report = scope["report"]
+    assert (report["status"], report["missing_evidence"], report["mismatches"]) == ("paired", [], [])
+    assert capsys.readouterr().out.strip() == "paired [] []"
+
+
+@pytest.mark.parametrize("page", [
+    "docs/running_simulations.md", "docs/pt/running_simulations.md",
+    "docs/schema_reference.md", "docs/pt/schema_reference.md", "docs/source/python_api.rst",
+])
+def test_experiment_identity_is_documented(page):
+    assert "set_experiment_identity" in (ROOT / page).read_text(encoding="utf-8")
