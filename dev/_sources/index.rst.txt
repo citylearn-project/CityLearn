@@ -83,6 +83,7 @@ for the bibliography.
    guides/running_simulations
    guides/dataset_catalogue
    guides/schema_reference
+   guides/schema_full_reference
    guides/dataset_reference
    guides/portugal_rec_datasets
    guides/data_unit_contract

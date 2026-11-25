@@ -70,6 +70,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_full_reference.html">Full Reference Schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
@@ -221,8 +222,8 @@ the workflow; the policies are not expected to beat the business-as-usual operat
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2026-11-25 08:18:16,189 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
-2026-11-25 08:18:17,718 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-25 09:28:06,427 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-25 09:28:08,242 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
 </pre></div></div>
 </div>
 </section>
@@ -253,7 +254,7 @@ the workflow; the policies are not expected to beat the business-as-usual operat
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2026-11-25 08:18:20,279 WARNING algorithm_config.py:5160 -- You are running PPO on the new API stack! This is the new default behavior for this algorithm. If you don&#39;t want to use the new API stack, set `config.api_stack(enable_rl_module_and_learner=False,enable_env_runner_and_connector_v2=False)`. For a detailed migration guide, see here: https://docs.ray.io/en/master/rllib/new-api-stack-migration-guide.html
+2026-11-25 09:28:11,096 WARNING algorithm_config.py:5160 -- You are running PPO on the new API stack! This is the new default behavior for this algorithm. If you don&#39;t want to use the new API stack, set `config.api_stack(enable_rl_module_and_learner=False,enable_env_runner_and_connector_v2=False)`. For a detailed migration guide, see here: https://docs.ray.io/en/master/rllib/new-api-stack-migration-guide.html
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -374,7 +375,7 @@ environment steps sampled: 96.0
     <tr>
       <th>building_battery_health_equivalent_full_cycles_count</th>
       <td>0.0</td>
-      <td>0.316</td>
+      <td>0.501</td>
       <td>0.000</td>
       <td>NaN</td>
     </tr>
@@ -390,7 +391,7 @@ environment steps sampled: 96.0
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>224.654</td>
+      <td>235.442</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_thermal_coverage_ratio</th>
@@ -531,9 +532,9 @@ environment steps sampled: 96.0
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_count</th>
-      <td>0.147</td>
-      <td>0.427</td>
-      <td>0.123</td>
+      <td>0.053</td>
+      <td>0.272</td>
+      <td>0.439</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -548,7 +549,7 @@ environment steps sampled: 96.0
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>239.231</td>
+      <td>224.375</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_thermal_coverage_ratio</th>
@@ -580,7 +581,7 @@ environment steps sampled: 96.0
     </tr>
   </tbody>
 </table>
-<p>949 rows × 4 columns</p>
+<p>959 rows × 4 columns</p>
 </div></div>
 </div>
 <div class="nbinput nblast docutils container">

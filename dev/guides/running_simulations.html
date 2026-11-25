@@ -86,6 +86,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_full_reference.html">Full Reference Schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
@@ -321,8 +322,8 @@ follows each device’s action contract.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicles</span></code></p></td>
 <td class="text-right"><p>list</p></td>
 <td class="text-right"><p>schema</p></td>
-<td><p>Subset of EVs to load.</p></td>
-<td><p>Usually from <code class="docutils literal notranslate"><span class="pre">electric_vehicles_def</span></code>.</p></td>
+<td><p>Accepted, but it does not select EVs.</p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">electric_vehicles_def.&lt;ev&gt;.include</span></code> in the schema.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">simulation_start_time_step</span></code></p></td>
 <td class="text-right"><p>int</p></td>
@@ -345,7 +346,7 @@ follows each device’s action contract.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_episode_split</span></code></p></td>
 <td class="text-right"><p>bool</p></td>
 <td class="text-right"><p>schema</p></td>
-<td><p>Sequential window episodes.</p></td>
+<td><p>Every row can start an episode (overlapping windows).</p></td>
 <td><p>Useful for training.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_episode_split</span></code></p></td>
@@ -439,10 +440,10 @@ follows each device’s action contract.</p>
 <td><p>Uses data series or stochastic model.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">solar_generation</span></code></p></td>
-<td class="text-right"><p>bool</p></td>
-<td class="text-right"><p>schema</p></td>
-<td><p>Compatibility switch for solar generation.</p></td>
-<td><p>Kept for original CityLearn compatibility.</p></td>
+<td class="text-right"><p>bool/list</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code> (or one bool per building) removes the PV.</p></td>
+<td><p>Constructor only; there is no schema key.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
 <td class="text-right"><p>int</p></td>
