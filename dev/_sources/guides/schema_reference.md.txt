@@ -311,6 +311,7 @@ See the [reward function overview](https://www.citylearn.net/overview/reward_fun
 | `render_chunk_size` | int | 100000 (CSV), 50000 (Parquet) | Rows buffered before a write; values below 1 become 1. | `render_chunk_size` |
 | `render_session_name` | string | timestamp | Subfolder under the render folder. Must be relative, without `..`. | `render_session_name` |
 | `export_kpis_on_episode_end` | bool | follows rendering | Write `exported_kpis.csv` when the episode ends. | `export_kpis_on_episode_end` |
+| `evaluation_window` | bool/object | off | Recurring local window KPIs in `evaluate_v2()` and the KPI exports, without changing the simulation. See [Evaluation window](#evaluation-window). | `evaluation_window` |
 | `export_only_final_episode` | bool | `true` | When a run plans its episodes (CLI, `agent.learn`), export only the last one. | `export_only_final_episode` |
 
 `render_directory` and `render_directory_name` are constructor arguments only.
@@ -1065,6 +1066,30 @@ attributes on the env afterwards (`community_market_enabled`,
 native BAU reference is rebuilt from the schema, so `evaluate_v2()` with the
 BAU comparison raises a `ValueError` when they differ. To change the market,
 edit `schema['community_market']` and build a new env.
+
+## Evaluation Window
+
+`evaluation_window` adds opt-in recurring local-window KPIs (`*_energy_grid_window_average_power_*_kw` and `*_ev_window_net_exchange_control_kwh`; see [KPI reference](kpis_reference.md#recurring-evaluation-window)) without changing simulation physics or KPI names when bounds change.
+
+```json
+{
+  "evaluation_window": {
+    "enabled": true,
+    "start": "16:00",
+    "end": "19:00",
+    "timezone": "scenario_local"
+  }
+}
+```
+
+| Field | Default | Purpose |
+|---|---:|---|
+| `enabled` | `false` (`true` when `start` or `end` is set) | Enables recurring window KPIs in `evaluate_v2()` and KPI exports. Passing `"evaluation_window": true` enables the `16:00:00` to `19:00:00` starter window. |
+| `start` | `"16:00:00"` | Window start in 24-hour `"HH:MM"` or `"HH:MM:SS"` format, supporting sub-hour boundaries. |
+| `end` | `"19:00:00"` | Window end in 24-hour `"HH:MM"` or `"HH:MM:SS"` format. When `start > end` (for example `"22:00"` to `"06:00"`), the window wraps across midnight. |
+| `timezone` | `schema.timezone` or `"scenario_local"` | IANA time zone used when converting a UTC `TimeAxis` calendar, or `"scenario_local"` for local dataset calendar columns. |
+
+The resolved `start`, `end` and `timezone` are recorded in `exported_kpis.manifest.json`. When both runs enable `evaluation_window` with different effective bounds or time zones, `compare_manifests()` adds `'evaluation_window'` to `mismatches` (`status='incompatible'`). When only one run enables `evaluation_window`, `compare_manifests()` keeps `status='paired'` for all shared KPIs, records `'evaluation_window_one_sided'` in `declared_differences` (`evaluation_window.status == 'one_sided'`), and `compare_exports()` flags only the windowed rows in `unpaired_window_kpis`.
 
 ## Demand response
 

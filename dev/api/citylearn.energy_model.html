@@ -269,6 +269,14 @@ a building’s battery. If the dataframe is not provided it is read in using
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="citylearn.energy_model.Battery.capacity_fade_kwh">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">capacity_fade_kwh</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.Battery.capacity_fade_kwh" title="Link to this definition"></a></dt>
+<dd><p>Cumulative storage capacity lost to degradation <code class="docutils literal notranslate"><span class="pre">max(0.0,</span> <span class="pre">capacity</span> <span class="pre">-</span> <span class="pre">degraded_capacity)</span></code> in [kWh].</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">0.0</span></code> when <code class="docutils literal notranslate"><span class="pre">capacity</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">0.0</span></code> before the first step (before <a class="reference internal" href="#citylearn.energy_model.Battery.reset" title="citylearn.energy_model.Battery.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> or at
+<code class="docutils literal notranslate"><span class="pre">time_step</span> <span class="pre">==</span> <span class="pre">0</span></code> prior to any charge or discharge transfer).</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.capacity_history">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">capacity_history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.energy_model.Battery.capacity_history" title="Link to this definition"></a></dt>
 <dd><p>Time series of maximum amount of energy the storage device can store in [kWh].</p>
@@ -311,6 +319,14 @@ limitations, losses to the environment quantified by <cite>efficiency</cite>, <c
 energy before the step’s first transfer. The first call in a step can use all of it; a later call in
 the same step gets only what the earlier calls in that direction left. Capacity and depth-of-discharge
 limits use the current stored energy.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.energy_model.Battery.current_state_of_health">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_state_of_health</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.Battery.current_state_of_health" title="Link to this definition"></a></dt>
+<dd><p>Current state-of-health (SOH) ratio <code class="docutils literal notranslate"><span class="pre">clip(degraded_capacity</span> <span class="pre">/</span> <span class="pre">capacity,</span> <span class="pre">0.0,</span> <span class="pre">1.0)</span></code> [dimensionless].</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">1.0</span></code> when <code class="docutils literal notranslate"><span class="pre">capacity</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1.0</span></code> before the first step (before <a class="reference internal" href="#citylearn.energy_model.Battery.reset" title="citylearn.energy_model.Battery.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> or at
+<code class="docutils literal notranslate"><span class="pre">time_step</span> <span class="pre">==</span> <span class="pre">0</span></code> prior to any charge or discharge transfer).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -361,6 +377,16 @@ limits use the current stored energy.</p>
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.efficiency_history">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">efficiency_history</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.energy_model.Battery.efficiency_history" title="Link to this definition"></a></dt>
 <dd><p>Time series of technical efficiency.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.energy_model.Battery.equivalent_full_cycles">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">equivalent_full_cycles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.Battery.equivalent_full_cycles" title="Link to this definition"></a></dt>
+<dd><p>Cumulative equivalent full cycles from accepted gross battery-terminal throughput over <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">capacity</span></code> [cycles, dimensionless].</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">0.0</span></code> before the first step (before <a class="reference internal" href="#citylearn.energy_model.Battery.reset" title="citylearn.energy_model.Battery.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> or at <code class="docutils literal notranslate"><span class="pre">time_step</span> <span class="pre">==</span> <span class="pre">0</span></code> prior to any transfer)
+and <code class="docutils literal notranslate"><span class="pre">0.0</span></code> when <code class="docutils literal notranslate"><span class="pre">capacity</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code>; the corresponding KPIs
+(<code class="docutils literal notranslate"><span class="pre">*_battery_health_equivalent_full_cycles_count</span></code>, <code class="docutils literal notranslate"><span class="pre">*_ev_battery_health_equivalent_full_cycles_count</span></code>) are
+undefined (<code class="docutils literal notranslate"><span class="pre">NaN</span></code>) when nominal capacity is zero.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -476,6 +502,14 @@ it. A user-supplied curve is left unchanged.</p>
 <dd class="field-odd"><p><strong>efficiency</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – Rated efficiency. <cite>None</cite> or NaN draws the default, as the <cite>efficiency</cite> setter does.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.energy_model.Battery.state_of_health">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_of_health</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#citylearn.energy_model.Battery.state_of_health" title="Link to this definition"></a></dt>
+<dd><p>State-of-health (SOH) ratio time series <code class="docutils literal notranslate"><span class="pre">clip(degraded_capacity_t</span> <span class="pre">/</span> <span class="pre">capacity,</span> <span class="pre">0.0,</span> <span class="pre">1.0)</span></code> up to <code class="docutils literal notranslate"><span class="pre">time_step</span> <span class="pre">+</span> <span class="pre">1</span></code> [dimensionless].</p>
+<p>Returns an array of ones when <code class="docutils literal notranslate"><span class="pre">capacity</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code>, and <code class="docutils literal notranslate"><span class="pre">np.array([1.0],</span> <span class="pre">dtype='float64')</span></code> before the first
+step (before <a class="reference internal" href="#citylearn.energy_model.Battery.reset" title="citylearn.energy_model.Battery.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> or at <code class="docutils literal notranslate"><span class="pre">time_step</span> <span class="pre">==</span> <span class="pre">0</span></code> prior to any charge or discharge transfer).</p>
 </dd></dl>
 
 <dl class="py property">

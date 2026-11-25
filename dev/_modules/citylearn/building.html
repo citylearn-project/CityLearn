@@ -176,6 +176,11 @@
     <span class="n">power_kw_to_energy_kwh</span><span class="p">,</span>
     <span class="n">to_dataset_resolution_energy</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.service_energy</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">is_power_outage_value</span><span class="p">,</span>
+    <span class="n">power_outage_mask</span><span class="p">,</span>
+    <span class="n">validate_power_outage_signal</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.occupant</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegressionOccupant</span><span class="p">,</span> <span class="n">Occupant</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.power_outage</span><span class="w"> </span><span class="kn">import</span> <span class="n">PowerOutage</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalize</span> <span class="k">as</span> <span class="n">Normalize</span><span class="p">,</span> <span class="n">PeriodicNormalization</span>
@@ -630,7 +635,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_power_outage</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">values</span>
 
-        <span class="n">outage</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_outage_signal</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="n">outage</span> <span class="o">=</span> <span class="n">power_outage_mask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_outage_signal</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">outage</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">values</span>
@@ -1073,7 +1078,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">power_outage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Whether there is power outage at current time step."""</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_power_outage</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__power_outage_signal</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_power_outage</span> <span class="ow">and</span> <span class="n">is_power_outage_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__power_outage_signal</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">stochastic_power_outage_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PowerOutage</span><span class="p">:</span>
@@ -3554,6 +3559,10 @@
 
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">power_outage_signal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="n">power_outage</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+            <span class="n">power_outage_signal</span> <span class="o">=</span> <span class="n">validate_power_outage_signal</span><span class="p">(</span>
+                <span class="n">power_outage_signal</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">.power_outage_signal'</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">pass</span>

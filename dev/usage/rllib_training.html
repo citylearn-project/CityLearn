@@ -222,8 +222,8 @@ the workflow; the policies are not expected to beat the business-as-usual operat
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2026-11-25 09:28:06,427 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
-2026-11-25 09:28:08,242 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-25 09:58:16,408 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-25 09:58:18,318 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
 </pre></div></div>
 </div>
 </section>
@@ -254,7 +254,7 @@ the workflow; the policies are not expected to beat the business-as-usual operat
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2026-11-25 09:28:11,096 WARNING algorithm_config.py:5160 -- You are running PPO on the new API stack! This is the new default behavior for this algorithm. If you don&#39;t want to use the new API stack, set `config.api_stack(enable_rl_module_and_learner=False,enable_env_runner_and_connector_v2=False)`. For a detailed migration guide, see here: https://docs.ray.io/en/master/rllib/new-api-stack-migration-guide.html
+2026-11-25 09:58:21,223 WARNING algorithm_config.py:5160 -- You are running PPO on the new API stack! This is the new default behavior for this algorithm. If you don&#39;t want to use the new API stack, set `config.api_stack(enable_rl_module_and_learner=False,enable_env_runner_and_connector_v2=False)`. For a detailed migration guide, see here: https://docs.ray.io/en/master/rllib/new-api-stack-migration-guide.html
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -346,37 +346,37 @@ environment steps sampled: 96.0
   <tbody>
     <tr>
       <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
-      <td>0.0</td>
+      <td>0.000</td>
       <td>0.000</td>
       <td>0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
-      <td>-0.0</td>
-      <td>0.000</td>
+      <td>-0.000</td>
+      <td>-0.000</td>
       <td>-0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_capacity_fade_ratio</th>
-      <td>0.0</td>
+      <td>0.000</td>
       <td>0.000</td>
       <td>0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
-      <td>0.7</td>
+      <td>0.700</td>
       <td>0.197</td>
       <td>0.705</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_count</th>
-      <td>0.0</td>
-      <td>0.501</td>
-      <td>0.000</td>
+      <td>0.016</td>
+      <td>0.078</td>
+      <td>0.039</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -391,7 +391,7 @@ environment steps sampled: 96.0
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>235.442</td>
+      <td>232.773</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_thermal_coverage_ratio</th>
@@ -423,7 +423,7 @@ environment steps sampled: 96.0
     </tr>
   </tbody>
 </table>
-<p>959 rows × 4 columns</p>
+<p>953 rows × 4 columns</p>
 </div></div>
 </div>
 </section>
@@ -512,7 +512,7 @@ environment steps sampled: 96.0
     <tr>
       <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
       <td>-0.000</td>
-      <td>0.000</td>
+      <td>-0.000</td>
       <td>-0.000</td>
       <td>NaN</td>
     </tr>
@@ -532,9 +532,9 @@ environment steps sampled: 96.0
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_count</th>
-      <td>0.053</td>
-      <td>0.272</td>
-      <td>0.439</td>
+      <td>0.317</td>
+      <td>0.091</td>
+      <td>0.078</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -549,39 +549,39 @@ environment steps sampled: 96.0
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>224.375</td>
+      <td>238.69</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_thermal_coverage_ratio</th>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>1.000</td>
+      <td>1.00</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>0.000</td>
+      <td>0.00</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>0.000</td>
+      <td>0.00</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_unserved_service_ratio</th>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>0.000</td>
+      <td>0.00</td>
     </tr>
   </tbody>
 </table>
-<p>959 rows × 4 columns</p>
+<p>955 rows × 4 columns</p>
 </div></div>
 </div>
 <div class="nbinput nblast docutils container">

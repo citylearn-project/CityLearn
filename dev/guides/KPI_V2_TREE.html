@@ -209,7 +209,7 @@ Which rows appear depends on the scenario’s assets and services.</p>
 <td class="text-right"><p>24</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#grid-energy-and-load-shape"><span class="std std-ref">Grid energy and load shape</span></a></p></td>
-<td class="text-right"><p>112</p></td>
+<td class="text-right"><p>118</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#emissions"><span class="std std-ref">Emissions</span></a></p></td>
 <td class="text-right"><p>28</p></td>
@@ -227,7 +227,7 @@ Which rows appear depends on the scenario’s assets and services.</p>
 <td class="text-right"><p>22</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#electric-vehicles"><span class="std std-ref">Electric vehicles</span></a></p></td>
-<td class="text-right"><p>62</p></td>
+<td class="text-right"><p>72</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#ev-departure-audit"><span class="std std-ref">EV departure audit</span></a></p></td>
 <td class="text-right"><p>128</p></td>
@@ -423,10 +423,15 @@ district_cost_total_delta_to_business_as_usual_eur
 <td><p>ratio</p></td>
 <td><p>Control load-factor penalty over BAU penalty, on the same series.</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">energy_grid_window_average_power_{control,business_as_usual,delta_to_business_as_usual}_kw</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>kW</p></td>
+<td><p>Mean signed net grid power inside the recurring local <code class="docutils literal notranslate"><span class="pre">evaluation_window</span></code> for the controlled run, the BAU run, and control minus BAU; emitted only when <code class="docutils literal notranslate"><span class="pre">evaluation_window.enabled</span></code> is true.</p></td>
+</tr>
 </tbody>
 </table>
 <details>
-<summary>All 112 names</summary>
+<summary>All 118 names</summary>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>building_energy_grid_daily_average_export_baseline_kwh
 building_energy_grid_daily_average_export_business_as_usual_kwh
 building_energy_grid_daily_average_export_control_kwh
@@ -463,6 +468,9 @@ building_energy_grid_total_net_exchange_business_as_usual_kwh
 building_energy_grid_total_net_exchange_control_kwh
 building_energy_grid_total_net_exchange_delta_kwh
 building_energy_grid_total_net_exchange_delta_to_business_as_usual_kwh
+building_energy_grid_window_average_power_business_as_usual_kw
+building_energy_grid_window_average_power_control_kw
+building_energy_grid_window_average_power_delta_to_business_as_usual_kw
 district_energy_grid_daily_average_export_baseline_kwh
 district_energy_grid_daily_average_export_business_as_usual_kwh
 district_energy_grid_daily_average_export_control_kwh
@@ -539,6 +547,9 @@ district_energy_grid_total_net_exchange_business_as_usual_kwh
 district_energy_grid_total_net_exchange_control_kwh
 district_energy_grid_total_net_exchange_delta_kwh
 district_energy_grid_total_net_exchange_delta_to_business_as_usual_kwh
+district_energy_grid_window_average_power_business_as_usual_kw
+district_energy_grid_window_average_power_control_kw
+district_energy_grid_window_average_power_delta_to_business_as_usual_kw
 </pre></div>
 </div>
 </details>
@@ -964,7 +975,7 @@ district_electrical_service_phase_violations_event_count
 </section>
 <section id="electric-vehicles">
 <h2>Electric vehicles<a class="headerlink" href="#electric-vehicles" title="Link to this heading"></a></h2>
-<p>Departure service, charging and V2G energy of electric vehicles at the members’ chargers. Every member emits these rows; without chargers, counts and energies are 0 and rates are undefined.</p>
+<p>Departure service, charging and V2G energy of electric vehicles at the members’ chargers, and opt-in EV battery health and wear (<code class="docutils literal notranslate"><span class="pre">evaluate_v2(include_battery_health_audit=True)</span></code>). Every member emits the departure and energy rows; without chargers, counts and energies are 0 and rates are undefined.</p>
 <p>Equations and rules: <a class="reference internal" href="kpis_reference.html#electric-vehicles"><span class="std std-ref">Electric vehicles</span></a>.</p>
 <table class="docutils align-default">
 <thead>
@@ -1035,11 +1046,40 @@ district_electrical_service_phase_violations_event_count
 <td><p>kWh</p></td>
 <td><p>Per member, max(SOC gain − charge total, 0): SOC gain not explained by metered charging; the district value is the sum of the member values.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_window_net_exchange_control_kwh</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>kWh</p></td>
+<td><p>Signed net AC energy across EV chargers inside the recurring local <code class="docutils literal notranslate"><span class="pre">evaluation_window</span></code> (positive for charging draw, negative for V2X delivery); emitted only when <code class="docutils literal notranslate"><span class="pre">evaluation_window.enabled</span></code> is true.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ev_battery_health_terminal_soh_ratio</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>ratio</p></td>
+<td><p>Opt-in capacity-weighted terminal EV battery state of health in [0, 1] (<code class="docutils literal notranslate"><span class="pre">include_battery_health_audit=True</span></code>). At building level, read at the end of each connected EV’s last realized connection, including wear received at other buildings, so building SOH can be below 1 − ev_battery_health_capacity_fade_ratio; at district and portfolio levels, pooled over unique eligible fleet EVs by nominal capacity (equal to 1 − fade ratio); undefined when nominal capacity ≤ 0.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_battery_health_capacity_fade_kwh</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>kWh</p></td>
+<td><p>Opt-in cumulative EV battery capacity lost to degradation in [kWh] (<code class="docutils literal notranslate"><span class="pre">include_battery_health_audit=True</span></code>), attributed to executed transfers at the member’s chargers at building level and summed over unique eligible fleet EVs at district and portfolio levels.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ev_battery_health_capacity_fade_ratio</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>ratio</p></td>
+<td><p>Opt-in fraction of nominal EV battery capacity lost to degradation in [0, 1] (<code class="docutils literal notranslate"><span class="pre">include_battery_health_audit=True</span></code>), from executed transfers over realized connected EV capacity at building level and pooled over unique eligible fleet EV nominal capacity at district and portfolio levels; undefined when nominal capacity ≤ 0.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_battery_health_equivalent_full_cycles_count</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>count</p></td>
+<td><p>Opt-in equivalent full cycles of EV batteries from accepted gross battery-terminal throughput over (2 · nominal capacity) (<code class="docutils literal notranslate"><span class="pre">include_battery_health_audit=True</span></code>), attributed to executed transfers over realized connected EV capacity at building level and pooled over unique eligible fleet EV nominal capacity at district and portfolio levels; undefined when nominal capacity ≤ 0 (whereas <code class="docutils literal notranslate"><span class="pre">Battery.equivalent_full_cycles</span></code> returns <code class="docutils literal notranslate"><span class="pre">0.0</span></code>).</p></td>
+</tr>
 </tbody>
 </table>
 <details>
-<summary>All 62 names</summary>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>building_ev_energy_accounting_connected_soc_gain_kwh
+<summary>All 72 names</summary>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>building_ev_battery_health_capacity_fade_kwh
+building_ev_battery_health_capacity_fade_ratio
+building_ev_battery_health_equivalent_full_cycles_count
+building_ev_battery_health_terminal_soh_ratio
+building_ev_energy_accounting_connected_soc_gain_kwh
 building_ev_energy_accounting_shortfall_kwh
 building_ev_events_departure_count
 building_ev_events_departure_met_count
@@ -1070,6 +1110,11 @@ building_ev_total_charge_kwh
 building_ev_total_v2g_export_business_as_usual_kwh
 building_ev_total_v2g_export_delta_to_business_as_usual_kwh
 building_ev_total_v2g_export_kwh
+building_ev_window_net_exchange_control_kwh
+district_ev_battery_health_capacity_fade_kwh
+district_ev_battery_health_capacity_fade_ratio
+district_ev_battery_health_equivalent_full_cycles_count
+district_ev_battery_health_terminal_soh_ratio
 district_ev_energy_accounting_connected_soc_gain_kwh
 district_ev_energy_accounting_shortfall_kwh
 district_ev_events_departure_count
@@ -1101,6 +1146,7 @@ district_ev_total_charge_kwh
 district_ev_total_v2g_export_business_as_usual_kwh
 district_ev_total_v2g_export_delta_to_business_as_usual_kwh
 district_ev_total_v2g_export_kwh
+district_ev_window_net_exchange_control_kwh
 </pre></div>
 </div>
 </details>

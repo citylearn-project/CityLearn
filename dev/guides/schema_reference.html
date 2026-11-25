@@ -137,6 +137,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#validation">Validation</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#evaluation-window">Evaluation Window</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#demand-response">Demand response</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#robustness">Robustness</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#entity-interface-observation-bundles-and-derived-forecasts">Entity interface: observation bundles and derived forecasts</a><ul>
@@ -1080,7 +1081,13 @@ are summed.</p>
 <td><p>Write <code class="docutils literal notranslate"><span class="pre">exported_kpis.csv</span></code> when the episode ends.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">export_only_final_episode</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation_window</span></code></p></td>
+<td><p>bool/object</p></td>
+<td><p>off</p></td>
+<td><p>Recurring local window KPIs in <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> and the KPI exports, without changing the simulation. See <a class="reference internal" href="#evaluation-window"><span class="std std-ref">Evaluation window</span></a>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">evaluation_window</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">export_only_final_episode</span></code></p></td>
 <td><p>bool</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
 <td><p>When a run plans its episodes (CLI, <code class="docutils literal notranslate"><span class="pre">agent.learn</span></code>), export only the last one.</p></td>
@@ -2830,6 +2837,47 @@ native BAU reference is rebuilt from the schema, so <code class="docutils litera
 BAU comparison raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> when they differ. To change the market,
 edit <code class="docutils literal notranslate"><span class="pre">schema['community_market']</span></code> and build a new env.</p>
 </section>
+</section>
+<section id="evaluation-window">
+<h2>Evaluation Window<a class="headerlink" href="#evaluation-window" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">evaluation_window</span></code> adds opt-in recurring local-window KPIs (<code class="docutils literal notranslate"><span class="pre">*_energy_grid_window_average_power_*_kw</span></code> and <code class="docutils literal notranslate"><span class="pre">*_ev_window_net_exchange_control_kwh</span></code>; see <a class="reference internal" href="kpis_reference.html#recurring-evaluation-window"><span class="std std-ref">KPI reference</span></a>) without changing simulation physics or KPI names when bounds change.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"evaluation_window"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"start"</span><span class="p">:</span><span class="w"> </span><span class="s2">"16:00"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"end"</span><span class="p">:</span><span class="w"> </span><span class="s2">"19:00"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"timezone"</span><span class="p">:</span><span class="w"> </span><span class="s2">"scenario_local"</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Default</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enabled</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code> (<code class="docutils literal notranslate"><span class="pre">true</span></code> when <code class="docutils literal notranslate"><span class="pre">start</span></code> or <code class="docutils literal notranslate"><span class="pre">end</span></code> is set)</p></td>
+<td><p>Enables recurring window KPIs in <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> and KPI exports. Passing <code class="docutils literal notranslate"><span class="pre">&quot;evaluation_window&quot;:</span> <span class="pre">true</span></code> enables the <code class="docutils literal notranslate"><span class="pre">16:00:00</span></code> to <code class="docutils literal notranslate"><span class="pre">19:00:00</span></code> starter window.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">&quot;16:00:00&quot;</span></code></p></td>
+<td><p>Window start in 24-hour <code class="docutils literal notranslate"><span class="pre">&quot;HH:MM&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;HH:MM:SS&quot;</span></code> format, supporting sub-hour boundaries.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">end</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">&quot;19:00:00&quot;</span></code></p></td>
+<td><p>Window end in 24-hour <code class="docutils literal notranslate"><span class="pre">&quot;HH:MM&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;HH:MM:SS&quot;</span></code> format. When <code class="docutils literal notranslate"><span class="pre">start</span> <span class="pre">&gt;</span> <span class="pre">end</span></code> (for example <code class="docutils literal notranslate"><span class="pre">&quot;22:00&quot;</span></code> to <code class="docutils literal notranslate"><span class="pre">&quot;06:00&quot;</span></code>), the window wraps across midnight.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">timezone</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">schema.timezone</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;scenario_local&quot;</span></code></p></td>
+<td><p>IANA time zone used when converting a UTC <code class="docutils literal notranslate"><span class="pre">TimeAxis</span></code> calendar, or <code class="docutils literal notranslate"><span class="pre">&quot;scenario_local&quot;</span></code> for local dataset calendar columns.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The resolved <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code> and <code class="docutils literal notranslate"><span class="pre">timezone</span></code> are recorded in <code class="docutils literal notranslate"><span class="pre">exported_kpis.manifest.json</span></code>. When both runs enable <code class="docutils literal notranslate"><span class="pre">evaluation_window</span></code> with different effective bounds or time zones, <code class="docutils literal notranslate"><span class="pre">compare_manifests()</span></code> adds <code class="docutils literal notranslate"><span class="pre">'evaluation_window'</span></code> to <code class="docutils literal notranslate"><span class="pre">mismatches</span></code> (<code class="docutils literal notranslate"><span class="pre">status='incompatible'</span></code>). When only one run enables <code class="docutils literal notranslate"><span class="pre">evaluation_window</span></code>, <code class="docutils literal notranslate"><span class="pre">compare_manifests()</span></code> keeps <code class="docutils literal notranslate"><span class="pre">status='paired'</span></code> for all shared KPIs, records <code class="docutils literal notranslate"><span class="pre">'evaluation_window_one_sided'</span></code> in <code class="docutils literal notranslate"><span class="pre">declared_differences</span></code> (<code class="docutils literal notranslate"><span class="pre">evaluation_window.status</span> <span class="pre">==</span> <span class="pre">'one_sided'</span></code>), and <code class="docutils literal notranslate"><span class="pre">compare_exports()</span></code> flags only the windowed rows in <code class="docutils literal notranslate"><span class="pre">unpaired_window_kpis</span></code>.</p>
 </section>
 <section id="demand-response">
 <h2>Demand response<a class="headerlink" href="#demand-response" title="Link to this heading"></a></h2>
