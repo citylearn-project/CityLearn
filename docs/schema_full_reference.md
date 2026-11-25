@@ -346,7 +346,7 @@ These keys are read only with `"interface": "entity"`.
 | `include` | `true` | `true` | `false` leaves the building out (an inactive member under dynamic topology). |
 | `type` | `citylearn.building.Building` | the same | `LSTMDynamicsBuilding` and the occupant types for indoor-temperature dynamics. |
 | `energy_simulation`, `weather` | dataset files | required | |
-| `pricing`, `carbon_intensity` | dataset files | zero series | |
+| `pricing`, `carbon_intensity` | dataset files | zero series | With a zero series the cost or emissions ratios are NaN (0/0). |
 | `noise_std` | `0.0` | `0.0` | Gaussian noise on weather, prices, carbon, PV profile and indoor conditions. |
 | `inactive_observations`, `inactive_actions` | `[]` | `[]` | Template names turned off for this building only. |
 | `equity_group` | `null` | none | `"asset_rich"` or `"asset_poor"` on every building enables the equity ratio KPI. |
@@ -789,7 +789,7 @@ size them or use `"autosize": true`.
 | `battery.attributes.depth_of_discharge` | `1.0` | `1.0` | |
 | `battery.attributes.loss_coefficient` | `0.0` | `0.0` for EVs | |
 | other `battery.attributes` | `null` | as for the stationary battery | |
-| `ev_departure_within_tolerance`, `ev_departure_service_tolerance` | `0.05` | `0.05` | SOC tolerances of the departure KPIs. |
+| `ev_departure_within_tolerance`, `ev_departure_service_tolerance` | `0.05` | `0.05` | SOC tolerances of the departure KPIs. The target met test uses 0.005, or the service tolerance if smaller. |
 | `business_as_usual_ev_charge_target` | `"full"` | `"full"` | `"requested"`: the BAU stops at the requested departure SOC. |
 
 ## Community market

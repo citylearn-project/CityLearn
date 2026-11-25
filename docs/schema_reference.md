@@ -334,7 +334,7 @@ All five have a constructor argument of the same name.
 | Key | Type | Default | Effect | Argument | Since |
 |---|---|---|---|---|---|
 | `ev_departure_within_tolerance` | number, SOC fraction | `0.05` | A departure is within tolerance when `abs(SOC - target) <= tolerance`. Finite and at least 0. | yes | 2.6.0 |
-| `ev_departure_service_tolerance` | number, SOC fraction | `0.05` | A departure gives acceptable service when `SOC + tolerance >= target`. Finite and at least 0. | yes | 3.0.0 |
+| `ev_departure_service_tolerance` | number, SOC fraction | `0.05` | A departure gives acceptable service when `SOC + tolerance >= target`. Finite and at least 0. It also caps the fixed margin (`EV_SERVICE_SOC_TOLERANCE`, 0.005) of the target met and target-feasibility KPIs, which count a departure as met when `SOC >= target - min(0.005, tolerance)`; see [Departures](kpis_reference.md#departures). | yes | 3.0.0 |
 | `business_as_usual_ev_charge_target` | `full`, `requested` | `full` | Charging policy of the native BAU used by `evaluate_v2()`: `full` charges to 100 % on arrival, `requested` stops at the requested departure SOC. Case-sensitive. The KPI baseline of `baseline_version` 2 always uses `full`. See [Baselines](baselines.md#choosing-the-bau-charging-target). | yes | 3.4.0 |
 
 ### Metadata keys
@@ -480,8 +480,8 @@ which actions are applied.
 | `type` | import path | `citylearn.building.Building` | Building class; see [Building types](#building-types). | |
 | `energy_simulation` | path | required | Loads, demands, calendar and PV profile. | [columns](dataset_reference.md#energy_simulation-columns) |
 | `weather` | path | required | 16 weather columns. | |
-| `pricing` | path | zeros | 4 price columns. | |
-| `carbon_intensity` | path | zeros | `carbon_intensity` column. | |
+| `pricing` | path | zeros | 4 price columns. With zero prices both cost totals are 0, and the `*_cost_ratio_to_*_total_ratio` KPIs are NaN. | |
+| `carbon_intensity` | path | zeros | `carbon_intensity` column. With zero carbon intensity both emissions totals are 0, and the `*_emissions_ratio_to_*_total_ratio` KPIs are NaN. | |
 | `noise_std` | number | `0.0` | Standard deviation of Gaussian noise added to the indoor temperature, humidity, PV profile, all weather columns, prices and carbon intensity of this building, in the unit of each series. Noisy files are not shared between buildings. Keep it `0` when a building has no `pricing` or `carbon_intensity` file, otherwise the zero series get noise too. | |
 | `inactive_observations` | list of names | `[]` | Observations turned off for this building. | replaced by the argument |
 | `inactive_actions` | list of names | `[]` | Actions turned off for this building. | replaced by the argument |
@@ -524,7 +524,8 @@ The [dataset reference](dataset_reference.md) lists every column. In short:
   `dhw_demand`, `cooling_demand`, `heating_demand`, `solar_generation`; optional `minutes`, `seconds`,
   `daylight_savings_status`, `average_unmet_cooling_setpoint_difference`, `indoor_relative_humidity`, `occupant_count`,
   `indoor_dry_bulb_temperature_cooling_set_point`, `indoor_dry_bulb_temperature_heating_set_point` (both 0 °C when
-  absent), `hvac_mode` (1 = cooling when absent), `power_outage`, `comfort_band` (2 °C when absent). An unknown column
+  absent, for the physics and the observations; without both columns the comfort KPIs of the building are NaN, see
+  [Comfort and resilience](kpis_reference.md#comfort-and-resilience)), `hvac_mode` (1 = cooling when absent), `power_outage`, `comfort_band` (2 °C when absent). An unknown column
   raises `TypeError`.
 - `weather`: the four weather variables, each with `_predicted_1`, `_predicted_2` and `_predicted_3`; all 16 are required.
 - `pricing`: `electricity_pricing` and its three predictions.
@@ -1247,7 +1248,7 @@ first one is activated).
 | `id` | no | Event ID, unique; default `topology_event_<index>`. |
 | `time_step` | yes | Global time step at which the event is applied. Events before the episode start are applied at its first step. |
 | `operation` | yes | `add_member`, `remove_member`, `add_asset`, `remove_asset`. |
-| `target_member_id` | yes | Target building. `add_member` with a name that is not in the schema clones `source_member_id` under that name. |
+| `target_member_id` | yes | Target building. `add_member` with a name that is not in the schema clones `source_member_id` under that name. The clone's chargers get ids of their own: `charger_1_1` of `Building_1` becomes `charger_19_1` in `Building_19`; an id that does not name the source gets `_<target member>` appended. Robustness events must name the clone's chargers by the new id. |
 | `target_asset_type` | asset operations | `charger`, `deferrable_appliance`, `pv`, `electrical_storage`. |
 | `target_asset_id` | charger and deferrable operations | Target asset. Not used for `pv` and `electrical_storage` (one per building). |
 | `source_member_id` | no | Building to clone from; defaults to the target member for asset operations. |

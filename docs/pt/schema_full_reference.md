@@ -347,7 +347,7 @@ Estas chaves só são lidas com `"interface": "entity"`.
 | `include` | `true` | `true` | `false` deixa o edifício de fora (um membro inativo na topologia dinâmica). |
 | `type` | `citylearn.building.Building` | a mesma | `LSTMDynamicsBuilding` e os tipos com ocupantes para a dinâmica da temperatura interior. |
 | `energy_simulation`, `weather` | ficheiros do dataset | obrigatórias | |
-| `pricing`, `carbon_intensity` | ficheiros do dataset | séries de zeros | |
+| `pricing`, `carbon_intensity` | ficheiros do dataset | séries de zeros | Com uma série de zeros, os rácios de custo ou de emissões são NaN (0/0). |
 | `noise_std` | `0.0` | `0.0` | Ruído gaussiano na meteorologia, nos preços, no carbono, no perfil FV e nas condições interiores. |
 | `inactive_observations`, `inactive_actions` | `[]` | `[]` | Nomes de modelo desligados só neste edifício. |
 | `equity_group` | `null` | nenhuma | `"asset_rich"` ou `"asset_poor"` em todos os edifícios ativa o KPI de rácio de equidade. |
@@ -790,7 +790,7 @@ O `Building_4` mostra as mesmas secções escritas apenas com as chaves que não
 | `battery.attributes.depth_of_discharge` | `1.0` | `1.0` | |
 | `battery.attributes.loss_coefficient` | `0.0` | `0.0` nos VE | |
 | outros `battery.attributes` | `null` | como na bateria estacionária | |
-| `ev_departure_within_tolerance`, `ev_departure_service_tolerance` | `0.05` | `0.05` | Tolerâncias de SOC dos KPIs de partida. |
+| `ev_departure_within_tolerance`, `ev_departure_service_tolerance` | `0.05` | `0.05` | Tolerâncias de SOC dos KPIs de partida. O teste de alvo cumprido usa 0,005, ou a tolerância de serviço se for menor. |
 | `business_as_usual_ev_charge_target` | `"full"` | `"full"` | `"requested"`: o BAU para no SOC pedido para a partida. |
 
 ## Mercado comunitário

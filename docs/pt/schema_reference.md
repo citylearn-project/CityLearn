@@ -336,7 +336,7 @@ As cinco têm um argumento do construtor com o mesmo nome.
 | Chave | Tipo | Predefinição | Efeito | Argumento | Desde |
 |---|---|---|---|---|---|
 | `ev_departure_within_tolerance` | número, fração de SOC | `0.05` | Uma partida está dentro da tolerância quando `abs(SOC - alvo) <= tolerância`. Finito e pelo menos 0. | sim | 2.6.0 |
-| `ev_departure_service_tolerance` | número, fração de SOC | `0.05` | Uma partida tem serviço aceitável quando `SOC + tolerância >= alvo`. Finito e pelo menos 0. | sim | 3.0.0 |
+| `ev_departure_service_tolerance` | número, fração de SOC | `0.05` | Uma partida tem serviço aceitável quando `SOC + tolerância >= alvo`. Finito e pelo menos 0. Também limita a margem fixa (`EV_SERVICE_SOC_TOLERANCE`, 0,005) dos KPIs de alvo cumprido e de viabilidade do alvo, que contam uma partida como cumprida quando `SOC >= alvo - min(0,005, tolerância)`; consulte [Partidas](kpis_reference.md#partidas). | sim | 3.0.0 |
 | `business_as_usual_ev_charge_target` | `full`, `requested` | `full` | Política de carregamento do BAU nativo usado por `evaluate_v2()`: `full` carrega até 100 % à chegada, `requested` para no SOC pedido para a partida. Distingue maiúsculas. A baseline dos KPIs da `baseline_version` 2 usa sempre `full`. Consulte [Referências](baselines.md#escolher-o-alvo-de-carregamento-do-bau). | sim | 3.4.0 |
 
 ### Chaves de metadados
@@ -485,8 +485,8 @@ as ações são aplicadas.
 | `type` | caminho de importação | `citylearn.building.Building` | Classe do edifício; consulte [Tipos de edifício](#tipos-de-edifício). | |
 | `energy_simulation` | caminho | obrigatória | Cargas, procuras, calendário e perfil FV. | [colunas](dataset_reference.md#colunas-de-energy_simulation) |
 | `weather` | caminho | obrigatória | 16 colunas de meteorologia. | |
-| `pricing` | caminho | zeros | 4 colunas de preço. | |
-| `carbon_intensity` | caminho | zeros | Coluna `carbon_intensity`. | |
+| `pricing` | caminho | zeros | 4 colunas de preço. Com preços a zero, os dois totais de custo são 0 e os KPIs `*_cost_ratio_to_*_total_ratio` são NaN. | |
+| `carbon_intensity` | caminho | zeros | Coluna `carbon_intensity`. Com intensidade carbónica a zero, os dois totais de emissões são 0 e os KPIs `*_emissions_ratio_to_*_total_ratio` são NaN. | |
 | `noise_std` | número | `0.0` | Desvio-padrão do ruído gaussiano somado à temperatura interior, à humidade, ao perfil FV, a todas as colunas de meteorologia, aos preços e à intensidade carbónica deste edifício, na unidade de cada série. Os ficheiros com ruído não são partilhados entre edifícios. Mantenha `0` quando um edifício não tem ficheiro `pricing` ou `carbon_intensity`; caso contrário, as séries de zeros também recebem ruído. | |
 | `inactive_observations` | lista de nomes | `[]` | Observações desligadas neste edifício. | substituída pelo argumento |
 | `inactive_actions` | lista de nomes | `[]` | Ações desligadas neste edifício. | substituída pelo argumento |
@@ -529,7 +529,8 @@ A [referência dos datasets](dataset_reference.md) lista todas as colunas. Em re
   `dhw_demand`, `cooling_demand`, `heating_demand`, `solar_generation`; opcionais `minutes`, `seconds`,
   `daylight_savings_status`, `average_unmet_cooling_setpoint_difference`, `indoor_relative_humidity`, `occupant_count`,
   `indoor_dry_bulb_temperature_cooling_set_point`, `indoor_dry_bulb_temperature_heating_set_point` (ambas 0 °C quando
-  ausentes), `hvac_mode` (1 = arrefecimento quando ausente), `power_outage`, `comfort_band` (2 °C quando ausente). Uma
+  ausentes, para a física e as observações; sem as duas colunas, os KPIs de conforto do edifício são NaN, consulte
+  [Conforto e resiliência](kpis_reference.md#conforto-e-resiliência)), `hvac_mode` (1 = arrefecimento quando ausente), `power_outage`, `comfort_band` (2 °C quando ausente). Uma
   coluna desconhecida lança `TypeError`.
 - `weather`: as quatro variáveis de meteorologia, cada uma com `_predicted_1`, `_predicted_2` e `_predicted_3`; as 16
   são obrigatórias.
@@ -1259,7 +1260,7 @@ inativos, o primeiro é ativado).
 | `id` | não | ID do evento, único; predefinição `topology_event_<índice>`. |
 | `time_step` | sim | Passo global em que o evento é aplicado. Os eventos anteriores ao início do episódio são aplicados no seu primeiro passo. |
 | `operation` | sim | `add_member`, `remove_member`, `add_asset`, `remove_asset`. |
-| `target_member_id` | sim | Edifício alvo. `add_member` com um nome que não está no schema clona `source_member_id` com esse nome. |
+| `target_member_id` | sim | Edifício alvo. `add_member` com um nome que não está no schema clona `source_member_id` com esse nome. Os carregadores do clone recebem ids próprios: `charger_1_1` de `Building_1` passa a `charger_19_1` em `Building_19`; um id que não nomeia a origem recebe `_<membro alvo>` no fim. Os eventos de robustez têm de indicar os carregadores do clone pelo novo id. |
 | `target_asset_type` | operações de ativos | `charger`, `deferrable_appliance`, `pv`, `electrical_storage`. |
 | `target_asset_id` | operações de carregadores e aparelhos diferíveis | Ativo alvo. Não é usado para `pv` e `electrical_storage` (um por edifício). |
 | `source_member_id` | não | Edifício de onde se clona; predefinição: o membro alvo nas operações de ativos. |
