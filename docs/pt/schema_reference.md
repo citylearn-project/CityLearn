@@ -315,6 +315,7 @@ Consulte a [visão geral das funções de recompensa](https://www.citylearn.net/
 | `render_chunk_size` | int | 100000 (CSV), 50000 (Parquet) | Linhas acumuladas antes de cada escrita; valores abaixo de 1 passam a 1. | `render_chunk_size` |
 | `render_session_name` | string | data e hora | Subpasta dentro da pasta de render. Tem de ser relativa, sem `..`. | `render_session_name` |
 | `export_kpis_on_episode_end` | bool | segue o render | Escreve `exported_kpis.csv` no fim do episódio. | `export_kpis_on_episode_end` |
+| `evaluation_window` | bool/objeto | desligada | KPIs de uma janela local recorrente no `evaluate_v2()` e nas exportações de KPIs, sem mudar a simulação. Ver [Janela de avaliação](#janela-de-avaliacao). | `evaluation_window` |
 | `export_only_final_episode` | bool | `true` | Quando uma execução planeia os episódios (CLI, `agent.learn`), exporta apenas o último. | `export_only_final_episode` |
 
 `render_directory` e `render_directory_name` são apenas argumentos do construtor.
@@ -1078,6 +1079,30 @@ As definições são lidas do schema na construção. Alterar depois os atributo
 `community_market_import_member_weights`, `community_market_local_enabled`, `community_tariffs`) não é suportado: a
 referência BAU nativa é reconstruída a partir do schema, pelo que `evaluate_v2()` com a comparação BAU lança
 `ValueError` quando diferem. Para mudar o mercado, edite `schema['community_market']` e construa um ambiente novo.
+
+## Janela de Avaliacao
+
+`evaluation_window` ativa KPIs opt-in numa janela local recorrente (`*_energy_grid_window_average_power_*_kw` e `*_ev_window_net_exchange_control_kwh`; ver [referencia de KPIs](kpis_reference.md#janela-de-avaliação-recorrente)) sem alterar a fisica da simulacao nem os nomes dos KPIs quando os limites mudam.
+
+```json
+{
+  "evaluation_window": {
+    "enabled": true,
+    "start": "16:00",
+    "end": "19:00",
+    "timezone": "scenario_local"
+  }
+}
+```
+
+| Campo | Default | O que faz |
+|---|---:|---|
+| `enabled` | `false` (`true` quando `start` ou `end` e definido) | Ativa os KPIs da janela recorrente em `evaluate_v2()` e nos exports. Passar `"evaluation_window": true` ativa a janela inicial `16:00:00` a `19:00:00`. |
+| `start` | `"16:00:00"` | Inicio da janela em formato 24h `"HH:MM"` ou `"HH:MM:SS"`, incluindo fronteiras sub-horarias. |
+| `end` | `"19:00:00"` | Fim da janela em formato 24h `"HH:MM"` ou `"HH:MM:SS"`. Quando `start > end` (por exemplo `"22:00"` a `"06:00"`), a janela atravessa a meia-noite. |
+| `timezone` | `schema.timezone` ou `"scenario_local"` | Fuso horario IANA usado ao converter um calendario UTC `TimeAxis`, ou `"scenario_local"` para colunas de calendario locais do dataset. |
+
+Os valores resolvidos de `start`, `end` e `timezone` ficam registados em `exported_kpis.manifest.json`. Quando ambas as execucoes ativam `evaluation_window` com limites ou fusos horarios diferentes, `compare_manifests()` adiciona `'evaluation_window'` a `mismatches` (`status='incompatible'`). Quando apenas uma execucao ativa `evaluation_window`, `compare_manifests()` mantem `status='paired'` para todos os KPIs partilhados, regista `'evaluation_window_one_sided'` em `declared_differences` (`evaluation_window.status == 'one_sided'`), e `compare_exports()` assinala apenas as linhas da janela em `unpaired_window_kpis`.
 
 ## Resposta à procura
 

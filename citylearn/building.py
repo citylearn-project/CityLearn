@@ -27,6 +27,11 @@ from citylearn.internal.units import (
     power_kw_to_energy_kwh,
     to_dataset_resolution_energy,
 )
+from citylearn.internal.service_energy import (
+    is_power_outage_value,
+    power_outage_mask,
+    validate_power_outage_signal,
+)
 from citylearn.occupant import LogisticRegressionOccupant, Occupant
 from citylearn.power_outage import PowerOutage
 from citylearn.preprocessing import Normalize as Normalize, PeriodicNormalization
@@ -476,7 +481,7 @@ class Building(Environment):
         if not self.simulate_power_outage:
             return values
 
-        outage = np.asarray(self.power_outage_signal) != 0
+        outage = power_outage_mask(self.power_outage_signal)
 
         if not outage.any():
             return values
@@ -916,7 +921,7 @@ class Building(Environment):
     def power_outage(self) -> bool:
         """Whether there is power outage at current time step."""
 
-        return self.simulate_power_outage and bool(self.__power_outage_signal[self.time_step])
+        return self.simulate_power_outage and is_power_outage_value(self.__power_outage_signal[self.time_step])
 
     @property
     def stochastic_power_outage_model(self) -> PowerOutage:
@@ -3290,6 +3295,10 @@ class Building(Environment):
 
             else:
                 power_outage_signal = self.energy_simulation.power_outage.copy()
+
+            power_outage_signal = validate_power_outage_signal(
+                power_outage_signal, source=f'{self.name}.power_outage_signal',
+            )
 
         else:
             pass

@@ -888,6 +888,7 @@ O `Building_4` mostra as mesmas secções escritas apenas com as chaves que não
   "render_chunk_size": null,
   "render_session_name": null,
   "export_kpis_on_episode_end": false,
+  "evaluation_window": {"enabled": false},
   "export_only_final_episode": true,
   "debug_timing": false,
   "check_observation_limits": false,
@@ -905,6 +906,7 @@ O `Building_4` mostra as mesmas secções escritas apenas com as chaves que não
 | `render_chunk_size` | `null` | 100000 linhas em CSV, 50000 em Parquet | |
 | `render_session_name` | `null` | data e hora | Subpasta das exportações. |
 | `export_kpis_on_episode_end` | `false` | segue o render | `true` escreve `exported_kpis.csv` no fim de cada episódio. |
+| `evaluation_window` | `{"enabled": false}` | desligada | `{"enabled": true, "start": "16:00", "end": "19:00"}` acrescenta os KPIs da janela recorrente ao `evaluate_v2()` e às exportações de KPIs. Ver [Janela de avaliação](schema_reference.md#janela-de-avaliacao). |
 | `export_only_final_episode` | `true` | `true` | Para execuções planeadas com vários episódios. |
 | `debug_timing` | `false` | `false` | Campos de tempos em `info` do passo. |
 | `check_observation_limits` | `false` | `false` | Registos DEBUG das observações fora dos limites. |

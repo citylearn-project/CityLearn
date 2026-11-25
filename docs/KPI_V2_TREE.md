@@ -15,13 +15,13 @@ Which rows appear depends on the scenario's assets and services.
 | Family | Names |
 |---|---:|
 | [Cost](#cost) | 24 |
-| [Grid energy and load shape](#grid-energy-and-load-shape) | 112 |
+| [Grid energy and load shape](#grid-energy-and-load-shape) | 118 |
 | [Emissions](#emissions) | 28 |
 | [Solar self-consumption](#solar-self-consumption) | 38 |
 | [Community market](#community-market) | 36 |
 | [Batteries](#batteries) | 40 |
 | [Electrical service and phases](#electrical-service-and-phases) | 22 |
-| [Electric vehicles](#electric-vehicles) | 62 |
+| [Electric vehicles](#electric-vehicles) | 72 |
 | [EV departure audit](#ev-departure-audit) | 128 |
 | [Flexible appliances](#flexible-appliances) | 48 |
 | [Flexible-appliance audit](#flexible-appliance-audit) | 68 |
@@ -104,9 +104,10 @@ Equations and rules: [Grid energy and load shape](kpis_reference.md#grid-energy-
 | `energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average_to_baseline_signed_net_ratio` | district | ratio | As the import ratio above, on the signed net series (3.6.0 definition). |
 | `energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average{,_signed_net}_{control,business_as_usual,delta_to_business_as_usual}_ratio` | district | ratio | Load-factor penalty of the controlled run, of the BAU run, and control minus BAU, on import power or, with `_signed_net`, on signed net power (3.6.0). |
 | `energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average{,_signed_net}_to_business_as_usual_ratio` | district | ratio | Control load-factor penalty over BAU penalty, on the same series. |
+| `energy_grid_window_average_power_{control,business_as_usual,delta_to_business_as_usual}_kw` | building, district | kW | Mean signed net grid power inside the recurring local `evaluation_window` for the controlled run, the BAU run, and control minus BAU; emitted only when `evaluation_window.enabled` is true. |
 
 <details>
-<summary>All 112 names</summary>
+<summary>All 118 names</summary>
 
 ```text
 building_energy_grid_daily_average_export_baseline_kwh
@@ -145,6 +146,9 @@ building_energy_grid_total_net_exchange_business_as_usual_kwh
 building_energy_grid_total_net_exchange_control_kwh
 building_energy_grid_total_net_exchange_delta_kwh
 building_energy_grid_total_net_exchange_delta_to_business_as_usual_kwh
+building_energy_grid_window_average_power_business_as_usual_kw
+building_energy_grid_window_average_power_control_kw
+building_energy_grid_window_average_power_delta_to_business_as_usual_kw
 district_energy_grid_daily_average_export_baseline_kwh
 district_energy_grid_daily_average_export_business_as_usual_kwh
 district_energy_grid_daily_average_export_control_kwh
@@ -221,6 +225,9 @@ district_energy_grid_total_net_exchange_business_as_usual_kwh
 district_energy_grid_total_net_exchange_control_kwh
 district_energy_grid_total_net_exchange_delta_kwh
 district_energy_grid_total_net_exchange_delta_to_business_as_usual_kwh
+district_energy_grid_window_average_power_business_as_usual_kw
+district_energy_grid_window_average_power_control_kw
+district_energy_grid_window_average_power_delta_to_business_as_usual_kw
 ```
 
 </details>
@@ -506,7 +513,7 @@ district_electrical_service_phase_violations_event_count
 
 ## Electric vehicles
 
-Departure service, charging and V2G energy of electric vehicles at the members' chargers. Every member emits these rows; without chargers, counts and energies are 0 and rates are undefined.
+Departure service, charging and V2G energy of electric vehicles at the members' chargers, and opt-in EV battery health and wear (`evaluate_v2(include_battery_health_audit=True)`). Every member emits the departure and energy rows; without chargers, counts and energies are 0 and rates are undefined.
 
 Equations and rules: [Electric vehicles](kpis_reference.md#electric-vehicles).
 
@@ -524,11 +531,20 @@ Equations and rules: [Electric vehicles](kpis_reference.md#electric-vehicles).
 | `ev_ratio_to_business_as_usual_{charge,v2g_export}_total_ratio` | building, district | ratio | Control over BAU charge or V2G total, as in the shared rules; because the BAU never uses V2G, the V2G ratio is undefined whenever the controller discharges. |
 | `ev_energy_accounting_connected_soc_gain_kwh` | building, district | kWh | Sum over counted departures of max(departure SOC − arrival SOC, 0) times the nominal battery capacity. |
 | `ev_energy_accounting_shortfall_kwh` | building, district | kWh | Per member, max(SOC gain − charge total, 0): SOC gain not explained by metered charging; the district value is the sum of the member values. |
+| `ev_window_net_exchange_control_kwh` | building, district | kWh | Signed net AC energy across EV chargers inside the recurring local `evaluation_window` (positive for charging draw, negative for V2X delivery); emitted only when `evaluation_window.enabled` is true. |
+| `ev_battery_health_terminal_soh_ratio` | building, district | ratio | Opt-in capacity-weighted terminal EV battery state of health in [0, 1] (`include_battery_health_audit=True`). At building level, read at the end of each connected EV's last realized connection, including wear received at other buildings, so building SOH can be below 1 − ev_battery_health_capacity_fade_ratio; at district and portfolio levels, pooled over unique eligible fleet EVs by nominal capacity (equal to 1 − fade ratio); undefined when nominal capacity ≤ 0. |
+| `ev_battery_health_capacity_fade_kwh` | building, district | kWh | Opt-in cumulative EV battery capacity lost to degradation in [kWh] (`include_battery_health_audit=True`), attributed to executed transfers at the member's chargers at building level and summed over unique eligible fleet EVs at district and portfolio levels. |
+| `ev_battery_health_capacity_fade_ratio` | building, district | ratio | Opt-in fraction of nominal EV battery capacity lost to degradation in [0, 1] (`include_battery_health_audit=True`), from executed transfers over realized connected EV capacity at building level and pooled over unique eligible fleet EV nominal capacity at district and portfolio levels; undefined when nominal capacity ≤ 0. |
+| `ev_battery_health_equivalent_full_cycles_count` | building, district | count | Opt-in equivalent full cycles of EV batteries from accepted gross battery-terminal throughput over (2 · nominal capacity) (`include_battery_health_audit=True`), attributed to executed transfers over realized connected EV capacity at building level and pooled over unique eligible fleet EV nominal capacity at district and portfolio levels; undefined when nominal capacity ≤ 0 (whereas `Battery.equivalent_full_cycles` returns `0.0`). |
 
 <details>
-<summary>All 62 names</summary>
+<summary>All 72 names</summary>
 
 ```text
+building_ev_battery_health_capacity_fade_kwh
+building_ev_battery_health_capacity_fade_ratio
+building_ev_battery_health_equivalent_full_cycles_count
+building_ev_battery_health_terminal_soh_ratio
 building_ev_energy_accounting_connected_soc_gain_kwh
 building_ev_energy_accounting_shortfall_kwh
 building_ev_events_departure_count
@@ -560,6 +576,11 @@ building_ev_total_charge_kwh
 building_ev_total_v2g_export_business_as_usual_kwh
 building_ev_total_v2g_export_delta_to_business_as_usual_kwh
 building_ev_total_v2g_export_kwh
+building_ev_window_net_exchange_control_kwh
+district_ev_battery_health_capacity_fade_kwh
+district_ev_battery_health_capacity_fade_ratio
+district_ev_battery_health_equivalent_full_cycles_count
+district_ev_battery_health_terminal_soh_ratio
 district_ev_energy_accounting_connected_soc_gain_kwh
 district_ev_energy_accounting_shortfall_kwh
 district_ev_events_departure_count
@@ -591,6 +612,7 @@ district_ev_total_charge_kwh
 district_ev_total_v2g_export_business_as_usual_kwh
 district_ev_total_v2g_export_delta_to_business_as_usual_kwh
 district_ev_total_v2g_export_kwh
+district_ev_window_net_exchange_control_kwh
 ```
 
 </details>
