@@ -1716,7 +1716,24 @@ class CityLearnEnv(Environment, Env):
             b.time_step_ratio = self.time_step_ratio        
 
     def set_experiment_identity(self, implementation, version, parameters, observation_access='agent_payload'):
-        """Declare the controller used for exported paired comparisons."""
+        """Declare the controller used for exported paired comparisons.
+
+        The identity is written to the export manifest as ``controller_identity``.
+        ``compare_exports()`` and ``compare_manifests()`` report ``status='unknown'``
+        (``missing_evidence=['controller_identity']``) for a run without one. It stays
+        on the environment across ``reset()``; set it before ``export_final_kpis()``.
+
+        Parameters
+        ----------
+        implementation: str
+            Controller name, for example its import path.
+        version: str
+            Version of the controller code or of its trained weights.
+        parameters: dict
+            Settings that define the controller; JSON-serializable with finite numbers.
+        observation_access: str, default: 'agent_payload'
+            What the controller observes. Runs with different values are incompatible.
+        """
         import json
         if not implementation or not version or not isinstance(parameters, dict):
             raise ValueError('Controller implementation, version and parameter dictionary are required')

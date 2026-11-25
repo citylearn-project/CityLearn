@@ -159,6 +159,11 @@ procura atual introduziria outro desfasamento temporal. O excedente FV real pode
 por isso ser menor do que o estimado num passo com procura térmica, e um pedido
 de carregamento pode aumentar a importação da rede. O simulador continua a
 impor os limites elétricos configurados.
+As referências baseadas em regras planeiam o orçamento da bateria, dos VE e dos
+aparelhos com a mesma estimativa do passo atual (desde `basic-v4`,
+`smart-local-v4` e `community-v4`); antes, usavam a carga, o FV e as potências da
+bateria e dos VE já liquidadas no passo anterior
+([#400](https://github.com/citylearn-project/CityLearn/issues/400)).
 
 A bateria do BAU serve apenas a potência que o VE ainda consegue aceitar: a
 observação `available_charge_power_kw` do grupo `entity_core_electrical` ou, sem
@@ -274,6 +279,18 @@ os grupos de previsões, a Smart e a Community recorrem ao preço e ao FV atuais
 Ative-os no schema, por exemplo
 `"observation_bundles": {"entity_community_operational": true}`.
 
+A Smart e a Community só carregam a bateria a partir da rede a preço baixo
+quando não há excedente FV local previsto. Com `entity_forecasts_derived`, essa
+previsão é `forecast_net_next_*_kw`. Sem ela, a previsão solar faz as suas vezes:
+um edifício com FV não carrega a partir da rede a preço baixo enquanto a sua
+previsão FV, ou uma previsão de irradiância (`*_solar_irradiance_predicted_*`)
+acima de 100 W/m², indicar que vem aí produção FV. Sem nenhuma previsão solar, o
+carregamento a preço baixo funciona como antes. Até `smart-local-v3` e
+`community-v3`, a previsão de excedente em falta era lida como zero; em datasets
+como `citylearn_challenge_2022_phase_all`, as baterias enchiam a partir da rede
+antes do nascer do sol e depois exportavam o FV que já não conseguiam guardar
+([#400](https://github.com/citylearn-project/CityLearn/issues/400)).
+
 `RBCBasicPolicy` compara o preço atual com limiares fixos,
 `basic_cheap_price_eur_kwh=0.0765` e `basic_expensive_price_eur_kwh=0.1078`.
 São os tercis do preço diário português de 2023 usado para calibrar a política.
@@ -289,10 +306,15 @@ community = RBCCommunityPolicy(env, community_import_threshold_kw=10.0)
 ```
 
 Estas políticas foram portadas das referências dos Soft-CPS Algorithms (commit
-`725a72a`). Com os mesmos valores predefinidos e as mesmas observações, pedem as
-mesmas ações de armazenamento, VE e aparelhos em todos os passos; a regra de
-AVAC acima é própria do CityLearn (`hvac='off'` dá o AVAC a zero da versão
-portada). `agent.comparison_identity()` regista a classe, a versão da definição
+`725a72a`) e mantêm as suas regras e valores predefinidos, com três alterações
+do CityLearn. A regra de AVAC acima é própria do CityLearn (`hvac='off'` dá o
+AVAC a zero da versão portada). Desde `basic-v4`, `smart-local-v4` e
+`community-v4`, planeiam com a carga e o FV do passo atual, como o BAU, enquanto
+a versão portada reage às observações liquidadas do passo anterior; por isso, as
+suas ações diferem das da versão portada em todos os datasets. A previsão solar
+que substitui uma previsão de excedente FV em falta também é própria do
+CityLearn; nunca atua quando `entity_forecasts_derived` está ativo, como em
+`pt_rec_*` e `citylearn_challenge_2022_phase_all_plus_evs`. `agent.comparison_identity()` regista a classe, a versão da definição
 e os parâmetros resolvidos para os manifestos das experiências.
 
 As referências baseadas em regras também podem orientar a exploração de `SACRBC`

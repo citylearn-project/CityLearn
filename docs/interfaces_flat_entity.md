@@ -252,13 +252,17 @@ ID-keyed overrides are also supported:
 actions = {
     "map": {
         "building:Building_1": {"electrical_storage": 0.2},
-        "charger:Building_1:AC001": {"electric_vehicle_storage": 0.5},
-        "deferrable_appliance:Building_1:washer_1": {"start": 1.0}
+        "charger:Building_1/charger_1_1": {"electric_vehicle_storage": 0.5},
+        "deferrable_appliance:Building_1/deferrable_appliance_1": {"start": 1.0}
     }
 }
 ```
 
-Use prefixed IDs for robust GraphRL and Transformer integrations.
+Each key is `<kind>:<id>`. `<kind>` is `building`, `charger` or `deferrable_appliance`, and
+`<id>` is one of the ids listed in `env.entity_specs["actions"][<kind>]["ids"]`: the building name
+for buildings, and `<building>/<device>` for chargers and deferrable appliances (note the `/`). The
+example uses the ids of `Building_1` in `citylearn_challenge_2022_phase_all_plus_evs`. Use these
+prefixed ids for robust GraphRL and Transformer integrations.
 
 After an entity-mode step, `info["entity_action_execution"]` contains stable-ID
 entries for the requested command, the value after channel perturbations, the
