@@ -2572,6 +2572,9 @@ class Building(Environment):
                 low_limit[key] = -1.0
                 if key.endswith('_ratio') or key.endswith(('pending', 'running', 'can_start', 'deadline_missed')):
                     high_limit[key] = 1.0
+                elif key.endswith('_kwh') and physics_version_of(self) < 2:
+                    # The placeholder of CityLearn 3.6.0, kept to reproduce it.
+                    high_limit[key] = 1.0e6
                 elif key.endswith('_kwh'):
                     # Energies are never negative (0 without a cycle); the bound is the largest value the
                     # appliances' cycles can report, so that normalisation keeps the signal.

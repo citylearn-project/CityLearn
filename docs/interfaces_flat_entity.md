@@ -169,7 +169,8 @@ The deferrable appliance energies are bounded by the appliances' cycle
 definitions: `cycle_energy_kwh` and `remaining_energy_kwh` by [0, the largest
 cycle energy of the building's appliances], and `current_step_energy_kwh` by
 [0, the largest step energy of their cycle profiles]. No cycle can report more,
-so these bounds hold under any controller. The entity `deferrable_appliance`
+so these bounds hold under any controller. Physics version 1 keeps the
+placeholder [-1, 1e6] of CityLearn 3.6.0. The entity `deferrable_appliance`
 table bounds the three by [0, the largest cycle energy in the district, at least
 1 kWh].
 

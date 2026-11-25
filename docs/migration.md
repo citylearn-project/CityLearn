@@ -406,7 +406,8 @@ bounds from `env.action_space`. See
 The flat bounds of `deferrable_appliance_*_cycle_energy_kwh`,
 `*_remaining_energy_kwh` and `*_current_step_energy_kwh` change from
 [-1, 1e6] to [0, largest cycle energy] and [0, largest step energy] of the
-building's appliances. The observation values and the simulation do not change.
+building's appliances, under the default physics version 2; `physics_version=1`
+keeps [-1, 1e6]. The observation values and the simulation do not change.
 Normalised (`NormalizedObservationWrapper`) and discretised observations, and the
 encoders of `SAC` and `MARLISA`, read these bounds, so a policy trained on a
 dataset with deferrable appliances (`pt_rec_*`,
@@ -811,6 +812,9 @@ It also changes runs that use the following:
 - **Flat actions outside the action space.** They are clipped to the space, as
   entity tables are; version 1 applied them as given (see
   [out-of-range flat actions are clipped](#out-of-range-flat-actions-are-clipped)).
+- **Deferrable energy observation bounds.** The flat `*_kwh` bounds come from the
+  appliances' cycles; version 1 kept [-1, 1e6] (see
+  [deferrable energy observation bounds](#deferrable-energy-observation-bounds)).
 - **Occupant set points under arbitrary control.** An occupant change stops at
   `set_point_limits`, [15, 30] °C by default; version 1 had no limit
   ([#352](https://github.com/citylearn-project/CityLearn/issues/352), see

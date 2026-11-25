@@ -172,7 +172,8 @@ As energias dos aparelhos diferíveis são limitadas pelas definições dos cicl
 dos aparelhos: `cycle_energy_kwh` e `remaining_energy_kwh` por [0, a maior
 energia de ciclo dos aparelhos do edifício], e `current_step_energy_kwh` por
 [0, a maior energia por passo dos seus perfis de ciclo]. Nenhum ciclo pode
-indicar mais, pelo que estes limites valem com qualquer controlador. A tabela
+indicar mais, pelo que estes limites valem com qualquer controlador. A física
+da versão 1 mantém o limite provisório [-1, 1e6] do CityLearn 3.6.0. A tabela
 entity `deferrable_appliance` limita as três por [0, a maior energia de ciclo da
 comunidade, pelo menos 1 kWh].
 

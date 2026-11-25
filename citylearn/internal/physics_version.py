@@ -37,7 +37,9 @@ Versions
       `max_charging_power` charges up to its `nominal_power`; version 1 gives both 50 kW (#369);
     * flat actions outside the action space, and flat vectors sent to an entity environment, are
       clipped to the space, as entity table and map payloads always were; version 1 applies them as
-      given.
+      given;
+    * the flat deferrable `*_kwh` observations are bounded by the appliances' cycle energies instead
+      of the placeholder [-1, 1e6], which normalisation turned into constants.
 """
 
 from typing import Any

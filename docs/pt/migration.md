@@ -428,7 +428,8 @@ de `env.action_space`. Ver
 Os limites flat de `deferrable_appliance_*_cycle_energy_kwh`,
 `*_remaining_energy_kwh` e `*_current_step_energy_kwh` passam de [-1, 1e6] para
 [0, maior energia de ciclo] e [0, maior energia por passo] dos aparelhos do
-edifício. Os valores das observações e a simulação não mudam. As observações
+edifício, com a versão da física 2, a predefinida; `physics_version=1` mantém
+[-1, 1e6]. Os valores das observações e a simulação não mudam. As observações
 normalizadas (`NormalizedObservationWrapper`) e discretizadas, e os codificadores
 do `SAC` e do `MARLISA`, leem estes limites, pelo que uma política treinada num
 dataset com aparelhos diferíveis (`pt_rec_*`,
@@ -862,6 +863,9 @@ Altera também as execuções que usam o seguinte:
 - **Ações flat fora do espaço de ações.** São cortadas para o espaço, como as
   tabelas entity; a versão 1 aplicava-as tal como eram enviadas (ver
   [as ações flat fora dos limites são cortadas](#as-ações-flat-fora-dos-limites-são-cortadas)).
+- **Limites das observações de energia dos diferíveis.** Os limites flat `*_kwh`
+  vêm dos ciclos dos aparelhos; a versão 1 mantinha [-1, 1e6] (ver
+  [limites das observações de energia dos diferíveis](#limites-das-observações-de-energia-dos-diferíveis)).
 - **Set points dos ocupantes sob controlo arbitrário.** Uma alteração do ocupante
   para em `set_point_limits`, [15, 30] °C por omissão; a versão 1 não tinha limite
   ([#352](https://github.com/citylearn-project/CityLearn/issues/352), ver
