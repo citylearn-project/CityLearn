@@ -13,6 +13,19 @@ from test_deferrable_appliance_integration import (
 from private_access import runtime_service, topology_service
 
 
+def add_remaining_member(schema):
+    """Add Building_2, a copy of Building_1 without its washer or charger, so a member stays while Building_1 leaves.
+
+    The copied charger is dropped rather than renamed: two buildings may not declare the same charger id
+    (#402), and a renamed copy would still schedule Building_1's EV, which is then plugged in twice.
+    """
+
+    member = deepcopy(schema['buildings']['Building_1'])
+    member['deferrable_appliances'] = {}
+    member['chargers'] = {}
+    schema['buildings']['Building_2'] = member
+
+
 def make_env(tmp_path, *, earliest=0, latest=3, start=0, steps=8, events=None, seconds=900):
     path = _schema_with_deferrable_appliance(tmp_path, earliest=earliest, latest=latest)
     schema = json.loads(path.read_text())
@@ -21,9 +34,7 @@ def make_env(tmp_path, *, earliest=0, latest=3, start=0, steps=8, events=None, s
                   episode_time_steps=steps)
     if events is not None:
         schema.update(interface='entity', topology_mode='dynamic', topology_events=events)
-        # A remaining member keeps the environment meaningful while Building_1 leaves.
-        schema['buildings']['Building_2'] = deepcopy(schema['buildings']['Building_1'])
-        schema['buildings']['Building_2']['deferrable_appliances'] = {}
+        add_remaining_member(schema)
     return CityLearnEnv(schema, random_seed=0, offline=True, render_directory=tmp_path/'exports',
                         export_kpis_on_episode_end=False, time_step_ratio_mode='compress')
 
@@ -184,8 +195,7 @@ def test_member_reentry_retains_later_calendar_requests(tmp_path):
     schema.update(interface='entity', topology_mode='dynamic', physics_invariant_checks=True,
                   topology_events=[dict(id='out', time_step=2, operation='remove_member', target_member_id='Building_1'),
                                    dict(id='in', time_step=3, operation='add_member', target_member_id='Building_1')])
-    schema['buildings']['Building_2'] = deepcopy(schema['buildings']['Building_1'])
-    schema['buildings']['Building_2']['deferrable_appliances'] = {}
+    add_remaining_member(schema)
     env = CityLearnEnv(schema, random_seed=0, offline=True, export_kpis_on_episode_end=False)
     try:
         env.reset()

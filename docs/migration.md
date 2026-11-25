@@ -329,6 +329,21 @@ A schema that omits `max_discharging_power` and relied on the 50 kW of V2G
 needs it set explicitly, or `physics_version=1`, which keeps the 50 kW defaults
 of CityLearn 3.6.0 (the name check applies to both versions).
 
+### Charger ids are unique across the schema
+
+Two buildings may no longer declare a charger with the same id: loading raises
+`ValueError: Charger id 'charger_1_1' is declared by both Building_1 and
+Building_2` ([#402](https://github.com/citylearn-project/CityLearn/issues/402)).
+Give each charger its own id in the schema, for example `charger_2_1` for the
+copy in `Building_2`. If you built the second building by copying the first,
+check its `charger_simulation` file too: a copy that schedules the same EV
+plugs one car into two chargers, and the second stays idle with a warning.
+
+Deferrable-appliance names may still repeat across buildings. In an entity
+action map, address such an appliance with its building,
+`Building_2/washer_1`; the bare `washer_1` (or `deferrable_appliance:washer_1`)
+now raises when two buildings have it instead of reaching the last of them.
+
 ### EV departures at the end of the window
 
 A session that is still connected at the last step of a member's KPI window,

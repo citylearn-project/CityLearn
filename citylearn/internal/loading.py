@@ -326,6 +326,8 @@ class CityLearnLoadingService:
         for i, building_name in enumerate(buildings_to_include):
             buildings.append(self.load_building(i, building_name, schema, episode_tracker, pv_sizing_data, battery_sizing_data, **kwargs))
 
+        self._validate_unique_charger_ids(buildings)
+
         if not dynamic_mode:
             self._validate_static_action_asset_consistency(buildings)
 
@@ -1233,6 +1235,35 @@ class CityLearnLoadingService:
         schema = self.env.schema if isinstance(getattr(self.env, 'schema', None), Mapping) else {}
         building_schema = (schema.get('buildings', {}) or {}).get(getattr(building, 'name', ''), {})
         return set(self._normalize_action_tokens((building_schema or {}).get('inactive_actions')))
+
+    @staticmethod
+    def _validate_unique_charger_ids(buildings: List[Building]) -> None:
+        """Reject a charger id that two buildings declare (#402).
+
+        A charger id names the charger's observations and actions, the EV sessions it holds, its
+        export files and its raw entity-map key, so it must be unique across the schema. Chargers
+        cloned by topology events get their own ids (#394). Deferrable appliance names are scoped
+        to their building (entity id ``Building/appliance``) and may repeat; EV names are the keys
+        of ``electric_vehicles_def`` and are unique by construction.
+        """
+
+        owners: Dict[str, str] = {}
+
+        for building in buildings:
+            for charger in getattr(building, 'electric_vehicle_chargers', None) or []:
+                charger_id = str(charger.charger_id)
+
+                if charger_id in owners:
+                    owner = owners[charger_id]
+                    where = f'twice by {owner}' if owner == building.name else f'by both {owner} and {building.name}'
+                    raise ValueError(
+                        f"Charger id '{charger_id}' is declared {where}. "
+                        'Charger ids must be unique across the schema: they name the charger observations, '
+                        'actions, EV sessions and export files. Rename one of them, e.g. '
+                        f"'{charger_id}' -> '{charger_id}_{building.name}'."
+                    )
+
+                owners[charger_id] = building.name
 
     def _validate_static_action_asset_consistency(self, buildings: List[Building]) -> None:
         inconsistent: List[str] = []
