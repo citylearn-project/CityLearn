@@ -7,7 +7,7 @@ from citylearn.data import ChargerSimulation
 from citylearn.energy_model import Battery
 
 
-DEFINITION_VERSION = 'ev-departure-audit-v1'
+DEFINITION_VERSION = 'ev-departure-audit-v2'
 THRESHOLDS = ('target', 'min_acceptable', 'within_tolerance')
 # A departure receives the first applicable reason, so reason counts reconcile.
 UNKNOWN_REASONS = (
@@ -144,7 +144,8 @@ def record_departure(service, counts, building, charger, sim, ev, states, step, 
     start = connected_start(service, charger, sim, ev, states, step)
     reason, initial = prerequisites(service, charger, sim, ev, states, start, target)
     outage = any(service._ev_power_outage_at_step(building, t) for t in range(start, step + 1))
-    tolerances = (0., service._ev_departure_service_tolerance(), service._ev_departure_within_tolerance())
+    tolerances = (service._ev_departure_target_tolerance(), service._ev_departure_service_tolerance(),
+                  service._ev_departure_within_tolerance())
     feasibility = (None,) * len(THRESHOLDS)
     if reason is None:
         feasibility = service._ev_departure_thresholds_feasible(

@@ -43,8 +43,7 @@ def building_records(kpi: "CityLearnKPIService", building, t_start, t_end,
         )
 
     indoor = kpi._thermal_values(building, building.indoor_dry_bulb_temperature, t_start, t_end)
-    cooling_setpoint = kpi._thermal_values(building, building.indoor_dry_bulb_temperature_cooling_set_point, t_start, t_end)
-    heating_setpoint = kpi._thermal_values(building, building.indoor_dry_bulb_temperature_heating_set_point, t_start, t_end)
+    cooling_setpoint, heating_setpoint = kpi._comfort_set_points(building, t_start, t_end)
     occupants = kpi._thermal_values(building, building.occupant_count, t_start, t_end)
     discomfort_kwargs = {
         'indoor_dry_bulb_temperature': indoor,
