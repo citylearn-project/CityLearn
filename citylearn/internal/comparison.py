@@ -171,17 +171,16 @@ def context(env, data_files):
                'observations', 'actions', 'observation_bundles', 'community_market', 'random_seed', 'random_stream_version',
                'render', 'render_mode', 'render_directory', 'render_file_format', 'debug_timing',
                'metrics_log_interval', 'check_observation_limits', 'physics_invariant_checks',
-               'export_kpis_on_episode_end', 'evaluation_window', 'chargers_observations_helper', 'chargers_actions_helper',
+               'export_kpis_on_episode_end', 'evaluation_window', 'district_electrical_service',
+               'chargers_observations_helper', 'chargers_actions_helper',
                'chargers_shared_observations_helper', 'deferrable_appliance_observations_helper',
                'deferrable_appliance_actions_helper', 'escalator_observations_helper', 'escalator_actions_helper'}
+    # The feeder setting only monitors (nothing simulated changes), so, like the evaluation window,
+    # it is compared on its own in compare_manifests() and kept out of the physical hash.
     physical = {k: v for k, v in schema.items() if k not in ignored and not k.startswith('_')}
     effective_feeder = serialize_district_electrical_service_config(
         getattr(env, '_district_electrical_service_parsed', None)
     )
-    if effective_feeder['enabled']:
-        physical['district_electrical_service'] = effective_feeder
-    else:
-        physical.pop('district_electrical_service', None)
     if isinstance(physical.get('robustness'), dict):
         physical['robustness'].pop('agent_observation_contract', None)
     observation = {k: schema.get(k) for k in ('observations', 'observation_bundles', 'derived_forecasts')}
@@ -252,6 +251,20 @@ def _is_evaluation_window_kpi(kpi_name):
     return '_energy_grid_window_average_power_' in text or '_ev_window_net_exchange_' in text
 
 
+def _is_feeder_kpi(kpi_name):
+    return '_energy_grid_feeder_limit_' in str(kpi_name or '')
+
+
+def _monitor_status(left, right):
+    """'disabled', 'paired', 'one_sided' or 'incompatible' for two post-processing settings."""
+    left_enabled, right_enabled = bool(left.get('enabled')), bool(right.get('enabled'))
+    if not left_enabled and not right_enabled:
+        return 'disabled'
+    if left_enabled and right_enabled:
+        return 'paired' if left == right else 'incompatible'
+    return 'one_sided'
+
+
 def compare_manifests(left, right, mode='controller'):
     if mode not in ('controller', 'sharing'):
         raise ValueError('Comparison mode must be controller or sharing')
@@ -260,14 +273,11 @@ def compare_manifests(left, right, mode='controller'):
     default_window = {'enabled': False, 'start': None, 'end': None, 'timezone': None}
     win_a = (a or {}).get('evaluation_window') or left.get('evaluation_window') or default_window
     win_b = (b or {}).get('evaluation_window') or right.get('evaluation_window') or default_window
-    win_a_enabled = bool(win_a.get('enabled'))
-    win_b_enabled = bool(win_b.get('enabled'))
-    if not win_a_enabled and not win_b_enabled:
-        window_status = 'disabled'
-    elif win_a_enabled and win_b_enabled:
-        window_status = 'paired' if win_a == win_b else 'incompatible'
-    else:
-        window_status = 'one_sided'
+    window_status = _monitor_status(win_a, win_b)
+    default_feeder = {'enabled': False, 'limits': {'import_kw': None, 'export_kw': None}}
+    feeder_a = (a or {}).get('district_electrical_service') or left.get('district_electrical_service') or default_feeder
+    feeder_b = (b or {}).get('district_electrical_service') or right.get('district_electrical_service') or default_feeder
+    feeder_status = _monitor_status(feeder_a, feeder_b)
     if not a or not b or a.get('definition_version') != DEFINITION_VERSION or b.get('definition_version') != DEFINITION_VERSION:
         missing.append('versioned_comparison_context')
     else:
@@ -291,11 +301,12 @@ def compare_manifests(left, right, mode='controller'):
                     declared.append('sharing_enabled_flags')
             elif a[key] != b[key]:
                 mismatches.append(key)
-        default_feeder = {'enabled': False, 'limits': {'import_kw': None, 'export_kw': None}}
-        feeder_a = a.get('district_electrical_service') or default_feeder
-        feeder_b = b.get('district_electrical_service') or default_feeder
-        if feeder_a != feeder_b:
+        # The feeder monitor changes no simulated quantity: a run with it and the same run without it
+        # differ only in the feeder rows, as for a one-sided evaluation window.
+        if feeder_status == 'incompatible':
             mismatches.append('district_electrical_service')
+        elif feeder_status == 'one_sided':
+            declared.append('district_electrical_service_one_sided')
         if window_status == 'incompatible':
             mismatches.append('evaluation_window')
         elif window_status == 'one_sided':
@@ -331,6 +342,8 @@ def compare_manifests(left, right, mode='controller'):
                 permitted_claim=('controller_difference' if mode == 'controller' else 'sharing_difference') if status == 'paired' else None,
                 mismatches=sorted(set(mismatches)), missing_evidence=sorted(set(missing)), declared_differences=declared,
                 evaluation_window=dict(status=window_status, comparable=(window_status == 'paired'), left=win_a, right=win_b),
+                district_electrical_service=dict(status=feeder_status, comparable=(feeder_status == 'paired'),
+                                                 left=feeder_a, right=feeder_b),
                 left_controller=left.get('controller_identity'), right_controller=right.get('controller_identity'),
                 baseline_reference=left.get('business_as_usual_reference'),
                 final_inventory=dict(left=left.get('final_inventory'), right=right.get('final_inventory')),
@@ -350,9 +363,11 @@ def compare_exports(left_path, right_path, mode='controller'):
         manifests.append(json.loads(manifest_path.read_text()) if manifest_path.exists() else {})
     report = compare_manifests(*manifests, mode=mode)
     window_status = (report.get('evaluation_window') or {}).get('status')
+    feeder_status = (report.get('district_electrical_service') or {}).get('status')
     values = [load_kpis(p) for p in paths]
     rows = []
     unpaired_window_kpis = set()
+    unpaired_feeder_kpis = set()
     for name, key in sorted(set(values[0]) | set(values[1])):
         a, b = (v.get((name, key)) for v in values)
         row = dict(name=name, kpi=key, left=a, right=b,
@@ -360,9 +375,13 @@ def compare_exports(left_path, right_path, mode='controller'):
         if _is_evaluation_window_kpi(key) and window_status in ('one_sided', 'incompatible'):
             row['window_status'] = window_status
             unpaired_window_kpis.add(key)
+        if _is_feeder_kpi(key) and feeder_status in ('one_sided', 'incompatible'):
+            row['feeder_status'] = feeder_status
+            unpaired_feeder_kpis.add(key)
         rows.append(row)
     report['kpis'] = rows
     report['unpaired_window_kpis'] = sorted(unpaired_window_kpis)
+    report['unpaired_feeder_kpis'] = sorted(unpaired_feeder_kpis)
     report['outcome_summary'] = [r for r in rows if r['name'].rsplit(':', 1)[-1]=='District' and any(
         text in r['kpi'] for text in ('cost_total_control', 'departure_audit_', 'deferrable_appliance_audit_',
                                      'provenance_pv_useful_', 'provenance_external_purchase_emissions'))]

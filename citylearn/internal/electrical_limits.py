@@ -272,14 +272,21 @@ def parse_district_electrical_service_config(config) -> Dict[str, object]:
     raw_import = limits.get('import_kw', total_block.get('import_kw') if isinstance(total_block, Mapping) else None)
     raw_export = limits.get('export_kw', total_block.get('export_kw') if isinstance(total_block, Mapping) else None)
 
+    import_kw = _parse_district_limit_spec(raw_import, 'district_electrical_service.limits.import_kw', enabled=enabled)
+    export_kw = _parse_district_limit_spec(raw_export, 'district_electrical_service.limits.export_kw', enabled=enabled)
+
+    if enabled and import_kw is None and export_kw is None:
+        # An unconfigured direction is undefined, so every feeder KPI would be NaN.
+        raise ValueError(
+            'district_electrical_service is enabled but has no limit: give limits.import_kw and/or '
+            'limits.export_kw (a finite kW value or a per-step sequence), or set enabled to false. '
+            'Without a limit every feeder exceedance KPI would be NaN.'
+        )
+
     return {
         'enabled': enabled,
-        'import_kw': _parse_district_limit_spec(
-            raw_import, 'district_electrical_service.limits.import_kw', enabled=enabled
-        ),
-        'export_kw': _parse_district_limit_spec(
-            raw_export, 'district_electrical_service.limits.export_kw', enabled=enabled
-        ),
+        'import_kw': import_kw,
+        'export_kw': export_kw,
     }
 
 
