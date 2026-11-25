@@ -1628,8 +1628,7 @@ class ChargerSimulation(TimeSeriesData):
             if values is None:
                 continue
 
-            raw = pd.to_numeric(pd.Series(np.ravel(np.asarray(values, dtype=object))), errors='coerce')
-            raw = raw.to_numpy(dtype='float64')
+            raw = cls._soc_float_values(values)
             valid = np.isfinite(raw) & (raw >= 0.0) & (raw != default_soc_value)
 
             if np.any(raw[valid] > 1.0 + cls._SOC_FRACTION_TOLERANCE):
@@ -1645,10 +1644,26 @@ class ChargerSimulation(TimeSeriesData):
         suggest a fraction column that one stray value above 1 turned into percent.
         """
 
-        raw = pd.to_numeric(pd.Series(np.ravel(np.asarray(values, dtype=object))), errors='coerce')
-        raw = raw.to_numpy(dtype='float64')
+        raw = cls._soc_float_values(values)
         valid = np.isfinite(raw) & (raw != default_soc_value)
         return raw[valid & (raw > 0.0) & (raw < 1.0)]
+
+    @staticmethod
+    def _soc_float_values(values: Iterable[float]) -> np.ndarray:
+        """SOC values as a flat float64 array; values that are not numbers become NaN.
+
+        A numeric array, such as a column of a loaded file, is converted directly. Other values (strings,
+        mixed objects, nullable columns with ``pd.NA``) go through ``pd.to_numeric``, which takes about a
+        second per million values: on the 15 s datasets it made building an environment 4 s slower.
+        """
+
+        dtype = getattr(values, 'dtype', None)
+
+        if isinstance(values, (np.ndarray, pd.Series)) and isinstance(dtype, np.dtype) and dtype.kind in 'biuf':
+            return np.ravel(np.asarray(values)).astype('float64')
+
+        raw = pd.to_numeric(pd.Series(np.ravel(np.asarray(values, dtype=object))), errors='coerce')
+        return raw.to_numpy(dtype='float64')
 
     @classmethod
     def _resolve_soc_unit(cls, value: str = None, path: str = 'soc_unit') -> Union[str, None]:
