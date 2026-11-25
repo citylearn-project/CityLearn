@@ -69,7 +69,7 @@ Expected output:
 ``evaluate_v2()``, which ``scorecard()`` calls, runs the BAU on the same day and
 reports it next to the controller: ``*_control_*`` rows are this run,
 ``*_business_as_usual_*`` rows the BAU and ``*_delta_to_business_as_usual_*`` rows
-their difference. Here the controller imports less energy and costs about 25%
+their difference. Here the controller imports less energy and costs about 26%
 less than the BAU, while every EV still leaves with its minimum acceptable charge.
 
 ``env.scorecard()`` returns the default selection of the KPI table

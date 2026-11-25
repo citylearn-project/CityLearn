@@ -152,6 +152,10 @@ step is applied. Using the previous thermal load as current demand would
 introduce another time lag. Actual PV surplus can therefore be smaller than
 the estimate on a step with thermal demand, and a charge request can increase
 grid import. The simulator still enforces the configured electrical limits.
+The rule-based baselines plan their battery, EV and appliance budget with the
+same current-step estimate (since `basic-v4`, `smart-local-v4` and
+`community-v4`); before, they used the settled load, PV, battery and EV power of
+the previous step ([#400](https://github.com/citylearn-project/CityLearn/issues/400)).
 
 The BAU battery serves only the EV power the
 EV can still accept: the `available_charge_power_kw` observation of the
@@ -263,6 +267,17 @@ Community fall back to the current price and PV.
 Enable them in the schema, for example
 `"observation_bundles": {"entity_community_operational": true}`.
 
+Smart and Community charge the battery from the grid at a cheap price only when
+no local PV surplus is forecast. With `entity_forecasts_derived` that forecast is
+`forecast_net_next_*_kw`. Without it, the solar forecast stands in: a building with
+PV does not charge from the grid at a cheap price while its PV forecast, or an
+irradiance forecast (`*_solar_irradiance_predicted_*`) above 100 W/m², says that
+PV is coming. Without any solar forecast the cheap-price grid charge works as
+before. Until `smart-local-v3` and `community-v3` the missing surplus forecast
+read as zero, so on datasets such as `citylearn_challenge_2022_phase_all` the
+batteries filled from the grid before sunrise and then exported the PV they could
+not store ([#400](https://github.com/citylearn-project/CityLearn/issues/400)).
+
 `RBCBasicPolicy` compares the current price with fixed thresholds,
 `basic_cheap_price_eur_kwh=0.0765` and `basic_expensive_price_eur_kwh=0.1078`.
 They are the terciles of the 2023 Portuguese day-ahead price used to calibrate
@@ -278,9 +293,14 @@ community = RBCCommunityPolicy(env, community_import_threshold_kw=10.0)
 ```
 
 These policies are ported from the Soft-CPS Algorithms baselines (commit
-`725a72a`). With the same defaults and observations they request the same
-storage, EV and appliance actions at every step; the HVAC rule above is
-CityLearn's own (`hvac='off'` gives the zero HVAC of the port).
+`725a72a`) and keep their rules and defaults, with three CityLearn changes. The
+HVAC rule above is CityLearn's own (`hvac='off'` gives the zero HVAC of the
+port). Since `basic-v4`, `smart-local-v4` and `community-v4` they plan with the
+current-step load and PV, as the BAU does, where the port reacts to the settled
+observations of the previous step, so their actions differ from the port on every
+dataset. The solar forecast that stands in for a missing PV-surplus forecast is
+also CityLearn's own; it never acts where `entity_forecasts_derived` is enabled,
+as on `pt_rec_*` and `citylearn_challenge_2022_phase_all_plus_evs`.
 `agent.comparison_identity()` records the class, the definition version and the
 resolved parameters for experiment manifests.
 
