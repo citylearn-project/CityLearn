@@ -1114,7 +1114,7 @@ edit `schema['community_market']` and build a new env.
 | `end` | `"19:00:00"` | Window end in 24-hour `"HH:MM"` or `"HH:MM:SS"` format. When `start > end` (for example `"22:00"` to `"06:00"`), the window wraps across midnight. |
 | `timezone` | `schema.timezone` or `"scenario_local"` | IANA time zone used when converting a UTC `TimeAxis` calendar, or `"scenario_local"` for local dataset calendar columns. |
 
-The resolved `start`, `end` and `timezone` are recorded in `exported_kpis.manifest.json`. When both runs enable `evaluation_window` with different effective bounds or time zones, `compare_manifests()` adds `'evaluation_window'` to `mismatches` (`status='incompatible'`). When only one run enables `evaluation_window`, `compare_manifests()` keeps `status='paired'` for all shared KPIs, records `'evaluation_window_one_sided'` in `declared_differences` (`evaluation_window.status == 'one_sided'`), and `compare_exports()` flags only the windowed rows in `unpaired_window_kpis`.
+The resolved `start`, `end` and `timezone` are recorded in `exported_kpis.manifest.json`. When both runs enable `evaluation_window` with different effective bounds or time zones, `compare_manifests()` adds `'evaluation_window'` to `mismatches` (`status='incompatible'`). When only one run enables `evaluation_window`, and both runs otherwise pair (including a controller identity from `set_experiment_identity()`, see [Comparing two exported runs](running_simulations.md#comparing-two-exported-runs)), `compare_manifests()` keeps `status='paired'` for all shared KPIs, records `'evaluation_window_one_sided'` in `declared_differences` (`evaluation_window.status == 'one_sided'`), and `compare_exports()` flags only the windowed rows in `unpaired_window_kpis`.
 
 ## Demand response
 

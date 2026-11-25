@@ -345,6 +345,76 @@ Normal episode time series are controlled by `render_mode`/`render_enabled`, not
 
 For exact final-episode choices, keep `export_kpis_on_episode_end=False` and call `export_final_kpis()` yourself after the episode terminates.
 
+### Comparing two exported runs
+
+`export_final_kpis()` writes `exported_kpis.manifest.json` next to the KPI file. `compare_exports(left, right)`
+reads two KPI files and their manifests; `compare_manifests(left, right)` does the same check on manifests already
+loaded as dictionaries. Both are in `citylearn.internal.comparison`. They report whether the difference between the
+two runs can be read as a controller difference:
+
+| `status` | Meaning |
+|---|---|
+| `'paired'` | Only the controller differs. `permitted_claim` is `'controller_difference'`. |
+| `'incompatible'` | A setting that changes the results differs; it is listed in `mismatches`. |
+| `'unknown'` | Evidence is missing from a manifest; it is listed in `missing_evidence`. |
+
+The simulator cannot tell which controller chose the actions, so each run declares it with
+`env.set_experiment_identity(implementation, version, parameters, observation_access='agent_payload')`.
+**Without it, two otherwise identical runs compare as `status='unknown'` with
+`missing_evidence=['controller_identity']`.**
+
+| Argument | What it records |
+|---|---|
+| `implementation` | The controller's name, for example its import path. Required. |
+| `version` | The version of the controller code or of its trained weights. Required. |
+| `parameters` | A dictionary with the settings that define this controller. It must be JSON-serializable with finite numbers; use `{}` when there are none. |
+| `observation_access` | What the controller observes. The default `'agent_payload'` is the observations returned by `reset()` and `step()`. Two runs with different values are `incompatible` (`controller_observation_access`). |
+
+The identity is written to the manifest as `controller_identity`. It stays on the environment across `reset()`,
+so call it once after creating the environment; it must be set before `export_final_kpis()` runs, including the
+automatic export at the end of the episode when `export_kpis_on_episode_end=True`. The rule-based baselines
+declare their own identity through `agent.comparison_identity()`: pass the agent to
+`env.export_final_kpis(model=agent)` and it is recorded for you, with `observation_access='entity_observations'`.
+With `MultiCommunityEnv`, call it on each community in `mc.envs`, whose own exports carry the manifests.
+`compare_exports(left, right, mode='sharing')` compares one controller with sharing on and off, and also
+requires the two identities to be equal.
+
+This example runs one simple controller with two parameter values, exports both runs and compares them:
+
+```python
+from pathlib import Path
+
+from citylearn.citylearn import CityLearnEnv
+from citylearn.internal.comparison import compare_exports
+
+
+def run(name, battery_action):
+    env = CityLearnEnv(
+        "citylearn_challenge_2022_phase_all_plus_evs", central_agent=True, episode_time_steps=24,
+        render_directory="runs", render_session_name=name, export_kpis_on_episode_end=False,
+    )
+    env.set_experiment_identity(
+        implementation="my_project.ConstantBattery", version="1.0",
+        parameters={"battery_action": battery_action},
+    )
+    env.reset()
+    while not env.terminated:
+        actions = [[battery_action if n.startswith("electrical_storage") else 0.0 for n in env.action_names[0]]]
+        env.step(actions)
+    env.export_final_kpis(export_business_as_usual_timeseries=False)
+    path = Path(env.new_folder_path) / "exported_kpis.csv"
+    env.close()
+    return path
+
+
+report = compare_exports(run("idle", 0.0), run("charge", 0.2))
+print(report["status"], report["missing_evidence"], report["mismatches"])
+```
+
+```text
+paired [] []
+```
+
 ## Smoke-Test a Large Dataset
 
 For large 15s datasets, always run a short window first:

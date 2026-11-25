@@ -1056,6 +1056,20 @@ False to split episodes in steps of <cite>episode_time_steps</cite>.</p>
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.set_experiment_identity">
 <span class="sig-name descname"><span class="pre">set_experiment_identity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">implementation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observation_access</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'agent_payload'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/citylearn.html#CityLearnEnv.set_experiment_identity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.set_experiment_identity" title="Link to this definition"></a></dt>
 <dd><p>Declare the controller used for exported paired comparisons.</p>
+<p>The identity is written to the export manifest as <code class="docutils literal notranslate"><span class="pre">controller_identity</span></code>.
+<code class="docutils literal notranslate"><span class="pre">compare_exports()</span></code> and <code class="docutils literal notranslate"><span class="pre">compare_manifests()</span></code> report <code class="docutils literal notranslate"><span class="pre">status='unknown'</span></code>
+(<code class="docutils literal notranslate"><span class="pre">missing_evidence=['controller_identity']</span></code>) for a run without one. It stays
+on the environment across <code class="docutils literal notranslate"><span class="pre">reset()</span></code>; set it before <code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>implementation</strong> (<em>str</em>) – Controller name, for example its import path.</p></li>
+<li><p><strong>version</strong> (<em>str</em>) – Version of the controller code or of its trained weights.</p></li>
+<li><p><strong>parameters</strong> (<em>dict</em>) – Settings that define the controller; JSON-serializable with finite numbers.</p></li>
+<li><p><strong>observation_access</strong> (<em>str</em><em>, </em><em>default: 'agent_payload'</em>) – What the controller observes. Runs with different values are incompatible.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">

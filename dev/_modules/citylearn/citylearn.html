@@ -1872,7 +1872,24 @@
 <div class="viewcode-block" id="CityLearnEnv.set_experiment_identity">
 <a class="viewcode-back" href="../../api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.set_experiment_identity">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_experiment_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">implementation</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">observation_access</span><span class="o">=</span><span class="s1">'agent_payload'</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Declare the controller used for exported paired comparisons."""</span>
+<span class="w">        </span><span class="sd">"""Declare the controller used for exported paired comparisons.</span>
+
+<span class="sd">        The identity is written to the export manifest as ``controller_identity``.</span>
+<span class="sd">        ``compare_exports()`` and ``compare_manifests()`` report ``status='unknown'``</span>
+<span class="sd">        (``missing_evidence=['controller_identity']``) for a run without one. It stays</span>
+<span class="sd">        on the environment across ``reset()``; set it before ``export_final_kpis()``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        implementation: str</span>
+<span class="sd">            Controller name, for example its import path.</span>
+<span class="sd">        version: str</span>
+<span class="sd">            Version of the controller code or of its trained weights.</span>
+<span class="sd">        parameters: dict</span>
+<span class="sd">            Settings that define the controller; JSON-serializable with finite numbers.</span>
+<span class="sd">        observation_access: str, default: 'agent_payload'</span>
+<span class="sd">            What the controller observes. Runs with different values are incompatible.</span>
+<span class="sd">        """</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">implementation</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">version</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Controller implementation, version and parameter dictionary are required'</span><span class="p">)</span>

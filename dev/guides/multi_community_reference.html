@@ -305,14 +305,20 @@ receives the whole <code class="docutils literal notranslate"><span class="pre">
 <tr class="row-odd"><td><p>Same <code class="docutils literal notranslate"><span class="pre">central_agent</span></code> mode</p></td>
 <td><p>Avoids mixing centralized and decentralized reward/action semantics.</p></td>
 </tr>
-<tr class="row-even"><td><p>Same <code class="docutils literal notranslate"><span class="pre">evaluation_window</span></code> when enabled</p></td>
+<tr class="row-even"><td><p>Same <code class="docutils literal notranslate"><span class="pre">physics_version</span></code></p></td>
+<td><p>Portfolio totals add up district values, so every community must simulate the same physics.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Same <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code></p></td>
+<td><p>Randomly drawn defaults (battery curves, efficiencies, noise) must come from the same stream definition for the totals to be comparable.</p></td>
+</tr>
+<tr class="row-even"><td><p>Same <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code></p></td>
+<td><p>Portfolio baseline KPIs add up district baselines, so the baseline definition must match.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Same <code class="docutils literal notranslate"><span class="pre">evaluation_window</span></code> when enabled</p></td>
 <td><p>Keeps recurring window KPIs aligned across communities.</p></td>
 </tr>
 </tbody>
 </table>
-<p>| Same <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> | Portfolio totals add up district values, so every community must simulate the same physics. |
-| Same <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> | Randomly drawn defaults (battery curves, efficiencies, noise) must come from the same stream definition for the totals to be comparable. |
-| Same <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code> | Portfolio baseline KPIs add up district baselines, so the baseline definition must match. |</p>
 <p>The wrapper validates these conditions at construction and again after reset, and
 raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that names the setting, for example:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ValueError: MultiCommunityEnv requires all communities to share physics_version, got {'A': 2, 'B': 1}.

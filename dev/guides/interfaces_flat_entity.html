@@ -509,13 +509,17 @@ float32 rounding.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">actions</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"map"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"building:Building_1"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"electrical_storage"</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">},</span>
-        <span class="s2">"charger:Building_1:AC001"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"electric_vehicle_storage"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
-        <span class="s2">"deferrable_appliance:Building_1:washer_1"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"start"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">}</span>
+        <span class="s2">"charger:Building_1/charger_1_1"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"electric_vehicle_storage"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
+        <span class="s2">"deferrable_appliance:Building_1/deferrable_appliance_1"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"start"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">}</span>
     <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Use prefixed IDs for robust GraphRL and Transformer integrations.</p>
+<p>Each key is <code class="docutils literal notranslate"><span class="pre">&lt;kind&gt;:&lt;id&gt;</span></code>. <code class="docutils literal notranslate"><span class="pre">&lt;kind&gt;</span></code> is <code class="docutils literal notranslate"><span class="pre">building</span></code>, <code class="docutils literal notranslate"><span class="pre">charger</span></code> or <code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">&lt;id&gt;</span></code> is one of the ids listed in <code class="docutils literal notranslate"><span class="pre">env.entity_specs[&quot;actions&quot;][&lt;kind&gt;][&quot;ids&quot;]</span></code>: the building name
+for buildings, and <code class="docutils literal notranslate"><span class="pre">&lt;building&gt;/&lt;device&gt;</span></code> for chargers and deferrable appliances (note the <code class="docutils literal notranslate"><span class="pre">/</span></code>). The
+example uses the ids of <code class="docutils literal notranslate"><span class="pre">Building_1</span></code> in <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>. Use these
+prefixed ids for robust GraphRL and Transformer integrations.</p>
 <p>After an entity-mode step, <code class="docutils literal notranslate"><span class="pre">info[&quot;entity_action_execution&quot;]</span></code> contains stable-ID
 entries for the requested command, the value after channel perturbations, the
 equipment-limited value and the physically applied power where observable.
