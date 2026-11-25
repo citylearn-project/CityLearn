@@ -887,6 +887,7 @@ size them or use `"autosize": true`.
   "render_chunk_size": null,
   "render_session_name": null,
   "export_kpis_on_episode_end": false,
+  "evaluation_window": {"enabled": false},
   "export_only_final_episode": true,
   "debug_timing": false,
   "check_observation_limits": false,
@@ -904,6 +905,7 @@ size them or use `"autosize": true`.
 | `render_chunk_size` | `null` | 100000 rows for CSV, 50000 for Parquet | |
 | `render_session_name` | `null` | a timestamp | Subfolder of the exports. |
 | `export_kpis_on_episode_end` | `false` | follows rendering | `true` writes `exported_kpis.csv` at the end of each episode. |
+| `evaluation_window` | `{"enabled": false}` | off | `{"enabled": true, "start": "16:00", "end": "19:00"}` adds the recurring-window KPIs to `evaluate_v2()` and the KPI exports. See [Evaluation window](schema_reference.md#evaluation-window). |
 | `export_only_final_episode` | `true` | `true` | For planned multi-episode runs. |
 | `debug_timing` | `false` | `false` | Timing fields in the step `info`. |
 | `check_observation_limits` | `false` | `false` | DEBUG logs for observations outside their bounds. |

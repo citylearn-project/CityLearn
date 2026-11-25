@@ -1074,11 +1074,13 @@ edit `schema['community_market']` and build a new env.
 `evaluation_window` adds opt-in recurring local-window KPIs (`*_energy_grid_window_average_power_*_kw` and `*_ev_window_net_exchange_control_kwh`; see [KPI reference](kpis_reference.md#recurring-evaluation-window)) without changing simulation physics or KPI names when bounds change.
 
 ```json
-"evaluation_window": {
-  "enabled": true,
-  "start": "16:00",
-  "end": "19:00",
-  "timezone": "scenario_local"
+{
+  "evaluation_window": {
+    "enabled": true,
+    "start": "16:00",
+    "end": "19:00",
+    "timezone": "scenario_local"
+  }
 }
 ```
 

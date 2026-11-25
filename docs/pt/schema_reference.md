@@ -1085,11 +1085,13 @@ referência BAU nativa é reconstruída a partir do schema, pelo que `evaluate_v
 `evaluation_window` ativa KPIs opt-in numa janela local recorrente (`*_energy_grid_window_average_power_*_kw` e `*_ev_window_net_exchange_control_kwh`; ver [referencia de KPIs](kpis_reference.md#janela-de-avaliação-recorrente)) sem alterar a fisica da simulacao nem os nomes dos KPIs quando os limites mudam.
 
 ```json
-"evaluation_window": {
-  "enabled": true,
-  "start": "16:00",
-  "end": "19:00",
-  "timezone": "scenario_local"
+{
+  "evaluation_window": {
+    "enabled": true,
+    "start": "16:00",
+    "end": "19:00",
+    "timezone": "scenario_local"
+  }
 }
 ```
 
