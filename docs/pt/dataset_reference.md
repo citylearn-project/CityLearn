@@ -27,8 +27,10 @@ Cada primeira descarga usa dois pedidos à API do GitHub; os clientes anónimos 
 hora. Defina `CITYLEARN_GITHUB_TOKEN` ou `GITHUB_TOKEN` para aumentar esse limite.
 Um dataset em cache só é usado quando o seu `schema.json` e todos os ficheiros de
 entrada que o schema carrega existem: os ficheiros dos edifícios carregados e os ficheiros
-de eventos, tarifas e calendário. Caso contrário, é substituído de uma só vez por uma cópia
-local completa ou, com rede, por uma nova descarga; em modo offline sem cópia completa,
+de eventos, tarifas e calendário. Uma cópia local completa fica em cache sob o digest dos
+seus ficheiros, pelo que uma cópia feita a partir de outros ficheiros nunca é lida, e uma
+cópia em uso nunca é substituída. Sem cópia local, uma descarga incompleta em cache é
+substituída de uma só vez por uma nova descarga; em modo offline sem cópia completa,
 `OfflineDataError` indica os ficheiros em falta.
 
 Os [datasets REC de Portugal](portugal_rec_datasets.md) disponibilizam quatro
