@@ -510,6 +510,10 @@ These changes only affect `topology_mode='dynamic'`:
   `net_electricity_consumption`. KPIs are unchanged by this item.
 - An event at the terminal step no longer moves the buildings onto the
   unexecuted terminal row, so their series hold executed intervals only.
+- A member cloned with `source_member_id` gives its chargers ids of their own
+  (`charger_1_1` of `Building_1` becomes `charger_19_1` in `Building_19`), so
+  the clone's observation, action and entity names change; update saved agents
+  and robustness events that name the clone's chargers by the source's id.
 
 ### Control step different from the dataset step
 

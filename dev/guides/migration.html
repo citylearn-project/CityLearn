@@ -740,6 +740,10 @@ and count a member only from the step it joins, like
 <code class="docutils literal notranslate"><span class="pre">net_electricity_consumption</span></code>. KPIs are unchanged by this item.</p></li>
 <li><p>An event at the terminal step no longer moves the buildings onto the
 unexecuted terminal row, so their series hold executed intervals only.</p></li>
+<li><p>A member cloned with <code class="docutils literal notranslate"><span class="pre">source_member_id</span></code> gives its chargers ids of their own
+(<code class="docutils literal notranslate"><span class="pre">charger_1_1</span></code> of <code class="docutils literal notranslate"><span class="pre">Building_1</span></code> becomes <code class="docutils literal notranslate"><span class="pre">charger_19_1</span></code> in <code class="docutils literal notranslate"><span class="pre">Building_19</span></code>), so
+the clone’s observation, action and entity names change; update saved agents
+and robustness events that name the clone’s chargers by the source’s id.</p></li>
 </ul>
 </section>
 <section id="control-step-different-from-the-dataset-step">
