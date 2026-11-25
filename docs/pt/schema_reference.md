@@ -25,7 +25,7 @@ Versão em inglês: [../schema_reference.md](../schema_reference.md).
 | Escolher o que o agente vê | `observations.<name>.active`, `buildings.<b>.inactive_observations` | [Observações e ações](#observações-e-ações) |
 | Escolher o que o agente controla | `actions.<name>.active`, `buildings.<b>.inactive_actions` | [Ações](#ações) |
 | Usar observações em grafo ou em tabelas | `interface: "entity"`, `observation_bundles` | [Interface entity](#interface-entity-bundles-de-observação-e-previsões-derivadas) |
-| Dar ao agente previsões causais | `derived_forecasts.load_pv_method: "daily_persistence"`, `price_source` | [Previsões derivadas](#derived_forecasts) |
+| Dar ao agente previsões causais | `derived_forecasts.load_pv_method: "daily_persistence"`, `price_source` | [Previsões derivadas](#interface-entity-bundles-de-observação-e-previsões-derivadas) |
 | Mudar a recompensa | `reward_function.type`, `reward_function.attributes` | [Função de recompensa](#função-de-recompensa) |
 | Acrescentar uma bateria | `buildings.<b>.electrical_storage` | [Bateria](#bateria) |
 | Acrescentar FV a partir de energia medida | `pv.attributes.generation_mode: "absolute"` | [FV](#fv) |
@@ -429,7 +429,7 @@ Observações acrescentadas pelo [serviço elétrico](#serviço-elétrico) (não
 `charging_phase_<phase>_export_headroom_kw`, `charging_constraint_violation_kwh`,
 `charging_phase_one_hot_<charger>_<phase>` e `available_grid_power`. Ligue-as ou desligue-as com
 `electrical_service.observations`. As características do mercado comunitário, da resposta à procura, das previsões e
-temporais existem só na interface entity; consulte [bundles de observação](#observation_bundles).
+temporais existem só na interface entity; consulte [bundles de observação](#interface-entity-bundles-de-observação-e-previsões-derivadas).
 
 ### Ações
 
@@ -867,7 +867,8 @@ Outra chave dá um `UserWarning` que sugere a chave mais próxima e é ignorada.
 | `charger_type` | qualquer | nenhuma | nenhuma | Só uma etiqueta (por exemplo 0 para AC, 1 para DC). |
 
 Outro nome de atributo lança `ValueError`, que indica o carregador e sugere o nome válido mais próximo. Não defina
-`seconds_per_time_step` nem `time_step_ratio` em `attributes`: são definidos ao carregar o schema.
+`seconds_per_time_step` nem `time_step_ratio` em `attributes`: são definidos ao carregar o schema, e um valor indicado
+aí lança `TypeError` (`got multiple values`) na construção.
 
 Receitas:
 
@@ -1260,7 +1261,7 @@ inativos, o primeiro é ativado).
 | `id` | não | ID do evento, único; predefinição `topology_event_<índice>`. |
 | `time_step` | sim | Passo global em que o evento é aplicado. Os eventos anteriores ao início do episódio são aplicados no seu primeiro passo. |
 | `operation` | sim | `add_member`, `remove_member`, `add_asset`, `remove_asset`. |
-| `target_member_id` | sim | Edifício alvo. `add_member` com um nome que não está no schema clona `source_member_id` com esse nome. Os carregadores do clone recebem ids próprios: `charger_1_1` de `Building_1` passa a `charger_19_1` em `Building_19`; um id que não nomeia a origem recebe `_<membro alvo>` no fim. Os eventos de robustez têm de indicar os carregadores do clone pelo novo id. |
+| `target_member_id` | sim | Edifício alvo. `add_member` com um nome que não está no schema clona `source_member_id` com esse nome. Os carregadores do clone recebem ids próprios. O nome do membro de origem no id passa a ser o do alvo; caso contrário, o identificador que termina o nome do membro (`1` em `Building_1`, `001` em `Member_001`) é substituído pelo do alvo na sua primeira ocorrência isolada, pelo que `charger_1_1` de `Building_1` passa a `charger_19_1` em `Building_19`. Um id que não contenha nenhum dos dois, ou que não mudaria, recebe `_<membro alvo>` no fim; um conflito com outro carregador acrescenta `_2`, `_3`, ... Os eventos de robustez têm de indicar os carregadores do clone pelo novo id. |
 | `target_asset_type` | operações de ativos | `charger`, `deferrable_appliance`, `pv`, `electrical_storage`. |
 | `target_asset_id` | operações de carregadores e aparelhos diferíveis | Ativo alvo. Não é usado para `pv` e `electrical_storage` (um por edifício). |
 | `source_member_id` | não | Edifício de onde se clona; predefinição: o membro alvo nas operações de ativos. |
@@ -1347,6 +1348,10 @@ são as mesmas.
 | `noise_std` diferente de zero num edifício sem `pricing` ou `carbon_intensity` | Aparecem preços ou emissões aleatórios. | Acrescente os ficheiros ou mantenha `noise_std` em 0. |
 | Passar `electric_vehicles=[...]` para escolher VE | Ignorado. | Use `electric_vehicles_def.<ev>.include`. |
 | Baterias de VE acima de 100 kWh com `connected_electric_vehicle_at_charger_battery_capacity` | A observação ultrapassa o limite do espaço. | Normalize pela capacidade, ou deixe-a inativa. |
+| `charging_constraint_penalty_coefficient` nos atributos de `Electric_Vehicles_Reward_Function` | `TypeError` na construção: esta recompensa só aceita `weights` e `version`. | Não o indique; o coeficiente mantém a predefinição de 1,0. |
+| `request_purposes` escrito como lista | `AttributeError` ao carregar os pedidos. | Escreva um objeto, `{"<request_id>": "service"}`. |
+| `start_time_step` / `end_time_step` não inteiros ou negativos num ficheiro de pedidos de resposta à procura | As casas decimais são truncadas com `int()` (3,7 passa a 3), e os valores negativos são aceites. | Escreva índices de linhas de dados inteiros e não negativos. |
+| Nomes por dispositivo (`electric_vehicle_storage_<carregador>`, observações por carregador) em `inactive_actions` ou nos argumentos `active_/inactive_observations` | As topologias estática e dinâmica tratam-nos de forma diferente. A topologia estática ignora nomes por dispositivo expandidos em `inactive_actions`; a dinâmica respeita-os, mas recalcula as flags das observações de carregadores, aparelhos diferíveis e baterias a partir do schema, ignorando os argumentos `active_/inactive_observations` e as `inactive_observations` do edifício. | Ative ou desative as características dos dispositivos com os nomes do catálogo em `observations` e `actions`, e verifique `env.observation_names` e `env.action_names`. |
 
 ## Schema de referência completo
 

@@ -25,7 +25,7 @@ Portuguese version: [pt/schema_reference.md](pt/schema_reference.md).
 | Choose what the agent sees | `observations.<name>.active`, `buildings.<b>.inactive_observations` | [Observations and actions](#observations-and-actions) |
 | Choose what the agent controls | `actions.<name>.active`, `buildings.<b>.inactive_actions` | [Actions](#actions) |
 | Use graph or table observations | `interface: "entity"`, `observation_bundles` | [Entity interface](#entity-interface-observation-bundles-and-derived-forecasts) |
-| Give the agent causal forecasts | `derived_forecasts.load_pv_method: "daily_persistence"`, `price_source` | [Derived forecasts](#derived_forecasts) |
+| Give the agent causal forecasts | `derived_forecasts.load_pv_method: "daily_persistence"`, `price_source` | [Derived forecasts](#entity-interface-observation-bundles-and-derived-forecasts) |
 | Change the reward | `reward_function.type`, `reward_function.attributes` | [Reward function](#reward-function) |
 | Add a battery | `buildings.<b>.electrical_storage` | [Battery](#battery) |
 | Add PV from measured energy | `pv.attributes.generation_mode: "absolute"` | [PV](#pv) |
@@ -425,7 +425,7 @@ Observations added by the [electrical service](#electrical-service) (not listed 
 `charging_phase_<phase>_export_headroom_kw`, `charging_constraint_violation_kwh`,
 `charging_phase_one_hot_<charger>_<phase>` and `available_grid_power`. Switch them with
 `electrical_service.observations`. Community-market, demand-response, forecast and temporal features are
-entity-interface only; see [observation bundles](#observation_bundles).
+entity-interface only; see [observation bundles](#entity-interface-observation-bundles-and-derived-forecasts).
 
 ### Actions
 
@@ -856,7 +856,8 @@ Another key gives a `UserWarning` that suggests the closest key and is ignored.
 | `charger_type` | any | none | none | Label only (for example 0 for AC, 1 for DC). |
 
 Another attribute name raises `ValueError` that names the charger and suggests the closest valid name. Do not set
-`seconds_per_time_step` or `time_step_ratio` in `attributes`: the loader sets them.
+`seconds_per_time_step` or `time_step_ratio` in `attributes`: the loader sets them, and a value given there raises
+`TypeError` (`got multiple values`) at construction.
 
 Recipes:
 
@@ -1248,7 +1249,7 @@ first one is activated).
 | `id` | no | Event ID, unique; default `topology_event_<index>`. |
 | `time_step` | yes | Global time step at which the event is applied. Events before the episode start are applied at its first step. |
 | `operation` | yes | `add_member`, `remove_member`, `add_asset`, `remove_asset`. |
-| `target_member_id` | yes | Target building. `add_member` with a name that is not in the schema clones `source_member_id` under that name. The clone's chargers get ids of their own: `charger_1_1` of `Building_1` becomes `charger_19_1` in `Building_19`; an id that does not name the source gets `_<target member>` appended. Robustness events must name the clone's chargers by the new id. |
+| `target_member_id` | yes | Target building. `add_member` with a name that is not in the schema clones `source_member_id` under that name. The clone's chargers get ids of their own. The source member's name in the id becomes the target's; otherwise the identifier that ends the member name (`1` in `Building_1`, `001` in `Member_001`) is replaced by the target's at its first standalone occurrence, so `charger_1_1` of `Building_1` becomes `charger_19_1` in `Building_19`. An id that contains neither, or that would not change, gets `_<target member>` appended; a clash with another charger adds `_2`, `_3`, ... Robustness events must name the clone's chargers by the new id. |
 | `target_asset_type` | asset operations | `charger`, `deferrable_appliance`, `pv`, `electrical_storage`. |
 | `target_asset_id` | charger and deferrable operations | Target asset. Not used for `pv` and `electrical_storage` (one per building). |
 | `source_member_id` | no | Building to clone from; defaults to the target member for asset operations. |
@@ -1335,6 +1336,10 @@ same.
 | Non-zero `noise_std` for a building without `pricing` or `carbon_intensity` | Random prices or emissions appear. | Add the files or keep `noise_std` at 0. |
 | Passing `electric_vehicles=[...]` to select EVs | Ignored. | Use `electric_vehicles_def.<ev>.include`. |
 | EV batteries above 100 kWh with `connected_electric_vehicle_at_charger_battery_capacity` | The observation exceeds its space bound. | Normalise by the capacity, or leave it inactive. |
+| `charging_constraint_penalty_coefficient` in the attributes of `Electric_Vehicles_Reward_Function` | `TypeError` at construction: this reward takes only `weights` and `version`. | Leave it out; the coefficient keeps its default of 1.0. |
+| `request_purposes` written as a list | `AttributeError` when the requests are loaded. | Write an object, `{"<request_id>": "service"}`. |
+| Non-integer or negative `start_time_step` / `end_time_step` in a demand-response request file | Decimals are truncated with `int()` (3.7 becomes 3), and negative values are accepted. | Write whole, non-negative data-row indices. |
+| Per-device names (`electric_vehicle_storage_<charger>`, per-charger observations) in `inactive_actions` or the `active_/inactive_observations` arguments | Static and dynamic topology treat them differently. Static topology ignores expanded per-device names in `inactive_actions`; dynamic topology honours them, but recomputes the charger, deferrable-appliance and battery observation flags from the schema, ignoring the `active_/inactive_observations` arguments and the building's `inactive_observations`. | Turn device features on or off with the catalogue names in `observations` and `actions`, and check `env.observation_names` and `env.action_names`. |
 
 ## Full reference schema
 
