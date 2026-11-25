@@ -58,6 +58,7 @@ Versão em inglês: [../schema_reference.md](../schema_reference.md).
 | `check_observation_limits` | bool | não | Valida os limites das observações. |
 | `physics_invariant_checks` | bool | não | Verificações de invariantes físicos em tempo de execução. |
 | `physics_version` | int | não | Versão da física, `1` ou `2` (predefinida). `1` reproduz a física do CityLearn 3.6.0; consulte o [guia de migração](migration.md#versão-da-física). O argumento `physics_version` de `CityLearnEnv` tem precedência. |
+| `evaluation_window` | bool/object | não | Janela local recorrente opt-in para `evaluate_v2()` e exportacao de KPIs; ver [Janela de Avaliacao](#janela-de-avaliacao). |
 | `baseline_version` | int | não | Definição da baseline por omissão dos KPIs e do AVAC do BAU nativo, `1` ou `2` (predefinida). `2` retira a bateria, o armazenamento térmico e o carregamento dos VE da execução controlada e volta a somar o carregamento dos VE do BAU nativo com o alvo `'full'`, e o seu BAU nativo fornece a procura de aquecimento e de arrefecimento do dataset; `1` não volta a somar nada e o seu BAU envia zero às ações de AVAC, como no CityLearn 3.6.0. Consulte o [guia de migração](migration.md#carregamento-dos-ve-na-baseline-por-omissão) e [AVAC e a versão da baseline](baselines.md#avac-e-a-versão-da-baseline). O argumento `baseline_version` de `CityLearnEnv` tem precedência. |
 | `metrics_log_interval` | int | não | Cadência de registo das métricas de execução. |
 
@@ -671,6 +672,28 @@ Os metadados ficam expostos em `observations["meta"]["robustness"]`.
 | `kpis.community_self_consumption_enabled` | `true` | Ativa o KPI da quota de importação local. |
 | `matching_granularity` | `"aggregate_building"` | O único valor suportado; fica registado nos metadados. |
 | `counterfactual` | `"grid_only"` | O único valor suportado: as poupanças comparam cada membro com comprar e vender só à rede. Escrito pelo gerador das suites anuais de REC. |
+
+## Janela de Avaliacao
+
+`evaluation_window` ativa KPIs opt-in numa janela local recorrente (`*_energy_grid_window_average_power_*_kw` e `*_ev_window_net_exchange_control_kwh`; ver [referencia de KPIs](kpis_reference.md#janela-de-avaliação-recorrente)) sem alterar a fisica da simulacao nem os nomes dos KPIs quando os limites mudam.
+
+```json
+"evaluation_window": {
+  "enabled": true,
+  "start": "16:00",
+  "end": "19:00",
+  "timezone": "scenario_local"
+}
+```
+
+| Campo | Default | O que faz |
+|---|---:|---|
+| `enabled` | `false` (`true` quando `start` ou `end` e definido) | Ativa os KPIs da janela recorrente em `evaluate_v2()` e nos exports. Passar `"evaluation_window": true` ativa a janela inicial `16:00:00` a `19:00:00`. |
+| `start` | `"16:00:00"` | Inicio da janela em formato 24h `"HH:MM"` ou `"HH:MM:SS"`, incluindo fronteiras sub-horarias. |
+| `end` | `"19:00:00"` | Fim da janela em formato 24h `"HH:MM"` ou `"HH:MM:SS"`. Quando `start > end` (por exemplo `"22:00"` a `"06:00"`), a janela atravessa a meia-noite. |
+| `timezone` | `schema.timezone` ou `"scenario_local"` | Fuso horario IANA usado ao converter um calendario UTC `TimeAxis`, ou `"scenario_local"` para colunas de calendario locais do dataset. |
+
+Os valores resolvidos de `start`, `end` e `timezone` ficam registados em `exported_kpis.manifest.json`. Quando ambas as execucoes ativam `evaluation_window` com limites ou fusos horarios diferentes, `compare_manifests()` adiciona `'evaluation_window'` a `mismatches` (`status='incompatible'`). Quando apenas uma execucao ativa `evaluation_window`, `compare_manifests()` mantem `status='paired'` para todos os KPIs partilhados, regista `'evaluation_window_one_sided'` em `declared_differences` (`evaluation_window.status == 'one_sided'`), e `compare_exports()` assinala apenas as linhas da janela em `unpaired_window_kpis`.
 
 ## Combinações importantes
 

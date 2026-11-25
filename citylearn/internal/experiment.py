@@ -85,6 +85,7 @@ def experiment_manifest(env):
                 deferrable_service_audit=metadata['deferrable_service_audit'],
                 kpi_family_audit=metadata['kpi_family_audit'],
                 demand_response=metadata['demand_response'],
+                evaluation_window=metadata['evaluation_window'],
                 reward=metadata['reward_evidence'],
                 energy_provenance=provenance.enabled,
                 provenance_summary=provenance_summary,

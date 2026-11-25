@@ -51,6 +51,7 @@ class MultiCommunityEnv(Env):
         communities: Sequence[Mapping[str, Any]],
         render_directory: Union[str, Path] = None,
         render_session_name: str = None,
+        evaluation_window: Any = None,
     ):
         self.render_output_root = self._resolve_render_directory(render_directory)
         self.render_session_name = self._resolve_render_session_name(render_session_name)
@@ -67,6 +68,8 @@ class MultiCommunityEnv(Env):
         try:
             for config in configs:
                 child_kwargs = dict(config.env_kwargs)
+                if evaluation_window is not None and "evaluation_window" not in child_kwargs:
+                    child_kwargs["evaluation_window"] = evaluation_window
                 child_kwargs["render_directory"] = self.render_output_root
                 child_kwargs["render_session_name"] = str(Path(self.render_session_name) / config.community_id)
                 env = CityLearnEnv(config.schema, **child_kwargs)
@@ -351,6 +354,7 @@ class MultiCommunityEnv(Env):
             "time_step": self.time_step,
             "render_directory": str(self.render_output_root),
             "render_session_name": self.render_session_name,
+            "evaluation_window": dict(next(iter(self.envs.values()))._evaluation_window_effective),
             "communities": {
                 community_id: env.get_metadata()
                 for community_id, env in self.envs.items()
@@ -498,6 +502,15 @@ class MultiCommunityEnv(Env):
                 raise ValueError(
                     f"MultiCommunityEnv requires all communities to share {setting}, got {values}."
                 )
+
+        window_configs = [getattr(env, "_evaluation_window_effective", None) or {} for env in self.envs.values()]
+        if any(bool(cfg.get("enabled")) for cfg in window_configs):
+            window_keys = {
+                (bool(cfg.get("enabled")), cfg.get("start"), cfg.get("end"), cfg.get("timezone"))
+                for cfg in window_configs
+            }
+            if len(window_keys) != 1:
+                raise ValueError("MultiCommunityEnv requires all communities to share the same evaluation_window.")
 
     def _validate_reset_synchronization(self):
         self._validate_constructor_homogeneity()
@@ -666,6 +679,15 @@ class MultiCommunityEnv(Env):
                         control, reference, zero_over_zero=CityLearnKPIService.ratio_zero_over_zero(metric),
                     )
                     aggregate = np.nan if value is None else float(value)
+            elif (
+                (metric.startswith("district_energy_grid_window_average_power_") and metric.endswith("_kw"))
+                or metric == "district_ev_window_net_exchange_control_kwh"
+            ):
+                values = group["numeric_value"].dropna()
+                if values.empty or len(values) != len(group):
+                    aggregate = np.nan
+                else:
+                    aggregate = float(values.sum())
             elif metric.endswith(self._SUM_SUFFIXES):
                 values = group["numeric_value"].dropna()
                 if values.empty:

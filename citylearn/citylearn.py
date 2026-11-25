@@ -250,6 +250,12 @@ class CityLearnEnv(Environment, Env):
         Whether to keep the per-step electricity provenance ledger (``*_energy_provenance_*`` KPIs and
         provenance audits). Defaults to ``True``. Disabling it does not change any simulated quantity and
         makes ``step()`` substantially faster, e.g. for training runs that do not report provenance KPIs.
+    evaluation_window: Union[bool, Mapping[str, Any]], optional
+        Opt-in recurring local evaluation window for ``evaluate_v2()`` and KPI exports. Disabled by default.
+        Pass ``True`` or ``{'enabled': True}`` to use the ``16:00:00`` to ``19:00:00`` starter window in the
+        scenario's local time, or pass ``{'enabled': True, 'start': 'HH:MM', 'end': 'HH:MM', 'timezone': ...}``
+        to override the bounds (including sub-hour boundaries and midnight wrap when ``start > end``). Overrides
+        ``evaluation_window`` in the schema.
     **kwargs : dict
         Only the options listed above are accepted; any other keyword argument raises a `TypeError` that suggests
         the closest valid name.
@@ -272,7 +278,7 @@ class CityLearnEnv(Environment, Env):
         'reward_function', 'reward_function_kwargs', 'central_agent', 'shared_observations', 'active_observations',
         'inactive_observations', 'active_actions', 'inactive_actions', 'simulate_power_outage', 'solar_generation',
         'random_seed', 'offline', 'time_step_ratio', 'interface', 'topology_mode', 'start_date',
-        'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version', 'physics_version',
+        'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version', 'physics_version', 'evaluation_window',
         'baseline_version', 'ev_soc_carryover',
     )
 
@@ -312,6 +318,7 @@ class CityLearnEnv(Environment, Env):
         ev_departure_service_tolerance = kwargs.pop('ev_departure_service_tolerance', None)
         business_as_usual_ev_charge_target = kwargs.pop('business_as_usual_ev_charge_target', None)
         random_stream_version = kwargs.pop('random_stream_version', None)
+        evaluation_window = kwargs.pop('evaluation_window', None)
         kw_render_mode = kwargs.pop('render_mode', None)
         requested_render_mode = render_mode if kw_render_mode is None else kw_render_mode
         requested_render_mode = 'none' if requested_render_mode is None else str(requested_render_mode).lower()
@@ -461,6 +468,11 @@ class CityLearnEnv(Environment, Env):
             'inactive_actions': inactive_actions,
             'simulate_power_outage': simulate_power_outage,
             'solar_generation': solar_generation,
+            **(
+                {'evaluation_window': evaluation_window}
+                if evaluation_window is not None
+                else {}
+            ),
         })
         self._loading_service = CityLearnLoadingService(self)
         self._runtime_service = CityLearnRuntimeService(self)
@@ -498,6 +510,25 @@ class CityLearnEnv(Environment, Env):
                 random_seed=self.random_seed,
             )
         self.root_directory = root_directory
+        from citylearn.internal.evaluation_window import (
+            parse_evaluation_window_config,
+            serialize_evaluation_window_config,
+        )
+        resolved_evaluation_window = (
+            evaluation_window
+            if evaluation_window is not None
+            else (self.schema.get('evaluation_window') if isinstance(self.schema, dict) else None)
+        )
+        schema_timezone = self.schema.get('timezone') if isinstance(self.schema, dict) else None
+        self._evaluation_window_config = deepcopy(resolved_evaluation_window) if resolved_evaluation_window is not None else None
+        self._evaluation_window_parsed = parse_evaluation_window_config(
+            resolved_evaluation_window,
+            schema_timezone=schema_timezone,
+        )
+        self._evaluation_window_effective = serialize_evaluation_window_config(self._evaluation_window_parsed)
+        self.evaluation_window_enabled = bool(self._evaluation_window_parsed['enabled'])
+        if isinstance(self.schema, dict) and resolved_evaluation_window is not None:
+            self.schema['evaluation_window'] = deepcopy(self._evaluation_window_effective)
         self._all_buildings = list(buildings)
         self._all_electric_vehicles = list(electric_vehicles)
         if self.topology_mode == 'dynamic':
@@ -1657,6 +1688,7 @@ class CityLearnEnv(Environment, Env):
             },
             'demand_response': self._demand_response_service.get_metadata(),
             'robustness': self._robustness_service.get_metadata(),
+            'evaluation_window': deepcopy(self._evaluation_window_effective),
             'entity_specs': self._entity_service.specs if self.interface == 'entity' else None,
             'buildings': [b.get_metadata() for b in self.buildings],
         }

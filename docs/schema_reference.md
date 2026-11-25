@@ -47,6 +47,7 @@ Portuguese version: [pt/schema_reference.md](pt/schema_reference.md).
 | `demand_response` | object | no | Dataset-driven DSO/TSO flexibility requests and settlement. |
 | `robustness` | object | no | Dataset-driven observation, forecast, action and asset availability perturbations. |
 | `community_market` | object | no | Local market and market KPIs. |
+| `evaluation_window` | bool/object | no | Opt-in recurring local evaluation window for `evaluate_v2()` and KPI exports; see [Evaluation Window](#evaluation-window). |
 | `ev_departure_within_tolerance` | float | no | Symmetric departure SOC accuracy tolerance, default `0.05`. |
 | `ev_departure_service_tolerance` | float | no | Lower departure SOC service tolerance for minimum acceptable EV service, default `0.05`. |
 | `render_mode` | string | no | `none`, `during` or `end`. |
@@ -666,6 +667,28 @@ Metadata is exposed under `observations["meta"]["robustness"]`.
 | `kpis.community_self_consumption_enabled` | `true` | Enables local import-share KPI. |
 | `matching_granularity` | `"aggregate_building"` | The only supported value; recorded in the metadata. |
 | `counterfactual` | `"grid_only"` | The only supported value: savings compare each member with buying and selling on the grid alone. Written by the annual REC suite generator. |
+
+## Evaluation Window
+
+`evaluation_window` adds opt-in recurring local-window KPIs (`*_energy_grid_window_average_power_*_kw` and `*_ev_window_net_exchange_control_kwh`; see [KPI reference](kpis_reference.md#recurring-evaluation-window)) without changing simulation physics or KPI names when bounds change.
+
+```json
+"evaluation_window": {
+  "enabled": true,
+  "start": "16:00",
+  "end": "19:00",
+  "timezone": "scenario_local"
+}
+```
+
+| Field | Default | Purpose |
+|---|---:|---|
+| `enabled` | `false` (`true` when `start` or `end` is set) | Enables recurring window KPIs in `evaluate_v2()` and KPI exports. Passing `"evaluation_window": true` enables the `16:00:00` to `19:00:00` starter window. |
+| `start` | `"16:00:00"` | Window start in 24-hour `"HH:MM"` or `"HH:MM:SS"` format, supporting sub-hour boundaries. |
+| `end` | `"19:00:00"` | Window end in 24-hour `"HH:MM"` or `"HH:MM:SS"` format. When `start > end` (for example `"22:00"` to `"06:00"`), the window wraps across midnight. |
+| `timezone` | `schema.timezone` or `"scenario_local"` | IANA time zone used when converting a UTC `TimeAxis` calendar, or `"scenario_local"` for local dataset calendar columns. |
+
+The resolved `start`, `end` and `timezone` are recorded in `exported_kpis.manifest.json`. When both runs enable `evaluation_window` with different effective bounds or time zones, `compare_manifests()` adds `'evaluation_window'` to `mismatches` (`status='incompatible'`). When only one run enables `evaluation_window`, `compare_manifests()` keeps `status='paired'` for all shared KPIs, records `'evaluation_window_one_sided'` in `declared_differences` (`evaluation_window.status == 'one_sided'`), and `compare_exports()` flags only the windowed rows in `unpaired_window_kpis`.
 
 ## Important Combinations
 

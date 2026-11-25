@@ -75,7 +75,9 @@ portefólio substitui o prefixo `district_` por `portfolio_`. Cada KPI de distri
 4. **Os restantes `_ratio` e `_percent`** são médias ponderadas pelo `weight` da
    comunidade.
 5. **Tudo o resto** (`_kw`, `_c`, `_hours` e outros valores pontuais) não tem
-   linha de portefólio.
+   linha de portefólio, exceto `energy_grid_window_average_power_*_kw`, que soma
+   as médias na janela das comunidades sincronizadas quando `evaluation_window`
+   está ativo.
 
 Uma taxa agregada mantém a linha de portefólio qualquer que seja a unidade, pelo
 que o atraso de arranque agregado dos equipamentos flexíveis (`_hours`) tem uma.
@@ -283,7 +285,63 @@ Dois conjuntos de linhas usam séries diferentes:
 
 Note a ordem das palavras nos nomes com sinal: `load_factor_penalty_daily_average_to_baseline_signed_net_ratio`, mas `load_factor_penalty_daily_average_signed_net_to_business_as_usual_ratio`.
 
-**Portefólio.** Os totais de energia e as médias diárias são somados sobre as comunidades. Os rácios de importação, exportação e troca líquida são rácios dos totais somados (com sinal para a troca líquida). Os rácios de forma e os rácios `building_mean` são médias ponderadas pelo `weight` de cada comunidade. As linhas de forma em kW não passam para o portefólio.
+### Janela de avaliação recorrente
+
+Quando `evaluation_window.enabled` é verdadeiro (ver a [referência do esquema](schema_reference.md#janela-de-avaliacao)), `evaluate_v2()` e as exportações de KPIs incluem linhas de potência na janela local recorrente aos níveis de edifício, distrito e portefólio:
+
+```text
+w_t = τ_t / Δt                                fração de sobreposição do passo t em [0, 1]
+H_W = Σ_t w_t · Δh                            horas efetivas na janela nos passos finitos
+energy_grid_window_average_power_control_kw            = (Σ_t w_t · net_t) / H_W
+energy_grid_window_average_power_business_as_usual_kw  = (Σ_t w_t · net_bau,t) / H_W
+energy_grid_window_average_power_delta_to_business_as_usual_kw = control − business_as_usual
+```
+
+`τ_t` é a sobreposição em segundos entre o passo executado `[s_t, s_t + Δt)` em hora local e a janela diária configurada (`16:00:00` a `19:00:00` quando ativada sem limites explícitos). Com um calendário canónico `time_axis`, `s_t` é convertido de `timestamp_utc` para `evaluation_window.timezone`; sem ficheiro de calendário, a coluna `hour` do conjunto de dados varia de `1` a `24` e `s_t` usa `(hour − 1) mod 24` (`hour = 1, minutes = 0` começa às `00:00:00`), coincidindo com as variáveis temporais da interface de entidades. Janelas com `start > end` atravessam a meia-noite em `[start, 24:00)` e `[00:00, end)`. Os passos que intersetam uma fronteira recebem peso parcial `0 < w_t < 1`. Quando `H_W = 0`, todas as linhas da janela ficam indefinidas (`NaN`). Com `evaluate_v2(include_business_as_usual=False)`, apenas `_control_kw` é emitido.
+
+Para explorar outras janelas após a simulação sem voltar a correr o episódio, pondere as séries temporais exportadas de uma sessão renderizada (`exported_data_community_ep0.csv` escreve `timestamp` a partir de `time_axis`, ou a partir de `start_date` `00:00:00` quando o episódio começa à meia-noite):
+
+```python
+from pathlib import Path
+import json
+import numpy as np
+import pandas as pd
+
+
+def step_weight(t0: float, dt: float, segments: list[tuple[float, float]]) -> float:
+    parts = [(t0, min(t0 + dt, 86400.0))] + ([(0.0, t0 + dt - 86400.0)] if t0 + dt > 86400.0 else [])
+    return sum(max(0.0, min(s1, w1) - max(s0, w0)) for s0, s1 in parts for w0, w1 in segments) / dt
+
+
+export_dir = Path("render_logs/my_session")
+manifest = json.loads((export_dir / "exported_kpis.manifest.json").read_text(encoding="utf-8"))
+dt = float(manifest["effective_schema"]["seconds_per_time_step"])
+
+community = pd.read_csv(export_dir / "exported_data_community_ep0.csv")
+ts = pd.to_datetime(community["timestamp"])
+sec_of_day = (ts.dt.hour * 3600 + ts.dt.minute * 60 + ts.dt.second).to_numpy(dtype=float)
+
+start_s, end_s = 16 * 3600, 19 * 3600
+segments = [(start_s, end_s)] if start_s < end_s else [(start_s, 86400.0), (0.0, end_s)]
+weights = np.array([step_weight(float(t0), dt, segments) for t0 in sec_of_day], dtype=float)
+hours = float(weights.sum() * (dt / 3600.0))
+
+control_kw = float((weights * community["Net Electricity Consumption-kWh"]).sum() / hours)
+bau = pd.read_csv(export_dir / "exported_data_business_as_usual_ep0.csv")
+bau_net = bau.loc[bau["level"] == "district", "net_electricity_consumption_kwh"].to_numpy(dtype=float)
+bau_kw = float((weights * bau_net).sum() / hours)
+delta_kw = control_kw - bau_kw
+
+ev_net_kwh = 0.0
+for path in sorted(export_dir.glob("exported_data_*_ep0.csv")):
+    cols = pd.read_csv(path, nrows=0).columns
+    if {"Charger Consumption-kWh", "Charger Production-kWh"} <= set(cols):
+        df = pd.read_csv(path)
+        ac = np.maximum(df["Charger Consumption-kWh"], 0.0) - np.maximum(df["Charger Production-kWh"], 0.0)
+        ev_net_kwh += float((weights * ac).sum())
+```
+
+**Portefólio.** Os totais de energia e as médias diárias são somados sobre as comunidades. Os rácios de importação, exportação e troca líquida são rácios dos totais somados (com sinal para a troca líquida). Os rácios de forma e os rácios `building_mean` são médias ponderadas pelo `weight` de cada comunidade. As linhas de forma em kW não passam para o portefólio. Quando `evaluation_window` está ativo, `energy_grid_window_average_power_*_kw` soma com sinal as comunidades que partilham essa janela e fica indefinido quando algum valor de comunidade é indefinido.
 
 **Que KPI usar.**
 - Use o rácio do distrito `ratio_to_baseline_import_total_ratio`. `*_building_mean_ratio` é a média dos rácios dos edifícios, mantida apenas para comparar com resultados até à versão 3.6.0.
@@ -606,6 +664,16 @@ ev_total_v2g_export_kwh = soma_t max(-ac_t, 0)
 - **Perdas:** o total de carga inclui as perdas do carregador.
 - **Não é exportação para a rede:** o total de V2G é a energia que os VE fornecem através do carregador, seja qual for o seu uso. Não é exportação para a rede: o membro pode consumir ele próprio a energia V2G, e só a troca líquida do membro mostra o que atravessa a fronteira com a rede.
 - **Alternativa:** um carregador sem registos brutos usa as partes positiva e negativa do seu consumo de eletricidade.
+
+### Troca líquida na janela
+
+Quando `evaluation_window.enabled` é verdadeiro, `ev_window_net_exchange_control_kwh` reporta a energia AC líquida com sinal nos carregadores dentro da janela local recorrente:
+
+```text
+ev_window_net_exchange_control_kwh = Σ_t w_t · ac_net,t
+```
+
+`w_t` é o peso de sobreposição do passo definido em [Energia da rede e forma da carga](#janela-de-avaliação-recorrente), e `ac_net,t` é o consumo elétrico AC com sinal dos carregadores ativos no passo `t` (positivo ao carregar VE, negativo ao fornecer energia V2X ao edifício ou à rede). Membros sem carregadores de VE reportam `0.0` quando `H_W > 0`. Quando `H_W = 0`, o valor fica indefinido (`NaN`). Os valores de distrito e de portefólio somam com sinal os valores dos membros e das comunidades, ficando o portefólio indefinido se alguma comunidade estiver indefinida.
 
 ### Balanço de energia
 

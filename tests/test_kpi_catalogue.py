@@ -21,6 +21,7 @@ DATASETS = ROOT / "data" / "datasets"
 # response, robustness events, dynamic topology, outages with LSTM thermal dynamics, and a portfolio.
 SCENARIOS = (
     ("citylearn_challenge_2022_phase_all_plus_evs", 24, {"central_agent": True}),
+    ("citylearn_challenge_2022_phase_all_plus_evs", 24, {"central_agent": True, "evaluation_window": {"enabled": True}}),
     ("citylearn_three_phase_electrical_service_demo", 24, {}),
     ("citylearn_challenge_2022_phase_all_demand_response", 24, {}),
     ("citylearn_challenge_2022_phase_all_robustness", 24, {}),
