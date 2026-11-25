@@ -185,7 +185,7 @@ When `return_substeps=True`, `info` also includes `substep_rewards`, `substep_in
 
 `CityLearnEnv` stores episode rewards and the three district net-consumption series in preallocated `float64` buffers. Accessing a full-history list property (`env.rewards`, `env.net_electricity_consumption`, `env.net_electricity_consumption_cost`, `env.net_electricity_consumption_emission`) lazily materializes a tracked Python `list` that extends incrementally per step and detaches before any in-place mutation, so existing `[-1]` monitoring loops remain `O(1)` per step while caller edits stay isolated.
 
-Read the latest value with `[-1]`. Each read takes constant time per step.
+Read the latest value with `[-1]`. Each read takes constant time per step. Once read, the list is kept for the rest of the episode, so the memory saving of the buffers holds only while nothing reads these properties during the episode. In training loops, use the reward returned by `env.step()`, as the CityLearn agents do, and read the histories at the end of the episode.
 
 ```python
 latest_reward_row = env.rewards[-1]

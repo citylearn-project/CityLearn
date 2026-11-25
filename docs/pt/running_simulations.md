@@ -185,7 +185,7 @@ Quando `return_substeps=True`, `info` inclui também `substep_rewards`, `substep
 
 O `CityLearnEnv` guarda os rewards do episódio e as três séries agregadas do distrito em buffers `float64` pré-alocados. O acesso às propriedades de lista completa (`env.rewards`, `env.net_electricity_consumption`, `env.net_electricity_consumption_cost`, `env.net_electricity_consumption_emission`) materializa uma `list` Python na primeira leitura, acrescenta apenas os novos passos em `O(1)` por passo e desliga a cache antes de qualquer edição in-place, para que ciclos existentes com `[-1]` continuem lineares e isolados.
 
-Leia o último valor com `[-1]`. Cada leitura demora tempo constante por passo.
+Leia o último valor com `[-1]`. Cada leitura demora tempo constante por passo. Depois de lida, a lista mantém-se até ao fim do episódio, pelo que a poupança de memória dos buffers só se mantém enquanto nada ler estas propriedades durante o episódio. Nos ciclos de treino, use a recompensa devolvida por `env.step()`, como fazem os agentes do CityLearn, e leia os históricos no fim do episódio.
 
 ```python
 latest_reward_row = env.rewards[-1]
