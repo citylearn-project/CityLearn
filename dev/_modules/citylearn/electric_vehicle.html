@@ -157,6 +157,10 @@
 <span class="p">)</span>
 
 <span class="n">ZERO_DIVISION_PLACEHOLDER</span> <span class="o">=</span> <span class="mf">0.000001</span>
+<span class="c1"># A departure SOC within this margin below its target counts as meeting the target in the</span>
+<span class="c1"># met and target-feasibility KPIs. The rule-based engines stop charging 0.001 below the target,</span>
+<span class="c1"># well inside it. The SOC deficit and shortfall KPIs stay exact.</span>
+<span class="n">EV_SERVICE_SOC_TOLERANCE</span> <span class="o">=</span> <span class="mf">0.005</span>
 <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ElectricVehicle">

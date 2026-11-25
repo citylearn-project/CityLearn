@@ -843,6 +843,28 @@ evaluations whose portfolio rows you compare.</p></li>
 over the episode; the sum is published as <code class="docutils literal notranslate"><span class="pre">*_ramping_total_*_kw</span></code>
 (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/245">#245</a>). The ratio
 to the BAU is unchanged.</p></li>
+<li><p><strong>EV target met</strong> uses a tolerance of 0.005 SOC instead of 1e-6, for the met
+rates, the target feasibility counts and the departure-audit target rows. The
+rule-based baselines, which stop 0.001 short, now count as meeting the target:
+on full-year <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>,
+<code class="docutils literal notranslate"><span class="pre">district_ev_performance_departure_success_ratio</span></code> goes from 0.988 to 0.994
+(BAU), 0.598 to 0.994 (<code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>), 0.495 to 0.994 (<code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code>)
+and 0.130 to 0.134 (random actions). Rerun the evaluation before comparing
+met rates with earlier tables; the departure audit’s <code class="docutils literal notranslate"><span class="pre">definition_version</span></code> is
+now <code class="docutils literal notranslate"><span class="pre">ev-departure-audit-v2</span></code>, so <code class="docutils literal notranslate"><span class="pre">compare_exports</span></code> reports older exports as
+incompatible. Use the deficit or shortfall means, which stay
+exact, to measure how far short a controller leaves the cars.</p></li>
+<li><p><strong>Comfort KPIs of buildings without set-point columns</strong> are undefined instead
+of judged against the 0 °C default; on the <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> datasets the discomfort
+ratios go from 1 to undefined for every controller, and the district skips
+those buildings. Code that reads these cells must handle <code class="docutils literal notranslate"><span class="pre">None</span></code>/NaN. Datasets
+with set points do not change, nor do the 2020–2022 challenge datasets and the
+three-phase demos, which have no set-point columns but no occupants either, so
+their comfort KPIs were already undefined.</p></li>
+<li><p><strong>Cost and emissions ratios of two zero totals</strong> are undefined instead of 1,
+for example the emissions ratios on Quebec (zero carbon intensity) and the
+cost ratios on the <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2020_climate_zone_*</span></code> and
+<code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2021</span></code> datasets (no prices), for every controller.</p></li>
 </ul>
 </section>
 <section id="physics-version">
