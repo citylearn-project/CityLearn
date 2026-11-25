@@ -743,6 +743,8 @@ class CityLearnKPIService:
 
         soc = float(arrival_soc)
         connected_steps = max(int(departure_index) - int(interval_start) + 1, 0)
+        # Schedules written by a mobility provider may limit a step to the seconds plugged in.
+        connected_seconds = getattr(sim, 'electric_vehicle_connected_seconds', None)
 
         # Replay the concrete battery implementation in compact, isolated buffers.
         # No real state, RNG, degradation history or episode tracker is advanced.
@@ -767,11 +769,24 @@ class CityLearnKPIService:
             if audit and self._ev_power_outage_at_step(building, step):
                 power_kw = 0.0
             charger_efficiency = self._ev_charger_charge_efficiency(charger, power_kw, charger_power_kw)
+            transfer_seconds = self._safe_sequence_value(connected_seconds, step)
+            transfer_seconds = (
+                None if transfer_seconds is None or not np.isfinite(float(transfer_seconds))
+                else min(max(float(transfer_seconds), 0.0), seconds_per_time_step)
+            )
+            transfer_hours = step_hours if transfer_seconds is None else transfer_seconds / 3600.0
             if replay is not None:
                 if offset:
                     replay.next_time_step()
                 ratio = replay.time_step_ratio or 1.0
-                replay.charge(power_kw * step_hours * charger_efficiency / ratio)
+                if transfer_seconds is None:
+                    replay.charge(power_kw * step_hours * charger_efficiency / ratio)
+                elif transfer_seconds > 0.0:
+                    replay.charge(
+                        power_kw * transfer_hours * charger_efficiency / ratio, duration_seconds=transfer_seconds,
+                    )
+                else:
+                    replay.charge(0.0)
                 soc = float(replay.soc[offset])
             else:
                 # Compatibility for legacy battery adapters without a physical
@@ -782,7 +797,7 @@ class CityLearnKPIService:
                     battery, power_kw * charger_efficiency, soc,
                 )
                 eta = self._ev_battery_charge_one_way_efficiency(battery, battery_power)
-                soc = float(np.clip(soc + battery_power * step_hours * eta / capacity_kwh,
+                soc = float(np.clip(soc + battery_power * transfer_hours * eta / capacity_kwh,
                                     0.0, getattr(battery, 'max_soc', 1.0)))
 
         return soc

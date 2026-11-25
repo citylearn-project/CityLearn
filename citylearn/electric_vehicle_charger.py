@@ -437,8 +437,15 @@ class Charger(Environment):
 
         return 0.0, True
 
-    def _battery_command(self, signed_power_kw: float, charging: bool) -> Tuple[float, float, float]:
-        """Charger efficiency, commanded AC energy and battery-side energy, in control-step kWh, for a power request."""
+    def _battery_command(
+        self, signed_power_kw: float, charging: bool, transfer_seconds: float = None
+    ) -> Tuple[float, float, float]:
+        """Charger efficiency, commanded AC energy and battery-side energy, in control-step kWh, for a power request.
+
+        ``transfer_seconds`` is the time the power is applied for, the time step by default.
+        """
+
+        transfer_seconds = self.seconds_per_time_step if transfer_seconds is None else transfer_seconds
 
         if charging:
             applied_power_kw = abs(signed_power_kw)
@@ -447,7 +454,7 @@ class Charger(Environment):
             commanded_energy_kwh = normalized_power_action_to_energy_kwh(
                 normalized_power,
                 self.max_charging_power,
-                self.seconds_per_time_step,
+                transfer_seconds,
             )
             battery_energy_kwh = commanded_energy_kwh * efficiency
         else:
@@ -457,7 +464,7 @@ class Charger(Environment):
             commanded_energy_kwh = -normalized_power_action_to_energy_kwh(
                 normalized_power,
                 self.max_discharging_power,
-                self.seconds_per_time_step,
+                transfer_seconds,
             )
             battery_energy_kwh = commanded_energy_kwh / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
 
@@ -494,6 +501,26 @@ class Charger(Environment):
         signed_power_kw, _ = self._signed_power_from_action(action_value)
         return signed_power_kw
 
+    def _session_limits(self) -> Tuple[float, float]:
+        """Connected seconds and discharge SOC floor of the current row, ``None`` when not set.
+
+        Only schedules written by a mobility provider (:mod:`citylearn.mobility`) have these rows.
+        """
+
+        simulation = self.charger_simulation
+        connected_seconds = getattr(simulation, 'electric_vehicle_connected_seconds', None)
+        soc_floor = getattr(simulation, 'electric_vehicle_discharge_soc_floor', None)
+        if connected_seconds is None and soc_floor is None:
+            return None, None
+
+        def value(values):
+            if values is None or not 0 <= self.time_step < len(values):
+                return None
+            value = float(values[self.time_step])
+            return value if np.isfinite(value) else None
+
+        return value(connected_seconds), value(soc_floor)
+
     def update_connected_electric_vehicle_soc(self, action_value: float):
         """
         Updates the SOC of the connected electric vehicle based on the charging/discharging action.
@@ -502,8 +529,18 @@ class Charger(Environment):
         ----------
         action_value : float
             The normalized charging or discharging action (range [-1, 1]).
+
+        Notes
+        -----
+        When a mobility provider limits the connection to part of the time step
+        (``connected_seconds``), the commanded power is applied for that time only. A session's
+        ``discharge_soc_floor`` caps discharging so that the battery SOC stays at or above it.
         """
         signed_power_kw, charging = self._signed_power_from_action(action_value)
+        connected_seconds, soc_floor = self._session_limits()
+
+        if connected_seconds is not None and connected_seconds <= 0.0:
+            signed_power_kw = 0.0
 
         if signed_power_kw == 0.0:
             # Keep EV SOC state consistent at the current timestep even when no power is requested.
@@ -513,7 +550,10 @@ class Charger(Environment):
             self.__past_charging_action_values_kwh[self.time_step] = 0
             return
 
-        efficiency, commanded_energy_kwh, battery_energy_kwh = self._battery_command(signed_power_kw, charging)
+        transfer_seconds = self.seconds_per_time_step if connected_seconds is None else connected_seconds
+        efficiency, commanded_energy_kwh, battery_energy_kwh = self._battery_command(
+            signed_power_kw, charging, transfer_seconds
+        )
         self.__past_charging_action_values_kwh[self.time_step] = commanded_energy_kwh
 
         if self.connected_electric_vehicle:
@@ -522,7 +562,15 @@ class Charger(Environment):
             # Battery model expects dataset-resolution energy. Convert from control-step kWh when needed.
             ratio = getattr(electric_vehicle.battery, 'time_step_ratio', None)
             battery_command = to_dataset_resolution_energy(battery_energy_kwh, ratio)
-            electric_vehicle.battery.charge(battery_command)
+            if connected_seconds is None and (soc_floor is None or charging):
+                electric_vehicle.battery.charge(battery_command)
+            else:
+                # Battery power limits and efficiency refer to the time the vehicle is plugged in.
+                electric_vehicle.battery.charge(
+                    battery_command,
+                    duration_seconds=connected_seconds,
+                    soc_floor=None if charging else soc_floor,
+                )
 
             if getattr(electric_vehicle.battery, '_balance_time_step', -1) == self.time_step:
                 battery_energy_balance = float(electric_vehicle.battery._last_transfer_energy)

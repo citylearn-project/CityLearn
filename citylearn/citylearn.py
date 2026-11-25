@@ -42,6 +42,8 @@ from citylearn.internal.entity_interface import CityLearnEntityInterfaceService
 from citylearn.internal.topology import CityLearnTopologyService
 from citylearn.internal.demand_response import CityLearnDemandResponseService
 from citylearn.internal.robustness import CityLearnRobustnessService
+from citylearn.internal.mobility import CityLearnMobilityService
+from citylearn.mobility import MobilityInterface, MobilityProvider
 from citylearn.utilities import parse_bool
 from citylearn.reward_function import (
     MultiBuildingRewardFunction as MultiBuildingRewardFunction,
@@ -196,6 +198,10 @@ class CityLearnEnv(Environment, Env):
     start_date: Union[str, datetime.date], optional
         Date of the first time step in rendered and exported timestamps, e.g. ``'2024-01-01'``. Defaults to the
         schema's ``start_date``, else 2024-01-01. It does not change the simulation.
+    mobility_provider: citylearn.mobility.MobilityProvider, optional
+        Writes the schedule of the chargers declared ``"charger_simulation": {"source": "external"}`` while the
+        episode runs, e.g. from a traffic simulator. Can also be assigned to :attr:`mobility_provider` before
+        :meth:`reset`. See :mod:`citylearn.mobility`.
 
     Other Parameters
     ----------------
@@ -272,8 +278,8 @@ class CityLearnEnv(Environment, Env):
         'reward_function', 'reward_function_kwargs', 'central_agent', 'shared_observations', 'active_observations',
         'inactive_observations', 'active_actions', 'inactive_actions', 'simulate_power_outage', 'solar_generation',
         'random_seed', 'offline', 'time_step_ratio', 'interface', 'topology_mode', 'start_date',
-        'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version', 'physics_version',
-        'baseline_version', 'ev_soc_carryover',
+        'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version', 'mobility_provider',
+        'physics_version', 'baseline_version', 'ev_soc_carryover',
     )
 
     def __init__(self,
@@ -287,7 +293,7 @@ class CityLearnEnv(Environment, Env):
         interface: str = None,
         topology_mode: str = None,
         start_date: Union[str, datetime.date] = None, render_session_name: str = None, render_mode: str = 'none',
-        export_kpis_on_episode_end: bool = None, **kwargs: Any
+        export_kpis_on_episode_end: bool = None, mobility_provider: MobilityProvider = None, **kwargs: Any
     ):
         episode_split_boundary = kwargs.pop('episode_split_boundary', None)
         ev_soc_carryover = kwargs.pop('ev_soc_carryover', None)
@@ -472,6 +478,8 @@ class CityLearnEnv(Environment, Env):
         self._topology_service = CityLearnTopologyService(self)
         self._demand_response_service = CityLearnDemandResponseService(self)
         self._robustness_service = CityLearnRobustnessService(self)
+        self._mobility_service = CityLearnMobilityService(self)
+        self._mobility_service.provider = mobility_provider
         root_directory, buildings, electric_vehicles, episode_time_steps, rolling_episode_split, random_episode_split, \
             seconds_per_time_step, reward_function, central_agent, shared_observations, episode_tracker = self._load(
                 deepcopy(self.schema),
@@ -617,6 +625,22 @@ class CityLearnEnv(Environment, Env):
         """Date used as the origin for rendered timestamps."""
 
         return self._render_start_date
+
+    @property
+    def mobility(self) -> MobilityInterface:
+        """Write and read access to external chargers and vehicles; see :mod:`citylearn.mobility`."""
+
+        return self._mobility_service.interface
+
+    @property
+    def mobility_provider(self) -> MobilityProvider:
+        """Provider that writes the external chargers' schedule; takes effect from the next :meth:`reset`."""
+
+        return self._mobility_service.provider
+
+    @mobility_provider.setter
+    def mobility_provider(self, provider: MobilityProvider):
+        self._mobility_service.provider = provider
 
     @property
     def schema(self) -> Mapping[str, Any]:
@@ -2063,6 +2087,8 @@ class CityLearnEnv(Environment, Env):
         self._ev_soc_carryover_reset(previous_episode_end)
         self._demand_response_service.reset()
         self._robustness_service.reset()
+        # External chargers start away; the mobility provider writes time step 0 before association.
+        self._mobility_service.reset()
         self.associate_chargers_to_electric_vehicles()
         self._provenance_service.reset()
         from citylearn.internal.comparison import equipment, inventory, reference_configuration

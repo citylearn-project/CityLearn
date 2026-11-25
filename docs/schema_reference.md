@@ -395,7 +395,7 @@ interval, so they reflect the limit that was in force then.
 
 | Field | Unit | Purpose |
 |---|---:|---|
-| `charger_simulation` | path | Charger schedule file. |
+| `charger_simulation` | path or `{"source": "external"}` | Charger schedule file, or `{"source": "external"}` for a schedule written at runtime by a [mobility provider](mobility_provider.md). |
 | `soc_unit` | `percent`, `fraction` | Optional, next to `charger_simulation`: the unit of the SOC columns of the schedule file. Omitted, it is inferred once per column from the whole file (see [SOC unit](dataset_reference.md#soc-unit)). |
 | `attributes.nominal_power` | kW | Rated power. Default of `max_charging_power`. |
 | `attributes.charger_type` | any | Descriptive label (for example 0 for AC, 1 for DC). No effect on the simulation. |
@@ -415,6 +415,10 @@ closest valid name, so a misspelt `max_discharge_power` no longer falls back to 
 with a warning that suggests the closest key. Under physics version 1
 an omitted `max_charging_power` or `max_discharging_power` is 50 kW, as in CityLearn 3.6.0,
 and `nominal_power` is not used.
+
+An external charger's schedule starts away for the whole episode; the provider connects, announces and
+releases vehicles while the episode runs. External chargers are not supported with `topology_mode="dynamic"`.
+See [external mobility providers](mobility_provider.md).
 
 ## EV Definitions
 
@@ -439,6 +443,7 @@ and `nominal_power` is not used.
 |---|---|
 | `type` | EV class path. |
 | `include` | Include the EV in the initial pool. |
+| `external` | `true` when a [mobility provider](mobility_provider.md) reports the EV's SOC: no random SOC drift while it is away. Default `false`. |
 | `battery.attributes` | `Battery` kwargs. |
 
 EV battery standby loss is intentionally isolated from stationary storage defaults:
