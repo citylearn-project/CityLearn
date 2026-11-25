@@ -66,7 +66,7 @@ MultiCommunityEnv(
 )
 ```
 
-`community_id` tem de ser único, não vazio e seguro como componente de um caminho relativo. Só pode conter letras, números, `_`, `-` e `.`. `weight` tem o valor predefinido `1.0`, tem de ser finito e não negativo, e pelo menos uma comunidade tem de ter um peso positivo. Cada entrada só aceita `community_id`, `schema`, `env_kwargs` e `weight`: qualquer outra chave levanta um `ValueError` que a nomeia, e `weight` não pode ser um booleano.
+`community_id` tem de ser único, não vazio e seguro como componente de um caminho relativo. Só pode conter letras, números, `_`, `-` e `.`. `weight` tem o valor predefinido `1.0`, tem de ser finito e não negativo, e pelo menos uma comunidade tem de ter um peso positivo. Cada entrada só aceita `community_id`, `schema`, `env_kwargs` e `weight`: qualquer outra chave levanta um `ValueError` que a nomeia, e `weight` tem de ser um número: um booleano ou um texto como `'2'` levanta um `ValueError`.
 
 `env_kwargs` são passados ao `CityLearnEnv` filho. O wrapper define a sessão de exportação de cada filho como `<render_session_name>/<community_id>`, para que os ficheiros de render e de KPIs fiquem separados por comunidade.
 
@@ -133,6 +133,8 @@ Todos os ambientes filhos têm de usar:
 | A mesma `physics_version` | Os totais do portefólio somam valores dos distritos, pelo que todas as comunidades têm de simular a mesma física. |
 | A mesma `random_stream_version` | As predefinições sorteadas (curvas e eficiências das baterias, ruído) têm de vir da mesma definição do fluxo aleatório para que os totais sejam comparáveis. |
 | A mesma `baseline_version` | Os KPI de referência do portefólio somam as referências dos distritos, pelo que a definição da referência tem de coincidir. |
+| O mesmo `business_as_usual_ev_charge_target` | Os totais BAU do portefólio e os rácios face ao BAU somam as execuções BAU dos distritos, pelo que todas as comunidades têm de carregar os VE no BAU até ao mesmo alvo (`full` ou `requested`). |
+| O mesmo `ev_soc_carryover` | Altera o estado dos VE no início de cada episódio, na execução controlada e no BAU, pelo que os totais do portefólio misturariam duas definições de VE. |
 | A mesma `evaluation_window` quando ativa | Mantém alinhados os KPIs da janela recorrente entre comunidades. |
 
 O wrapper valida estas condições na construção e novamente depois do reset, e

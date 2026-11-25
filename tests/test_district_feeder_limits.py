@@ -656,3 +656,109 @@ def test_manifest_provenance_comparison_multi_community_and_deepcopy(tmp_path: P
             env_clone.close()
     finally:
         env_orig.close()
+
+
+@pytest.mark.parametrize(
+    "cfg",
+    [
+        {"enabled": True},
+        {"enabled": True, "limits": {}},
+        {"enabled": True, "limits": None},
+        {"enabled": True, "limits": {"import_kw": None, "export_kw": None}},
+        {"enabled": True, "limits": {"import_kw": float("inf"), "export_kw": float("inf")}},
+        {"enabled": True, "limits": {"total": {}}},
+    ],
+)
+def test_enabled_without_any_limit_is_rejected(tmp_path: Path, cfg):
+    # Every feeder KPI would be NaN: an unconfigured direction is undefined.
+    schema_path = _write_synthetic_feeder_scenario(tmp_path / "no_limit")
+    with pytest.raises(ValueError, match="enabled but has no limit"):
+        CityLearnEnv(str(schema_path), district_electrical_service=cfg)
+
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    schema["district_electrical_service"] = cfg
+    with pytest.raises(ValueError, match="enabled but has no limit"):
+        CityLearnEnv(schema)
+
+
+def test_disabled_or_single_direction_feeder_without_limits_is_still_accepted(tmp_path: Path):
+    schema_path = _write_synthetic_feeder_scenario(tmp_path / "accepted")
+    for cfg in (
+        {"enabled": False},
+        {"enabled": False, "limits": {}},
+        {"enabled": True, "limits": {"export_kw": 5.0}},
+        {"enabled": True, "limits": {"import_kw": [None, None, None, None, None]}},
+    ):
+        env = CityLearnEnv(str(schema_path), district_electrical_service=cfg)
+        env.close()
+
+
+def test_one_sided_feeder_monitor_is_a_declared_difference(tmp_path: Path):
+    """The feeder monitor changes nothing simulated, so it follows the one-sided evaluation window rule."""
+    schema_path = _write_synthetic_feeder_scenario(tmp_path / "one_sided")
+
+    def _export(session: str, cfg: Optional[Dict[str, Any]]) -> Path:
+        kwargs: Dict[str, Any] = {
+            "render_directory": tmp_path / "exports",
+            "render_session_name": session,
+            "export_kpis_on_episode_end": False,
+        }
+        if cfg is not None:
+            kwargs["district_electrical_service"] = cfg
+        env = CityLearnEnv(str(schema_path), **kwargs)
+        try:
+            env.reset(seed=0)
+            while not env.terminated:
+                env.step([np.zeros(1, dtype="float32")])
+            env.set_experiment_identity("zero", "1.0", {})
+            env.export_final_kpis(export_business_as_usual_timeseries=False)
+            return Path(env.new_folder_path) / "exported_kpis.csv"
+        finally:
+            env.close()
+
+    def _manifest(csv: Path) -> Dict[str, Any]:
+        return json.loads(csv.with_name("exported_kpis.manifest.json").read_text(encoding="utf-8"))
+
+    limits_a = {"enabled": True, "limits": {"import_kw": 6.0, "export_kw": 5.0}}
+    limits_b = {"enabled": True, "limits": {"import_kw": 8.0, "export_kw": 5.0}}
+    csv_off = _export("off", None)
+    csv_on = _export("on", limits_a)
+    csv_on_again = _export("on_again", limits_a)
+    csv_other = _export("other", limits_b)
+
+    # The monitor is not part of the physical configuration hash.
+    hashes = {
+        _manifest(csv)["comparison_context"]["physical_configuration_sha256"]
+        for csv in (csv_off, csv_on, csv_other)
+    }
+    assert len(hashes) == 1
+
+    for left, right in ((csv_off, csv_on), (csv_on, csv_off)):
+        report = compare_exports(left, right)
+        assert report["status"] == "paired"
+        assert report["mismatches"] == []
+        assert "district_electrical_service_one_sided" in report["declared_differences"]
+        assert report["district_electrical_service"]["status"] == "one_sided"
+        assert report["district_electrical_service"]["comparable"] is False
+        assert report["unpaired_feeder_kpis"]
+        assert all("_energy_grid_feeder_limit_" in name for name in report["unpaired_feeder_kpis"])
+        shared = [r for r in report["kpis"] if "_energy_grid_feeder_limit_" not in r["kpi"]]
+        assert shared and all("feeder_status" not in r for r in shared)
+        assert all(
+            r["delta_right_minus_left"] in (None, 0.0) for r in shared
+        ), "a monitor-only setting must not change any shared KPI"
+
+    paired = compare_exports(csv_on, csv_on_again)
+    assert paired["status"] == "paired"
+    assert paired["district_electrical_service"]["status"] == "paired"
+    assert "district_electrical_service_one_sided" not in paired["declared_differences"]
+    assert paired["unpaired_feeder_kpis"] == []
+
+    disabled = compare_manifests(_manifest(csv_off), _manifest(csv_off))
+    assert disabled["district_electrical_service"]["status"] == "disabled"
+    assert disabled["declared_differences"] == []
+
+    mismatch = compare_exports(csv_on, csv_other)
+    assert mismatch["status"] == "incompatible"
+    assert mismatch["mismatches"] == ["district_electrical_service"]
+    assert mismatch["district_electrical_service"]["status"] == "incompatible"

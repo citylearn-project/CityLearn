@@ -310,7 +310,7 @@ exceedance_peak_control_kw          = max_t exceedance_t
 exceedance_step_control_count       = number of executed steps with Δh · exceedance_t > 1e-9 kWh
 ```
 
-Per-step exceedance series are exposed on `env.feeder_import_exceedance_kw` and `env.feeder_export_exceedance_kw` (empty right after `reset()` until `step()` executes, and `0.0` at steps without a limit in that direction). Each metric publishes `_control`, `_business_as_usual` and `_delta_to_business_as_usual` (`control − business_as_usual`); when `evaluate_v2(include_business_as_usual=False)` is called, only `_control` is emitted. If `district_electrical_service` is enabled with only one direction configured, the unconfigured direction is undefined (`NaN`). When `district_electrical_service` is disabled, no feeder exceedance KPI rows are emitted.
+Per-step exceedance series are exposed on `env.feeder_import_exceedance_kw` and `env.feeder_export_exceedance_kw` (empty right after `reset()` until `step()` executes, and `0.0` at steps without a limit in that direction). Each metric publishes `_control`, `_business_as_usual` and `_delta_to_business_as_usual` (`control − business_as_usual`); when `evaluate_v2(include_business_as_usual=False)` is called, only `_control` is emitted. If `district_electrical_service` is enabled with only one direction configured, the unconfigured direction is undefined (`NaN`); enabling it with no limit at all raises `ValueError`. When `district_electrical_service` is disabled, no feeder exceedance KPI rows are emitted.
 
 ### Recurring evaluation window
 

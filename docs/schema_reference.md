@@ -171,7 +171,7 @@ A missing required key raises `KeyError`.
 |---|---|---|---|---|---|---|
 | `seconds_per_time_step` | number | required | s, at least 1 | Duration of one control step. Must equal the dataset step unless `time_step_ratio_mode` is `compress`. | `seconds_per_time_step` | original |
 | `simulation_start_time_step` | int | required | data row | First row read from every time-series file. | `simulation_start_time_step` | original |
-| `simulation_end_time_step` | int | required | data row | Last row read, inclusive. The window has `end - start + 1` rows; rows outside it are not loaded. | `simulation_end_time_step` | original |
+| `simulation_end_time_step` | int | required | data row | Last row read, inclusive. The window has `end - start + 1` rows; rows outside it are not loaded. It must be a row of every time series file: a later value raises `ValueError` at construction that names the file and the last valid end step (one more with `terminal_observation_padding`). | `simulation_end_time_step` | original |
 | `time_step_ratio_mode` | string | `reject` | `reject`, `compress` | What to do when `seconds_per_time_step` differs from the dataset step. `reject` raises `ValueError`. `compress` keeps the 3.6.0 behaviour: one data row per control step, energies scaled by the ratio, and a notice is printed. | `time_step_ratio_mode` | after 3.6.0 |
 
 The dataset step is read, in this order, from `dataset_seconds_per_time_step`, from the calendar file, or from the
@@ -828,7 +828,7 @@ Only charging is limited; discharging (V2G) is not. Requests above a limit are s
 | `limits.import_kw` | `null` | Non-negative scalar in `kW`, dataset-step-0 anchored sequence of `kW`/`null` values covering all executed steps (`episode_start_time_step + time_step`), or `null` when import is unmonitored. |
 | `limits.export_kw` | `null` | Non-negative scalar in `kW`, dataset-step-0 anchored sequence of `kW`/`null` values covering all executed steps (`episode_start_time_step + time_step`), or `null` when export is unmonitored. |
 
-`limits.total.{import_kw,export_kw}` is also accepted as an alias matching building `electrical_service`. When enabled, the normalized configuration is recorded in `effective_schema`, `physical_configuration_sha256`, and `comparison_context`, and `compare_manifests()` marks runs with differing `district_electrical_service` configurations as `incompatible`.
+`limits.total.{import_kw,export_kw}` is also accepted as an alias matching building `electrical_service`. When enabled, at least one of `import_kw` and `export_kw` must be given (a finite value or a sequence); `enabled: true` without a limit raises `ValueError`, because every feeder KPI would be undefined. The normalized configuration is recorded in `effective_schema` and `comparison_context`, not in `physical_configuration_sha256`, because the monitor changes no simulated quantity. `compare_manifests()` follows the [evaluation window](#evaluation-window) rule: when both runs enable `district_electrical_service` with different limits, it adds `'district_electrical_service'` to `mismatches` (`status='incompatible'`); when only one run enables it, it keeps `status='paired'` for all shared KPIs, records `'district_electrical_service_one_sided'` in `declared_differences` (`district_electrical_service.status == 'one_sided'`), and `compare_exports()` flags only the feeder rows in `unpaired_feeder_kpis`.
 
 ## Electric vehicles and chargers
 
