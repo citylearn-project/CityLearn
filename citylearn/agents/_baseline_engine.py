@@ -2607,6 +2607,25 @@ class _EconomicSmartPolicy(RBCSmartPolicy):
             return self._deferrable_start_value(bounds)
         return 0.0
 
+    def _pv_expected_without_surplus_forecast(self, obs, obs_map) -> bool:
+        """Whether PV is forecast for a building with PV while no PV-surplus forecast is observed.
+
+        The cheap-price grid charge waits while a local PV surplus is forecast. That forecast comes from
+        ``forecast_pv_surplus_mean``, ``forecast_export`` or ``forecast_net`` observations; CityLearn
+        publishes ``forecast_net_next_*_kw`` only with the ``entity_forecasts_derived`` bundle. Without
+        them the expected surplus read as zero, so the battery charged from the grid before sunrise and
+        then exported the PV it could no longer store (#400). The solar resource forecast (PV or
+        irradiance) then stands in for the missing surplus forecast.
+        """
+        if any(
+            self._forecast_values(obs, obs_map, [token], exclude_tokens=["community"])
+            for token in ("forecast_pv_surplus_mean", "forecast_export", "forecast_net")
+        ):
+            return False
+        if self._get_value(obs, obs_map, "active_pvs_count", default=1.0) <= 0.0:
+            return False
+        return self._forecast_solar_resource_expected(obs, obs_map)
+
     def _storage_demand(self, agent_idx, obs, obs_map):
         local = self._budget_value(
             agent_idx, "local_import_kw", self._get_import_power(obs, obs_map)
@@ -2660,6 +2679,7 @@ class _EconomicSmartPolicy(RBCSmartPolicy):
             bool(price["cheap"])
             and not peak
             and expected <= self.pv_surplus_threshold_kw
+            and not self._pv_expected_without_surplus_forecast(obs, obs_map)
             and soc < min(max_soc, self.storage_price_charge_soc_ceiling)
         ):
             # Reserve current connection capacity for the service actions that
