@@ -14,7 +14,7 @@ supplied; dynamic-temperature building models allow HVAC control to affect indoo
 temperature. Comfort and outage indicators report the resulting service.
 
 Choose devices under each building's schema entry and enable their actions.
-[Device configuration](schema_reference.md#device-sections),
+[Device configuration](schema_reference.md#devices),
 [action meanings](actions_reference.md#flat-actions) and
 [comfort KPIs](kpis_reference.md#comfort-and-resilience) provide the details.
 
@@ -66,7 +66,7 @@ A normalized action selects one of those states; demand and availability inputs
 determine passenger-service indicators and energy use. This is a state-and-demand
 model, not an individual passenger or queue simulation.
 
-Provide your own schedule using the [escalator schema](schema_reference.md#escalators-flat-interface).
+Provide your own schedule using the [escalator schema](schema_reference.md#escalators).
 The [actions guide](actions_reference.md#escalator-control) explains state
 thresholds.
 
@@ -96,7 +96,7 @@ among members. Local prices and importer weights determine financial allocation;
 exports expose settled costs, the grid-only counterfactual and savings for each
 member and the community. Settlement values the recorded physical trajectory.
 
-Configure the [community market](schema_reference.md#community-market).
+Configure the [community market](schema_reference.md#community-market-and-settlement).
 Residual grid exports earn nothing by default; with `"settlement_version": 2`
 they are paid `grid_export_price`, and `tariff_files` give each member its own
 prices. Invalid market settings raise an error when the env is built. Local
