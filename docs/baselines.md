@@ -368,9 +368,12 @@ of the controlled run, and adds back the EV charging of the native BAU with the
 full, and never discharged. The cars get the energy they need, without V2G, and
 the baseline does not depend on how the controller charged them, so a controller
 that leaves the cars short does not lower its own baseline. The deferrable
-appliances and the HVAC stay as the controller ran them. The `baseline` rows
-therefore credit the controller with its storage dispatch, its EV charging and
-its V2G against charging on arrival. With `baseline_version=1` nothing is added
+appliances stay as the controller ran them. So does the HVAC, except in buildings
+with temperature dynamics (LSTM): there the default condition uses the dataset's
+ideal-load heating and cooling demand instead of the HVAC the controller ran. The
+`baseline` rows therefore credit the controller with its storage dispatch, its
+EV charging and its V2G against charging on arrival, and in buildings with
+temperature dynamics also with its HVAC control. With `baseline_version=1` nothing is added
 back, as in CityLearn 3.6.0, so on EV datasets the baseline is a community whose
 cars never charge.
 
