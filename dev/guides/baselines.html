@@ -204,7 +204,7 @@ It is not a scenario with all equipment switched off.</p>
 <td><p>Runs under the scenario, but has no policy that optimizes an activation target, payment or penalty.</p></td>
 </tr>
 <tr class="row-even"><td><p>HVAC (<code class="docutils literal notranslate"><span class="pre">heating_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code>)</p></td>
-<td><p>With <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code> 1 or 2 (default): requests zero, so in buildings with temperature dynamics the BAU neither heats nor cools. With <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code>: requests the action that delivers the dataset’s own heating or cooling demand at each step (see <a class="reference internal" href="#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>).</p></td>
+<td><p>With <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code> (default): requests the action that delivers the dataset’s own heating or cooling demand at each step (see <a class="reference internal" href="#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>). With <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code>: requests zero, as in CityLearn 3.6.0, so in buildings with temperature dynamics the BAU neither heats nor cools.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Other active actions</p></td>
 <td><p>Requests zero, clipped to the action bounds. This is not a dedicated thermal-storage or escalator policy; the effect of zero follows each device’s action contract.</p></td>
@@ -263,15 +263,10 @@ available. The bundled datasets with an active HVAC action are
 <code class="docutils literal notranslate"><span class="pre">tx_travis_county_neighborhood</span></code>, <code class="docutils literal notranslate"><span class="pre">vt_chittenden_county_neighborhood</span></code>,
 <code class="docutils literal notranslate"><span class="pre">ca_alameda_county_neighborhood</span></code>, <code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code> and the
 <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_*</span></code> datasets.</p>
-<p>Up to <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code> the BAU requests zero for those actions, so once the
-LSTM warm-up ends its buildings are neither heated nor cooled: indoor
-temperatures drift away from the set points and every <code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code>
-row compares the controller with unheated (or uncooled) houses
-(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/362">#362</a>).</p>
-<p><code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code> makes the BAU run the HVAC as a building without
-optimisation does. At each step it requests the action that delivers the
-dataset’s own heating or cooling demand, the as-simulated <code class="docutils literal notranslate"><span class="pre">heating_demand</span></code> and
-<code class="docutils literal notranslate"><span class="pre">cooling_demand</span></code> of the building file (the energy simulation’s
+<p>Under <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code>, the default, the BAU runs the HVAC as a building
+without optimisation does. At each step it requests the action that delivers
+the dataset’s own heating or cooling demand, the as-simulated <code class="docutils literal notranslate"><span class="pre">heating_demand</span></code>
+and <code class="docutils literal notranslate"><span class="pre">cooling_demand</span></code> of the building file (the energy simulation’s
 <code class="docutils literal notranslate"><span class="pre">*_demand_without_control</span></code> series):</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>action = device input energy for the demand / (nominal power × dataset step in hours)
 </pre></div>
@@ -281,9 +276,12 @@ the nominal power, the heat pump COP at the outdoor temperature and, during an
 outage, the local supply. A service is used only in the steps whose <code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code>
 allows it; with <code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code> the larger of the two demands sets
 the sign. The BAU does not pre-heat, pre-cool, follow prices or use the thermal
-storage, which still receives zero. Everything else (EVs, battery, appliances)
-is the BAU of version 2, and the KPI baseline (<code class="docutils literal notranslate"><span class="pre">*_baseline_*</span></code> rows) is also the
-one of version 2.</p>
+storage, which still receives zero.</p>
+<p><code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> reproduces CityLearn 3.6.0: the BAU requests zero for
+those actions, so once the LSTM warm-up ends its buildings are neither heated
+nor cooled. Indoor temperatures drift away from the set points and every
+<code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> row compares the controller with unheated (or uncooled)
+houses (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/362">#362</a>).</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">baseline_version</span></code></p></th>
@@ -300,27 +298,55 @@ one of version 2.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">2</span></code> (default)</p></td>
 <td><p>EV charging of the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> BAU added back</p></td>
-<td><p>zero</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v4</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">3</span></code> (opt-in)</p></td>
-<td><p>as <code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
 <td><p>delivers the dataset heating and cooling demand</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v4+hvac-dataset-demand-v1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v4+hvac-dataset-demand-v1</span></code> on datasets with HVAC actions, <code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v4</span></code> on the others</p></td>
 </tr>
 </tbody>
 </table>
 <p>(With <code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target='requested'</span></code> the definition starts
 with <code class="docutils literal notranslate"><span class="pre">immediate-user-target-v3</span></code> instead.)</p>
-<p>Use version 3 when you compare controllers with the BAU on a dataset with HVAC
-actions and want the BAU to keep the houses heated and cooled as the dataset
-did; the <code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> rows and the <code class="docutils literal notranslate"><span class="pre">*_delta_to_business_as_usual_*</span></code> and
-<code class="docutils literal notranslate"><span class="pre">*_ratio_to_business_as_usual_*</span></code> values change on those datasets. On datasets
-without HVAC actions version 3 gives exactly the results of version 2. Version 2
-stays the default so that existing results do not change; comparisons report
-runs with different baseline versions as incompatible.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'quebec_neighborhood_without_demand_response_set_points'</span><span class="p">,</span> <span class="n">baseline_version</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<p>The HVAC rule changes the <code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> rows, and the
+<code class="docutils literal notranslate"><span class="pre">*_delta_to_business_as_usual_*</span></code> and <code class="docutils literal notranslate"><span class="pre">*_ratio_to_business_as_usual_*</span></code> values,
+on datasets with HVAC actions only. On datasets without HVAC actions the BAU,
+its definition and identity, and every KPI are the same, bit for bit, as before
+the HVAC rule was added.
+Comparisons report runs with different baseline versions as incompatible.</p>
+<p>On Quebec (<code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_without_demand_response_set_points</span></code>, steps
+0–335), the default BAU now heats the houses:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Quebec, steps 0–335</p></th>
+<th class="head"><p>Before (BAU HVAC at zero)</p></th>
+<th class="head"><p>Now (default)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BAU mean / minimum indoor temperature (°C)</p></td>
+<td><p>3.4 / −12.8</p></td>
+<td><p>20.6 / 17.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>BAU <code class="docutils literal notranslate"><span class="pre">comfort_resilience_discomfort_overall_ratio</span></code></p></td>
+<td><p>0.183</p></td>
+<td><p>0.026</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">district_cost_total_business_as_usual_eur</span></code></p></td>
+<td><p>631.8</p></td>
+<td><p>4,403.8</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> <code class="docutils literal notranslate"><span class="pre">cost_ratio_to_business_as_usual_total_ratio</span></code></p></td>
+<td><p>6.970</p></td>
+<td><p>1.000</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code> <code class="docutils literal notranslate"><span class="pre">cost_ratio_to_business_as_usual_total_ratio</span></code></p></td>
+<td><p>1.000</p></td>
+<td><p>0.143</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'quebec_neighborhood_without_demand_response_set_points'</span><span class="p">)</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>  <span class="c1"># hvac='dataset_demand', from the env</span>
+
+<span class="n">legacy</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'quebec_neighborhood_without_demand_response_set_points'</span><span class="p">,</span> <span class="n">baseline_version</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent(env,</span> <span class="pre">hvac=...)</span></code> overrides the environment for that agent:
@@ -328,19 +354,17 @@ runs with different baseline versions as incompatible.</p>
 BAU of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> always follows the environment’s <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code>.</p>
 <p><strong>The rule-based baselines run the HVAC the same way.</strong> <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>,
 <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> deliver the dataset heating and
-cooling demand with the same rule as the version 3 BAU, whatever the
-<code class="docutils literal notranslate"><span class="pre">baseline_version</span></code> (see <a class="reference internal" href="#hvac-of-the-rule-based-baselines"><span class="std std-ref">HVAC of the rule-based
-baselines</span></a>), so under version 3 their ratios
-to the BAU compare houses that are heated and cooled alike. Under the default
-version 2 the BAU does not heat or cool, so their ratios to the BAU compare
-heated houses with unheated ones: use version 3 on these datasets.
-<code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code> still sends zero, and so does any controller of your own that
-does not drive the HVAC: under version 3 its <code class="docutils literal notranslate"><span class="pre">*_ratio_to_business_as_usual_*</span></code>
-values look much better only because the BAU pays for heating and cooling and it
-does not. Read the ratios to the BAU together with the comfort KPIs
-(<code class="docutils literal notranslate"><span class="pre">*_comfort_resilience_discomfort_*</span></code>). <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> has no
-<code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> comfort rows, so to see the BAU comfort, run
-<code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> as the controller and read its comfort KPIs.</p>
+cooling demand with the same rule as the BAU, whatever the <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code>
+(see <a class="reference internal" href="#hvac-of-the-rule-based-baselines"><span class="std std-ref">HVAC of the rule-based baselines</span></a>).
+Under the default version their ratios to the BAU therefore compare houses
+that are heated and cooled alike. <code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code> still sends zero, and so
+does any controller of your own that does not drive the HVAC: its
+<code class="docutils literal notranslate"><span class="pre">*_ratio_to_business_as_usual_*</span></code> values look much better only because the BAU
+pays for heating and cooling and it does not. Read the ratios to the BAU
+together with the comfort KPIs (<code class="docutils literal notranslate"><span class="pre">*_comfort_resilience_discomfort_*</span></code>).
+<code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> has no <code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> comfort rows, so to see the BAU
+comfort, run <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> as the controller and read its comfort
+KPIs.</p>
 </section>
 <section id="known-limits">
 <h3>Known limits<a class="headerlink" href="#known-limits" title="Link to this heading"></a></h3>
@@ -467,7 +491,7 @@ follow <code class="docutils literal notranslate"><span class="pre">hvac</span><
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">'dataset_demand'</span></code> (default)</p></td>
-<td><p>Deliver the dataset’s own heating and cooling demand at each step, with the rule of the version 3 BAU (see <a class="reference internal" href="#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>): a thermostat that meets the load, without optimisation.</p></td>
+<td><p>Deliver the dataset’s own heating and cooling demand at each step, with the rule of the default BAU (see <a class="reference internal" href="#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>): a thermostat that meets the load, without optimisation.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">'off'</span></code></p></td>
 <td><p>Zero, as before. On datasets with temperature dynamics the houses are neither heated nor cooled.</p></td>
@@ -480,15 +504,15 @@ records <code class="docutils literal notranslate"><span class="pre">hvac='datas
 <code class="docutils literal notranslate"><span class="pre">+hvac-dataset-demand-v1</span></code>, so these runs are not mixed with runs from earlier
 releases. Thermal storage still receives zero.</p>
 <p>On Quebec (<code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_without_demand_response_set_points</span></code>, steps
-0–335), the three rule-based baselines heat the houses as the version 3 BAU
+0–335), the three rule-based baselines heat the houses as the default BAU
 does. The mean indoor temperature is 20.6 °C instead of 3.4 °C, the minimum
 17.2 °C instead of −12.8 °C, and
 <code class="docutils literal notranslate"><span class="pre">district_comfort_resilience_discomfort_overall_ratio</span></code> goes from 0.183 to
-0.026. Quebec has no batteries or EVs, so they then run exactly as the version
-3 BAU: cost 4,403.8 EUR and a cost ratio of 1.000. With <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code> they cost
-631.8 EUR, a ratio of 0.143. Against the default version 2 BAU, which does not
-heat, their cost ratio is 6.970, so on datasets with HVAC actions compare them
-with the version 3 BAU.</p>
+0.026. Quebec has no batteries or EVs, so they then run exactly as the BAU:
+cost 4,403.8 EUR and a cost ratio of 1.000. With <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code> they cost
+631.8 EUR, a ratio of 0.143. Under <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code>, whose BAU does not
+heat, their cost ratio is 6.970; to reproduce the earlier ratio of 1.000 under
+that version, also pass <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">smart</span> <span class="o">=</span> <span class="n">RBCSmartPolicy</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>               <span class="c1"># HVAC meets the dataset demand</span>
 <span class="n">legacy</span> <span class="o">=</span> <span class="n">RBCSmartPolicy</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">hvac</span><span class="o">=</span><span class="s1">'off'</span><span class="p">)</span>  <span class="c1"># HVAC at zero, as before</span>
 </pre></div>

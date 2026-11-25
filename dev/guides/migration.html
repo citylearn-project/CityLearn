@@ -104,7 +104,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#dataset-cache-keyed-by-content">Dataset cache keyed by content</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ev-charging-in-the-default-baseline">EV charging in the default baseline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hvac-in-the-bau-opt-in-baseline-version-3">HVAC in the BAU (opt-in <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hvac-in-the-bau">HVAC in the BAU</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-rule-based-baselines-run-the-hvac">The rule-based baselines run the HVAC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#district-emissions-with-local-trading-off">District emissions with local trading off</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#community-market-settings-are-validated">Community market settings are validated</a></li>
@@ -302,51 +302,64 @@ raises <code class="docutils literal notranslate"><span class="pre">ValueError</
 run records the BAU reference as evaluated.</p></li>
 <li><p>Only datasets with EV chargers change: <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>,
 the <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> datasets and the three-phase demos. The simulation, the
-control rows, the BAU rows and the rewards do not change. The equity KPIs,
+control rows and the rewards do not change, and neither do the BAU rows on
+datasets without HVAC actions (see <a class="reference internal" href="#hvac-in-the-bau"><span class="std std-ref">HVAC in the BAU</span></a>). The equity KPIs,
 which are built from each member’s benefit against the baseline, change with it.</p></li>
 <li><p>Set <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code> (constructor argument or schema key) to
-reproduce the baseline of CityLearn 3.6.0. The version is in
+reproduce the baseline of CityLearn 3.6.0, including its BAU that does not
+run the HVAC. The version is in
 <code class="docutils literal notranslate"><span class="pre">env.get_metadata()</span></code> and the export manifest, at top level and in
 <code class="docutils literal notranslate"><span class="pre">comparison_context</span></code>; <code class="docutils literal notranslate"><span class="pre">compare_exports()</span></code> reports two runs under different
 versions as <code class="docutils literal notranslate"><span class="pre">incompatible</span></code>. <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> requires every community to
 use the same version.</p></li>
 </ul>
 </section>
-<section id="hvac-in-the-bau-opt-in-baseline-version-3">
-<span id="hvac-in-the-bau-opt-in-baseline_version3"></span><h3>HVAC in the BAU (opt-in <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code>)<a class="headerlink" href="#hvac-in-the-bau-opt-in-baseline-version-3" title="Link to this heading"></a></h3>
-<p>On datasets with HVAC actions (temperature dynamics), the BAU sends zero to
+<section id="hvac-in-the-bau">
+<h3>HVAC in the BAU<a class="headerlink" href="#hvac-in-the-bau" title="Link to this heading"></a></h3>
+<p>On datasets with HVAC actions (temperature dynamics), the BAU sent zero to
 <code class="docutils literal notranslate"><span class="pre">heating_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_device</span></code> and <code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code>, so its
-buildings are neither heated nor cooled and the <code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> rows
-compare the controller with unheated or uncooled houses
+buildings were neither heated nor cooled and the <code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> rows
+compared the controller with unheated or uncooled houses
 (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/362">#362</a>).</p>
 <ul class="simple">
-<li><p>Nothing changes by default: <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code> stays the default and
-versions 1 and 2 give the same results as before.</p></li>
-<li><p>Set <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code> to make the BAU deliver the dataset’s own heating and
-cooling demand at each step, clipped to the action bounds and device limits.
-The BAU rows and the deltas and ratios to the BAU change on datasets with
-HVAC actions; on other datasets version 3 equals version 2. The BAU definition
-becomes <code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v4+hvac-dataset-demand-v1</span></code> (or
+<li><p>Under <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code>, the default, the BAU now delivers the dataset’s
+own heating and cooling demand at each step, clipped to the action bounds
+and device limits. On those datasets the BAU definition becomes
+<code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v4+hvac-dataset-demand-v1</span></code> (or
 <code class="docutils literal notranslate"><span class="pre">immediate-user-target-v3+hvac-dataset-demand-v1</span></code>). See
 <a class="reference internal" href="baselines.html#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>.</p></li>
+<li><p>On datasets with HVAC actions (<code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_with_demand_response_set_points</span></code>,
+<code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_without_demand_response_set_points</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tx_travis_county_neighborhood</span></code>, <code class="docutils literal notranslate"><span class="pre">vt_chittenden_county_neighborhood</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ca_alameda_county_neighborhood</span></code>, <code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code> and the
+<code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_*</span></code> datasets) the default
+<code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> rows, and the deltas and ratios to the BAU, change. On
+<code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_without_demand_response_set_points</span></code> (steps 0–335) the BAU cost goes from 631.8 to 4,403.8 EUR, its mean
+indoor temperature from 3.4 to 20.6 °C, and the cost ratio of
+<code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> to the BAU from 6.970 to 1.000.</p></li>
+<li><p>On datasets without HVAC actions nothing changes, bit for bit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> keeps the BAU with the HVAC at zero, as in CityLearn
+3.6.0, to reproduce earlier numbers.</p></li>
 <li><p>A <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> you run yourself follows the environment’s version;
 <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code> or <code class="docutils literal notranslate"><span class="pre">hvac='dataset_demand'</span></code> overrides it.</p></li>
+<li><p>A controller that does not drive the HVAC, such as <code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code>, now
+looks much cheaper than the BAU on these datasets, because the BAU pays for
+heating and cooling. Read its ratios to the BAU together with the comfort KPIs.</p></li>
 </ul>
 </section>
 <section id="the-rule-based-baselines-run-the-hvac">
 <h3>The rule-based baselines run the HVAC<a class="headerlink" href="#the-rule-based-baselines-run-the-hvac" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> now deliver the
 dataset’s heating and cooling demand through the HVAC actions, with the rule of
-the <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code> BAU.</p>
+the default BAU.</p>
 <ul class="simple">
 <li><p>Datasets without HVAC actions: nothing changes, bit for bit, including
 <code class="docutils literal notranslate"><span class="pre">comparison_identity()</span></code>.</p></li>
 <li><p>Datasets with HVAC actions: the rule-based baselines heat and cool, so their
-energy, cost and comfort KPIs change. Compare them with the
-<code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code> BAU; against the default version 2 BAU, which does not
-heat or cool, their ratios to the BAU compare heated houses with unheated
-ones. Their identity records <code class="docutils literal notranslate"><span class="pre">hvac='dataset_demand'</span></code> and the definition gets
-the suffix <code class="docutils literal notranslate"><span class="pre">+hvac-dataset-demand-v1</span></code>.</p></li>
+energy, cost and comfort KPIs change. Under the default <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code>
+the BAU heats and cools too, so their ratios to the BAU compare houses that
+are heated and cooled alike. Their identity records <code class="docutils literal notranslate"><span class="pre">hvac='dataset_demand'</span></code>
+and the definition gets the suffix <code class="docutils literal notranslate"><span class="pre">+hvac-dataset-demand-v1</span></code>.</p></li>
 <li><p>The storage, EV and appliance rules do not change, but where a dataset with
 HVAC actions also has batteries, the battery actions can change: the load the
 rules react to now includes the HVAC.</p></li>

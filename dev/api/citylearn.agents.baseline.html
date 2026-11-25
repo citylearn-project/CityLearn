@@ -184,7 +184,7 @@ departure SOC (<code class="docutils literal notranslate"><span class="pre">ev_c
 starts appliances at the first admissible step; the
 home battery stores PV surplus and serves local import.
 With <code class="docutils literal notranslate"><span class="pre">hvac='dataset_demand'</span></code> (default under
-<code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code>) the HVAC delivers the dataset’s
+<code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code>) the HVAC delivers the dataset’s
 heating and cooling demand.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#citylearn.agents.baseline.RBCBasicPolicy" title="citylearn.agents.baseline.RBCBasicPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code></a></p></td>
@@ -207,7 +207,7 @@ periods once community import reaches a trigger
 </table>
 <p>The three RBCs also run the HVAC (<code class="docutils literal notranslate"><span class="pre">heating_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_device</span></code>,
 <code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code>) at the dataset’s heating and cooling demand, as the
-BAU does under <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code> (<code class="docutils literal notranslate"><span class="pre">hvac='dataset_demand'</span></code>, the default; pass
+BAU does under the default <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code> (<code class="docutils literal notranslate"><span class="pre">hvac='dataset_demand'</span></code>, the default; pass
 <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code> for the zero HVAC of earlier releases). They do not optimise the HVAC.
 On datasets without HVAC actions this changes nothing.</p>
 <p>The policies are ported from the Soft-CPS Algorithms baselines and keep their
@@ -228,15 +228,17 @@ slightly below the target instead of overshooting it. Appliances start at the fi
 step and the home battery uses observed current-step demand and PV when
 estimating local surplus or import.</p>
 <p>The HVAC follows <cite>hvac</cite>. With <code class="docutils literal notranslate"><span class="pre">'off'</span></code> the <code class="docutils literal notranslate"><span class="pre">heating_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_device</span></code> and
-<code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code> actions are zero, as in CityLearn 3.6.0, so on datasets with HVAC
-actions the BAU buildings are neither heated nor cooled (#362). With <code class="docutils literal notranslate"><span class="pre">'dataset_demand'</span></code> each step the
-HVAC action is the fraction of the device’s nominal power that delivers the dataset’s own heating or
-cooling demand (<code class="docutils literal notranslate"><span class="pre">heating_demand_without_control</span></code> and <code class="docutils literal notranslate"><span class="pre">cooling_demand_without_control</span></code> of the energy
-simulation, the as-simulated demand of the building file), clipped to the action bounds; the device
-limits (nominal power, outage supply) cap it as for any action. That is a thermostat that meets the
+<code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code> actions are zero, as in CityLearn 3.6.0 and under <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code>,
+so on datasets with HVAC actions the BAU buildings are neither heated nor cooled (#362). With
+<code class="docutils literal notranslate"><span class="pre">'dataset_demand'</span></code> each step the HVAC action is the fraction of the device’s nominal power that
+delivers the dataset’s own heating or cooling demand (<code class="docutils literal notranslate"><span class="pre">heating_demand_without_control</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cooling_demand_without_control</span></code> of the energy simulation, the as-simulated demand of the building
+file), clipped to the action bounds; the device limits (nominal power, outage supply) cap it as for any
+action. That is a thermostat that meets the
 load without optimisation. The demand is used only in the steps whose <code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> allows that service.
-The default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, is <code class="docutils literal notranslate"><span class="pre">'dataset_demand'</span></code> when the environment’s <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code> is 3 or more
-and <code class="docutils literal notranslate"><span class="pre">'off'</span></code> otherwise.</p>
+The default, <code class="docutils literal notranslate"><span class="pre">None</span></code>, is <code class="docutils literal notranslate"><span class="pre">'dataset_demand'</span></code> when the environment’s <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code> is 2 (the
+default) and it has HVAC actions, and <code class="docutils literal notranslate"><span class="pre">'off'</span></code> under version 1 or without HVAC actions, which keeps the
+definition and identity of earlier releases there.</p>
 <p>Choose the BAU that <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> uses with the environment’s
 <code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target</span></code> and <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code>.</p>
 <dl class="py attribute">
@@ -271,6 +273,9 @@ and <code class="docutils literal notranslate"><span class="pre">'off'</span></c
 <dt class="sig sig-object py" id="citylearn.agents.baseline.BusinessAsUsualAgent.hvac_mode_for">
 <em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hvac_mode_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/citylearn/agents/baseline.html#BusinessAsUsualAgent.hvac_mode_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.baseline.BusinessAsUsualAgent.hvac_mode_for" title="Link to this definition"></a></dt>
 <dd><p>HVAC behaviour of the BAU under the environment’s <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'dataset_demand'</span></code> from version 2 on an environment with HVAC actions, <code class="docutils literal notranslate"><span class="pre">'off'</span></code> otherwise: where no
+building has an HVAC action both run the same, and <code class="docutils literal notranslate"><span class="pre">'off'</span></code> keeps the BAU definition and identity of
+earlier releases.</p>
 </dd></dl>
 
 </dd></dl>

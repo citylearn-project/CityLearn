@@ -417,7 +417,7 @@ a step. With dynamic topology a member counts only while it is active.</p>
 <td><p>The conventional counterfactual of the same run: the members without their battery and thermal storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator’s own series. The EV charging of the run is replaced by that of the native BAU with the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target (charged on arrival until full, no V2G), the same for every controller; the deferrable appliances and the HVAC stay as the controller ran them. <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> adds no EV charging back, as in CityLearn 3.6.0. <code class="docutils literal notranslate"><span class="pre">evaluate_v2(baseline_condition=...)</span></code> selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">business_as_usual</span></code></p></td>
-<td><p>The native business-as-usual rollout of the same scenario and window (see <a class="reference internal" href="baselines.html"><span class="std std-doc">Baselines</span></a>). Its HVAC requests zero up to <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code>; with <code class="docutils literal notranslate"><span class="pre">baseline_version=3</span></code> it delivers the dataset heating and cooling demand (<a class="reference internal" href="baselines.html#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>).</p></td>
+<td><p>The native business-as-usual rollout of the same scenario and window (see <a class="reference internal" href="baselines.html"><span class="std std-doc">Baselines</span></a>). Under <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code> (default) its HVAC delivers the dataset heating and cooling demand; under <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> it requests zero, as in CityLearn 3.6.0 (<a class="reference internal" href="baselines.html#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">delta</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">control</span> <span class="pre">-</span> <span class="pre">baseline</span></code>.</p></td>
@@ -1816,7 +1816,7 @@ storage_max_residual = max over stocks and intervals of |stock in the ledger - s
 <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> changed definition. Where a 3.6.0 value may have been used in
 published comparisons, it is kept under a distinct name, and the legacy
 <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> rows keep their own 3.6.0 definitions, apart from the baseline of
-datasets with EV chargers (last row), which <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> restores.</p>
+datasets with EV chargers (the EV charger row), which <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> restores.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>KPI</p></th>
@@ -1883,6 +1883,10 @@ datasets with EV chargers (last row), which <code class="docutils literal notran
 </tr>
 <tr class="row-even"><td><p>On datasets with EV chargers: every <code class="docutils literal notranslate"><span class="pre">*_baseline_*</span></code>, <code class="docutils literal notranslate"><span class="pre">*_delta_*</span></code> (not <code class="docutils literal notranslate"><span class="pre">*_delta_to_business_as_usual_*</span></code>) and <code class="docutils literal notranslate"><span class="pre">*_ratio_to_baseline_*</span></code> row, the equity KPIs built on them, and the whole legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> table (#365)</p></td>
 <td><p>The baseline charges the EVs as the native BAU with the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target does, instead of not charging them (<code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code>).</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>On datasets with HVAC actions: every <code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> row and every <code class="docutils literal notranslate"><span class="pre">*_delta_to_business_as_usual_*</span></code> and <code class="docutils literal notranslate"><span class="pre">*_ratio_to_business_as_usual_*</span></code> value (#362)</p></td>
+<td><p>The native BAU delivers the dataset heating and cooling demand instead of sending zero to the HVAC actions (<code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code>).</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code></p></td>
 </tr>
 </tbody>

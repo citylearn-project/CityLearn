@@ -171,8 +171,8 @@ Quebec neighbourhoods (20 buildings, steps 0–2159, physics version 2):
 
 | Controller | Indoor temperature | Heating delta | Set point |
 |---|---|---|---|
-| HVAC at the dataset demand: `BusinessAsUsualAgent` under `baseline_version=3`, `RBCBasicPolicy`, `RBCSmartPolicy`, `RBCCommunityPolicy` | inside, 17.0–26.5 °C against [−1.1, 42.4] | inside | inside |
-| HVAC not run: `BusinessAsUsualAgent` under `baseline_version` 1 or 2 (the default), the rule-based baselines with `hvac='off'`, `ZeroActionAgent` | below `low` in 38% of building-steps, by up to 22.6 °C | below `low` in 89% of building-steps, by up to 31.6 °C | inside |
+| HVAC at the dataset demand: `BusinessAsUsualAgent` under `baseline_version=2` (the default), `RBCBasicPolicy`, `RBCSmartPolicy`, `RBCCommunityPolicy` | inside, 17.0–26.5 °C against [−1.1, 42.4] | inside | inside |
+| HVAC not run: `BusinessAsUsualAgent` under `baseline_version=1`, the rule-based baselines with `hvac='off'`, `ZeroActionAgent` | below `low` in 38% of building-steps, by up to 22.6 °C | below `low` in 89% of building-steps, by up to 31.6 °C | inside |
 | Random actions | above `high` in 7% of building-steps, by up to 20.7 °C | above `high` in 19% of building-steps, by up to 27.3 °C | inside |
 
 Without heating the indoor temperature falls towards the outdoor temperature,
