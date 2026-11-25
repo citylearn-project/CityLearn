@@ -1,5 +1,6 @@
 """Occupant tree classifiers evaluated with NumPy, without unpickling scikit-learn objects."""
 
+import hashlib
 import json
 import os
 import pickle
@@ -186,3 +187,88 @@ def test_rejects_wrong_feature_count():
 
     with pytest.raises(ValueError, match='features'):
         model.predict([[1.0, 2.0]])
+
+
+# SHA-256 of the inputs, `predict_proba` (float64) and `predict` (int64) of the four distinct bundled
+# occupant models on _pinned_inputs, computed by the tree-by-tree evaluation of CityLearn master 6ffc2a39.
+# The forests are now walked all trees at once; the outputs must not change by a single bit.
+PINNED = {
+    '199613_setpoint_increase': (
+        '5aa2c96b71b167fb79bad7a9e1c4ba7e996c5494a00dab1e9a3e451bfac932d9',
+        '834b6e8a14d3b12503013e56ff89b883d23fa4742afc832d8c282ffcedc9b478',
+        '34fd8364af0478c1ccee6a2e6237ba688a616ae97178bbd4ba66bc4496f55eae',
+    ),
+    '199613_setpoint_decrease': (
+        'dafc387422ebb8f227f1f42a160cb299f84e60b6d5a2ea044d0babca74dc7d27',
+        'bc369d62dd41998651457c533cd52027701f6c4fdcc36b7ab9f591fff6c51ad0',
+        '0ee7ddb55cfc555f9ca6f048ec0ca0f82a9393bd28868eca42a3d118533148ce',
+    ),
+    '373117_setpoint_increase': (
+        '9a039a210a38b05e7662bb87eba0faf0d83d414c4326ce3518c7d39ae8c4450e',
+        'bd350fec738651666855f2980b50912ed3ad3797feca49415eda9c23cb08e08b',
+        'd60a35cc6be702537f6458aa3d5bd19eed94bc6317d09aa52183d64678f1a2f4',
+    ),
+    '373117_setpoint_decrease': (
+        '9dd8e083ef84874c2c98d2e5c909526d0040a591f121f5ba365ee94a726eb39e',
+        '50eb52990b3fd75171550444a99dadb876b1c318dd6b99519e6f3dcf0f72d113',
+        '82837af9ea2981a45814dec48c2aade596f1de5fbbea71495e5fe62db3f89a41',
+    ),
+}
+
+
+def _pinned_inputs(model):
+    """400 rows drawn over each feature's split range, then 200 rows with one feature on a split threshold."""
+    internal = [tree.left != -1 for tree in model.trees]
+    feature = np.concatenate([tree.feature[mask] for tree, mask in zip(model.trees, internal)])
+    threshold = np.concatenate([tree.threshold[mask] for tree, mask in zip(model.trees, internal)])
+    n = model.n_features_in_
+    rng = np.random.default_rng(0)
+    low = np.array([threshold[feature == i].min() for i in range(n)]) - 1.0
+    high = np.array([threshold[feature == i].max() for i in range(n)]) + 1.0
+    x = rng.uniform(low, high, size=(400, n))
+    on_split = x[:200].copy()
+    pick = rng.choice(len(threshold), size=200, replace=False)
+    on_split[np.arange(200), feature[pick]] = threshold[pick].astype('float32')
+    return np.vstack([x, on_split])
+
+
+def _sha256(array) -> str:
+    return hashlib.sha256(np.ascontiguousarray(array).tobytes()).hexdigest()
+
+
+def _tree_by_tree_proba(model, x):
+    """The forest evaluation CityLearn used before the trees were walked together."""
+    x = model._validate(x)
+    proba = np.zeros((x.shape[0], len(model.classes_)), dtype='float64')
+    for tree in model.trees:
+        proba += tree.proba(x, len(model.classes_))
+    proba /= len(model.trees)
+    return proba
+
+
+@pytest.mark.parametrize('name', sorted(PINNED))
+def test_bundled_occupant_model_outputs_are_pinned(name):
+    model = TreeClassifierModel.from_pickle(DATASET/f'resstock-amy2018-2021-release-1-{name}.pkl')
+    x = _pinned_inputs(model)
+    x_sha, proba_sha, predict_sha = PINNED[name]
+    proba = model.predict_proba(x)
+
+    assert _sha256(x) == x_sha
+    assert _sha256(proba) == proba_sha
+    assert _sha256(model.predict(x).astype('int64')) == predict_sha
+    # The environment asks for one row at a time.
+    for row in x[::23]:
+        single = model.predict_proba(row[np.newaxis])
+        assert single.tobytes() == _tree_by_tree_proba(model, row[np.newaxis]).tobytes()
+    assert proba.tobytes() == _tree_by_tree_proba(model, x).tobytes()
+
+
+@pytest.mark.parametrize('name', sorted(name for name in EXPECTED if EXPECTED[name]['estimator'] == 'RandomForestClassifier'))
+def test_forest_walk_matches_tree_by_tree_sum_on_fixtures(name):
+    model = load_occupant_model(FIXTURES/f'{name}.pkl')
+    x = np.array(EXPECTED[name]['x'], dtype='float64')
+
+    if EXPECTED[name]['nan_rejected']:
+        x = x[~np.isnan(x).any(axis=1)]
+
+    assert model.predict_proba(x).tobytes() == _tree_by_tree_proba(model, x).tobytes()

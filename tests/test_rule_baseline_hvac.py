@@ -1,4 +1,4 @@
-"""The rule-based baselines run the HVAC at the dataset's heating and cooling demand, as the v3 BAU does.
+"""The rule-based baselines run the HVAC at the dataset's heating and cooling demand, as the default BAU does.
 
 Up to now ``RBCBasicPolicy``, ``RBCSmartPolicy`` and ``RBCCommunityPolicy`` sent zero to the HVAC actions, so
 on datasets with temperature dynamics their buildings were neither heated nor cooled. They now deliver the
@@ -88,8 +88,8 @@ def test_rbc_delivers_the_dataset_demand_by_default(controller, case):
 
 
 @pytest.mark.parametrize('controller', RBCS)
-def test_rbc_hvac_matches_the_v3_bau_hvac(controller):
-    """Same HVAC rule as the BAU under baseline_version=3: the same heat each step."""
+def test_rbc_hvac_matches_the_bau_hvac(controller):
+    """Same HVAC rule as the BAU under the default baseline_version=2: the same heat each step."""
 
     dataset, _, start, heating = CASES['heating_device']
     rbc, _, _ = _run(controller, dataset, start)

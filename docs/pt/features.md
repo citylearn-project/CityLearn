@@ -17,7 +17,7 @@ interior. Os indicadores de conforto e de cortes de energia reportam o serviço
 resultante.
 
 Escolha os equipamentos na entrada do schema de cada edifício e ative as suas
-ações. A [configuração dos equipamentos](schema_reference.md#secções-de-dispositivos),
+ações. A [configuração dos equipamentos](schema_reference.md#dispositivos),
 o [significado das ações](actions_reference.md#ações-flat) e os
 [KPIs de conforto](kpis_reference.md#conforto-e-resiliência) dão os pormenores.
 
@@ -75,7 +75,7 @@ passageiros e o consumo de energia. É um modelo de estados e procura, não uma
 simulação de passageiros individuais ou de filas.
 
 Forneça o seu próprio calendário com o
-[schema das escadas rolantes](schema_reference.md#escadas-rolantes-interface-flat).
+[schema das escadas rolantes](schema_reference.md#escadas-rolantes).
 O [guia de ações](actions_reference.md#controlo-das-escadas-rolantes) explica os limiares
 dos estados.
 
@@ -88,7 +88,7 @@ a margem e a potência por fase, o que permite a um estudo distinguir um pedido
 excessivo de uma ultrapassagem residual depois do tratamento das restrições.
 
 Configure `buildings.<name>.electrical_service` com a
-[referência do schema](schema_reference.md#buildings). Comece com
+[referência do schema](schema_reference.md#edifícios). Comece com
 `citylearn_three_phase_electrical_service_demo`. Estas são restrições de potência
 ativa na ligação; não calculam a tensão no alimentador nem o fluxo de potência
 AC. Consulte os [KPIs elétricos](kpis_reference.md#serviço-elétrico-e-fases).
@@ -108,7 +108,7 @@ determinam a repartição financeira; os exports expõem os custos liquidados, o
 contrafactual só com a rede e as poupanças de cada membro e da comunidade. A
 liquidação valoriza a trajetória física registada.
 
-Configure o [mercado comunitário](schema_reference.md#mercado-comunitário). Por
+Configure o [mercado comunitário](schema_reference.md#mercado-comunitário-e-liquidação). Por
 omissão, as exportações residuais para a rede não são remuneradas; com
 `"settlement_version": 2` recebem `grid_export_price`, e `tariff_files` dá a
 cada membro os seus próprios preços. Definições inválidas do mercado dão erro

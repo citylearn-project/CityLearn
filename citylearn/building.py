@@ -27,6 +27,11 @@ from citylearn.internal.units import (
     power_kw_to_energy_kwh,
     to_dataset_resolution_energy,
 )
+from citylearn.internal.service_energy import (
+    is_power_outage_value,
+    power_outage_mask,
+    validate_power_outage_signal,
+)
 from citylearn.occupant import LogisticRegressionOccupant, Occupant
 from citylearn.power_outage import PowerOutage
 from citylearn.preprocessing import Normalize as Normalize, PeriodicNormalization
@@ -476,7 +481,7 @@ class Building(Environment):
         if not self.simulate_power_outage:
             return values
 
-        outage = np.asarray(self.power_outage_signal) != 0
+        outage = power_outage_mask(self.power_outage_signal)
 
         if not outage.any():
             return values
@@ -521,7 +526,9 @@ class Building(Environment):
         (:py:meth:`citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline` with the ``'full'`` target,
         whatever `business_as_usual_ev_charge_target` is), so it is run when a building has EV chargers.
         Buildings without chargers need no sidecar. The deferrable appliances and the HVAC stay as the
-        controller ran them.
+        controller ran them in this series. The default KPI condition adds, for buildings with temperature
+        dynamics (LSTM), the difference to the dataset's ideal-load heating and cooling demand
+        (:py:attr:`net_electricity_consumption_without_storage_and_partial_load`).
 
         With `baseline_version` 1 (CityLearn 3.6.0 and earlier) no charging is added back, so on EV datasets the
         baseline is a community whose cars never charge. See :py:mod:`citylearn.internal.baseline_version`.
@@ -914,7 +921,7 @@ class Building(Environment):
     def power_outage(self) -> bool:
         """Whether there is power outage at current time step."""
 
-        return self.simulate_power_outage and bool(self.__power_outage_signal[self.time_step])
+        return self.simulate_power_outage and is_power_outage_value(self.__power_outage_signal[self.time_step])
 
     @property
     def stochastic_power_outage_model(self) -> PowerOutage:
@@ -3288,6 +3295,10 @@ class Building(Environment):
 
             else:
                 power_outage_signal = self.energy_simulation.power_outage.copy()
+
+            power_outage_signal = validate_power_outage_signal(
+                power_outage_signal, source=f'{self.name}.power_outage_signal',
+            )
 
         else:
             pass

@@ -74,7 +74,8 @@ aggregated by the first rule that applies:
 4. **Other `_ratio` and `_percent` names** are means weighted by the community
    `weight`.
 5. **Everything else** (`_kw`, `_c`, `_hours` and other point values) has no
-   portfolio row.
+   portfolio row, except `energy_grid_window_average_power_*_kw`, which sums the
+   synchronized community window averages when `evaluation_window` is enabled.
 
 A pooled rate keeps its portfolio row whatever its unit, so the pooled
 flexible-appliance start delay (`_hours`) has one. The
@@ -113,7 +114,7 @@ explained in its own section below:
 - [Community market](kpis_reference.md#community-market): Local energy trading between the members of a community and its settlement. The rows appear in every run (zero, or undefined shares, when `community_market.enabled` is false), except `local_traded` and `import_share`, which need the market and their KPI switches.
 - [Batteries](kpis_reference.md#batteries): Activity and wear of the stationary batteries; the rows appear in every run, with zero energy and undefined cycles and fade for members without a battery.
 - [Electrical service and phases](kpis_reference.md#electrical-service-and-phases): Compliance with the declared total and per-phase power limits of the electrical service, and the balance and peaks of the phases; the values are zero or undefined unless the schema configures an electrical service.
-- [Electric vehicles](kpis_reference.md#electric-vehicles): Departure service, charging and V2G energy of electric vehicles at the members' chargers. Every member emits these rows; without chargers, counts and energies are 0 and rates are undefined.
+- [Electric vehicles](kpis_reference.md#electric-vehicles): Departure service, charging and V2G energy of electric vehicles at the members' chargers, and opt-in EV battery health and wear (`evaluate_v2(include_battery_health_audit=True)`). Every member emits the departure and energy rows; without chargers, counts and energies are 0 and rates are undefined.
 - [EV departure audit](kpis_reference.md#ev-departure-audit): Audited EV departure service, with an explicit population, a three-way feasibility status and the reason for each unknown case. Every member emits these rows.
 - [Flexible appliances](kpis_reference.md#flexible-appliances): Cycle service of deferrable (flexible) appliances from their cycle states and nominal cycle energies. Every member emits these rows; without appliances, counts and energies are 0 and rates are undefined.
 - [Flexible-appliance audit](kpis_reference.md#flexible-appliance-audit): Audited cycle service of flexible appliances from metered energy in executed intervals, with an explicit population and exclusive states. Every member emits these rows.
@@ -149,8 +150,8 @@ a step. With dynamic topology a member counts only while it is active.
 | Variant | Meaning |
 |---|---|
 | `control` | The run being evaluated. |
-| `baseline` | The conventional counterfactual of the same run: the members without their battery and thermal storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator's own series. The EV charging of the run is replaced by that of the native BAU with the `'full'` target (charged on arrival until full, no V2G), the same for every controller; the deferrable appliances and the HVAC stay as the controller ran them. `baseline_version=1` adds no EV charging back, as in CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run. |
-| `business_as_usual` | The native business-as-usual rollout of the same scenario and window (see [Baselines](baselines.md)). Its HVAC requests zero up to `baseline_version=2`; with `baseline_version=3` it delivers the dataset heating and cooling demand ([HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version)). |
+| `baseline` | The conventional counterfactual of the same run: the members without their battery and thermal storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator's own series. The EV charging of the run is replaced by that of the native BAU with the `'full'` target (charged on arrival until full, no V2G), the same for every controller; the deferrable appliances stay as the controller ran them, and so does the HVAC except in buildings with LSTM dynamics, which use the dataset's ideal-load heating and cooling demand. `baseline_version=1` adds no EV charging back, as in CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run. |
+| `business_as_usual` | The native business-as-usual rollout of the same scenario and window (see [Baselines](baselines.md)). Under `baseline_version=2` (default) its HVAC delivers the dataset heating and cooling demand; under `baseline_version=1` it requests zero, as in CityLearn 3.6.0 ([HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |
 
@@ -175,6 +176,11 @@ Every ratio uses safe division:
 - **exception:** each `*_deferrable_appliance_ratio_to_business_as_usual_*_ratio`
   is undefined when its own two totals are zero, even when cycles were due. For
   example, the missed-cycle ratio is undefined when neither run missed a cycle.
+- **exception:** the cost and emissions ratios
+  (`*_cost_ratio_to_*_total_ratio`, `*_emissions_ratio_to_*_total_ratio`) are
+  undefined when both totals are zero. Nothing was priced or emitted, as on a
+  dataset with zero carbon intensity, so there is nothing to compare. The
+  `*_building_mean_ratio` variants keep their 3.6.0 value.
 
 Ratios stay lower-is-better when the reference total is negative. Net exchange
 and cost totals can be negative, for a net exporter or after community-market
@@ -274,7 +280,82 @@ Two sets of rows use different series:
 
 Note the word order of the signed-net names: `load_factor_penalty_daily_average_to_baseline_signed_net_ratio`, but `load_factor_penalty_daily_average_signed_net_to_business_as_usual_ratio`.
 
-**Portfolio.** Energy totals and daily averages are summed over communities. Import, export and net-exchange ratios are ratios of the summed totals (signed for net exchange). The shape ratios and the `building_mean` ratios are means weighted by community `weight`. The shape rows in kW are not carried over.
+### District feeder limit exceedances
+
+When `district_electrical_service.enabled` is true (see the [schema reference](schema_reference.md#district-electrical-service)), `evaluate_v2()` measures and reports settled district feeder limit exceedances at district level without enforcing or curtailing device dispatch:
+
+```text
+Δh = step length in hours
+P_t = N_t / Δh                             settled district net power at executed step t, in kW
+import exceedance_t = max(P_t − limit_import,t, 0)
+export exceedance_t = max(−P_t − limit_export,t, 0)
+exceedance ≤ 1e-5 kW is set to 0
+
+exceedance_energy_total_control_kwh = Σ_t Δh · exceedance_t
+exceedance_peak_control_kw          = max_t exceedance_t
+exceedance_step_control_count       = number of executed steps with Δh · exceedance_t > 1e-9 kWh
+```
+
+Per-step exceedance series are exposed on `env.feeder_import_exceedance_kw` and `env.feeder_export_exceedance_kw` (empty right after `reset()` until `step()` executes, and `0.0` at steps without a limit in that direction). Each metric publishes `_control`, `_business_as_usual` and `_delta_to_business_as_usual` (`control − business_as_usual`); when `evaluate_v2(include_business_as_usual=False)` is called, only `_control` is emitted. If `district_electrical_service` is enabled with only one direction configured, the unconfigured direction is undefined (`NaN`). When `district_electrical_service` is disabled, no feeder exceedance KPI rows are emitted.
+
+**Portfolio.** Energy totals and daily averages are summed over communities. Import, export and net-exchange ratios are ratios of the summed totals (signed for net exchange). The shape ratios and the `building_mean` ratios are means weighted by community `weight`. The shape rows in kW are not carried over. Feeder exceedance energies (`_kwh`) and step counts (`_count`) are summed over communities, while feeder exceedance peaks (`_kw`) are not carried over.
+### Recurring evaluation window
+
+When `evaluation_window.enabled` is true (see the [schema reference](schema_reference.md#evaluation-window)), `evaluate_v2()` and KPI exports include recurring local-window power rows at building, district and portfolio levels:
+
+```text
+w_t = τ_t / Δt                                overlap fraction of step t in [0, 1]
+H_W = Σ_t w_t · Δh                            effective window hours over finite steps
+energy_grid_window_average_power_control_kw            = (Σ_t w_t · net_t) / H_W
+energy_grid_window_average_power_business_as_usual_kw  = (Σ_t w_t · net_bau,t) / H_W
+energy_grid_window_average_power_delta_to_business_as_usual_kw = control − business_as_usual
+```
+
+`τ_t` is the overlap in seconds between executed step `[s_t, s_t + Δt)` in local time and the configured daily window (`16:00:00` to `19:00:00` when enabled without explicit bounds). With a canonical `time_axis` calendar, `s_t` is converted from `timestamp_utc` to `evaluation_window.timezone`; without a calendar file, dataset `hour` runs from `1` to `24` and `s_t` uses `(hour − 1) mod 24` (`hour = 1, minutes = 0` starts at `00:00:00`), matching the entity temporal features. Windows with `start > end` wrap across midnight into `[start, 24:00)` and `[00:00, end)`. Steps straddling a boundary receive partial weight `0 < w_t < 1`. When `H_W = 0`, all window rows are undefined (`NaN`). When `evaluate_v2(include_business_as_usual=False)` is called, only `_control_kw` is emitted.
+
+To inspect additional post-run windows without rerunning the simulation, weight the exported step series from a rendered session (`exported_data_community_ep0.csv` writes `timestamp` from `time_axis`, or from `start_date` `00:00:00` when the episode starts at midnight):
+
+```python
+from pathlib import Path
+import json
+import numpy as np
+import pandas as pd
+
+
+def step_weight(t0: float, dt: float, segments: list[tuple[float, float]]) -> float:
+    parts = [(t0, min(t0 + dt, 86400.0))] + ([(0.0, t0 + dt - 86400.0)] if t0 + dt > 86400.0 else [])
+    return sum(max(0.0, min(s1, w1) - max(s0, w0)) for s0, s1 in parts for w0, w1 in segments) / dt
+
+
+export_dir = Path("render_logs/my_session")
+manifest = json.loads((export_dir / "exported_kpis.manifest.json").read_text(encoding="utf-8"))
+dt = float(manifest["effective_schema"]["seconds_per_time_step"])
+
+community = pd.read_csv(export_dir / "exported_data_community_ep0.csv")
+ts = pd.to_datetime(community["timestamp"])
+sec_of_day = (ts.dt.hour * 3600 + ts.dt.minute * 60 + ts.dt.second).to_numpy(dtype=float)
+
+start_s, end_s = 16 * 3600, 19 * 3600
+segments = [(start_s, end_s)] if start_s < end_s else [(start_s, 86400.0), (0.0, end_s)]
+weights = np.array([step_weight(float(t0), dt, segments) for t0 in sec_of_day], dtype=float)
+hours = float(weights.sum() * (dt / 3600.0))
+
+control_kw = float((weights * community["Net Electricity Consumption-kWh"]).sum() / hours)
+bau = pd.read_csv(export_dir / "exported_data_business_as_usual_ep0.csv")
+bau_net = bau.loc[bau["level"] == "district", "net_electricity_consumption_kwh"].to_numpy(dtype=float)
+bau_kw = float((weights * bau_net).sum() / hours)
+delta_kw = control_kw - bau_kw
+
+ev_net_kwh = 0.0
+for path in sorted(export_dir.glob("exported_data_*_ep0.csv")):
+    cols = pd.read_csv(path, nrows=0).columns
+    if {"Charger Consumption-kWh", "Charger Production-kWh"} <= set(cols):
+        df = pd.read_csv(path)
+        ac = np.maximum(df["Charger Consumption-kWh"], 0.0) - np.maximum(df["Charger Production-kWh"], 0.0)
+        ev_net_kwh += float((weights * ac).sum())
+```
+
+**Portfolio.** Energy totals and daily averages are summed over communities. Import, export and net-exchange ratios are ratios of the summed totals (signed for net exchange). The shape ratios and the `building_mean` ratios are means weighted by community `weight`. The shape rows in kW are not carried over. When `evaluation_window` is enabled, `energy_grid_window_average_power_*_kw` is summed signed across communities sharing that window and is undefined when any community value is undefined.
 
 **Which KPI.**
 - Use the district ratio `ratio_to_baseline_import_total_ratio`. `*_building_mean_ratio` is the mean of the building ratios, kept only to compare with results up to 3.6.0.
@@ -503,7 +584,7 @@ The phase peaks are `max_t max(P_ph,t, 0)` (import) and `max_t max(−P_ph,t, 0)
 
 ## Electric vehicles
 
-These rows measure the state of charge (SOC) EVs have when they leave, and the energy the chargers exchange with them. Every member emits the rows. A member without chargers reports 0 for counts and energies, and undefined rates. All values cover the member's active window. Units, naming and the BAU variants follow the [shared rules](kpis_reference.md#shared-rules).
+These rows measure the state of charge (SOC) EVs have when they leave, the energy the chargers exchange with them, and (when `evaluate_v2(include_battery_health_audit=True)` is passed) EV battery state of health, capacity fade and equivalent full cycles. Every member emits the departure and energy rows. A member without chargers reports 0 for counts and energies, and undefined rates. All values cover the member's active window. Units, naming and the BAU variants follow the [shared rules](kpis_reference.md#shared-rules).
 
 ### Departures
 
@@ -515,7 +596,7 @@ A departure is recorded at step `t` when an EV is connected at `t` and any of th
 
 Each session is counted once over consecutive episodes. A departure at step 0 of an episode is not counted when the same session was already connected on the row before step 0: the same session or EV id there, and, without ids, no countdown reset from [0, 1]. Between consecutive episodes that row is the last control step of the episode before under `'shared'`, and the row between the two episodes under `'disjoint'`, so the episode before has already counted the session at its last step, and step 0 would only score the SOC set at reset. The rule looks only at that row, so it also applies with `rolling_episode_split` or an explicit list of `episode_time_steps`, where the row before step 0 may belong to no simulated episode and the session is then not counted. The first episode of a simulation has no row before step 0.
 
-With `ev_soc_carryover=True`, an episode that continues the previous one in time starts each EV from the SOC it reached at the end of that episode, so a session connected across the boundary keeps its charge and is scored where it really leaves. Which splits carry depends on the split mode. Sequential splits carry. Random and rolling splits never carry, even when a random pick happens to follow the previous episode, and the env warns once that the setting has no effect there. An explicit list of `episode_time_steps` carries only when a window starts exactly on the previous window's last row under `'shared'`, or on the row after it under `'disjoint'`. So under the default `'shared'` a list without a gap, such as `[(1900, 1949), (1950, 1999)]`, does not carry, while `[(1900, 1949), (1949, 1999)]` does; under `'disjoint'` the list without a gap carries. Only the session connected across the boundary takes the carried SOC in place of the schedule's, at the new episode's first step. Every later arrival in the episode, the same EV arriving again included, takes the arrival SOC of the file. An arrival with no arrival SOC in the file keeps the EV's simulated SOC, as in one run, and at step 0 of a carried episode that is the carried SOC. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still start every episode from their initial state. The setting is a trade-off. Off, every episode is independent of the ones before it, but a session that crosses a boundary loses the charge it received. On, that charge is kept, but an episode that continues the previous one depends on what the previous controller did, so its KPIs are no longer those of an independent episode. The two rules above change accordingly. When the next episode starts on this episode's last row (consecutive `'shared'` splits), the last step only counts a countdown of 0, and a session still connected on that row is counted by the next episode. When it starts on the row after (consecutive `'disjoint'` splits), the last step counts a countdown in [0, 1]. Step 0 of an episode that started from carried SOC does not skip a session connected on the row before it. The carried SOC, or the simulated SOC of a step-0 arrival without a file SOC, is the session's start SOC in the new episode for every EV KPI: met departures, feasibility and the connected SOC gain of the energy accounting all start from it, so the charge of the previous episode is not counted again. Summed over the episodes, the departures, the met departures and the feasibility classes then match one run, except for a session whose arrival SOC one run cannot resolve and reports as unknown, which the split resolves from the carried SOC. The connected SOC gain is each episode's own gain: a session that charges before the boundary and leaves after it has that charge in neither episode, so the sum over the episodes is lower than in one run (2,412 against 6,120 kWh for 30 × 24 `'shared'` splits on the dataset below) and is not comparable with it. Under `'shared'` a session reaches the boundary row with the same SOC as in one run; the controller can still act differently at step 0 than one run does at that row, so energy totals can differ slightly. Under `'disjoint'` the row between two episodes is never controlled, so a session connected across it reaches step 0 up to one charging step behind one run (between 0 and 0.086 SOC on this dataset). On `citylearn_challenge_2022_phase_all_plus_evs` with the BAU from step 1900, the met departures of 2 × 100 and 30 × 24 `'disjoint'` splits are 67 and 221, the same as one run, while without carry-over they are 67 and 163.
+With `ev_soc_carryover=True`, an episode that continues the previous one in time starts each EV from the SOC it reached at the end of that episode, so a session connected across the boundary keeps its charge and is scored where it really leaves. Which splits carry depends on the split mode. Sequential splits carry. Random and rolling splits never carry, even when a random pick happens to follow the previous episode, and the env warns once that the setting has no effect there. An explicit list of `episode_time_steps` carries only when a window starts exactly on the previous window's last row under `'shared'`, or on the row after it under `'disjoint'`. So under the default `'shared'` a list without a gap, such as `[(1900, 1949), (1950, 1999)]`, does not carry, while `[(1900, 1949), (1949, 1999)]` does; under `'disjoint'` the list without a gap carries. Only the session connected across the boundary takes the carried SOC in place of the schedule's, at the new episode's first step. Every later arrival in the episode, the same EV arriving again included, takes the arrival SOC of the file. An arrival with no arrival SOC in the file keeps the EV's simulated SOC, as in one run, and at step 0 of a carried episode that is the carried SOC. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still start every episode from their initial state. The setting is a trade-off. Off, every episode is independent of the ones before it, but a session that crosses a boundary loses the charge it received. On, that charge is kept, but an episode that continues the previous one depends on what the previous controller did, so its KPIs are no longer those of an independent episode. The two rules above change accordingly. When the next episode starts on this episode's last row (consecutive `'shared'` splits), the last step only counts a countdown of 0, and a session still connected on that row is counted by the next episode. When it starts on the row after (consecutive `'disjoint'` splits), the last step counts a countdown in [0, 1]. Step 0 of an episode that started from carried SOC does not skip a session connected on the row before it. The carried SOC, or the simulated SOC of a step-0 arrival without a file SOC, is the session's start SOC in the new episode for every EV KPI: met departures, feasibility and the connected SOC gain of the energy accounting all start from it, so the charge of the previous episode is not counted again. Summed over the episodes, the departures, the met departures and the feasibility classes then match one run, except for a session whose arrival SOC one run cannot resolve and reports as unknown, which the split resolves from the carried SOC. The connected SOC gain is each episode's own gain: a session that charges before the boundary and leaves after it has that charge in neither episode, so the sum over the episodes is lower than in one run (2,412 against 6,120 kWh for 30 × 24 `'shared'` splits on the dataset below) and is not comparable with it. Under `'shared'` a session reaches the boundary row with the same SOC as in one run; the controller can still act differently at step 0 than one run does at that row, so energy totals can differ slightly. Under `'disjoint'` the row between two episodes is never controlled, so a session connected across it reaches step 0 up to one charging step behind one run (between 0 and 0.086 SOC on this dataset). On `citylearn_challenge_2022_phase_all_plus_evs` with the BAU from step 1900, the met departures of 2 × 100 and 30 × 24 `'disjoint'` splits are 70 and 224, the same as one run, while without carry-over they are 70 and 168.
 
 The target SOC is read at `t`. A target in (1, 100] is taken as a percentage and divided by 100. A target outside [0, 1] after that, or a missing one, is invalid.
 
@@ -531,9 +612,10 @@ s      = battery SOC at the departure step (fraction 0-1)
 s*     = target SOC
 tol_s  = ev_departure_service_tolerance   (default 0.05, >= 0)
 tol_w  = ev_departure_within_tolerance    (default 0.05, >= 0)
+tol_t  = min(0.005, tol_s)
 eps    = 1e-6
 
-met              : s* - s <= eps
+met              : s* - s <= tol_t + eps
 min_acceptable   : s + tol_s + eps >= s*
 within_tolerance : |s - s*| <= tol_w + eps
 
@@ -547,6 +629,11 @@ abs_error = |s - s*|
 - **Means:** the `*_mean_ratio` rows are the means of deficit, shortfall, surplus and absolute error over the same departures, as SOC fractions.
 - **Undefined values:** both rates and means are undefined without departures.
 
+`tol_t` is the service tolerance of the EV target, 0.005 SOC (0.5 %), held by the constant
+`EV_SERVICE_SOC_TOLERANCE` in `citylearn.electric_vehicle`. The rule-based baselines stop charging 0.001
+below the target, so their cars count as meeting it. It is capped by `tol_s` so that met never exceeds
+min_acceptable. The deficit, surplus, absolute-error and shortfall means stay exact.
+
 The counts are ordered: met ≤ min_acceptable ≤ departures, and within_tolerance ≤ departures. Met and within_tolerance are not ordered relative to each other: an EV charged above the band is met but not within tolerance.
 
 ### Legacy feasibility
@@ -554,7 +641,7 @@ The counts are ordered: met ≤ min_acceptable ≤ departures, and within_tolera
 The `ev_events_departure_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count` rows say whether each threshold could be reached. A threshold is feasible when an isolated replay reaches it. The thresholds are:
 
 ```text
-threshold_target         = s*
+threshold_target         = max(s* - tol_t, 0)
 threshold_min_acceptable = max(s* - tol_s, 0)
 threshold_within         = max(s* - tol_w, 0)
 feasible                 : s_replay + eps >= threshold
@@ -591,6 +678,16 @@ ev_total_v2g_export_kwh = sum_t max(-ac_t, 0)
 - **Not grid export:** the V2G total is the energy the EVs deliver through the charger, wherever it is used. It is not grid export: a member can use V2G energy itself, and only the member's net exchange shows what crosses the grid boundary.
 - **Fallback:** a charger without gross records uses the positive and negative parts of its electricity consumption instead.
 
+### Window net exchange
+
+When `evaluation_window.enabled` is true, `ev_window_net_exchange_control_kwh` reports the signed net AC energy across the chargers inside the recurring local window:
+
+```text
+ev_window_net_exchange_control_kwh = Σ_t w_t · ac_net,t
+```
+
+`w_t` is the step overlap weight from [Grid energy and load shape](kpis_reference.md#recurring-evaluation-window), and `ac_net,t` is the signed AC electricity consumption of the active chargers at step `t` (positive when charging EVs, negative when delivering V2X energy to the building or grid). Members without EV chargers report `0.0` when `H_W > 0`. When `H_W = 0`, the value is undefined (`NaN`). District and portfolio values sum the signed member and community values, and the portfolio value is undefined if any community value is undefined.
+
 ### Energy accounting
 
 ```text
@@ -602,17 +699,41 @@ shortfall_kwh (member) = max(connected_soc_gain_kwh - ev_total_charge_kwh, 0)
 - **Meaning:** the shortfall flags SOC gain that metered charging does not explain.
 - **Coverage:** the charge total covers every step in the window, including sessions with no counted departure, so the check is one-sided.
 
+### Battery health and wear
+
+Every `Battery` instance (stationary storage and `ElectricVehicle.battery`) exposes four read-only health and wear properties: `current_state_of_health` (dimensionless ratio in `[0, 1]`, `clip(degraded_capacity / capacity, 0, 1)`, returning `1.0` when `capacity <= 0` or before the first step), `state_of_health` (`float64` array of dimensionless ratios in `[0, 1]` up to `time_step + 1`, returning ones when `capacity <= 0` and `[1.0]` before the first step), `equivalent_full_cycles` (dimensionless cycle count `(Σ charge + Σ discharge) / (2 · capacity)`, returning `0.0` before the first step and `0.0` when `capacity <= 0`, whereas the cycle KPIs `*_battery_health_equivalent_full_cycles_count` and `*_ev_battery_health_equivalent_full_cycles_count` are undefined when nominal capacity is zero), and `capacity_fade_kwh` (cumulative capacity lost to degradation in `kWh`, `max(0, capacity − degraded_capacity)`, returning `0.0` when `capacity <= 0` or before the first step). Stationary battery wear KPIs are reported by the [Batteries](kpis_reference.md#batteries) family.
+
+Passing `evaluate_v2(include_battery_health_audit=True)` (default `False`) emits four opt-in `ev_battery_health_*` rows for EV batteries:
+
+```text
+C_i      = nominal capacity of EV battery i (> 0), in kWh
+T_i      = Σ_t (charge_i,t + discharge_i,t), accepted gross battery-terminal energy in kWh
+C_deg,i  = clip(degraded capacity of EV battery i, 0, C_i), in kWh
+fade_i   = max(0, C_i − C_deg,i), in kWh
+
+ev_battery_health_terminal_soh_ratio             = clip(Σ_i C_deg,i / Σ_i C_i, 0, 1)      undefined when Σ_i C_i ≤ 0
+ev_battery_health_capacity_fade_kwh              = Σ_i fade_i                             0 when Σ_i C_i ≤ 0
+ev_battery_health_capacity_fade_ratio            = clip(Σ_i fade_i / Σ_i C_i, 0, 1)       undefined when Σ_i C_i ≤ 0
+ev_battery_health_equivalent_full_cycles_count   = Σ_i T_i / (2 · Σ_i C_i)                undefined when Σ_i C_i ≤ 0
+```
+
+At building level, `building_ev_battery_health_*` uses only realized connections (`past_connected_evs[t]`) and executed transfers during the member's active executed steps (`0 ≤ t < time_step`). Throughput and capacity loss are attributed strictly to the building whose charger executed each transfer, `Σ C_i` counts once each unique EV (`capacity > 0`) that actually connected at that building, and `building_ev_battery_health_terminal_soh_ratio` reads each connected EV's degraded capacity at the end of its last actual connection at that building. EVs listed only in disconnected charger schedules (or only on unexecuted steps) are excluded (`capacity_fade_kwh = 0`, ratios and cycles undefined when no EV actually connects).
+
+Because `building_ev_battery_health_terminal_soh_ratio` reflects cumulative battery state at the EV's last connection at that building (including wear received at other buildings), while `building_ev_battery_health_capacity_fade_ratio` counts only wear from transfers executed at that building, building SOH can be below `1 − building_ev_battery_health_capacity_fade_ratio` (whereas at district and portfolio levels SOH equals `1 − capacity_fade_ratio`). For example, when a `60 kWh` EV (`capacity_loss_coefficient = 1e-3`) charges `6 kWh` at `Building_1` in step `0` (`0.05` equivalent full cycles, `0.003 kWh` fade, fade ratio `0.00005`, terminal SOH `59.997 / 60 = 0.99995`) and then connects at `Building_2` in step `1` with `0 kWh` exchanged, `Building_2` reports `0.0` equivalent full cycles, `0.0 kWh` fade, `0.0` fade ratio, and `0.99995` terminal SOH from the cumulative wear carried into `Building_2`. If the same EV then charges another `6 kWh` at `Building_2` in step `2` (degrading further to `59.994 kWh`), `Building_1` keeps terminal SOH `0.99995` from its last actual connection in step `0`, while `Building_2` updates to `59.994 / 60 = 0.99990`.
+
 ### District and portfolio
 
 **District:**
 - counts, energies and the SOC gain are sums over members;
 - rates and means are recomputed from the summed numerators and denominators;
 - the shortfall is the sum of the member shortfalls, each already clipped at 0, not the clip of the district totals;
-- the tolerance row is the configured value.
+- the tolerance row is the configured value;
+- the opt-in `ev_battery_health_*` rows pool the district EV fleet population, defined as the unique eligible EVs with `capacity > 0` (`electric_vehicles` in static topology, or the EVs that entered participation during the episode, `electric_vehicles` union suspended EVs, in dynamic topology), counting each eligible EV once regardless of how many buildings it visits (eligible fleet EVs that never connect contribute their nominal capacity with zero throughput, zero fade and terminal SOH `1.0`).
 
 **Portfolio:**
-- counts and energies are summed;
-- the rates and means are pooled: weighted by `ev_events_departure_count`, or by the matching `*_feasible_count` for the feasible rates;
+- counts, energies and `portfolio_ev_battery_health_capacity_fade_kwh` are summed;
+- the departure rates and means are pooled: weighted by `ev_events_departure_count`, or by the matching `*_feasible_count` for the feasible rates;
+- `portfolio_ev_battery_health_terminal_soh_ratio`, `portfolio_ev_battery_health_capacity_fade_ratio` and `portfolio_ev_battery_health_equivalent_full_cycles_count` are pooled by nominal EV battery capacity from the communities' capacity and fade/cycle totals (undefined when total nominal EV capacity is zero);
 - the ratios to the BAU are ratios of the summed totals;
 - the tolerance row is the mean of the communities' settings weighted by community `weight`.
 
@@ -621,6 +742,8 @@ shortfall_kwh (member) = max(connected_soc_gain_kwh - ev_total_charge_kwh, 0)
 To compare controllers on departure service, use the [EV departure audit](kpis_reference.md#ev-departure-audit) ratios, which the default scorecard reports:
 - `ev_departure_audit_min_acceptable_service_feasible_ratio` for service;
 - `ev_departure_audit_within_tolerance_service_feasible_ratio` for target accuracy.
+
+To evaluate EV battery wear from charging and V2G dispatch, pass `include_battery_health_audit=True` and report `ev_battery_health_terminal_soh_ratio` and `ev_battery_health_capacity_fade_kwh` alongside `ev_battery_health_equivalent_full_cycles_count`.
 
 The legacy feasible rates count departures with missing data as feasible, and they do not report how many departures could be judged. Keep the `ev_performance` rows for continuity with earlier results.
 
@@ -637,7 +760,7 @@ The legacy feasible rates count departures with missing data as feasible, and th
 The audit reports departure service with an explicit population, and it separates feasibility that could not be judged from feasibility that failed. Every member emits the rows. A member without departures reports 0 counts and undefined ratios. It uses the departure detection, target normalisation, tolerances and met tests of [Electric vehicles](kpis_reference.md#electric-vehicles), applied to three thresholds:
 
 ```text
-target           : tolerance 0
+target           : tolerance tol_t
 min_acceptable   : tolerance tol_s
 within_tolerance : tolerance tol_w   (met test is symmetric: |s - s*| <= tol_w + eps)
 ```
@@ -938,6 +1061,17 @@ hot_t       = evaluated_t and T_t > T_cool,t + band_t
 
 Only occupied steps are evaluated. A step is comfortable when
 `T_heat - band <= T <= T_cool + band`.
+
+**Buildings without set points.** When a building's dataset has no
+`indoor_dry_bulb_temperature_cooling_set_point` or no
+`indoor_dry_bulb_temperature_heating_set_point` column, the simulation and the observations use a set point
+of 0 °C. The comfort KPIs do not judge comfort against that default: they read `T_heat` and `T_cool` as
+undefined, so no step of the building is evaluated. Every discomfort ratio, delta and outage ratio of the
+building is then undefined, in `evaluate_v2()`, `evaluate()` and the
+[thermal-service audit](kpis_reference.md#thermal-service-audit), and the district skips the building. Among the
+bundled datasets, `pt_rec_*` have no set-point columns and have occupants, so their comfort KPIs are
+undefined. The 2020–2022 challenge datasets and the three-phase demos have no set-point columns either,
+but their buildings have no occupants, so their comfort KPIs were already undefined.
 
 **Discomfort ratios.**
 
@@ -1545,7 +1679,7 @@ The KPI definition version (`kpi_definition_version` in the
 `evaluate_v2()` changed definition. Where a 3.6.0 value may have been used in
 published comparisons, it is kept under a distinct name, and the legacy
 `evaluate()` rows keep their own 3.6.0 definitions, apart from the baseline of
-datasets with EV chargers (last row), which `baseline_version=1` restores.
+datasets with EV chargers (the EV charger row), which `baseline_version=1` restores.
 
 | KPI | New definition | 3.6.0 value kept as |
 |---|---|---|
@@ -1559,15 +1693,35 @@ datasets with EV chargers (last row), which `baseline_version=1` restores.
 | `*_deferrable_appliance_service_average_start_delay_hours` | Undefined when no cycle completed (was 0). | none |
 | Ratios with an undefined control or reference | Undefined (were read as 0, or 1 when both were undefined). | none |
 | `*_deferrable_appliance_ratio_to_business_as_usual_*_ratio` with both totals zero | Undefined (was 1). | none |
+| `*_ev_events_departure_met_count` (legacy `ev_departure_met_events_count`), `*_ev_performance_departure_success_ratio`, `*_ev_performance_departure_success_feasible_ratio`, `*_ev_events_departure_target_{feasible,infeasible}_count`, `*_ev_departure_audit_target_*` | A departure meets its target within 0.005 SOC (was 1e-6), so a car that the rule-based baselines stop 0.001 short of its target counts as served. | none |
+| Comfort rows (`*_comfort_resilience_*`, `*_thermal_service_audit_*` discomfort rows, legacy `discomfort_*` and `one_minus_thermal_resilience_proportion`) of a building without set-point columns | Undefined (was judged against a 0 °C cooling set point). | none |
+| `*_{cost,emissions}_ratio_to_{baseline,business_as_usual}_total_ratio` with both totals zero, and their portfolio values | Undefined (was 1). | none |
 | `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Allocated from the district settlement. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostic) |
 | Portfolio EV departure rates and means, deferrable and escalator service levels, start delay and solar self-consumption (`MultiCommunityEnv`) | Pooled from their additive denominators. | none |
 | Portfolio community-market local shares, demand-response compliance and demand-response audit coverage ratios (`MultiCommunityEnv`, #285) | Pooled from local plus grid energy, valid requested energy, requested energy and active intervals. | none |
 | Portfolio stationary-battery equivalent full cycles and their BAU comparisons (`MultiCommunityEnv`, #330) | Total throughput over twice the total nominal capacity, with BAU delta and ratio derived from the two portfolio values. | none |
 | On datasets with EV chargers: every `*_baseline_*`, `*_delta_*` (not `*_delta_to_business_as_usual_*`) and `*_ratio_to_baseline_*` row, the equity KPIs built on them, and the whole legacy `evaluate()` table (#365) | The baseline charges the EVs as the native BAU with the `'full'` target does, instead of not charging them (`baseline_version=2`). | `baseline_version=1` |
+| On datasets with HVAC actions: every `*_business_as_usual` row and every `*_delta_to_business_as_usual_*` and `*_ratio_to_business_as_usual_*` value (#362) | The native BAU delivers the dataset heating and cooling demand instead of sending zero to the HVAC actions (`baseline_version=2`). | `baseline_version=1` |
 
 In the legacy rows, a load-factor window whose signed peak is not positive is
 now undefined; it used to give an infinite or negative penalty, which safe
 division reported as a perfect 0.
+
+## Outage Event Resilience Audit
+
+For event-by-event inspection of grid interruptions on static-topology scenarios without changing `evaluate_v2()`, call `env.evaluate_outage_events()` (returns `(events_df, summary_df)`) or `env.get_outage_resilience_audit()` (returns a JSON-ready dictionary including `district_windows`).
+
+A building outage event is a maximal run of consecutive executed timesteps where `building.simulate_power_outage` is enabled and `building.power_outage_signal` is finite and nonzero, matching the simulator and `citylearn/internal/service_energy.py` (when `simulate_power_outage` is enabled, non-finite `power_outage` inputs such as blank cells, `NaN`, `inf`, or `-inf` raise `ValueError` before simulation; when disabled, the column is ignored). A district outage window (`district_windows`) is a maximal run of consecutive executed timesteps where at least one member building has an active outage. Expected, served and unserved service energy are built from `citylearn/internal/service_energy.py` (`cooling`, `heating`, `dhw` and `non_shiftable` end uses capped individually so surpluses in one end use never offset shortfalls in another), matching the numerator and denominator of `..._resilience_unserved_energy_outage_normalized_ratio`.
+
+| Field | Scope | Unit | Meaning |
+|---|---|---:|---|
+| `start_time_step`, `end_time_step` | event, district window | step | Inclusive 0-based episode step boundaries of the interruption. |
+| `duration_steps`, `duration_hours` | event, district window | count / hours | Interruption length in steps and hours (`duration_steps * seconds_per_time_step / 3600`). |
+| `expected_energy_kwh`, `served_energy_kwh`, `unserved_energy_kwh` | event, district window, building, district | kWh | Total service energy expected, served and left unserved during outages, plus `<end_use>_*_energy_kwh` splits. |
+| `peak_unserved_power_kw` | event, district window, building, district | kW | Worst single-step unserved power (`max_step_unserved_kwh * 3600 / seconds_per_time_step`); at district level, coincident across simultaneously affected buildings. |
+| `fully_served` | event, district window | bool | Whether unserved energy is zero within tolerance (`<= 1e-9` kWh). |
+| `building_events_count`, `building_outage_steps_count`, `building_outage_hours`, `worst_building_event_unserved_energy_kwh`, `fully_served_building_events_ratio` | building, district | count / steps / hours / kWh / ratio | Building outage event count, building-step duration, largest single-building event shortfall and share of fully served building events (`None` when `building_events_count == 0`). On the `District` row these aggregate member-building events. |
+| `district_windows_count`, `district_window_steps_count`, `district_window_hours`, `worst_district_window_unserved_energy_kwh`, `fully_served_district_windows_ratio` | district (`NaN` on building rows) | count / steps / hours / kWh / ratio | Count, contiguous step/hour duration, worst window shortfall and fully served share of district outage windows spanning contiguous steps with at least one affected building (`None` when `district_windows_count == 0`). |
 
 ## Export
 

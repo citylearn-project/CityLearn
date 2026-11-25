@@ -50,6 +50,30 @@ development-line history.
 
 ## Unreleased
 
+### Dataset cache keyed by content
+
+Local copies of datasets are now cached under the key of their content, in
+`datasets_by_content/<key>/<dataset>` of `DataSet().cache_directory`, instead
+of `datasets/<dataset>`. Nothing needs to change in code that loads datasets by
+name or by the path that `DataSet().get_dataset()` returns.
+
+- Copies cached by earlier runs under `datasets/<dataset>` are no longer read
+  while a complete local copy exists, and they are left untouched. A run that
+  used a stale cached schema now loads the local one, which can change its
+  results; to reproduce such a run, pass the old `schema.json` path explicitly.
+- Each different content of a dataset keeps its own copy, so checkouts that
+  switch between branches accumulate copies. `DataSet().clear_cache()` removes
+  them all.
+- Code that built the cache path by hand from `cache_directory`, `datasets` and
+  the dataset name should use the path returned by `DataSet().get_dataset(name)`.
+- Downloads, used when no local copy exists, are still cached under
+  `datasets/<dataset>` of the release tag.
+
+`IndependentBalanceAudit` accepts `flow_relative_tolerance` (default 1e-8),
+which scales the tolerance of the district balance residuals with their gross
+flow; its report records the value. Pass `flow_relative_tolerance=0` to keep
+the previous fixed tolerance.
+
 ### EV charging in the default baseline
 
 The default KPI baseline (`EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV`,
@@ -65,8 +89,10 @@ baseline ([#365](https://github.com/citylearn-project/CityLearn/issues/365)).
   full, and never discharged. The cars get the energy they need, without V2G,
   and the baseline is the same for every controller, so the `baseline` rows
   credit a controller with its storage dispatch, its EV charging and its V2G
-  against charging on arrival. The deferrable appliances and the HVAC stay as
-  the controller ran them.
+  against charging on arrival. The deferrable appliances stay as the controller
+  ran them. So does the HVAC, except in buildings with temperature dynamics
+  (LSTM), where the default condition uses the dataset's ideal-load heating and
+  cooling demand.
 - On datasets with EV chargers, every evaluation runs the BAU sidecar for that
   charging, also the legacy `evaluate()` and
   `evaluate_v2(include_business_as_usual=False)`, and uses the `'full'` target
@@ -76,49 +102,62 @@ baseline ([#365](https://github.com/citylearn-project/CityLearn/issues/365)).
   run records the BAU reference as evaluated.
 - Only datasets with EV chargers change: `citylearn_challenge_2022_phase_all_plus_evs`,
   the `pt_rec_*` datasets and the three-phase demos. The simulation, the
-  control rows, the BAU rows and the rewards do not change. The equity KPIs,
+  control rows and the rewards do not change, and neither do the BAU rows on
+  datasets without HVAC actions (see [HVAC in the BAU](#hvac-in-the-bau)). The equity KPIs,
   which are built from each member's benefit against the baseline, change with it.
 - Set `baseline_version` to `1` (constructor argument or schema key) to
-  reproduce the baseline of CityLearn 3.6.0. The version is in
+  reproduce the baseline of CityLearn 3.6.0, including its BAU that does not
+  run the HVAC. The version is in
   `env.get_metadata()` and the export manifest, at top level and in
   `comparison_context`; `compare_exports()` reports two runs under different
   versions as `incompatible`. `MultiCommunityEnv` requires every community to
   use the same version.
 
-### HVAC in the BAU (opt-in `baseline_version=3`)
+### HVAC in the BAU
 
-On datasets with HVAC actions (temperature dynamics), the BAU sends zero to
+On datasets with HVAC actions (temperature dynamics), the BAU sent zero to
 `heating_device`, `cooling_device` and `cooling_or_heating_device`, so its
-buildings are neither heated nor cooled and the `*_business_as_usual` rows
-compare the controller with unheated or uncooled houses
+buildings were neither heated nor cooled and the `*_business_as_usual` rows
+compared the controller with unheated or uncooled houses
 ([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
 
-- Nothing changes by default: `baseline_version=2` stays the default and
-  versions 1 and 2 give the same results as before.
-- Set `baseline_version=3` to make the BAU deliver the dataset's own heating and
-  cooling demand at each step, clipped to the action bounds and device limits.
-  The BAU rows and the deltas and ratios to the BAU change on datasets with
-  HVAC actions; on other datasets version 3 equals version 2. The BAU definition
-  becomes `immediate-full-charge-v4+hvac-dataset-demand-v1` (or
+- Under `baseline_version=2`, the default, the BAU now delivers the dataset's
+  own heating and cooling demand at each step, clipped to the action bounds
+  and device limits. On those datasets the BAU definition becomes
+  `immediate-full-charge-v4+hvac-dataset-demand-v1` (or
   `immediate-user-target-v3+hvac-dataset-demand-v1`). See
   [HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version).
+- On datasets with HVAC actions (`quebec_neighborhood_with_demand_response_set_points`,
+  `quebec_neighborhood_without_demand_response_set_points`,
+  `tx_travis_county_neighborhood`, `vt_chittenden_county_neighborhood`,
+  `ca_alameda_county_neighborhood`, `baeda_3dem` and the
+  `citylearn_challenge_2023_*` datasets) the default
+  `*_business_as_usual` rows, and the deltas and ratios to the BAU, change. On
+  `quebec_neighborhood_without_demand_response_set_points` (steps 0–335) the BAU cost goes from 631.8 to 4,403.8 EUR, its mean
+  indoor temperature from 3.4 to 20.6 °C, and the cost ratio of
+  `RBCSmartPolicy` to the BAU from 6.970 to 1.000.
+- On datasets without HVAC actions nothing changes, bit for bit.
+- `baseline_version=1` keeps the BAU with the HVAC at zero, as in CityLearn
+  3.6.0, to reproduce earlier numbers.
 - A `BusinessAsUsualAgent` you run yourself follows the environment's version;
   `hvac='off'` or `hvac='dataset_demand'` overrides it.
+- A controller that does not drive the HVAC, such as `ZeroActionAgent`, now
+  looks much cheaper than the BAU on these datasets, because the BAU pays for
+  heating and cooling. Read its ratios to the BAU together with the comfort KPIs.
 
 ### The rule-based baselines run the HVAC
 
 `RBCBasicPolicy`, `RBCSmartPolicy` and `RBCCommunityPolicy` now deliver the
 dataset's heating and cooling demand through the HVAC actions, with the rule of
-the `baseline_version=3` BAU.
+the default BAU.
 
 - Datasets without HVAC actions: nothing changes, bit for bit, including
   `comparison_identity()`.
 - Datasets with HVAC actions: the rule-based baselines heat and cool, so their
-  energy, cost and comfort KPIs change. Compare them with the
-  `baseline_version=3` BAU; against the default version 2 BAU, which does not
-  heat or cool, their ratios to the BAU compare heated houses with unheated
-  ones. Their identity records `hvac='dataset_demand'` and the definition gets
-  the suffix `+hvac-dataset-demand-v1`.
+  energy, cost and comfort KPIs change. Under the default `baseline_version=2`
+  the BAU heats and cools too, so their ratios to the BAU compare houses that
+  are heated and cooled alike. Their identity records `hvac='dataset_demand'`
+  and the definition gets the suffix `+hvac-dataset-demand-v1`.
 - The storage, EV and appliance rules do not change, but where a dataset with
   HVAC actions also has batteries, the battery actions can change: the load the
   rules react to now includes the HVAC.
@@ -476,6 +515,10 @@ These changes only affect `topology_mode='dynamic'`:
   `net_electricity_consumption`. KPIs are unchanged by this item.
 - An event at the terminal step no longer moves the buildings onto the
   unexecuted terminal row, so their series hold executed intervals only.
+- A member cloned with `source_member_id` gives its chargers ids of their own
+  (`charger_1_1` of `Building_1` becomes `charger_19_1` in `Building_19`), so
+  the clone's observation, action and entity names change; update saved agents
+  and robustness events that name the clone's chargers by the source's id.
 
 ### Control step different from the dataset step
 
@@ -577,6 +620,28 @@ lists every changed row and the name that keeps its 3.6.0 value.
   over the episode; the sum is published as `*_ramping_total_*_kw`
   ([#245](https://github.com/citylearn-project/CityLearn/issues/245)). The ratio
   to the BAU is unchanged.
+- **EV target met** uses a tolerance of 0.005 SOC instead of 1e-6, for the met
+  rates, the target feasibility counts and the departure-audit target rows. The
+  rule-based baselines, which stop 0.001 short, now count as meeting the target:
+  on full-year `citylearn_challenge_2022_phase_all_plus_evs`,
+  `district_ev_performance_departure_success_ratio` goes from 0.988 to 0.994
+  (BAU), 0.598 to 0.994 (`RBCBasicPolicy`), 0.495 to 0.994 (`RBCSmartPolicy`)
+  and 0.130 to 0.134 (random actions). Rerun the evaluation before comparing
+  met rates with earlier tables; the departure audit's `definition_version` is
+  now `ev-departure-audit-v2`, so `compare_exports` reports older exports as
+  incompatible. Use the deficit or shortfall means, which stay
+  exact, to measure how far short a controller leaves the cars.
+- **Comfort KPIs of buildings without set-point columns** are undefined instead
+  of judged against the 0 °C default; on the `pt_rec_*` datasets the discomfort
+  ratios go from 1 to undefined for every controller, and the district skips
+  those buildings. Code that reads these cells must handle `None`/NaN. Datasets
+  with set points do not change, nor do the 2020–2022 challenge datasets and the
+  three-phase demos, which have no set-point columns but no occupants either, so
+  their comfort KPIs were already undefined.
+- **Cost and emissions ratios of two zero totals** are undefined instead of 1,
+  for example the emissions ratios on Quebec (zero carbon intensity) and the
+  cost ratios on the `citylearn_challenge_2020_climate_zone_*` and
+  `citylearn_challenge_2021` datasets (no prices), for every controller.
 
 ### Physics version
 

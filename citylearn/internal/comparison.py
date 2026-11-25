@@ -162,6 +162,8 @@ def source_sha256(source_root):
 
 def context(env, data_files):
     from citylearn import __version__
+    from citylearn.internal.electrical_limits import serialize_district_electrical_service_config
+    from citylearn.internal.evaluation_window import serialize_evaluation_window_config
     from citylearn.internal.observation_contract import configuration
     schema = deepcopy(env.schema)
     root = str(Path(schema.get('root_directory') or '.').resolve())
@@ -169,10 +171,17 @@ def context(env, data_files):
                'observations', 'actions', 'observation_bundles', 'community_market', 'random_seed', 'random_stream_version',
                'render', 'render_mode', 'render_directory', 'render_file_format', 'debug_timing',
                'metrics_log_interval', 'check_observation_limits', 'physics_invariant_checks',
-               'export_kpis_on_episode_end', 'chargers_observations_helper', 'chargers_actions_helper',
+               'export_kpis_on_episode_end', 'evaluation_window', 'chargers_observations_helper', 'chargers_actions_helper',
                'chargers_shared_observations_helper', 'deferrable_appliance_observations_helper',
                'deferrable_appliance_actions_helper', 'escalator_observations_helper', 'escalator_actions_helper'}
     physical = {k: v for k, v in schema.items() if k not in ignored and not k.startswith('_')}
+    effective_feeder = serialize_district_electrical_service_config(
+        getattr(env, '_district_electrical_service_parsed', None)
+    )
+    if effective_feeder['enabled']:
+        physical['district_electrical_service'] = effective_feeder
+    else:
+        physical.pop('district_electrical_service', None)
     if isinstance(physical.get('robustness'), dict):
         physical['robustness'].pop('agent_observation_contract', None)
     observation = {k: schema.get(k) for k in ('observations', 'observation_bundles', 'derived_forecasts')}
@@ -200,7 +209,9 @@ def context(env, data_files):
                 service_tolerances=dict(ev_within=env.ev_departure_within_tolerance,
                                         ev_service=env.ev_departure_service_tolerance),
                 observation=canonical(observation, root, files),
-                market=env.get_metadata()['community_market'])
+                market=env.get_metadata()['community_market'],
+                district_electrical_service=effective_feeder,
+                evaluation_window=serialize_evaluation_window_config(getattr(env, '_evaluation_window_parsed', None)))
 
 
 def native_reference(env):
@@ -236,11 +247,27 @@ def load_kpis(path):
             for r in frame.to_dict('records')}
 
 
+def _is_evaluation_window_kpi(kpi_name):
+    text = str(kpi_name or '')
+    return '_energy_grid_window_average_power_' in text or '_ev_window_net_exchange_' in text
+
+
 def compare_manifests(left, right, mode='controller'):
     if mode not in ('controller', 'sharing'):
         raise ValueError('Comparison mode must be controller or sharing')
     a, b = left.get('comparison_context'), right.get('comparison_context')
     missing, mismatches, declared = [], [], []
+    default_window = {'enabled': False, 'start': None, 'end': None, 'timezone': None}
+    win_a = (a or {}).get('evaluation_window') or left.get('evaluation_window') or default_window
+    win_b = (b or {}).get('evaluation_window') or right.get('evaluation_window') or default_window
+    win_a_enabled = bool(win_a.get('enabled'))
+    win_b_enabled = bool(win_b.get('enabled'))
+    if not win_a_enabled and not win_b_enabled:
+        window_status = 'disabled'
+    elif win_a_enabled and win_b_enabled:
+        window_status = 'paired' if win_a == win_b else 'incompatible'
+    else:
+        window_status = 'one_sided'
     if not a or not b or a.get('definition_version') != DEFINITION_VERSION or b.get('definition_version') != DEFINITION_VERSION:
         missing.append('versioned_comparison_context')
     else:
@@ -264,6 +291,16 @@ def compare_manifests(left, right, mode='controller'):
                     declared.append('sharing_enabled_flags')
             elif a[key] != b[key]:
                 mismatches.append(key)
+        default_feeder = {'enabled': False, 'limits': {'import_kw': None, 'export_kw': None}}
+        feeder_a = a.get('district_electrical_service') or default_feeder
+        feeder_b = b.get('district_electrical_service') or default_feeder
+        if feeder_a != feeder_b:
+            mismatches.append('district_electrical_service')
+        if window_status == 'incompatible':
+            mismatches.append('evaluation_window')
+        elif window_status == 'one_sided':
+            declared.append('evaluation_window_one_sided')
+
         # Exports from before the setting existed ran without it.
         if bool(a.get('ev_soc_carryover', False)) != bool(b.get('ev_soc_carryover', False)):
             mismatches.append('ev_soc_carryover')
@@ -293,6 +330,7 @@ def compare_manifests(left, right, mode='controller'):
     return dict(definition_version=DEFINITION_VERSION, mode=mode, status=status,
                 permitted_claim=('controller_difference' if mode == 'controller' else 'sharing_difference') if status == 'paired' else None,
                 mismatches=sorted(set(mismatches)), missing_evidence=sorted(set(missing)), declared_differences=declared,
+                evaluation_window=dict(status=window_status, comparable=(window_status == 'paired'), left=win_a, right=win_b),
                 left_controller=left.get('controller_identity'), right_controller=right.get('controller_identity'),
                 baseline_reference=left.get('business_as_usual_reference'),
                 final_inventory=dict(left=left.get('final_inventory'), right=right.get('final_inventory')),
@@ -311,13 +349,20 @@ def compare_exports(left_path, right_path, mode='controller'):
         manifest_path = p.with_suffix('.manifest.json')
         manifests.append(json.loads(manifest_path.read_text()) if manifest_path.exists() else {})
     report = compare_manifests(*manifests, mode=mode)
+    window_status = (report.get('evaluation_window') or {}).get('status')
     values = [load_kpis(p) for p in paths]
     rows = []
+    unpaired_window_kpis = set()
     for name, key in sorted(set(values[0]) | set(values[1])):
         a, b = (v.get((name, key)) for v in values)
-        rows.append(dict(name=name, kpi=key, left=a, right=b,
-                         delta_right_minus_left=b-a if a is not None and b is not None else None))
+        row = dict(name=name, kpi=key, left=a, right=b,
+                   delta_right_minus_left=b-a if a is not None and b is not None else None)
+        if _is_evaluation_window_kpi(key) and window_status in ('one_sided', 'incompatible'):
+            row['window_status'] = window_status
+            unpaired_window_kpis.add(key)
+        rows.append(row)
     report['kpis'] = rows
+    report['unpaired_window_kpis'] = sorted(unpaired_window_kpis)
     report['outcome_summary'] = [r for r in rows if r['name'].rsplit(':', 1)[-1]=='District' and any(
         text in r['kpi'] for text in ('cost_total_control', 'departure_audit_', 'deferrable_appliance_audit_',
                                      'provenance_pv_useful_', 'provenance_external_purchase_emissions'))]

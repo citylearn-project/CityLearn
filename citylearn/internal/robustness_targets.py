@@ -23,6 +23,39 @@ def declared_target_view(service):
         clone.deferrable_appliances = list(building.deferrable_appliances or [])
         return clone
 
+    def cloned_member(source, source_member_id, name):
+        # The clone's chargers take the ids the topology service gives them when the member is added.
+        clone = member_copy(source, name)
+        renames = topology.cloned_charger_renames(
+            [charger.charger_id for charger in clone.electric_vehicle_chargers], members.values(),
+            source_member_id, name,
+        )
+
+        if not renames:
+            return clone
+
+        chargers = []
+
+        for charger in clone.electric_vehicle_chargers:
+            charger = copy(charger)
+            charger.charger_id = renames[charger.charger_id]
+            chargers.append(charger)
+
+        clone.electric_vehicle_chargers = chargers
+        clone._charger_lookup = {charger.charger_id: charger for charger in chargers}
+        clone.observation_metadata = {
+            topology.renamed_charger_key(key, renames): value for key, value in source.observation_metadata.items()
+        }
+        clone.action_metadata = {
+            topology.renamed_charger_key(key, renames): value for key, value in source.action_metadata.items()
+        }
+        phase_map = getattr(source, '_charger_phase_map', None)
+
+        if isinstance(phase_map, dict):
+            clone._charger_phase_map = {renames.get(key, key): value for key, value in phase_map.items()}
+
+        return clone
+
     for name, building in topology._initial_member_pool.items():
         clone = member_copy(building, name)
         initial = topology._initial_building_structures[name]
@@ -40,7 +73,7 @@ def declared_target_view(service):
         if event.operation == "add_member" and target not in members:
             if event.source_member_id not in members:
                 continue  # The topology service diagnoses an invalid source.
-            members[target] = member_copy(members[event.source_member_id], target)
+            members[target] = cloned_member(members[event.source_member_id], event.source_member_id, target)
         elif event.operation == "add_asset" and target in members:
             building = members[target]
             source = members.get(event.source_member_id or target)

@@ -75,7 +75,9 @@ portefólio substitui o prefixo `district_` por `portfolio_`. Cada KPI de distri
 4. **Os restantes `_ratio` e `_percent`** são médias ponderadas pelo `weight` da
    comunidade.
 5. **Tudo o resto** (`_kw`, `_c`, `_hours` e outros valores pontuais) não tem
-   linha de portefólio.
+   linha de portefólio, exceto `energy_grid_window_average_power_*_kw`, que soma
+   as médias na janela das comunidades sincronizadas quando `evaluation_window`
+   está ativo.
 
 Uma taxa agregada mantém a linha de portefólio qualquer que seja a unidade, pelo
 que o atraso de arranque agregado dos equipamentos flexíveis (`_hours`) tem uma.
@@ -114,7 +116,7 @@ explicada na sua secção:
 - [Mercado comunitário](#mercado-comunitário): Troca local de energia entre os membros de uma comunidade e a respetiva liquidação. As linhas aparecem em todas as simulações (a zero, ou com quotas indefinidas, quando `community_market.enabled` é falso), exceto `local_traded` e `import_share`, que exigem o mercado e os respetivos interruptores de KPI.
 - [Baterias](#baterias): Atividade e desgaste das baterias estacionárias; as linhas aparecem em todas as execuções, com energia nula e ciclos e perda de capacidade indefinidos para membros sem bateria.
 - [Serviço elétrico e fases](#serviço-elétrico-e-fases): Cumprimento dos limites de potência total e por fase declarados para o serviço elétrico, e o equilíbrio e os picos das fases; os valores são nulos ou indefinidos se o esquema não configurar um serviço elétrico.
-- [Veículos elétricos](#veículos-elétricos): Serviço à partida, energia de carregamento e V2G dos veículos elétricos (VE) nos carregadores dos membros. Todos os membros emitem estas linhas; sem carregadores, as contagens e energias são 0 e as taxas ficam indefinidas.
+- [Veículos elétricos](#veículos-elétricos): Serviço à partida, energia de carregamento e V2G dos veículos elétricos (VE) nos carregadores dos membros, e saúde e desgaste opt-in das baterias dos VE (`evaluate_v2(include_battery_health_audit=True)`). Todos os membros emitem as linhas de partida e energia; sem carregadores, as contagens e energias são 0 e as taxas ficam indefinidas.
 - [Auditoria das partidas dos VE](#auditoria-das-partidas-dos-ve): Serviço auditado às partidas dos VE, com uma população explícita, um estado de viabilidade com três classes e o motivo de cada caso desconhecido. Todos os membros emitem estas linhas.
 - [Equipamentos flexíveis](#equipamentos-flexíveis): Serviço dos ciclos dos equipamentos flexíveis (diferíveis) a partir dos estados dos ciclos e das energias nominais dos ciclos. Todos os membros emitem estas linhas; sem equipamentos, as contagens e energias são 0 e as taxas ficam indefinidas.
 - [Auditoria dos equipamentos flexíveis](#auditoria-dos-equipamentos-flexíveis): Serviço auditado dos ciclos dos equipamentos flexíveis a partir da energia medida nos intervalos executados, com uma população explícita e estados exclusivos. Todos os membros emitem estas linhas.
@@ -150,8 +152,8 @@ um step. Com topologia dinâmica, um membro só conta enquanto está ativo.
 | Variante | Significado |
 |---|---|
 | `control` | A execução avaliada. |
-| `baseline` | O contrafactual convencional da mesma execução: os membros sem a bateria e o armazenamento térmico (e sem controlo de carga parcial nos edifícios com dinâmica LSTM), com PV, lido das próprias séries do simulador. O carregamento dos VE da execução é substituído pelo do BAU nativo com o alvo `'full'` (carregados à chegada até ficarem cheios, sem V2G), igual para todos os controladores; os aparelhos diferíveis e o AVAC ficam como o controlador os operou. `baseline_version=1` não volta a somar carregamento dos VE, como no CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` escolhe outra condição. Nos steps com falha de energia, as suas séries de net, custo e emissões são zero, como as da execução controlada. |
-| `business_as_usual` | A execução business-as-usual nativa do mesmo cenário e janela (ver [Baselines](baselines.md)). O seu AVAC pede zero até `baseline_version=2`; com `baseline_version=3` fornece a procura de aquecimento e de arrefecimento do dataset ([AVAC e a versão da baseline](baselines.md#avac-e-a-versão-da-baseline)). |
+| `baseline` | O contrafactual convencional da mesma execução: os membros sem a bateria e o armazenamento térmico (e sem controlo de carga parcial nos edifícios com dinâmica LSTM), com PV, lido das próprias séries do simulador. O carregamento dos VE da execução é substituído pelo do BAU nativo com o alvo `'full'` (carregados à chegada até ficarem cheios, sem V2G), igual para todos os controladores; os aparelhos diferíveis ficam como o controlador os operou, e o AVAC também, exceto nos edifícios com dinâmica LSTM, que usam a procura de aquecimento e de arrefecimento de carga ideal do dataset. `baseline_version=1` não volta a somar carregamento dos VE, como no CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` escolhe outra condição. Nos steps com falha de energia, as suas séries de net, custo e emissões são zero, como as da execução controlada. |
+| `business_as_usual` | A execução business-as-usual nativa do mesmo cenário e janela (ver [Baselines](baselines.md)). Com `baseline_version=2` (predefinida), o seu AVAC fornece a procura de aquecimento e de arrefecimento do dataset; com `baseline_version=1` pede zero, como no CityLearn 3.6.0 ([AVAC e a versão da baseline](baselines.md#avac-e-a-versão-da-baseline)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |
 
@@ -178,6 +180,11 @@ Todos os ratios usam divisão segura:
   é indefinido quando os seus dois totais são zero, mesmo que tenha havido ciclos
   devidos. Por exemplo, o ratio de ciclos falhados é indefinido quando nenhuma das
   execuções falhou um ciclo.
+- **exceção:** os ratios de custo e de emissões
+  (`*_cost_ratio_to_*_total_ratio`, `*_emissions_ratio_to_*_total_ratio`) são
+  indefinidos quando os dois totais são zero. Nada foi faturado nem emitido, como
+  num dataset com intensidade carbónica nula, pelo que não há nada a comparar. As
+  variantes `*_building_mean_ratio` mantêm o valor da 3.6.0.
 
 Os ratios mantêm-se lower-is-better quando o total de referência é negativo. Os
 totais de net exchange e de custo podem ser negativos, para um exportador
@@ -278,7 +285,82 @@ Dois conjuntos de linhas usam séries diferentes:
 
 Note a ordem das palavras nos nomes com sinal: `load_factor_penalty_daily_average_to_baseline_signed_net_ratio`, mas `load_factor_penalty_daily_average_signed_net_to_business_as_usual_ratio`.
 
-**Portefólio.** Os totais de energia e as médias diárias são somados sobre as comunidades. Os rácios de importação, exportação e troca líquida são rácios dos totais somados (com sinal para a troca líquida). Os rácios de forma e os rácios `building_mean` são médias ponderadas pelo `weight` de cada comunidade. As linhas de forma em kW não passam para o portefólio.
+### Excessos nos limites do alimentador do distrito
+
+Quando `district_electrical_service.enabled` é verdadeiro (ver a [referência do esquema](schema_reference.md#servico-eletrico-do-distrito)), `evaluate_v2()` mede e reporta os excessos face aos limites do alimentador na potência líquida do distrito sem impor cortes nem alterar o despacho dos equipamentos:
+
+```text
+Δh = duração do passo em horas
+P_t = N_t / Δh                             potência líquida do distrito no passo executado t, em kW
+excesso importação_t = max(P_t − limite_importação,t, 0)
+excesso exportação_t = max(−P_t − limite_exportação,t, 0)
+excesso ≤ 1e-5 kW é posto a 0
+
+exceedance_energy_total_control_kwh = Σ_t Δh · excesso_t
+exceedance_peak_control_kw          = max_t excesso_t
+exceedance_step_control_count       = número de passos executados com Δh · excesso_t > 1e-9 kWh
+```
+
+As séries por passo ficam expostas em `env.feeder_import_exceedance_kw` e `env.feeder_export_exceedance_kw` (vazias logo após `reset()` até `step()` correr, e `0.0` nos passos sem limite nessa direção). Cada métrica publica `_control`, `_business_as_usual` e `_delta_to_business_as_usual` (`control − business_as_usual`); com `evaluate_v2(include_business_as_usual=False)`, apenas `_control` é emitido. Se `district_electrical_service` estiver ativo com apenas uma direção configurada, a direção não configurada fica indefinida (`NaN`). Quando `district_electrical_service` está desativado, estas linhas não são emitidas.
+
+**Portefólio.** Os totais de energia e as médias diárias são somados sobre as comunidades. Os rácios de importação, exportação e troca líquida são rácios dos totais somados (com sinal para a troca líquida). Os rácios de forma e os rácios `building_mean` são médias ponderadas pelo `weight` de cada comunidade. As linhas de forma em kW não passam para o portefólio. As energias (`_kwh`) e contagens de passos (`_count`) de excesso no alimentador são somadas sobre as comunidades, enquanto os picos (`_kw`) não passam para o portefólio.
+### Janela de avaliação recorrente
+
+Quando `evaluation_window.enabled` é verdadeiro (ver a [referência do esquema](schema_reference.md#janela-de-avaliacao)), `evaluate_v2()` e as exportações de KPIs incluem linhas de potência na janela local recorrente aos níveis de edifício, distrito e portefólio:
+
+```text
+w_t = τ_t / Δt                                fração de sobreposição do passo t em [0, 1]
+H_W = Σ_t w_t · Δh                            horas efetivas na janela nos passos finitos
+energy_grid_window_average_power_control_kw            = (Σ_t w_t · net_t) / H_W
+energy_grid_window_average_power_business_as_usual_kw  = (Σ_t w_t · net_bau,t) / H_W
+energy_grid_window_average_power_delta_to_business_as_usual_kw = control − business_as_usual
+```
+
+`τ_t` é a sobreposição em segundos entre o passo executado `[s_t, s_t + Δt)` em hora local e a janela diária configurada (`16:00:00` a `19:00:00` quando ativada sem limites explícitos). Com um calendário canónico `time_axis`, `s_t` é convertido de `timestamp_utc` para `evaluation_window.timezone`; sem ficheiro de calendário, a coluna `hour` do conjunto de dados varia de `1` a `24` e `s_t` usa `(hour − 1) mod 24` (`hour = 1, minutes = 0` começa às `00:00:00`), coincidindo com as variáveis temporais da interface de entidades. Janelas com `start > end` atravessam a meia-noite em `[start, 24:00)` e `[00:00, end)`. Os passos que intersetam uma fronteira recebem peso parcial `0 < w_t < 1`. Quando `H_W = 0`, todas as linhas da janela ficam indefinidas (`NaN`). Com `evaluate_v2(include_business_as_usual=False)`, apenas `_control_kw` é emitido.
+
+Para explorar outras janelas após a simulação sem voltar a correr o episódio, pondere as séries temporais exportadas de uma sessão renderizada (`exported_data_community_ep0.csv` escreve `timestamp` a partir de `time_axis`, ou a partir de `start_date` `00:00:00` quando o episódio começa à meia-noite):
+
+```python
+from pathlib import Path
+import json
+import numpy as np
+import pandas as pd
+
+
+def step_weight(t0: float, dt: float, segments: list[tuple[float, float]]) -> float:
+    parts = [(t0, min(t0 + dt, 86400.0))] + ([(0.0, t0 + dt - 86400.0)] if t0 + dt > 86400.0 else [])
+    return sum(max(0.0, min(s1, w1) - max(s0, w0)) for s0, s1 in parts for w0, w1 in segments) / dt
+
+
+export_dir = Path("render_logs/my_session")
+manifest = json.loads((export_dir / "exported_kpis.manifest.json").read_text(encoding="utf-8"))
+dt = float(manifest["effective_schema"]["seconds_per_time_step"])
+
+community = pd.read_csv(export_dir / "exported_data_community_ep0.csv")
+ts = pd.to_datetime(community["timestamp"])
+sec_of_day = (ts.dt.hour * 3600 + ts.dt.minute * 60 + ts.dt.second).to_numpy(dtype=float)
+
+start_s, end_s = 16 * 3600, 19 * 3600
+segments = [(start_s, end_s)] if start_s < end_s else [(start_s, 86400.0), (0.0, end_s)]
+weights = np.array([step_weight(float(t0), dt, segments) for t0 in sec_of_day], dtype=float)
+hours = float(weights.sum() * (dt / 3600.0))
+
+control_kw = float((weights * community["Net Electricity Consumption-kWh"]).sum() / hours)
+bau = pd.read_csv(export_dir / "exported_data_business_as_usual_ep0.csv")
+bau_net = bau.loc[bau["level"] == "district", "net_electricity_consumption_kwh"].to_numpy(dtype=float)
+bau_kw = float((weights * bau_net).sum() / hours)
+delta_kw = control_kw - bau_kw
+
+ev_net_kwh = 0.0
+for path in sorted(export_dir.glob("exported_data_*_ep0.csv")):
+    cols = pd.read_csv(path, nrows=0).columns
+    if {"Charger Consumption-kWh", "Charger Production-kWh"} <= set(cols):
+        df = pd.read_csv(path)
+        ac = np.maximum(df["Charger Consumption-kWh"], 0.0) - np.maximum(df["Charger Production-kWh"], 0.0)
+        ev_net_kwh += float((weights * ac).sum())
+```
+
+**Portefólio.** Os totais de energia e as médias diárias são somados sobre as comunidades. Os rácios de importação, exportação e troca líquida são rácios dos totais somados (com sinal para a troca líquida). Os rácios de forma e os rácios `building_mean` são médias ponderadas pelo `weight` de cada comunidade. As linhas de forma em kW não passam para o portefólio. Quando `evaluation_window` está ativo, `energy_grid_window_average_power_*_kw` soma com sinal as comunidades que partilham essa janela e fica indefinido quando algum valor de comunidade é indefinido.
 
 **Que KPI usar.**
 - Use o rácio do distrito `ratio_to_baseline_import_total_ratio`. `*_building_mean_ratio` é a média dos rácios dos edifícios, mantida apenas para comparar com resultados até à versão 3.6.0.
@@ -507,7 +589,7 @@ Os picos de fase são `max_t max(P_f,t, 0)` (importação) e `max_t max(−P_f,t
 
 ## Veículos elétricos
 
-Estas linhas medem o estado de carga (SOC) com que os VE partem e a energia que os carregadores trocam com eles. Todos os membros emitem as linhas. Um membro sem carregadores reporta 0 nas contagens e energias, e taxas indefinidas. Todos os valores cobrem a janela ativa do membro. As unidades, os nomes e as variantes BAU seguem as [regras comuns](#regras-comuns).
+Estas linhas medem o estado de carga (SOC) com que os VE partem, a energia que os carregadores trocam com eles e (quando se passa `evaluate_v2(include_battery_health_audit=True)`) o estado de saúde, a perda de capacidade e os ciclos completos equivalentes das baterias dos VE. Todos os membros emitem as linhas de partida e energia. Um membro sem carregadores reporta 0 nas contagens e energias, e taxas indefinidas. Todos os valores cobrem a janela ativa do membro. As unidades, os nomes e as variantes BAU seguem as [regras comuns](#regras-comuns).
 
 ### Partidas
 
@@ -519,7 +601,7 @@ Regista-se uma partida no passo `t` quando há um VE ligado em `t` e se verifica
 
 Cada sessão é contada uma vez ao longo de episódios consecutivos. Uma partida no passo 0 de um episódio não é contada quando a mesma sessão já estava ligada na linha antes do passo 0: o mesmo identificador de sessão ou de VE nessa linha e, sem identificadores, sem reinício da contagem decrescente a partir de [0, 1]. Entre episódios consecutivos, essa linha é o último passo de controlo do episódio anterior com `'shared'`, e a linha entre os dois episódios com `'disjoint'`, pelo que o episódio anterior já contou a sessão no seu último passo, e o passo 0 apenas avaliaria o SOC definido no reset. A regra olha apenas para essa linha, pelo que também se aplica com `rolling_episode_split` ou com uma lista explícita de `episode_time_steps`, em que a linha antes do passo 0 pode não pertencer a nenhum episódio simulado e a sessão não é então contada. O primeiro episódio de uma simulação não tem linha antes do passo 0.
 
-Com `ev_soc_carryover=True`, um episódio que continua o anterior no tempo começa cada VE com o SOC que atingiu no fim desse episódio, pelo que uma sessão ligada através da fronteira mantém a sua carga e é avaliada onde realmente parte. As divisões que transportam dependem do modo de divisão. As divisões sequenciais transportam. As divisões aleatórias e rolantes nunca transportam, mesmo quando uma escolha aleatória segue o episódio anterior, e o ambiente avisa uma vez que a definição não tem efeito nesse caso. Uma lista explícita de `episode_time_steps` só transporta quando uma janela começa exatamente na última linha da janela anterior com `'shared'`, ou na linha seguinte com `'disjoint'`. Assim, com o `'shared'` por omissão, uma lista sem intervalo, como `[(1900, 1949), (1950, 1999)]`, não transporta, enquanto `[(1900, 1949), (1949, 1999)]` transporta; com `'disjoint'`, a lista sem intervalo transporta. Só a sessão ligada através da fronteira recebe o SOC transportado em vez do SOC do calendário, no primeiro passo do novo episódio. Todas as chegadas seguintes no episódio, incluindo uma nova chegada do mesmo VE, usam o SOC de chegada do ficheiro. Uma chegada sem SOC de chegada no ficheiro mantém o SOC simulado do VE, tal como na execução única, e no passo 0 de um episódio transportado esse é o SOC transportado. Só o SOC dos VE é transportado: as baterias, o armazenamento térmico e as temperaturas interiores continuam a começar cada episódio no seu estado inicial. A definição é um compromisso. Desligada, cada episódio é independente dos anteriores, mas uma sessão que atravessa uma fronteira perde a carga que recebeu. Ligada, essa carga mantém-se, mas um episódio que continua o anterior depende do que o controlador anterior fez, pelo que os seus KPIs deixam de ser os de um episódio independente. As duas regras acima mudam em conformidade. Quando o episódio seguinte começa na última linha deste (divisões `'shared'` consecutivas), o último passo só conta uma contagem decrescente de 0, e uma sessão ainda ligada nessa linha é contada pelo episódio seguinte. Quando começa na linha seguinte (divisões `'disjoint'` consecutivas), o último passo conta uma contagem decrescente em [0, 1]. O passo 0 de um episódio que começou com SOC transportado não ignora uma sessão ligada na linha antes dele. O SOC transportado, ou o SOC simulado de uma chegada no passo 0 sem SOC no ficheiro, é o SOC inicial da sessão no novo episódio para todos os KPIs de VE: as partidas cumpridas, a viabilidade e o ganho de SOC ligado da contabilidade energética partem todos dele, pelo que a carga do episódio anterior não é contada de novo. Somadas sobre os episódios, as partidas, as partidas cumpridas e as classes de viabilidade coincidem então com a execução única, exceto numa sessão cujo SOC de chegada a execução única não consegue determinar e indica como desconhecido, que a divisão determina a partir do SOC transportado. O ganho de SOC ligado é o ganho de cada episódio: uma sessão que carrega antes da fronteira e parte depois dela não tem essa carga em nenhum dos episódios, pelo que a soma sobre os episódios é menor do que na execução única (2412 contra 6120 kWh para divisões `'shared'` 30 × 24 no dataset abaixo) e não é comparável com ela. Com `'shared'`, uma sessão chega à linha de fronteira com o mesmo SOC que numa execução única; o controlador pode ainda agir no passo 0 de forma diferente da execução única nessa linha, pelo que os totais de energia podem diferir ligeiramente. Com `'disjoint'`, a linha entre dois episódios nunca é controlada, pelo que uma sessão ligada através dela chega ao passo 0 até um passo de carregamento atrás da execução única (entre 0 e 0,086 de SOC neste dataset). Em `citylearn_challenge_2022_phase_all_plus_evs` com a BAU a partir do passo 1900, as partidas cumpridas de divisões `'disjoint'` 2 × 100 e 30 × 24 são 67 e 221, tal como na execução única, enquanto sem transporte são 67 e 163.
+Com `ev_soc_carryover=True`, um episódio que continua o anterior no tempo começa cada VE com o SOC que atingiu no fim desse episódio, pelo que uma sessão ligada através da fronteira mantém a sua carga e é avaliada onde realmente parte. As divisões que transportam dependem do modo de divisão. As divisões sequenciais transportam. As divisões aleatórias e rolantes nunca transportam, mesmo quando uma escolha aleatória segue o episódio anterior, e o ambiente avisa uma vez que a definição não tem efeito nesse caso. Uma lista explícita de `episode_time_steps` só transporta quando uma janela começa exatamente na última linha da janela anterior com `'shared'`, ou na linha seguinte com `'disjoint'`. Assim, com o `'shared'` por omissão, uma lista sem intervalo, como `[(1900, 1949), (1950, 1999)]`, não transporta, enquanto `[(1900, 1949), (1949, 1999)]` transporta; com `'disjoint'`, a lista sem intervalo transporta. Só a sessão ligada através da fronteira recebe o SOC transportado em vez do SOC do calendário, no primeiro passo do novo episódio. Todas as chegadas seguintes no episódio, incluindo uma nova chegada do mesmo VE, usam o SOC de chegada do ficheiro. Uma chegada sem SOC de chegada no ficheiro mantém o SOC simulado do VE, tal como na execução única, e no passo 0 de um episódio transportado esse é o SOC transportado. Só o SOC dos VE é transportado: as baterias, o armazenamento térmico e as temperaturas interiores continuam a começar cada episódio no seu estado inicial. A definição é um compromisso. Desligada, cada episódio é independente dos anteriores, mas uma sessão que atravessa uma fronteira perde a carga que recebeu. Ligada, essa carga mantém-se, mas um episódio que continua o anterior depende do que o controlador anterior fez, pelo que os seus KPIs deixam de ser os de um episódio independente. As duas regras acima mudam em conformidade. Quando o episódio seguinte começa na última linha deste (divisões `'shared'` consecutivas), o último passo só conta uma contagem decrescente de 0, e uma sessão ainda ligada nessa linha é contada pelo episódio seguinte. Quando começa na linha seguinte (divisões `'disjoint'` consecutivas), o último passo conta uma contagem decrescente em [0, 1]. O passo 0 de um episódio que começou com SOC transportado não ignora uma sessão ligada na linha antes dele. O SOC transportado, ou o SOC simulado de uma chegada no passo 0 sem SOC no ficheiro, é o SOC inicial da sessão no novo episódio para todos os KPIs de VE: as partidas cumpridas, a viabilidade e o ganho de SOC ligado da contabilidade energética partem todos dele, pelo que a carga do episódio anterior não é contada de novo. Somadas sobre os episódios, as partidas, as partidas cumpridas e as classes de viabilidade coincidem então com a execução única, exceto numa sessão cujo SOC de chegada a execução única não consegue determinar e indica como desconhecido, que a divisão determina a partir do SOC transportado. O ganho de SOC ligado é o ganho de cada episódio: uma sessão que carrega antes da fronteira e parte depois dela não tem essa carga em nenhum dos episódios, pelo que a soma sobre os episódios é menor do que na execução única (2412 contra 6120 kWh para divisões `'shared'` 30 × 24 no dataset abaixo) e não é comparável com ela. Com `'shared'`, uma sessão chega à linha de fronteira com o mesmo SOC que numa execução única; o controlador pode ainda agir no passo 0 de forma diferente da execução única nessa linha, pelo que os totais de energia podem diferir ligeiramente. Com `'disjoint'`, a linha entre dois episódios nunca é controlada, pelo que uma sessão ligada através dela chega ao passo 0 até um passo de carregamento atrás da execução única (entre 0 e 0,086 de SOC neste dataset). Em `citylearn_challenge_2022_phase_all_plus_evs` com a BAU a partir do passo 1900, as partidas cumpridas de divisões `'disjoint'` 2 × 100 e 30 × 24 são 70 e 224, tal como na execução única, enquanto sem transporte são 70 e 168.
 
 O SOC alvo é lido em `t`. Um alvo em (1, 100] é tratado como percentagem e dividido por 100. Um alvo fora de [0, 1] depois disso, ou em falta, é inválido.
 
@@ -535,9 +617,10 @@ s      = SOC da bateria no passo de partida (fração 0-1)
 s*     = SOC alvo
 tol_s  = ev_departure_service_tolerance   (por omissão 0,05, >= 0)
 tol_w  = ev_departure_within_tolerance    (por omissão 0,05, >= 0)
+tol_t  = min(0,005, tol_s)
 eps    = 1e-6
 
-met              : s* - s <= eps
+met              : s* - s <= tol_t + eps
 min_acceptable   : s + tol_s + eps >= s*
 within_tolerance : |s - s*| <= tol_w + eps
 
@@ -551,6 +634,12 @@ abs_error = |s - s*|
 - **Médias:** as linhas `*_mean_ratio` são as médias do défice, da insuficiência, do excesso e do erro absoluto sobre as mesmas partidas, em fração de SOC.
 - **Valores indefinidos:** as taxas e as médias ficam indefinidas sem partidas.
 
+`tol_t` é a tolerância de serviço do alvo do VE, 0,005 de SOC (0,5 %), guardada na constante
+`EV_SERVICE_SOC_TOLERANCE` em `citylearn.electric_vehicle`. As baselines baseadas em regras param de
+carregar 0,001 abaixo do alvo, pelo que os seus carros contam como tendo cumprido o alvo. Está limitada por
+`tol_s`, para que met nunca exceda min_acceptable. As médias do défice, do excesso, do erro
+absoluto e da insuficiência continuam exatas.
+
 As contagens estão ordenadas: met ≤ min_acceptable ≤ partidas, e within_tolerance ≤ partidas. Met e within_tolerance não estão ordenadas entre si: um VE carregado acima da banda cumpre o alvo mas fica fora da tolerância.
 
 ### Viabilidade antiga
@@ -558,7 +647,7 @@ As contagens estão ordenadas: met ≤ min_acceptable ≤ partidas, e within_tol
 As linhas `ev_events_departure_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count` indicam se cada limiar podia ser atingido. Um limiar é viável quando uma simulação isolada o atinge. Os limiares são:
 
 ```text
-threshold_target         = s*
+threshold_target         = max(s* - tol_t, 0)
 threshold_min_acceptable = max(s* - tol_s, 0)
 threshold_within         = max(s* - tol_w, 0)
 viável                   : s_simulado + eps >= limiar
@@ -595,6 +684,16 @@ ev_total_v2g_export_kwh = soma_t max(-ac_t, 0)
 - **Não é exportação para a rede:** o total de V2G é a energia que os VE fornecem através do carregador, seja qual for o seu uso. Não é exportação para a rede: o membro pode consumir ele próprio a energia V2G, e só a troca líquida do membro mostra o que atravessa a fronteira com a rede.
 - **Alternativa:** um carregador sem registos brutos usa as partes positiva e negativa do seu consumo de eletricidade.
 
+### Troca líquida na janela
+
+Quando `evaluation_window.enabled` é verdadeiro, `ev_window_net_exchange_control_kwh` reporta a energia AC líquida com sinal nos carregadores dentro da janela local recorrente:
+
+```text
+ev_window_net_exchange_control_kwh = Σ_t w_t · ac_net,t
+```
+
+`w_t` é o peso de sobreposição do passo definido em [Energia da rede e forma da carga](#janela-de-avaliação-recorrente), e `ac_net,t` é o consumo elétrico AC com sinal dos carregadores ativos no passo `t` (positivo ao carregar VE, negativo ao fornecer energia V2X ao edifício ou à rede). Membros sem carregadores de VE reportam `0.0` quando `H_W > 0`. Quando `H_W = 0`, o valor fica indefinido (`NaN`). Os valores de distrito e de portefólio somam com sinal os valores dos membros e das comunidades, ficando o portefólio indefinido se alguma comunidade estiver indefinida.
+
 ### Balanço de energia
 
 ```text
@@ -606,17 +705,41 @@ shortfall_kwh (membro) = max(connected_soc_gain_kwh - ev_total_charge_kwh, 0)
 - **Significado:** a insuficiência assinala ganho de SOC que a carga medida não explica.
 - **Cobertura:** o total de carga cobre todos os passos da janela, incluindo sessões sem partida contada, pelo que a verificação é unilateral.
 
+### Saúde e desgaste das baterias
+
+Cada instância de `Battery` (armazenamento estacionário e `ElectricVehicle.battery`) expõe quatro propriedades só de leitura de saúde e desgaste: `current_state_of_health` (rácio adimensional em `[0, 1]`, `clip(degraded_capacity / capacity, 0, 1)`, devolvendo `1.0` quando `capacity <= 0` ou antes do primeiro passo), `state_of_health` (vetor `float64` de rácios adimensionais em `[0, 1]` até `time_step + 1`, devolvendo uns quando `capacity <= 0` e `[1.0]` antes do primeiro passo), `equivalent_full_cycles` (contagem adimensional de ciclos `(Σ carga + Σ descarga) / (2 · capacity)`, devolvendo `0.0` antes do primeiro passo e `0.0` quando `capacity <= 0`, enquanto os KPIs de ciclos `*_battery_health_equivalent_full_cycles_count` e `*_ev_battery_health_equivalent_full_cycles_count` ficam indefinidos quando a capacidade nominal é zero) e `capacity_fade_kwh` (capacidade acumulada perdida por degradação em `kWh`, `máx(0, capacity − degraded_capacity)`, devolvendo `0.0` quando `capacity <= 0` ou antes do primeiro passo). Os KPIs de desgaste das baterias estacionárias são reportados pela família [Baterias](#baterias).
+
+Quando se passa `evaluate_v2(include_battery_health_audit=True)` (por omissão `False`), são emitidas quatro linhas opt-in `ev_battery_health_*` para as baterias dos VE:
+
+```text
+C_i      = capacidade nominal da bateria de VE i (> 0), em kWh
+T_i      = Σ_t (carga_i,t + descarga_i,t), energia bruta aceite nos terminais da bateria em kWh
+C_deg,i  = clip(capacidade degradada da bateria de VE i, 0, C_i), em kWh
+perda_i  = máx(0, C_i − C_deg,i), em kWh
+
+ev_battery_health_terminal_soh_ratio             = clip(Σ_i C_deg,i / Σ_i C_i, 0, 1)      indefinido quando Σ_i C_i ≤ 0
+ev_battery_health_capacity_fade_kwh              = Σ_i perda_i                            0 quando Σ_i C_i ≤ 0
+ev_battery_health_capacity_fade_ratio            = clip(Σ_i perda_i / Σ_i C_i, 0, 1)      indefinido quando Σ_i C_i ≤ 0
+ev_battery_health_equivalent_full_cycles_count   = Σ_i T_i / (2 · Σ_i C_i)                indefinido quando Σ_i C_i ≤ 0
+```
+
+Ao nível do edifício, `building_ev_battery_health_*` usa apenas ligações efetivas (`past_connected_evs[t]`) e transferências executadas durante os passos ativos executados do membro (`0 ≤ t < time_step`). A energia movimentada e a perda de capacidade são atribuídas estritamente ao edifício cujo carregador executou cada transferência, `Σ C_i` conta uma única vez cada VE único (`capacity > 0`) que efetivamente se ligou nesse edifício, e `building_ev_battery_health_terminal_soh_ratio` lê a capacidade degradada de cada VE ligado no fim da sua última ligação efetiva nesse edifício. Os VE listados apenas em horários de carregadores desligados (ou apenas em passos não executados) são excluídos (`capacity_fade_kwh = 0`, rácios e ciclos indefinidos quando nenhum VE se liga efetivamente).
+
+Como `building_ev_battery_health_terminal_soh_ratio` reflete o estado acumulado da bateria na última ligação do VE nesse edifício (incluindo o desgaste recebido noutros edifícios), enquanto `building_ev_battery_health_capacity_fade_ratio` contabiliza apenas o desgaste resultante das transferências executadas nesse edifício, o SOH do edifício pode ser inferior a `1 − building_ev_battery_health_capacity_fade_ratio` (ao passo que no distrito e no portefólio o SOH é igual a `1 − capacity_fade_ratio`). Por exemplo, quando um VE de `60 kWh` (`capacity_loss_coefficient = 1e-3`) carrega `6 kWh` em `Building_1` no passo `0` (`0.05` ciclos completos equivalentes, `0.003 kWh` de perda, rácio de perda `0.00005`, SOH terminal `59.997 / 60 = 0.99995`) e depois se liga em `Building_2` no passo `1` com `0 kWh` trocados, `Building_2` reporta `0.0` ciclos completos equivalentes, `0.0 kWh` de perda, rácio de perda `0.0` e SOH terminal `0.99995` devido ao desgaste acumulado trazido de `Building_1`. Se o mesmo VE carregar mais `6 kWh` em `Building_2` no passo `2` (degradando até `59.994 kWh`), `Building_1` mantém o SOH terminal `0.99995` da sua última ligação efetiva no passo `0`, enquanto `Building_2` passa para `59.994 / 60 = 0.99990`.
+
 ### Distrito e portefólio
 
 **Distrito:**
 - as contagens, as energias e o ganho de SOC são somas dos membros;
 - as taxas e as médias são recalculadas a partir dos numeradores e denominadores somados;
 - a insuficiência é a soma das insuficiências dos membros, cada uma já limitada a 0, e não o limite dos totais do distrito;
-- a linha da tolerância é o valor configurado.
+- a linha da tolerância é o valor configurado;
+- as linhas opt-in `ev_battery_health_*` agregam a população da frota de VE do distrito, definida como os VE elegíveis únicos com `capacity > 0` (`electric_vehicles` em topologia estática, ou os VE que entraram em participação durante o episódio, `electric_vehicles` união com os VE suspensos, em topologia dinâmica), contando cada VE elegível uma única vez independentemente do número de edifícios onde se liga (os VE elegíveis da frota que nunca se ligam contribuem com a sua capacidade nominal com energia movimentada nula, perda nula e SOH terminal `1.0`).
 
 **Portfolio:**
-- as contagens e as energias somam-se;
-- as taxas e as médias são agregadas: ponderadas por `ev_events_departure_count` ou, nas taxas viáveis, pelo `*_feasible_count` correspondente;
+- as contagens, as energias e `portfolio_ev_battery_health_capacity_fade_kwh` somam-se;
+- as taxas e as médias de partida são agregadas: ponderadas por `ev_events_departure_count` ou, nas taxas viáveis, pelo `*_feasible_count` correspondente;
+- `portfolio_ev_battery_health_terminal_soh_ratio`, `portfolio_ev_battery_health_capacity_fade_ratio` e `portfolio_ev_battery_health_equivalent_full_cycles_count` são agregados pela capacidade nominal das baterias dos VE a partir dos totais de capacidade e de perda/ciclos das comunidades (indefinido quando a capacidade nominal total dos VE é zero);
 - os ratios ao BAU são ratios dos totais somados;
 - a linha da tolerância é a média dos parâmetros das comunidades ponderada pelo `weight` de cada comunidade.
 
@@ -625,6 +748,8 @@ shortfall_kwh (membro) = max(connected_soc_gain_kwh - ev_total_charge_kwh, 0)
 Para comparar controladores quanto ao serviço à partida, use os ratios da [auditoria das partidas dos VE](#auditoria-das-partidas-dos-ve), que o scorecard por omissão reporta:
 - `ev_departure_audit_min_acceptable_service_feasible_ratio` para o serviço;
 - `ev_departure_audit_within_tolerance_service_feasible_ratio` para a precisão face ao alvo.
+
+Para avaliar o desgaste das baterias dos VE devido ao carregamento e ao despacho V2G, passe `include_battery_health_audit=True` e reporte `ev_battery_health_terminal_soh_ratio` e `ev_battery_health_capacity_fade_kwh` juntamente com `ev_battery_health_equivalent_full_cycles_count`.
 
 As taxas viáveis antigas contam como viáveis as partidas com dados em falta e não reportam quantas partidas puderam ser avaliadas. Mantenha as linhas `ev_performance` por continuidade com resultados anteriores.
 
@@ -641,7 +766,7 @@ As taxas viáveis antigas contam como viáveis as partidas com dados em falta e 
 A auditoria reporta o serviço à partida com uma população explícita, e separa a viabilidade que não pôde ser avaliada da viabilidade que falhou. Todos os membros emitem as linhas. Um membro sem partidas reporta contagens 0 e ratios indefinidos. Usa a deteção de partidas, a normalização do alvo, as tolerâncias e os testes de cumprimento de [Veículos elétricos](#veículos-elétricos), aplicados a três limiares:
 
 ```text
-target           : tolerância 0
+target           : tolerância tol_t
 min_acceptable   : tolerância tol_s
 within_tolerance : tolerância tol_w   (teste simétrico: |s - s*| <= tol_w + eps)
 ```
@@ -942,6 +1067,18 @@ quente_t   = avaliado_t e T_t > T_cool,t + banda_t
 
 Só os passos ocupados são avaliados. Um passo é confortável quando
 `T_heat - banda <= T <= T_cool + banda`.
+
+**Edifícios sem set points.** Quando o dataset de um edifício não tem a coluna
+`indoor_dry_bulb_temperature_cooling_set_point` ou a coluna
+`indoor_dry_bulb_temperature_heating_set_point`, a simulação e as observações usam um set point de 0 °C.
+Os KPIs de conforto não avaliam o conforto contra esse valor por omissão: leem `T_heat` e `T_cool` como
+indefinidos, pelo que nenhum passo do edifício é avaliado. Todas as razões, deltas e razões de falha de
+energia do desconforto desse edifício ficam então indefinidas, no `evaluate_v2()`, no `evaluate()` e na
+auditoria do serviço térmico, e o distrito ignora o
+edifício. Entre os datasets incluídos, os `pt_rec_*` não têm colunas de set points e têm ocupantes, pelo
+que os seus KPIs de conforto ficam indefinidos. Os datasets dos desafios de 2020 a 2022 e as demos
+trifásicas também não têm colunas de set points, mas os seus edifícios não têm ocupantes, pelo que os
+seus KPIs de conforto já eram indefinidos.
 
 **Razões de desconforto.**
 
@@ -1551,7 +1688,7 @@ Limitações conhecidas: o marcador não contém qualquer medição; use as colu
 
 ## Definicoes alteradas depois da 3.6.0
 
-A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_accounting` de `evaluate_v2()`) e `2.0.0`. Estas linhas de `evaluate_v2()` mudaram de definicao. Onde um valor da 3.6.0 pode ter sido usado em comparacoes publicadas, fica com um nome proprio, e as linhas legacy de `evaluate()` mantem as suas definicoes da 3.6.0, exceto a baseline dos datasets com carregadores de VE (ultima linha), que `baseline_version=1` repoe.
+A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_accounting` de `evaluate_v2()`) e `2.0.0`. Estas linhas de `evaluate_v2()` mudaram de definicao. Onde um valor da 3.6.0 pode ter sido usado em comparacoes publicadas, fica com um nome proprio, e as linhas legacy de `evaluate()` mantem as suas definicoes da 3.6.0, exceto a baseline dos datasets com carregadores de VE (a linha dos carregadores de VE), que `baseline_version=1` repoe.
 
 | KPI | Nova definicao | Valor da 3.6.0 mantido como |
 |---|---|---|
@@ -1565,13 +1702,33 @@ A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_
 | `*_deferrable_appliance_service_average_start_delay_hours` | Indefinido quando nenhum ciclo foi completado (era 0). | nenhum |
 | Ratios com control ou referencia indefinidos | Indefinidos (eram lidos como 0, ou 1 quando ambos eram indefinidos). | nenhum |
 | `*_deferrable_appliance_ratio_to_business_as_usual_*_ratio` com os dois totais a zero | Indefinido (era 1). | nenhum |
+| `*_ev_events_departure_met_count` (antigo `ev_departure_met_events_count`), `*_ev_performance_departure_success_ratio`, `*_ev_performance_departure_success_feasible_ratio`, `*_ev_events_departure_target_{feasible,infeasible}_count`, `*_ev_departure_audit_target_*` | Uma partida cumpre o alvo a menos de 0,005 de SOC (era 1e-6), pelo que um carro que as baselines baseadas em regras param 0,001 abaixo do alvo conta como servido. | nenhum |
+| Linhas de conforto (`*_comfort_resilience_*`, linhas de desconforto `*_thermal_service_audit_*`, `discomfort_*` e `one_minus_thermal_resilience_proportion` antigos) de um edifício sem colunas de set points | Indefinidas (eram avaliadas contra um set point de arrefecimento de 0 °C). | nenhum |
+| `*_{cost,emissions}_ratio_to_{baseline,business_as_usual}_total_ratio` com os dois totais a zero, e os seus valores de portfólio | Indefinido (era 1). | nenhum |
 | `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Alocados a partir do settlement district. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostico) |
 | Taxas e medias EV de departure, service levels dos deferrable appliances e das escadas rolantes, start delay e self-consumption solar do portefólio (`MultiCommunityEnv`) | Agregadas a partir dos seus denominadores aditivos. | nenhum |
 | Shares locais do mercado comunitário, compliance de demand response e ratios de cobertura das auditorias de demand response do portefólio (`MultiCommunityEnv`, #285) | Agregados a partir da energia local mais a da rede, da energia pedida válida, da energia pedida e dos intervalos ativos. | nenhum |
 | Ciclos completos equivalentes das baterias estacionárias do portefólio e comparações com a execução BAU (`MultiCommunityEnv`, #330) | Energia movimentada total sobre o dobro da capacidade nominal total. A diferença e o rácio face à execução BAU usam os dois valores do portefólio. | nenhum |
 | Nos datasets com carregadores de VE: todas as linhas `*_baseline_*`, `*_delta_*` (exceto `*_delta_to_business_as_usual_*`) e `*_ratio_to_baseline_*`, os KPIs de equidade calculados a partir delas, e toda a tabela legacy de `evaluate()` (#365) | A baseline carrega os VE como o BAU nativo com o alvo `'full'`, em vez de nao os carregar (`baseline_version=2`). | `baseline_version=1` |
+| Nos datasets com ações de AVAC: todas as linhas `*_business_as_usual` e todos os valores `*_delta_to_business_as_usual_*` e `*_ratio_to_business_as_usual_*` (#362) | O BAU nativo fornece a procura de aquecimento e de arrefecimento do dataset, em vez de enviar zero às ações de AVAC (`baseline_version=2`). | `baseline_version=1` |
 
 Nas linhas legacy, uma janela de load factor cujo pico com sinal nao e positivo passa a ser indefinida; antes dava uma penalizacao infinita ou negativa, que a safe division reportava como um 0 perfeito.
+
+## Auditoria de Resiliencia por Evento de Outage
+
+Para inspecionar interrupcoes da rede evento a evento em cenarios de topologia estatica sem alterar `evaluate_v2()`, usar `env.evaluate_outage_events()` (devolve `(events_df, summary_df)`) ou `env.get_outage_resilience_audit()` (devolve um dicionario pronto para JSON incluindo `district_windows`).
+
+Um evento de corte de um edificio e uma sequencia maxima de timesteps executados consecutivos em que `building.simulate_power_outage` esta ativo e `building.power_outage_signal` e finito e diferente de zero, seguindo a mesma regra do simulador e de `citylearn/internal/service_energy.py` (quando `simulate_power_outage` esta ativo, valores nao finitos em `power_outage`, como celulas em branco, `NaN`, `inf` ou `-inf`, levantam `ValueError` antes da simulacao; quando esta desativado, a coluna e ignorada). Uma janela de corte do distrito (`district_windows`) abrange timesteps executados consecutivos com pelo menos um edificio afetado. A energia de servico esperada, servida e nao servida vem de `citylearn/internal/service_energy.py` (usos finais `cooling`, `heating`, `dhw` e `non_shiftable`, limitados individualmente para que excessos num uso final nunca compensem falhas noutro), coincidindo com o numerador e denominador de `..._resilience_unserved_energy_outage_normalized_ratio`.
+
+| Campo | Nivel | Unidade | O que mede |
+|---|---|---:|---|
+| `start_time_step`, `end_time_step` | evento, janela do distrito | step | Limites inclusivos (base 0 no episodio) da interrupcao. |
+| `duration_steps`, `duration_hours` | evento, janela do distrito | count / hours | Duracao em steps e em horas (`duration_steps * seconds_per_time_step / 3600`). |
+| `expected_energy_kwh`, `served_energy_kwh`, `unserved_energy_kwh` | evento, janela do distrito, building, district | kWh | Energia esperada, servida e nao servida durante cortes, mais divisao `<end_use>_*_energy_kwh`. |
+| `peak_unserved_power_kw` | evento, janela do distrito, building, district | kW | Maior potencia nao servida num unico step (`max_step_unserved_kwh * 3600 / seconds_per_time_step`); no distrito, coincidente entre edificios simultaneamente afetados. |
+| `fully_served` | evento, janela do distrito | bool | Indica se a energia por servir e nula dentro da tolerancia (`<= 1e-9` kWh). |
+| `building_events_count`, `building_outage_steps_count`, `building_outage_hours`, `worst_building_event_unserved_energy_kwh`, `fully_served_building_events_ratio` | building, district | count / steps / hours / kWh / ratio | Contagem de eventos de edificio, duracao em steps/horas de edificio, pior energia nao servida num evento de edificio e fracao de eventos totalmente servidos (`None` quando `building_events_count == 0`). Na linha `District` agregam os eventos dos edificios membros. |
+| `district_windows_count`, `district_window_steps_count`, `district_window_hours`, `worst_district_window_unserved_energy_kwh`, `fully_served_district_windows_ratio` | district (`NaN` nas linhas building) | count / steps / hours / kWh / ratio | Contagem, duracao contigua em steps/horas, pior energia nao servida e fracao totalmente servida das janelas de corte do distrito com pelo menos um edificio afetado (`None` quando `district_windows_count == 0`). |
 
 ## Export
 

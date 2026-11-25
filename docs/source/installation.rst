@@ -105,7 +105,10 @@ names in Python, or with ``citylearn list_datasets``:
 The cache is a ``citylearn`` folder in the user cache directory, with one
 subfolder per dataset release, for example ``~/.cache/citylearn/v3.6.0`` on
 Linux; ``DataSet().cache_directory`` returns it and ``DataSet().clear_cache()``
-empties it. For your own data, pass a local ``schema.json`` path instead of a
+empties it. Downloads go to its ``datasets`` folder. A complete local copy of a
+dataset, such as ``data/datasets`` in a repository checkout, is copied to
+``datasets_by_content/<key>/<dataset>``, where the key is a digest of its
+files, so checkouts with different data never share a copy. For your own data, pass a local ``schema.json`` path instead of a
 dataset name. See :doc:`guides/dataset_reference` for files and units.
 
 These environment variables change where CityLearn looks for data:
