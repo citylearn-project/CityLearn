@@ -95,7 +95,7 @@ Each key is read at one level only. A building setting placed at the root (for e
 | Form | Example | `root_directory` |
 |---|---|---|
 | Path to a JSON file or to a folder containing `schema.json` | `CityLearnEnv("data/my_dataset/schema.json")` | Optional. `null` or missing: the schema's folder. Absolute: used as is. Relative: resolved from the schema's folder, then from its parent folders. |
-| Name of a public dataset | `CityLearnEnv("citylearn_challenge_2022_phase_all_plus_evs")` | Replaced by the downloaded dataset folder, whatever the schema says. |
+| Name of a public dataset | `CityLearnEnv("citylearn_challenge_2022_phase_all_plus_evs")` | Replaced by the folder that `DataSet().get_dataset(name)` returns, whatever the schema says: a complete local copy, cached under a digest of its files, or else a download of the release. |
 | Python `dict` | `CityLearnEnv(schema_dict)` | **Required key.** `null` means the current working directory, so relative file names are read from there. |
 
 Every file name in the schema (`energy_simulation`, `charger_simulation`, `requests_file`, ...) is resolved from
@@ -189,6 +189,7 @@ dataset, set `"simulation_start_time_step": 0` and `"simulation_end_time_step": 
 | `rolling_episode_split` | bool | `false` | | With an int `episode_time_steps`, every row from the window start to `end + 1 - N` is a possible episode start (overlapping windows). Ignored for a list. | `rolling_episode_split` | original |
 | `random_episode_split` | bool | `false` | | Pick the episode at random at every reset (with replacement), seeded by `random_seed` and the episode number. Without it, episodes are used in order and cycle. Applies to int and list episodes. | `random_episode_split` | original |
 | `episode_split_boundary` | string | `shared` | `shared`, `disjoint` | For non-rolling int episodes. `shared`: the last row of an episode is the first row of the next, so every interval is simulated (stride `N - 1`). `disjoint`: the 3.6.0 splits (stride `N`), which skip the interval between two episodes. | `episode_split_boundary` | after 3.6.0 |
+| `ev_soc_carryover` | bool | `false` | | Start each EV of an episode that continues the previous one in time (on its last row with `shared`, on the row after it with `disjoint`) from its SOC at the end of that episode, instead of the schedule SOC. Sequential splits and explicit lists carry; random and rolling splits never do. Only the EV SOC is carried. See the [migration guide](migration.md#ev-soc-carried-across-episode-splits). | `ev_soc_carryover` | after 3.6.0 |
 
 Rules:
 
@@ -234,7 +235,7 @@ digit string (`2`, `2.0`, `"2"`); a boolean raises `ValueError`. The constructor
 | Key | Values | Default | Selects | Since |
 |---|---|---|---|---|
 | `physics_version` | `1`, `2` | `2` | Device and dispatch physics. `1` reproduces CityLearn 3.6.0. | after 3.6.0 |
-| `baseline_version` | `1`, `2`, `3` | `2` | Definition of the KPI baseline (`*_without_storage` series) and of the BAU HVAC. `1` as in 3.6.0; `2` adds back the BAU EV charging; `3` (opt-in) also makes the BAU deliver the dataset heating and cooling demand. `env.baseline_version = v` also works after construction. | after 3.6.0 |
+| `baseline_version` | `1`, `2` | `2` | Definition of the KPI baseline (`*_without_storage` series) and of the BAU HVAC. `1` as in 3.6.0: nothing added back, and the BAU sends zero to the HVAC actions. `2` adds back the BAU EV charging, and on datasets with HVAC actions the BAU delivers the dataset heating and cooling demand. Any other value raises `ValueError`. `env.baseline_version = v` also works after construction. | after 3.6.0 |
 | `random_stream_version` | `v1`, `v2` (also `1`, `2`, `"V2"`) | `v2` | How random numbers are drawn from `random_seed`. `v1` reproduces 3.6.0. | after 3.6.0 |
 
 The community market has its own `settlement_version`; see [Community market](#community-market-and-settlement).
@@ -334,7 +335,7 @@ All five have a constructor argument of the same name.
 |---|---|---|---|---|---|
 | `ev_departure_within_tolerance` | number, SOC fraction | `0.05` | A departure is within tolerance when `abs(SOC - target) <= tolerance`. Finite and at least 0. | yes | 2.6.0 |
 | `ev_departure_service_tolerance` | number, SOC fraction | `0.05` | A departure gives acceptable service when `SOC + tolerance >= target`. Finite and at least 0. | yes | 3.0.0 |
-| `business_as_usual_ev_charge_target` | `full`, `requested` | `full` | Charging policy of the native BAU used by `evaluate_v2()`: `full` charges to 100 % on arrival, `requested` stops at the requested departure SOC. Case-sensitive. The KPI baseline of `baseline_version` 2 and 3 always uses `full`. See [Baselines](baselines.md#choosing-the-bau-charging-target). | yes | 3.4.0 |
+| `business_as_usual_ev_charge_target` | `full`, `requested` | `full` | Charging policy of the native BAU used by `evaluate_v2()`: `full` charges to 100 % on arrival, `requested` stops at the requested departure SOC. Case-sensitive. The KPI baseline of `baseline_version` 2 always uses `full`. See [Baselines](baselines.md#choosing-the-bau-charging-target). | yes | 3.4.0 |
 
 ### Metadata keys
 
@@ -350,7 +351,7 @@ reported as incompatible. Start the name of a comment or note key with `_` to ke
 |---|---|---|
 | `root_directory` | `root_directory` | Not used for `community_market.tariff_files`. |
 | `buildings` | `buildings.<b>.include` | Names, indices or `Building` objects; replaces the `include` selection. |
-| `simulation_start_time_step`, `simulation_end_time_step`, `episode_time_steps`, `rolling_episode_split`, `random_episode_split`, `episode_split_boundary`, `seconds_per_time_step`, `time_step_ratio_mode` | same | |
+| `simulation_start_time_step`, `simulation_end_time_step`, `episode_time_steps`, `rolling_episode_split`, `random_episode_split`, `episode_split_boundary`, `ev_soc_carryover`, `seconds_per_time_step`, `time_step_ratio_mode` | same | |
 | `central_agent`, `interface`, `topology_mode`, `random_seed`, `random_stream_version`, `physics_version`, `baseline_version` | same | |
 | `reward_function`, `reward_function_kwargs` | `reward_function.type`, `reward_function.attributes` | See [Reward function](#reward-function). |
 | `shared_observations` | `observations.<name>.shared_in_central_agent` | Replaces the list built from the schema. |
@@ -1292,10 +1293,10 @@ replaced by those of the wrapper. See the [multi-community reference](multi_comm
 | Version | KPI baseline (`*_without_storage`) | Native BAU HVAC |
 |---|---|---|
 | 1 | removes battery, thermal storage and EV charging; adds nothing back | off |
-| 2 (default) | as 1, then adds back the BAU EV charging with the `full` target | off |
-| 3 (opt-in) | as 2 | delivers the dataset heating and cooling demand |
+| 2 (default) | as 1, then adds back the BAU EV charging with the `full` target | delivers the dataset heating and cooling demand on datasets with HVAC actions |
 
-With versions 2 and 3, evaluating a dataset with chargers runs the native BAU; if it cannot run, `ValueError` suggests
+On datasets without HVAC actions the BAU, its definition and its identity are the same under both versions. Any other
+value raises `ValueError`. With version 2, evaluating a dataset with chargers runs the native BAU; if it cannot run, `ValueError` suggests
 `baseline_version=1`. See [Baselines](baselines.md#hvac-and-the-baseline-version).
 
 ### `random_stream_version`

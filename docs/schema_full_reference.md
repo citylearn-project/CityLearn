@@ -44,7 +44,7 @@ Portuguese version: [pt/schema_full_reference.md](pt/schema_full_reference.md).
 | `random_seed` | `2022` | a new random seed at each construction | Set it for repeatable runs: drawn device parameters, EV initial SOC and drift, noise and random episodes depend on it. |
 | `random_stream_version` | `"v2"` | `"v2"` | `"v1"` reproduces the random draws of CityLearn 3.6.0. |
 | `physics_version` | `2` | `2` | `1` reproduces the physics of 3.6.0; see [What each version changes](schema_reference.md#what-each-version-changes). |
-| `baseline_version` | `2` | `2` | `1`: the KPI baseline adds no EV charging back. `3`: the BAU also delivers the dataset heating and cooling demand. |
+| `baseline_version` | `2` | `2` | `1`: the KPI baseline adds no EV charging back, and the BAU sends zero to the HVAC actions, as in 3.6.0. This dataset has no HVAC actions, so its BAU is the same under both versions. |
 
 ## Agent layout, time window and episodes
 
@@ -59,7 +59,8 @@ Portuguese version: [pt/schema_full_reference.md](pt/schema_full_reference.md).
   "episode_time_steps": null,
   "rolling_episode_split": false,
   "random_episode_split": false,
-  "episode_split_boundary": "shared"
+  "episode_split_boundary": "shared",
+  "ev_soc_carryover": false
 }
 ```
 
@@ -74,6 +75,7 @@ Portuguese version: [pt/schema_full_reference.md](pt/schema_full_reference.md).
 | `rolling_episode_split` | `false` | `false` | `true`: every row can start an episode. |
 | `random_episode_split` | `false` | `false` | `true`: draw the episode at each reset. |
 | `episode_split_boundary` | `"shared"` | `"shared"` | `"disjoint"`: the 3.6.0 splits, which skip one interval between episodes. |
+| `ev_soc_carryover` | `false` | `false` | `true`: an episode that continues the previous one in time starts each EV from its SOC at the end of that episode. |
 
 ## Calendar and dataset clock
 

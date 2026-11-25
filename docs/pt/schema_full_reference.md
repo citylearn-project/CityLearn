@@ -45,7 +45,7 @@ Versão em inglês: [../schema_full_reference.md](../schema_full_reference.md).
 | `random_seed` | `2022` | uma semente aleatória nova em cada construção | Defina-a para execuções repetíveis: os parâmetros sorteados dos dispositivos, o SOC inicial e a deriva dos VE, o ruído e os episódios aleatórios dependem dela. |
 | `random_stream_version` | `"v2"` | `"v2"` | `"v1"` reproduz os sorteios do CityLearn 3.6.0. |
 | `physics_version` | `2` | `2` | `1` reproduz a física da 3.6.0; consulte [O que cada versão altera](schema_reference.md#o-que-cada-versão-altera). |
-| `baseline_version` | `2` | `2` | `1`: a baseline dos KPIs não volta a somar o carregamento dos VE. `3`: o BAU também fornece a procura de aquecimento e de arrefecimento do dataset. |
+| `baseline_version` | `2` | `2` | `1`: a baseline dos KPIs não volta a somar o carregamento dos VE, e o BAU envia zero às ações de AVAC, como na 3.6.0. Este dataset não tem ações de AVAC, pelo que o seu BAU é o mesmo nas duas versões. |
 
 ## Organização do agente, janela temporal e episódios
 
@@ -60,7 +60,8 @@ Versão em inglês: [../schema_full_reference.md](../schema_full_reference.md).
   "episode_time_steps": null,
   "rolling_episode_split": false,
   "random_episode_split": false,
-  "episode_split_boundary": "shared"
+  "episode_split_boundary": "shared",
+  "ev_soc_carryover": false
 }
 ```
 
@@ -75,6 +76,7 @@ Versão em inglês: [../schema_full_reference.md](../schema_full_reference.md).
 | `rolling_episode_split` | `false` | `false` | `true`: qualquer linha pode iniciar um episódio. |
 | `random_episode_split` | `false` | `false` | `true`: sorteia o episódio em cada reset. |
 | `episode_split_boundary` | `"shared"` | `"shared"` | `"disjoint"`: as divisões da 3.6.0, que saltam um intervalo entre episódios. |
+| `ev_soc_carryover` | `false` | `false` | `true`: um episódio que continua o anterior no tempo começa cada VE com o SOC que tinha no fim desse episódio. |
 
 ## Calendário e relógio do dataset
 

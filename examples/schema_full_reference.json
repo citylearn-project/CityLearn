@@ -14,6 +14,7 @@
   "rolling_episode_split": false,
   "random_episode_split": false,
   "episode_split_boundary": "shared",
+  "ev_soc_carryover": false,
   "time_axis": {"calendar_file": null},
   "timezone": null,
   "dataset_seconds_per_time_step": null,

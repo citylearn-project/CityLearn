@@ -95,7 +95,7 @@ Cada chave é lida num só nível. Uma definição de edifício colocada na raiz
 | Forma | Exemplo | `root_directory` |
 |---|---|---|
 | Caminho para um ficheiro JSON ou para uma pasta com `schema.json` | `CityLearnEnv("data/my_dataset/schema.json")` | Opcional. `null` ou ausente: a pasta do schema. Absoluto: usado tal como está. Relativo: resolvido a partir da pasta do schema e, depois, das pastas acima dela. |
-| Nome de um dataset público | `CityLearnEnv("citylearn_challenge_2022_phase_all_plus_evs")` | Substituído pela pasta do dataset descarregado, seja qual for o valor do schema. |
+| Nome de um dataset público | `CityLearnEnv("citylearn_challenge_2022_phase_all_plus_evs")` | Substituído pela pasta que `DataSet().get_dataset(name)` devolve, seja qual for o valor do schema: uma cópia local completa, em cache sob o digest dos seus ficheiros, ou então uma descarga da versão publicada. |
 | `dict` de Python | `CityLearnEnv(schema_dict)` | **Chave obrigatória.** `null` significa a pasta de trabalho atual, pelo que os nomes de ficheiro relativos são lidos a partir daí. |
 
 Todos os nomes de ficheiro do schema (`energy_simulation`, `charger_simulation`, `requests_file`, ...) são resolvidos a
@@ -191,6 +191,7 @@ passos de controlo).
 | `rolling_episode_split` | bool | `false` | | Com um `episode_time_steps` inteiro, qualquer linha entre o início da janela e `end + 1 - N` pode iniciar um episódio (janelas sobrepostas). Ignorada para uma lista. | `rolling_episode_split` | original |
 | `random_episode_split` | bool | `false` | | Escolhe o episódio ao acaso em cada reset (com reposição), com semente em `random_seed` e no número do episódio. Sem ela, os episódios são usados por ordem e em ciclo. Aplica-se a episódios inteiros e a listas. | `random_episode_split` | original |
 | `episode_split_boundary` | string | `shared` | `shared`, `disjoint` | Para episódios inteiros sem `rolling`. `shared`: a última linha de um episódio é a primeira do seguinte, pelo que todos os intervalos são simulados (passo `N - 1`). `disjoint`: as divisões da 3.6.0 (passo `N`), que saltam o intervalo entre dois episódios. | `episode_split_boundary` | depois da 3.6.0 |
+| `ev_soc_carryover` | bool | `false` | | Começa cada VE de um episódio que continua o anterior no tempo (na última linha dele com `shared`, na linha seguinte com `disjoint`) com o SOC que tinha no fim desse episódio, em vez do SOC do calendário. As divisões sequenciais e as listas explícitas transportam o SOC; as aleatórias e as `rolling` nunca o fazem. Só o SOC dos VE é transportado. Consulte o [guia de migração](migration.md#soc-dos-ve-transportado-entre-divisões-de-episódios). | `ev_soc_carryover` | depois da 3.6.0 |
 
 Regras:
 
@@ -236,7 +237,7 @@ mesmo nome prevalece. [O que cada versão altera](#o-que-cada-versão-altera) li
 | Chave | Valores | Predefinição | Escolhe | Desde |
 |---|---|---|---|---|
 | `physics_version` | `1`, `2` | `2` | Física dos dispositivos e do despacho. `1` reproduz o CityLearn 3.6.0. | depois da 3.6.0 |
-| `baseline_version` | `1`, `2`, `3` | `2` | Definição da baseline dos KPIs (séries `*_without_storage`) e do AVAC do BAU. `1` como na 3.6.0; `2` volta a somar o carregamento dos VE do BAU; `3` (opcional) faz também o BAU fornecer a procura de aquecimento e de arrefecimento do dataset. `env.baseline_version = v` também funciona depois da construção. | depois da 3.6.0 |
+| `baseline_version` | `1`, `2` | `2` | Definição da baseline dos KPIs (séries `*_without_storage`) e do AVAC do BAU. `1` como na 3.6.0: não volta a somar nada, e o BAU envia zero às ações de AVAC. `2` volta a somar o carregamento dos VE do BAU e, nos datasets com ações de AVAC, o BAU fornece a procura de aquecimento e de arrefecimento do dataset. Qualquer outro valor lança `ValueError`. `env.baseline_version = v` também funciona depois da construção. | depois da 3.6.0 |
 | `random_stream_version` | `v1`, `v2` (também `1`, `2`, `"V2"`) | `v2` | Como os números aleatórios são tirados de `random_seed`. `v1` reproduz a 3.6.0. | depois da 3.6.0 |
 
 O mercado comunitário tem a sua própria `settlement_version`; consulte [Mercado comunitário](#mercado-comunitário-e-liquidação).
@@ -336,7 +337,7 @@ As cinco têm um argumento do construtor com o mesmo nome.
 |---|---|---|---|---|---|
 | `ev_departure_within_tolerance` | número, fração de SOC | `0.05` | Uma partida está dentro da tolerância quando `abs(SOC - alvo) <= tolerância`. Finito e pelo menos 0. | sim | 2.6.0 |
 | `ev_departure_service_tolerance` | número, fração de SOC | `0.05` | Uma partida tem serviço aceitável quando `SOC + tolerância >= alvo`. Finito e pelo menos 0. | sim | 3.0.0 |
-| `business_as_usual_ev_charge_target` | `full`, `requested` | `full` | Política de carregamento do BAU nativo usado por `evaluate_v2()`: `full` carrega até 100 % à chegada, `requested` para no SOC pedido para a partida. Distingue maiúsculas. A baseline dos KPIs das `baseline_version` 2 e 3 usa sempre `full`. Consulte [Referências](baselines.md#escolher-o-alvo-de-carregamento-do-bau). | sim | 3.4.0 |
+| `business_as_usual_ev_charge_target` | `full`, `requested` | `full` | Política de carregamento do BAU nativo usado por `evaluate_v2()`: `full` carrega até 100 % à chegada, `requested` para no SOC pedido para a partida. Distingue maiúsculas. A baseline dos KPIs da `baseline_version` 2 usa sempre `full`. Consulte [Referências](baselines.md#escolher-o-alvo-de-carregamento-do-bau). | sim | 3.4.0 |
 
 ### Chaves de metadados
 
@@ -353,7 +354,7 @@ fora desse hash.
 |---|---|---|
 | `root_directory` | `root_directory` | Não é usado para `community_market.tariff_files`. |
 | `buildings` | `buildings.<b>.include` | Nomes, índices ou objetos `Building`; substitui a seleção por `include`. |
-| `simulation_start_time_step`, `simulation_end_time_step`, `episode_time_steps`, `rolling_episode_split`, `random_episode_split`, `episode_split_boundary`, `seconds_per_time_step`, `time_step_ratio_mode` | a mesma | |
+| `simulation_start_time_step`, `simulation_end_time_step`, `episode_time_steps`, `rolling_episode_split`, `random_episode_split`, `episode_split_boundary`, `ev_soc_carryover`, `seconds_per_time_step`, `time_step_ratio_mode` | a mesma | |
 | `central_agent`, `interface`, `topology_mode`, `random_seed`, `random_stream_version`, `physics_version`, `baseline_version` | a mesma | |
 | `reward_function`, `reward_function_kwargs` | `reward_function.type`, `reward_function.attributes` | Consulte [Função de recompensa](#função-de-recompensa). |
 | `shared_observations` | `observations.<name>.shared_in_central_agent` | Substitui a lista construída a partir do schema. |
@@ -1304,10 +1305,10 @@ episódio, `physics_version`, `random_stream_version` e `baseline_version`. `ren
 | Versão | Baseline dos KPIs (`*_without_storage`) | AVAC do BAU nativo |
 |---|---|---|
 | 1 | retira a bateria, o armazenamento térmico e o carregamento dos VE; não volta a somar nada | desligado |
-| 2 (predefinição) | como a 1 e, depois, volta a somar o carregamento dos VE do BAU com o alvo `full` | desligado |
-| 3 (opcional) | como a 2 | fornece a procura de aquecimento e de arrefecimento do dataset |
+| 2 (predefinição) | como a 1 e, depois, volta a somar o carregamento dos VE do BAU com o alvo `full` | fornece a procura de aquecimento e de arrefecimento do dataset nos datasets com ações de AVAC |
 
-Com as versões 2 e 3, avaliar um dataset com carregadores corre o BAU nativo; se não puder correr, um `ValueError`
+Nos datasets sem ações de AVAC, o BAU, a sua definição e a sua identidade são os mesmos nas duas versões. Qualquer outro
+valor lança `ValueError`. Com a versão 2, avaliar um dataset com carregadores corre o BAU nativo; se não puder correr, um `ValueError`
 sugere `baseline_version=1`. Consulte [Referências](baselines.md#avac-e-a-versão-da-baseline).
 
 ### `random_stream_version`
