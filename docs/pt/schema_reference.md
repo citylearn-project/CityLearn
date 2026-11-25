@@ -1320,7 +1320,9 @@ inativos, o primeiro é ativado).
 
 Acrescentar FV ou armazenamento substitui o que o edifício já tem. Remover um aparelho diferível cancela os ciclos
 pendentes/em curso e limpa o consumo futuro. Remover a FV cria uma FV nula. Remover o armazenamento cria uma BESS nula.
-Um schema com `topology_events` lança `ValueError` salvo se `topology_mode` for `dynamic`.
+O que uma FV ou bateria substituída ou removida produziu ou consumiu antes do evento fica nas séries do edifício, pelo
+que as referências sem armazenamento e as somas do distrito o mantêm. Um schema com `topology_events` lança
+`ValueError` salvo se `topology_mode` for `dynamic`.
 
 Os ficheiros de séries temporais de um membro (simulação energética, carregadores, escadas rolantes) cobrem o horizonte completo, com uma linha por passo do dataset, ou a janela do membro, mais curtos do que o dataset e com a primeira linha no passo do evento `add_member` do membro. Um ficheiro da janela do membro deve cobrir os passos ativos do membro na janela de simulação (caso contrário a última linha é repetida, com um aviso), e um membro que volta a entrar depois de sair precisa de ficheiros do horizonte completo. Um membro que entra a meio do episódio começa a bateria e o armazenamento térmico em `initial_soc`.
 
