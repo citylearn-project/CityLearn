@@ -66,7 +66,7 @@ MultiCommunityEnv(
 )
 ```
 
-`community_id` must be unique, non-empty and safe as a relative path component. It may contain only letters, numbers, `_`, `-` and `.`. `weight` defaults to `1.0`, must be finite and non-negative, and at least one community must have a positive weight. Only `community_id`, `schema`, `env_kwargs` and `weight` are accepted in an entry: any other key raises a `ValueError` that names it, and `weight` cannot be a boolean.
+`community_id` must be unique, non-empty and safe as a relative path component. It may contain only letters, numbers, `_`, `-` and `.`. `weight` defaults to `1.0`, must be finite and non-negative, and at least one community must have a positive weight. Only `community_id`, `schema`, `env_kwargs` and `weight` are accepted in an entry: any other key raises a `ValueError` that names it, and `weight` must be a number: a boolean or a string such as `'2'` raises a `ValueError`.
 
 `env_kwargs` are passed to the child `CityLearnEnv`. The wrapper sets each child export session to `<render_session_name>/<community_id>` so render and KPI files are separated by community.
 
@@ -131,10 +131,11 @@ All child environments must use:
 | Same `interface` | Keeps observation/action payload contracts stable. |
 | Same `central_agent` mode | Avoids mixing centralized and decentralized reward/action semantics. |
 | Same `evaluation_window` when enabled | Keeps recurring window KPIs aligned across communities. |
-
 | Same `physics_version` | Portfolio totals add up district values, so every community must simulate the same physics. |
 | Same `random_stream_version` | Randomly drawn defaults (battery curves, efficiencies, noise) must come from the same stream definition for the totals to be comparable. |
 | Same `baseline_version` | Portfolio baseline KPIs add up district baselines, so the baseline definition must match. |
+| Same `business_as_usual_ev_charge_target` | Portfolio BAU totals and ratios to the BAU add up the district BAU runs, so every community must charge its EVs in the BAU to the same target (`full` or `requested`). |
+| Same `ev_soc_carryover` | It changes the EV state at the start of each episode in the controlled and BAU runs, so portfolio totals would otherwise mix two EV definitions. |
 
 The wrapper validates these conditions at construction and again after reset, and
 raises a `ValueError` that names the setting, for example:

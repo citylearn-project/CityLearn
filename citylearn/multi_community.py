@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import math
+import numbers
 import re
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -438,6 +439,12 @@ class MultiCommunityEnv(Env):
         if isinstance(value, (bool, np.bool_)):
             raise ValueError(f"communities[{index}].weight must be a non-negative finite number, not a boolean.")
 
+        if not isinstance(value, numbers.Real):
+            # float() would also accept numeric strings such as '2'.
+            raise ValueError(
+                f"communities[{index}].weight must be a non-negative finite number, not {type(value).__name__}."
+            )
+
         try:
             weight = float(value)
         except (TypeError, ValueError) as exc:
@@ -498,7 +505,15 @@ class MultiCommunityEnv(Env):
             raise ValueError("MultiCommunityEnv requires all communities to share the same effective episode length.")
 
         # Portfolio KPIs add up district totals, so every community must use the same definitions.
-        for setting in ("physics_version", "random_stream_version", "baseline_version"):
+        # The BAU EV target and the EV SoC carry-over change each community's BAU reference and EV
+        # state, so portfolio BAU totals and ratios would otherwise mix two definitions.
+        for setting in (
+            "physics_version",
+            "random_stream_version",
+            "baseline_version",
+            "business_as_usual_ev_charge_target",
+            "ev_soc_carryover",
+        ):
             values = {community_id: getattr(env, setting) for community_id, env in self.envs.items()}
             if len(set(values.values())) != 1:
                 raise ValueError(
