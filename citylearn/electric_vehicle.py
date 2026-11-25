@@ -17,6 +17,13 @@ LOGGER = logging.getLogger(__name__)
 
 class ElectricVehicle(Environment):
 
+    external = False
+    """Whether a mobility provider reports this vehicle's SOC (``"external": true`` in the schema).
+
+    CityLearn then adds no random SOC drift while the vehicle is away; see
+    :mod:`citylearn.mobility`.
+    """
+
     def __init__(self, episode_tracker: EpisodeTracker,
                  battery: Battery = None, name: str = None, **kwargs):
         """

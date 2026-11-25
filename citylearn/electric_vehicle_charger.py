@@ -6,6 +6,9 @@ from citylearn.base import Environment, EpisodeTracker
 from citylearn.electric_vehicle import ElectricVehicle
 from citylearn.data import ChargerSimulation
 from citylearn.data import ZERO_DIVISION_PLACEHOLDER
+from citylearn.internal.charger_dynamics import (
+    SessionDynamics, SessionState, connected_until, integrate_step, known_departure_seconds,
+)
 from citylearn.internal.units import (
     energy_kwh_to_power_kw,
     normalized_power_action_to_energy_kwh,
@@ -24,6 +27,9 @@ class Charger(Environment):
             min_charging_power: float = None, max_discharging_power: float = None,  min_discharging_power: float = None, charge_efficiency_curve: Dict[float, float] = None,
             discharge_efficiency_curve: Dict[float, float] = None, connected_electric_vehicle: ElectricVehicle = None, incoming_electric_vehicle: ElectricVehicle = None,
             phase_connection: str = None, time_step_ratio: int = None, nominal_power: float = None, charger_type: Any = None,
+            start_delay_seconds: float = None, setpoint_delay_seconds: float = None,
+            ramp_up_kw_per_second: float = None, ramp_down_kw_per_second: float = None,
+            stop_delay_seconds: float = None,
             **kwargs
     ):
         r"""Initializes the `Electric Vehicle Charger` class with the given attributes.
@@ -53,6 +59,20 @@ class Charger(Environment):
         charger_type : optional
             Descriptive label kept on the charger (for example 0 for AC, 1 for DC). It has no
             effect on the simulation.
+        start_delay_seconds : float, optional
+            Seconds after a vehicle connects before energy flows (coupling and communication start-up).
+        setpoint_delay_seconds : float, optional
+            Seconds after the start of a step before that step's command takes effect; the previous
+            set-point holds meanwhile.
+        ramp_up_kw_per_second : float, optional
+            Largest rate at which the magnitude of the power rises. Unlimited when omitted.
+        ramp_down_kw_per_second : float, optional
+            Largest rate at which the magnitude of the power falls. Unlimited when omitted.
+        stop_delay_seconds : float, optional
+            Seconds before a known departure at which the charger stops the transfer.
+
+            Without these parameters the commanded power applies for the whole connected time. See
+            :mod:`citylearn.internal.charger_dynamics` for the model.
 
         Other Parameters
         ----------------
@@ -81,6 +101,13 @@ class Charger(Environment):
         self.incoming_electric_vehicle = incoming_electric_vehicle
         self.phase_connection = phase_connection
         self.charger_simulation = charger_simulation
+        self.session_dynamics = SessionDynamics.from_attributes(
+            start_delay_seconds=start_delay_seconds,
+            setpoint_delay_seconds=setpoint_delay_seconds,
+            ramp_up_kw_per_second=ramp_up_kw_per_second,
+            ramp_down_kw_per_second=ramp_down_kw_per_second,
+            stop_delay_seconds=stop_delay_seconds,
+        )
 
         self.time_step_ratio = time_step_ratio
         seconds_per_time_step = kwargs.get('seconds_per_time_step', 3600)
@@ -437,8 +464,15 @@ class Charger(Environment):
 
         return 0.0, True
 
-    def _battery_command(self, signed_power_kw: float, charging: bool) -> Tuple[float, float, float]:
-        """Charger efficiency, commanded AC energy and battery-side energy, in control-step kWh, for a power request."""
+    def _battery_command(
+        self, signed_power_kw: float, charging: bool, transfer_seconds: float = None
+    ) -> Tuple[float, float, float]:
+        """Charger efficiency, commanded AC energy and battery-side energy, in control-step kWh, for a power request.
+
+        ``transfer_seconds`` is the time the power is applied for, the time step by default.
+        """
+
+        transfer_seconds = self.seconds_per_time_step if transfer_seconds is None else transfer_seconds
 
         if charging:
             applied_power_kw = abs(signed_power_kw)
@@ -447,7 +481,7 @@ class Charger(Environment):
             commanded_energy_kwh = normalized_power_action_to_energy_kwh(
                 normalized_power,
                 self.max_charging_power,
-                self.seconds_per_time_step,
+                transfer_seconds,
             )
             battery_energy_kwh = commanded_energy_kwh * efficiency
         else:
@@ -457,7 +491,7 @@ class Charger(Environment):
             commanded_energy_kwh = -normalized_power_action_to_energy_kwh(
                 normalized_power,
                 self.max_discharging_power,
-                self.seconds_per_time_step,
+                transfer_seconds,
             )
             battery_energy_kwh = commanded_energy_kwh / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
 
@@ -494,6 +528,53 @@ class Charger(Environment):
         signed_power_kw, _ = self._signed_power_from_action(action_value)
         return signed_power_kw
 
+    def _schedule_value(self, name: str) -> float:
+        """Finite value of a schedule row at the current step, else ``None``.
+
+        The optional rows exist only in schedules written by a mobility provider
+        (:mod:`citylearn.mobility`).
+        """
+
+        values = getattr(self.charger_simulation, name, None)
+        if values is None or not 0 <= self.time_step < len(values):
+            return None
+
+        value = float(values[self.time_step])
+        return value if np.isfinite(value) else None
+
+    def _session_limits(self) -> Tuple[float, float]:
+        """Connected seconds and discharge SOC floor of the current row, ``None`` when not set.
+
+        An exact departure within the step (``electric_vehicle_departure_seconds``) also ends the
+        connection.
+        """
+
+        connected_seconds = self._schedule_value('electric_vehicle_connected_seconds')
+        departure_seconds = self._schedule_value('electric_vehicle_departure_seconds')
+        if departure_seconds is not None:
+            connected_seconds = connected_until(connected_seconds, departure_seconds, self.seconds_per_time_step)
+
+        return connected_seconds, self._schedule_value('electric_vehicle_discharge_soc_floor')
+
+    def _known_departure_seconds(self, connected_seconds: float) -> float:
+        return known_departure_seconds(
+            self._schedule_value('electric_vehicle_departure_time'), connected_seconds, self.seconds_per_time_step,
+            departure_seconds=self._schedule_value('electric_vehicle_departure_seconds'),
+        )
+
+    def _session_starts_now(self) -> bool:
+        return getattr(self, '_session_started_at', None) == self.time_step
+
+    def _uses_session_profile(self) -> bool:
+        """Whether this step's energy comes from the session power profile."""
+
+        if self.session_dynamics.enabled:
+            return True
+
+        # A vehicle that plugs in during the step delivers no energy before it is connected.
+        since = self._schedule_value('electric_vehicle_connected_since_seconds')
+        return since is not None and since < 0.0 and self._session_starts_now()
+
     def update_connected_electric_vehicle_soc(self, action_value: float):
         """
         Updates the SOC of the connected electric vehicle based on the charging/discharging action.
@@ -502,8 +583,22 @@ class Charger(Environment):
         ----------
         action_value : float
             The normalized charging or discharging action (range [-1, 1]).
+
+        Notes
+        -----
+        When a mobility provider limits the connection to part of the time step
+        (``connected_seconds``), the commanded power is applied for that time only. A session's
+        ``discharge_soc_floor`` caps discharging so that the battery SOC stays at or above it.
         """
         signed_power_kw, charging = self._signed_power_from_action(action_value)
+        connected_seconds, soc_floor = self._session_limits()
+
+        if self._uses_session_profile():
+            self._update_from_session_profile(signed_power_kw, connected_seconds, soc_floor)
+            return
+
+        if connected_seconds is not None and connected_seconds <= 0.0:
+            signed_power_kw = 0.0
 
         if signed_power_kw == 0.0:
             # Keep EV SOC state consistent at the current timestep even when no power is requested.
@@ -513,7 +608,10 @@ class Charger(Environment):
             self.__past_charging_action_values_kwh[self.time_step] = 0
             return
 
-        efficiency, commanded_energy_kwh, battery_energy_kwh = self._battery_command(signed_power_kw, charging)
+        transfer_seconds = self.seconds_per_time_step if connected_seconds is None else connected_seconds
+        efficiency, commanded_energy_kwh, battery_energy_kwh = self._battery_command(
+            signed_power_kw, charging, transfer_seconds
+        )
         self.__past_charging_action_values_kwh[self.time_step] = commanded_energy_kwh
 
         if self.connected_electric_vehicle:
@@ -522,24 +620,95 @@ class Charger(Environment):
             # Battery model expects dataset-resolution energy. Convert from control-step kWh when needed.
             ratio = getattr(electric_vehicle.battery, 'time_step_ratio', None)
             battery_command = to_dataset_resolution_energy(battery_energy_kwh, ratio)
-            electric_vehicle.battery.charge(battery_command)
-
-            if getattr(electric_vehicle.battery, '_balance_time_step', -1) == self.time_step:
-                battery_energy_balance = float(electric_vehicle.battery._last_transfer_energy)
+            if connected_seconds is None and (soc_floor is None or charging):
+                electric_vehicle.battery.charge(battery_command)
             else:
-                battery_energy_balance = float(electric_vehicle.battery.energy_balance[self.time_step])
-            ac_energy = (
-                battery_energy_balance / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
-                if battery_energy_balance >= 0 else battery_energy_balance * efficiency
+                # Battery power limits and efficiency refer to the time the vehicle is plugged in.
+                electric_vehicle.battery.charge(
+                    battery_command,
+                    duration_seconds=connected_seconds,
+                    soc_floor=None if charging else soc_floor,
+                )
+
+            self._record_battery_transfer(electric_vehicle, efficiency)
+
+    def _record_battery_transfer(self, electric_vehicle: ElectricVehicle, efficiency: float):
+        """Add the AC energy of the battery's last charge call to this step's charger series."""
+
+        if getattr(electric_vehicle.battery, '_balance_time_step', -1) == self.time_step:
+            battery_energy_balance = float(electric_vehicle.battery._last_transfer_energy)
+        else:
+            battery_energy_balance = float(electric_vehicle.battery.energy_balance[self.time_step])
+        ac_energy = (
+            battery_energy_balance / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
+            if battery_energy_balance >= 0 else battery_energy_balance * efficiency
+        )
+        # Add in float64 before storing, as NumPy 1 did; NEP 50 would add a Python float in float32.
+        self.__electricity_consumption[self.time_step] = float(self.__electricity_consumption[self.time_step]) + ac_energy
+        self.__gross_energy_charge[self.time_step] = float(self.__gross_energy_charge[self.time_step]) + max(float(ac_energy), 0.0)
+        self.__gross_energy_discharge[self.time_step] = float(self.__gross_energy_discharge[self.time_step]) + max(-float(ac_energy), 0.0)
+        # Preserve charger losses at the AC boundary for passive provenance.
+        events = electric_vehicle.battery.energy_provenance_events
+        if events:
+            events[-1]['bus'] = float(ac_energy)
+
+    def _update_from_session_profile(self, command_kw: float, connected_seconds: float, soc_floor: float):
+        """Charge or discharge the connected vehicle with the exact energy of the session power profile.
+
+        The profile (:func:`citylearn.internal.charger_dynamics.integrate_step`) is integrated in
+        closed form. Its charging and discharging parts are applied in time order; the efficiency
+        of each part is read from the efficiency curve at the part's average power, and the
+        battery's power limits refer to the time the part lasts.
+        """
+
+        t = self.time_step
+        electric_vehicle = self.connected_electric_vehicle
+        if electric_vehicle is None:
+            self._session_state = None
+            self.__past_charging_action_values_kwh[t] = 0.0
+            return
+
+        state = getattr(self, '_session_state', None)
+        if state is None or self._session_starts_now() or getattr(self, '_session_state_time_step', None) != t - 1:
+            since = self._schedule_value('electric_vehicle_connected_since_seconds')
+            state = SessionState(age_seconds=0.0 if since is None else since)
+
+        profile = integrate_step(
+            self.session_dynamics,
+            state,
+            command_kw=command_kw,
+            step_seconds=self.seconds_per_time_step,
+            connected_seconds=connected_seconds,
+            departure_seconds=self._known_departure_seconds(connected_seconds),
+        )
+        self._session_state = profile.state
+        self._session_state_time_step = t
+        parts = profile.parts()
+        commanded_energy_kwh = 0.0
+        battery = electric_vehicle.battery
+        ratio = getattr(battery, 'time_step_ratio', None)
+
+        if len(parts) == 0:
+            # Keep EV SOC state consistent at the current timestep when no energy flows.
+            battery.charge(0.0)
+
+        for sign, energy_kwh, seconds in parts:
+            charging = sign > 0
+            max_power = self.max_charging_power if charging else self.max_discharging_power
+            average_power_kw = abs(energy_kwh) / max(seconds / 3600.0, ZERO_DIVISION_PLACEHOLDER)
+            efficiency = self.get_efficiency(average_power_kw / max(max_power, ZERO_DIVISION_PLACEHOLDER), charging)
+            battery_energy_kwh = (
+                energy_kwh * efficiency if charging else energy_kwh / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
             )
-            # Add in float64 before storing, as NumPy 1 did; NEP 50 would add a Python float in float32.
-            self.__electricity_consumption[self.time_step] = float(self.__electricity_consumption[self.time_step]) + ac_energy
-            self.__gross_energy_charge[self.time_step] = float(self.__gross_energy_charge[self.time_step]) + max(float(ac_energy), 0.0)
-            self.__gross_energy_discharge[self.time_step] = float(self.__gross_energy_discharge[self.time_step]) + max(-float(ac_energy), 0.0)
-            # Preserve charger losses at the AC boundary for passive provenance.
-            events = electric_vehicle.battery.energy_provenance_events
-            if events:
-                events[-1]['bus'] = float(ac_energy)
+            battery.charge(
+                to_dataset_resolution_energy(battery_energy_kwh, ratio),
+                duration_seconds=seconds,
+                soc_floor=None if charging else soc_floor,
+            )
+            self._record_battery_transfer(electric_vehicle, efficiency)
+            commanded_energy_kwh += energy_kwh
+
+        self.__past_charging_action_values_kwh[t] = commanded_energy_kwh
 
 
     def next_time_step(self):
@@ -562,6 +731,9 @@ class Charger(Environment):
         self.__past_charging_action_values_kwh = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.__past_connected_evs = [None] * self.episode_tracker.episode_time_steps
         self._topology_connection_soc = {}
+        self._session_state = None
+        self._session_state_time_step = None
+        self._session_started_at = None
         self.action_feedback_requested_action_normalized = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.action_feedback_limited_action_normalized = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.action_feedback_requested_power_kw = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')

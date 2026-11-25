@@ -109,6 +109,26 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   `scripts/ci/perf_smoke.py`. Os resultados são verificados pela auditoria de
   paridade da refatoração e pelas referências congeladas dos testes
   ([#314](https://github.com/citylearn-project/CityLearn/issues/314)).
+- **Fornecedores externos de mobilidade.** Um carregador declarado
+  `"charger_simulation": {"source": "external"}` não tem ficheiro de calendário: um
+  `citylearn.mobility.MobilityProvider`, por exemplo um adaptador para um simulador de tráfego como
+  o SUMO, liga, anuncia e liberta veículos durante o episódio através de `env.mobility`. O `update`
+  do fornecedor corre depois de calculada a energia do intervalo terminado e antes da associação dos
+  carregadores, pelo que as observações devolvidas por `step()` já mostram as novas ligações. As
+  linhas escritas alimentam sem alterações a associação, as observações, os KPI, a auditoria de
+  partidas e a referência BAU. Uma ligação pode limitar-se a parte de um passo
+  (`connected_seconds`) e uma sessão pode proteger um SOC mínimo de descarga
+  (`discharge_soc_floor`). EVs declarados `"external": true` não têm deriva aleatória de SOC
+  enquanto ausentes. Ver [fornecedores externos de mobilidade](mobility_provider.md).
+- **Dinâmica das sessões de carga.** Cinco atributos opcionais do carregador modelam os tempos de uma
+  sessão: `start_delay_seconds` (acoplamento e arranque da comunicação), `setpoint_delay_seconds`,
+  `ramp_up_kw_per_second`, `ramp_down_kw_per_second` e `stop_delay_seconds` (antes de uma partida
+  conhecida). A energia de um passo é o integral exato, em forma fechada, do perfil de potência linear
+  por troços resultante, e os KPI de viabilidade das partidas repetem o mesmo perfil. Valores medidos
+  para começar estão citados em [dinâmica das sessões de carga](charger_session_dynamics.md). Um
+  fornecedor de mobilidade pode indicar a idade de uma sessão com `connected_since_seconds` e o tempo
+  exato de partida com `departure_seconds`, que posiciona a paragem também quando ela cai num passo
+  anterior ao da partida; as observações mantêm a contagem em passos inteiros. Não é necessária migração de datasets, schemas ou KPI; ambientes sem fornecedor, sem carregadores externos e sem atributos de dinâmica de sessão simulam exatamente como antes.
 - **Agentes genéricos na interface de entidades.** Na interface de entidades os
   espaços de ações e de observações são dicionários de tabelas de entidades, pelo
   que `Agent` e `ZeroActionBaselineAgent` falhavam com `AttributeError` no

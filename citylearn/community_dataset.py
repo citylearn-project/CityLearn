@@ -55,8 +55,11 @@ class InventoryBattery(Battery):
     def get_max_input_power(self, energy_init=None):
         energy_init = self.energy_init if energy_init is None else energy_init
         headroom = max(0.0, self.capacity*self.max_soc-energy_init)
+        # A transfer shorter than the step (an EV plugged in for part of it) fills the headroom faster.
+        seconds = getattr(self, '_transfer_seconds', None)
+        seconds = self.seconds_per_time_step if seconds is None else seconds
         return min(self.max_charge_kw, super().get_max_input_power(energy_init),
-                   headroom/self.charging_efficiency*3600/self.seconds_per_time_step)
+                   headroom/self.charging_efficiency*3600/max(seconds, 1.0e-9))
 
     def get_max_output_power(self, energy_init=None):
         if self.legacy_discharge_power_limit:
@@ -67,9 +70,9 @@ class InventoryBattery(Battery):
     def get_current_efficiency(self, power):
         return (self.charging_efficiency if self._charging else self.discharging_efficiency)**2
 
-    def charge(self, energy):
+    def charge(self, energy, **kwargs):
         self._charging = energy >= 0
-        super().charge(energy)
+        super().charge(energy, **kwargs)
 
     def preview_charge(self, energy):
         charging = self._charging

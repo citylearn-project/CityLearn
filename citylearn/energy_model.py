@@ -1498,7 +1498,7 @@ class Battery(StorageDevice, ElectricDevice):
             ),
         }
 
-    def charge(self, energy: float):
+    def charge(self, energy: float, *, duration_seconds: float = None, soc_floor: float = None):
         """Charges or discharges storage with respect to specified energy while considering `capacity` degradation and `soc_init` 
         limitations, losses to the environment quantified by `efficiency`, `power_efficiency_curve` and `capacity_power_curve`.
 
@@ -1506,6 +1506,12 @@ class Battery(StorageDevice, ElectricDevice):
         ----------
         energy : float
             Energy to charge if (+) or discharge if (-) in [kWh].
+        duration_seconds : float, optional
+            Time within the step during which the energy is transferred, e.g. an electric vehicle
+            plugged in for part of the step. Power limits and the power-dependent efficiency refer to
+            this time. Defaults to the whole step.
+        soc_floor : float, optional
+            Discharging stops at this SOC if it is above the depth-of-discharge limit.
 
         Notes
         -----
@@ -1520,8 +1526,15 @@ class Battery(StorageDevice, ElectricDevice):
             self.capacity_before_step[self.time_step] = self.degraded_capacity
         energy_init = self.energy_init
         degraded_capacity = self.degraded_capacity
+        # Read by subclasses whose power limits depend on the transfer time.
+        self._transfer_seconds = duration_seconds
         same_step_transfer = getattr(self, '_balance_time_step', -1) == self.time_step
-        energy, efficiency = self._limit_charge_energy(energy, energy_init, degraded_capacity)
+        try:
+            energy, efficiency = self._limit_charge_energy(
+                energy, energy_init, degraded_capacity, duration_seconds=duration_seconds, soc_floor=soc_floor,
+            )
+        finally:
+            self._transfer_seconds = None
         # One efficiency entry per operation: the efficiency at the power finally applied.
         self.efficiency = efficiency
         if not same_step_transfer:
@@ -1565,7 +1578,10 @@ class Battery(StorageDevice, ElectricDevice):
         energy, _ = self._limit_charge_energy(energy, self.energy_init, self.degraded_capacity)
         return energy
 
-    def _limit_charge_energy(self, energy: float, energy_init: float, degraded_capacity: float) -> Tuple[float, float]:
+    def _limit_charge_energy(
+        self, energy: float, energy_init: float, degraded_capacity: float, *,
+        duration_seconds: float = None, soc_floor: float = None,
+    ) -> Tuple[float, float]:
         """Limit a requested charge (+) or discharge (-) and return it with the efficiency at that power.
 
         `energy` and the returned energy are dataset-resolution kWh, as :py:meth:`charge` takes them. The
@@ -1580,14 +1596,15 @@ class Battery(StorageDevice, ElectricDevice):
         # Public control paths pass dataset-resolution kWh; physical limits are per control step.
         ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
         requested_energy = float(energy) * ratio
-        step_hours = max(float(self.seconds_per_time_step) / 3600.0, 1.0e-12)
+        transfer_seconds = self.seconds_per_time_step if duration_seconds is None else float(duration_seconds)
+        step_hours = max(float(transfer_seconds) / 3600.0, 1.0e-12)
         efficiency = self.efficiency
         same_step_transfer = getattr(self, '_balance_time_step', -1) == self.time_step
         budget_energy = getattr(self, '_step_transfer_start_energy', energy_init) if same_step_transfer else energy_init
 
         if requested_energy >= 0:
             max_input_power = max(float(self.get_max_input_power(energy_init=budget_energy)), 0.0)
-            max_input_energy = power_kw_to_energy_kwh(max_input_power, self.seconds_per_time_step)
+            max_input_energy = power_kw_to_energy_kwh(max_input_power, transfer_seconds)
             if same_step_transfer:
                 max_input_energy = max(max_input_energy - getattr(self, '_step_transfer_input_energy', 0.0), 0.0)
             limited_energy = min(requested_energy, max_input_energy)
@@ -1601,7 +1618,7 @@ class Battery(StorageDevice, ElectricDevice):
             return limited_energy / ratio, efficiency
 
         max_output_power = max(float(self.get_max_output_power(energy_init=budget_energy)), 0.0)
-        max_output_energy = power_kw_to_energy_kwh(max_output_power, self.seconds_per_time_step)
+        max_output_energy = power_kw_to_energy_kwh(max_output_power, transfer_seconds)
         if same_step_transfer:
             max_output_energy = max(max_output_energy - getattr(self, '_step_transfer_output_energy', 0.0), 0.0)
         requested_output = abs(requested_energy)
@@ -1611,6 +1628,8 @@ class Battery(StorageDevice, ElectricDevice):
             efficiency = self._validated_efficiency(self.get_current_efficiency(limited_output / step_hours))
             soc_limit_wrt_dod = 1.0 - self.depth_of_discharge
             minimum_energy = soc_limit_wrt_dod * self.capacity
+            if soc_floor is not None:
+                minimum_energy = max(minimum_energy, float(soc_floor) * self.capacity)
             dod_limited_output = max(energy_init - minimum_energy, 0.0) * efficiency**0.5
             limited_output = min(requested_output, max_output_energy, dod_limited_output)
 
