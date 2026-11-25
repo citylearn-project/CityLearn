@@ -325,8 +325,9 @@ See the [reward function overview](https://www.citylearn.net/overview/reward_fun
 | `physics_invariant_checks` | bool | `false` | Checks energy balances every step and raises `PhysicsInvariantError` on a violation. Slower. | 3.0.0 |
 | `energy_provenance` | bool | `true` | Keeps the per-step energy provenance ledger and its KPIs. `false` is faster and changes no simulated value; provenance audits then raise. | 3.2.0 |
 | `metrics_log_interval` | int | `0` | Every N steps, and at the end, log one INFO line with energy, cost and emissions. `0` disables it. | 3.0.0 |
+| `district_electrical_service` | object | off | Opt-in monitoring of the district feeder import and export limits on the settled district net power. It reports the exceedances and does not curtail any device. See [District electrical service](#district-electrical-service). | after 3.6.0 |
 
-All five have a constructor argument of the same name.
+All six have a constructor argument of the same name.
 
 ### EV evaluation settings
 
@@ -802,6 +803,30 @@ interval, so they reflect the limit that was in force then.
 | `observations.headroom_export` | `false` | No effect: there are no export limits here. |
 
 Only charging is limited; discharging (V2G) is not. Requests above a limit are scaled down proportionally.
+
+## District Electrical Service
+
+`district_electrical_service` monitors shared feeder import and export power limits on the settled district net power without enforcing or curtailing device dispatch (see [KPI reference](kpis_reference.md#district-feeder-limit-exceedances)). Every simulated quantity remains identical to a run without `district_electrical_service`.
+
+```json
+{
+  "district_electrical_service": {
+    "enabled": true,
+    "limits": {
+      "import_kw": 50.0,
+      "export_kw": 20.0
+    }
+  }
+}
+```
+
+| Field | Default | Purpose |
+|---|---:|---|
+| `enabled` | `false` | Enables per-step feeder exceedance tracking (`env.feeder_import_exceedance_kw`, `env.feeder_export_exceedance_kw`) and district feeder exceedance KPIs in `evaluate_v2()`. |
+| `limits.import_kw` | `null` | Non-negative scalar in `kW`, dataset-step-0 anchored sequence of `kW`/`null` values covering all executed steps (`episode_start_time_step + time_step`), or `null` when import is unmonitored. |
+| `limits.export_kw` | `null` | Non-negative scalar in `kW`, dataset-step-0 anchored sequence of `kW`/`null` values covering all executed steps (`episode_start_time_step + time_step`), or `null` when export is unmonitored. |
+
+`limits.total.{import_kw,export_kw}` is also accepted as an alias matching building `electrical_service`. When enabled, the normalized configuration is recorded in `effective_schema`, `physical_configuration_sha256`, and `comparison_context`, and `compare_manifests()` marks runs with differing `district_electrical_service` configurations as `incompatible`.
 
 ## Electric vehicles and chargers
 

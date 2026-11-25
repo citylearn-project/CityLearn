@@ -278,6 +278,25 @@ Two sets of rows use different series:
 
 Note the word order of the signed-net names: `load_factor_penalty_daily_average_to_baseline_signed_net_ratio`, but `load_factor_penalty_daily_average_signed_net_to_business_as_usual_ratio`.
 
+### District feeder limit exceedances
+
+When `district_electrical_service.enabled` is true (see the [schema reference](schema_reference.md#district-electrical-service)), `evaluate_v2()` measures and reports settled district feeder limit exceedances at district level without enforcing or curtailing device dispatch:
+
+```text
+Δh = step length in hours
+P_t = N_t / Δh                             settled district net power at executed step t, in kW
+import exceedance_t = max(P_t − limit_import,t, 0)
+export exceedance_t = max(−P_t − limit_export,t, 0)
+exceedance ≤ 1e-5 kW is set to 0
+
+exceedance_energy_total_control_kwh = Σ_t Δh · exceedance_t
+exceedance_peak_control_kw          = max_t exceedance_t
+exceedance_step_control_count       = number of executed steps with Δh · exceedance_t > 1e-9 kWh
+```
+
+Per-step exceedance series are exposed on `env.feeder_import_exceedance_kw` and `env.feeder_export_exceedance_kw` (empty right after `reset()` until `step()` executes, and `0.0` at steps without a limit in that direction). Each metric publishes `_control`, `_business_as_usual` and `_delta_to_business_as_usual` (`control − business_as_usual`); when `evaluate_v2(include_business_as_usual=False)` is called, only `_control` is emitted. If `district_electrical_service` is enabled with only one direction configured, the unconfigured direction is undefined (`NaN`). When `district_electrical_service` is disabled, no feeder exceedance KPI rows are emitted.
+
+**Portfolio.** Energy totals and daily averages are summed over communities. Import, export and net-exchange ratios are ratios of the summed totals (signed for net exchange). The shape ratios and the `building_mean` ratios are means weighted by community `weight`. The shape rows in kW are not carried over. Feeder exceedance energies (`_kwh`) and step counts (`_count`) are summed over communities, while feeder exceedance peaks (`_kw`) are not carried over.
 ### Recurring evaluation window
 
 When `evaluation_window.enabled` is true (see the [schema reference](schema_reference.md#evaluation-window)), `evaluate_v2()` and KPI exports include recurring local-window power rows at building, district and portfolio levels:

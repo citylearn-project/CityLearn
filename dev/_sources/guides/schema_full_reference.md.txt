@@ -886,6 +886,7 @@ size them or use `"autosize": true`.
   "render_session_name": null,
   "export_kpis_on_episode_end": false,
   "evaluation_window": {"enabled": false},
+  "district_electrical_service": {"enabled": false, "limits": {"import_kw": null, "export_kw": null}},
   "export_only_final_episode": true,
   "debug_timing": false,
   "check_observation_limits": false,
@@ -904,6 +905,7 @@ size them or use `"autosize": true`.
 | `render_session_name` | `null` | a timestamp | Subfolder of the exports. |
 | `export_kpis_on_episode_end` | `false` | follows rendering | `true` writes `exported_kpis.csv` at the end of each episode. |
 | `evaluation_window` | `{"enabled": false}` | off | `{"enabled": true, "start": "16:00", "end": "19:00"}` adds the recurring-window KPIs to `evaluate_v2()` and the KPI exports. See [Evaluation window](schema_reference.md#evaluation-window). |
+| `district_electrical_service` | disabled | disabled | `{"enabled": true, "limits": {"import_kw": 50.0, "export_kw": 20.0}}` reports the district feeder exceedances in `evaluate_v2()` without curtailing anything. See [District electrical service](schema_reference.md#district-electrical-service). |
 | `export_only_final_episode` | `true` | `true` | For planned multi-episode runs. |
 | `debug_timing` | `false` | `false` | Timing fields in the step `info`. |
 | `check_observation_limits` | `false` | `false` | DEBUG logs for observations outside their bounds. |

@@ -1774,6 +1774,7 @@ size them or use <code class="docutils literal notranslate"><span class="pre">&q
 <span class="w">  </span><span class="nt">"render_session_name"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"export_kpis_on_episode_end"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"evaluation_window"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"district_electrical_service"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"import_kw"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nt">"export_kw"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">}},</span>
 <span class="w">  </span><span class="nt">"export_only_final_episode"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"debug_timing"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"check_observation_limits"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
@@ -1827,32 +1828,37 @@ size them or use <code class="docutils literal notranslate"><span class="pre">&q
 <td><p>off</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">{&quot;enabled&quot;:</span> <span class="pre">true,</span> <span class="pre">&quot;start&quot;:</span> <span class="pre">&quot;16:00&quot;,</span> <span class="pre">&quot;end&quot;:</span> <span class="pre">&quot;19:00&quot;}</span></code> adds the recurring-window KPIs to <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> and the KPI exports. See <a class="reference internal" href="schema_reference.html#evaluation-window"><span class="std std-ref">Evaluation window</span></a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">export_only_final_episode</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">district_electrical_service</span></code></p></td>
+<td><p>disabled</p></td>
+<td><p>disabled</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;enabled&quot;:</span> <span class="pre">true,</span> <span class="pre">&quot;limits&quot;:</span> <span class="pre">{&quot;import_kw&quot;:</span> <span class="pre">50.0,</span> <span class="pre">&quot;export_kw&quot;:</span> <span class="pre">20.0}}</span></code> reports the district feeder exceedances in <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> without curtailing anything. See <a class="reference internal" href="schema_reference.html#district-electrical-service"><span class="std std-ref">District electrical service</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">export_only_final_episode</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
 <td><p>For planned multi-episode runs.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">debug_timing</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">debug_timing</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
 <td><p>Timing fields in the step <code class="docutils literal notranslate"><span class="pre">info</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">check_observation_limits</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">check_observation_limits</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
 <td><p>DEBUG logs for observations outside their bounds.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">physics_invariant_checks</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">physics_invariant_checks</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
 <td><p>Raise on an energy-balance violation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">energy_provenance</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">energy_provenance</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">false</span></code> is faster and drops the provenance KPIs.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metrics_log_interval</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metrics_log_interval</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 <td><p>Log a summary line every N steps.</p></td>
