@@ -21,7 +21,7 @@ Which rows appear depends on the scenario's assets and services.
 | [Community market](#community-market) | 36 |
 | [Batteries](#batteries) | 40 |
 | [Electrical service and phases](#electrical-service-and-phases) | 22 |
-| [Electric vehicles](#electric-vehicles) | 64 |
+| [Electric vehicles](#electric-vehicles) | 72 |
 | [EV departure audit](#ev-departure-audit) | 128 |
 | [Flexible appliances](#flexible-appliances) | 48 |
 | [Flexible-appliance audit](#flexible-appliance-audit) | 68 |
@@ -513,7 +513,7 @@ district_electrical_service_phase_violations_event_count
 
 ## Electric vehicles
 
-Departure service, charging and V2G energy of electric vehicles at the members' chargers. Every member emits these rows; without chargers, counts and energies are 0 and rates are undefined.
+Departure service, charging and V2G energy of electric vehicles at the members' chargers, and opt-in EV battery health and wear (`evaluate_v2(include_battery_health_audit=True)`). Every member emits the departure and energy rows; without chargers, counts and energies are 0 and rates are undefined.
 
 Equations and rules: [Electric vehicles](kpis_reference.md#electric-vehicles).
 
@@ -532,11 +532,19 @@ Equations and rules: [Electric vehicles](kpis_reference.md#electric-vehicles).
 | `ev_energy_accounting_connected_soc_gain_kwh` | building, district | kWh | Sum over counted departures of max(departure SOC − arrival SOC, 0) times the nominal battery capacity. |
 | `ev_energy_accounting_shortfall_kwh` | building, district | kWh | Per member, max(SOC gain − charge total, 0): SOC gain not explained by metered charging; the district value is the sum of the member values. |
 | `ev_window_net_exchange_control_kwh` | building, district | kWh | Signed net AC energy across EV chargers inside the recurring local `evaluation_window` (positive for charging draw, negative for V2X delivery); emitted only when `evaluation_window.enabled` is true. |
+| `ev_battery_health_terminal_soh_ratio` | building, district | ratio | Opt-in capacity-weighted terminal EV battery state of health in [0, 1] (`include_battery_health_audit=True`). At building level, read at the end of each connected EV's last realized connection, including wear received at other buildings, so building SOH can be below 1 − ev_battery_health_capacity_fade_ratio; at district and portfolio levels, pooled over unique eligible fleet EVs by nominal capacity (equal to 1 − fade ratio); undefined when nominal capacity ≤ 0. |
+| `ev_battery_health_capacity_fade_kwh` | building, district | kWh | Opt-in cumulative EV battery capacity lost to degradation in [kWh] (`include_battery_health_audit=True`), attributed to executed transfers at the member's chargers at building level and summed over unique eligible fleet EVs at district and portfolio levels. |
+| `ev_battery_health_capacity_fade_ratio` | building, district | ratio | Opt-in fraction of nominal EV battery capacity lost to degradation in [0, 1] (`include_battery_health_audit=True`), from executed transfers over realized connected EV capacity at building level and pooled over unique eligible fleet EV nominal capacity at district and portfolio levels; undefined when nominal capacity ≤ 0. |
+| `ev_battery_health_equivalent_full_cycles_count` | building, district | count | Opt-in equivalent full cycles of EV batteries from accepted gross battery-terminal throughput over (2 · nominal capacity) (`include_battery_health_audit=True`), attributed to executed transfers over realized connected EV capacity at building level and pooled over unique eligible fleet EV nominal capacity at district and portfolio levels; undefined when nominal capacity ≤ 0 (whereas `Battery.equivalent_full_cycles` returns `0.0`). |
 
 <details>
-<summary>All 64 names</summary>
+<summary>All 72 names</summary>
 
 ```text
+building_ev_battery_health_capacity_fade_kwh
+building_ev_battery_health_capacity_fade_ratio
+building_ev_battery_health_equivalent_full_cycles_count
+building_ev_battery_health_terminal_soh_ratio
 building_ev_energy_accounting_connected_soc_gain_kwh
 building_ev_energy_accounting_shortfall_kwh
 building_ev_events_departure_count
@@ -569,6 +577,10 @@ building_ev_total_v2g_export_business_as_usual_kwh
 building_ev_total_v2g_export_delta_to_business_as_usual_kwh
 building_ev_total_v2g_export_kwh
 building_ev_window_net_exchange_control_kwh
+district_ev_battery_health_capacity_fade_kwh
+district_ev_battery_health_capacity_fade_ratio
+district_ev_battery_health_equivalent_full_cycles_count
+district_ev_battery_health_terminal_soh_ratio
 district_ev_energy_accounting_connected_soc_gain_kwh
 district_ev_energy_accounting_shortfall_kwh
 district_ev_events_departure_count

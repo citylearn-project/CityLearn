@@ -21,7 +21,7 @@ As linhas presentes dependem dos equipamentos e serviços do cenário.
 | [Mercado comunitário](#mercado-comunitário) | 36 |
 | [Baterias](#baterias) | 40 |
 | [Serviço elétrico e fases](#serviço-elétrico-e-fases) | 22 |
-| [Veículos elétricos](#veículos-elétricos) | 64 |
+| [Veículos elétricos](#veículos-elétricos) | 72 |
 | [Auditoria das partidas dos VE](#auditoria-das-partidas-dos-ve) | 128 |
 | [Equipamentos flexíveis](#equipamentos-flexíveis) | 48 |
 | [Auditoria dos equipamentos flexíveis](#auditoria-dos-equipamentos-flexíveis) | 68 |
@@ -513,7 +513,7 @@ district_electrical_service_phase_violations_event_count
 
 ## Veículos elétricos
 
-Serviço à partida, energia de carregamento e V2G dos veículos elétricos (VE) nos carregadores dos membros. Todos os membros emitem estas linhas; sem carregadores, as contagens e energias são 0 e as taxas ficam indefinidas.
+Serviço à partida, energia de carregamento e V2G dos veículos elétricos (VE) nos carregadores dos membros, e saúde e desgaste opt-in das baterias dos VE (`evaluate_v2(include_battery_health_audit=True)`). Todos os membros emitem as linhas de partida e energia; sem carregadores, as contagens e energias são 0 e as taxas ficam indefinidas.
 
 Equações e regras: [Veículos elétricos](kpis_reference.md#veículos-elétricos).
 
@@ -532,11 +532,19 @@ Equações e regras: [Veículos elétricos](kpis_reference.md#veículos-elétric
 | `ev_energy_accounting_connected_soc_gain_kwh` | building, district | kWh | Soma, sobre as partidas contadas, de max(SOC à partida − SOC à chegada, 0) vezes a capacidade nominal da bateria. |
 | `ev_energy_accounting_shortfall_kwh` | building, district | kWh | Por membro, max(ganho de SOC − total de carga, 0): ganho de SOC não explicado pela carga medida; o valor do distrito é a soma dos valores dos membros. |
 | `ev_window_net_exchange_control_kwh` | building, district | kWh | Energia AC líquida com sinal nos carregadores de VE dentro da janela local recorrente `evaluation_window` (positiva no carregamento, negativa na entrega V2X); só é emitida quando `evaluation_window.enabled` é verdadeiro. |
+| `ev_battery_health_terminal_soh_ratio` | building, district | ratio | Estado de saúde terminal opt-in das baterias dos VE ponderado pela capacidade em [0, 1] (`include_battery_health_audit=True`). Ao nível do edifício, é lido no fim da última ligação efetiva de cada VE ligado e inclui o desgaste recebido noutros edifícios, pelo que o SOH do edifício pode ser inferior a 1 − ev_battery_health_capacity_fade_ratio; no distrito e no portefólio, é agregado sobre os VE elegíveis únicos da frota pela capacidade nominal (igual a 1 − rácio de perda); indefinido quando a capacidade nominal ≤ 0. |
+| `ev_battery_health_capacity_fade_kwh` | building, district | kWh | Capacidade acumulada opt-in das baterias dos VE perdida por degradação em [kWh] (`include_battery_health_audit=True`), atribuída às transferências executadas nos carregadores do membro ao nível do edifício e somada sobre os VE elegíveis únicos da frota no distrito e no portefólio. |
+| `ev_battery_health_capacity_fade_ratio` | building, district | ratio | Fração opt-in da capacidade nominal das baterias dos VE perdida por degradação em [0, 1] (`include_battery_health_audit=True`), a partir das transferências executadas sobre a capacidade dos VE efetivamente ligados no edifício e agregada pela capacidade nominal dos VE elegíveis únicos da frota no distrito e no portefólio; indefinida quando a capacidade nominal ≤ 0. |
+| `ev_battery_health_equivalent_full_cycles_count` | building, district | count | Ciclos completos equivalentes opt-in das baterias dos VE a partir da energia bruta aceite nos terminais da bateria sobre (2 · capacidade nominal) (`include_battery_health_audit=True`), atribuídos às transferências executadas sobre a capacidade dos VE efetivamente ligados no edifício e agregados pela capacidade nominal dos VE elegíveis únicos da frota no distrito e no portefólio; indefinido quando a capacidade nominal ≤ 0 (enquanto `Battery.equivalent_full_cycles` devolve `0.0`). |
 
 <details>
-<summary>Todos os 64 nomes</summary>
+<summary>Todos os 72 nomes</summary>
 
 ```text
+building_ev_battery_health_capacity_fade_kwh
+building_ev_battery_health_capacity_fade_ratio
+building_ev_battery_health_equivalent_full_cycles_count
+building_ev_battery_health_terminal_soh_ratio
 building_ev_energy_accounting_connected_soc_gain_kwh
 building_ev_energy_accounting_shortfall_kwh
 building_ev_events_departure_count
@@ -569,6 +577,10 @@ building_ev_total_v2g_export_business_as_usual_kwh
 building_ev_total_v2g_export_delta_to_business_as_usual_kwh
 building_ev_total_v2g_export_kwh
 building_ev_window_net_exchange_control_kwh
+district_ev_battery_health_capacity_fade_kwh
+district_ev_battery_health_capacity_fade_ratio
+district_ev_battery_health_equivalent_full_cycles_count
+district_ev_battery_health_terminal_soh_ratio
 district_ev_energy_accounting_connected_soc_gain_kwh
 district_ev_energy_accounting_shortfall_kwh
 district_ev_events_departure_count

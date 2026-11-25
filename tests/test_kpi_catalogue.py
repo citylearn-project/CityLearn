@@ -55,6 +55,8 @@ def emitted():
             while not env.terminated:
                 observations, *_ = env.step(agent.predict(observations))
             names |= _names(env.evaluate_v2())
+            if dataset == "citylearn_challenge_2022_phase_all_plus_evs":
+                names |= _names(env.evaluate_v2(include_business_as_usual=False, include_battery_health_audit=True))
         finally:
             env.close()
 
@@ -75,6 +77,7 @@ def emitted():
                 for community_id, env in portfolio.envs.items()
             })
         names |= _names(portfolio.evaluate_v2())
+        names |= _names(portfolio.evaluate_v2(include_business_as_usual=False, include_battery_health_audit=True))
     finally:
         portfolio.close()
 

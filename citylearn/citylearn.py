@@ -1793,6 +1793,7 @@ class CityLearnEnv(Environment, Env):
         baseline_condition: EvaluationCondition = None,
         comfort_band: float = None,
         include_business_as_usual: bool = True,
+        include_battery_health_audit: bool = False,
         *,
         progress_callback=None,
     ) -> pd.DataFrame:
@@ -1817,6 +1818,9 @@ class CityLearnEnv(Environment, Env):
             The reference is rebuilt from the schema and the constructor arguments; a `ValueError` names the
             setting when it differs from this environment as captured at its last `reset()`. See the baselines
             guide for the settings that are compared.
+        include_battery_health_audit: bool, default: False
+            Opt-in flag to append EV battery terminal state-of-health (SOH), capacity fade (kWh and ratio), and
+            equivalent full cycles. Defaults to ``False`` so default KPI tables remain unchanged.
         progress_callback: callable, optional
             Keyword-only. Receives scalar stage events while the table is computed. A callback that raises is
             logged and disabled; the table is unaffected, and no events or timings are added to it.
@@ -1845,6 +1849,7 @@ class CityLearnEnv(Environment, Env):
             baseline_condition=baseline_condition,
             comfort_band=comfort_band,
             include_business_as_usual=include_business_as_usual,
+            include_battery_health_audit=include_battery_health_audit,
             evaluation_condition_cls=EvaluationCondition,
             dynamics_building_cls=DynamicsBuilding,
             progress_callback=progress_callback,

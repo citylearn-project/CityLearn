@@ -114,7 +114,7 @@ explained in its own section below:
 - [Community market](kpis_reference.md#community-market): Local energy trading between the members of a community and its settlement. The rows appear in every run (zero, or undefined shares, when `community_market.enabled` is false), except `local_traded` and `import_share`, which need the market and their KPI switches.
 - [Batteries](kpis_reference.md#batteries): Activity and wear of the stationary batteries; the rows appear in every run, with zero energy and undefined cycles and fade for members without a battery.
 - [Electrical service and phases](kpis_reference.md#electrical-service-and-phases): Compliance with the declared total and per-phase power limits of the electrical service, and the balance and peaks of the phases; the values are zero or undefined unless the schema configures an electrical service.
-- [Electric vehicles](kpis_reference.md#electric-vehicles): Departure service, charging and V2G energy of electric vehicles at the members' chargers. Every member emits these rows; without chargers, counts and energies are 0 and rates are undefined.
+- [Electric vehicles](kpis_reference.md#electric-vehicles): Departure service, charging and V2G energy of electric vehicles at the members' chargers, and opt-in EV battery health and wear (`evaluate_v2(include_battery_health_audit=True)`). Every member emits the departure and energy rows; without chargers, counts and energies are 0 and rates are undefined.
 - [EV departure audit](kpis_reference.md#ev-departure-audit): Audited EV departure service, with an explicit population, a three-way feasibility status and the reason for each unknown case. Every member emits these rows.
 - [Flexible appliances](kpis_reference.md#flexible-appliances): Cycle service of deferrable (flexible) appliances from their cycle states and nominal cycle energies. Every member emits these rows; without appliances, counts and energies are 0 and rates are undefined.
 - [Flexible-appliance audit](kpis_reference.md#flexible-appliance-audit): Audited cycle service of flexible appliances from metered energy in executed intervals, with an explicit population and exclusive states. Every member emits these rows.
@@ -565,7 +565,7 @@ The phase peaks are `max_t max(P_ph,t, 0)` (import) and `max_t max(−P_ph,t, 0)
 
 ## Electric vehicles
 
-These rows measure the state of charge (SOC) EVs have when they leave, and the energy the chargers exchange with them. Every member emits the rows. A member without chargers reports 0 for counts and energies, and undefined rates. All values cover the member's active window. Units, naming and the BAU variants follow the [shared rules](kpis_reference.md#shared-rules).
+These rows measure the state of charge (SOC) EVs have when they leave, the energy the chargers exchange with them, and (when `evaluate_v2(include_battery_health_audit=True)` is passed) EV battery state of health, capacity fade and equivalent full cycles. Every member emits the departure and energy rows. A member without chargers reports 0 for counts and energies, and undefined rates. All values cover the member's active window. Units, naming and the BAU variants follow the [shared rules](kpis_reference.md#shared-rules).
 
 ### Departures
 
@@ -680,17 +680,41 @@ shortfall_kwh (member) = max(connected_soc_gain_kwh - ev_total_charge_kwh, 0)
 - **Meaning:** the shortfall flags SOC gain that metered charging does not explain.
 - **Coverage:** the charge total covers every step in the window, including sessions with no counted departure, so the check is one-sided.
 
+### Battery health and wear
+
+Every `Battery` instance (stationary storage and `ElectricVehicle.battery`) exposes four read-only health and wear properties: `current_state_of_health` (dimensionless ratio in `[0, 1]`, `clip(degraded_capacity / capacity, 0, 1)`, returning `1.0` when `capacity <= 0` or before the first step), `state_of_health` (`float64` array of dimensionless ratios in `[0, 1]` up to `time_step + 1`, returning ones when `capacity <= 0` and `[1.0]` before the first step), `equivalent_full_cycles` (dimensionless cycle count `(Σ charge + Σ discharge) / (2 · capacity)`, returning `0.0` before the first step and `0.0` when `capacity <= 0`, whereas the cycle KPIs `*_battery_health_equivalent_full_cycles_count` and `*_ev_battery_health_equivalent_full_cycles_count` are undefined when nominal capacity is zero), and `capacity_fade_kwh` (cumulative capacity lost to degradation in `kWh`, `max(0, capacity − degraded_capacity)`, returning `0.0` when `capacity <= 0` or before the first step). Stationary battery wear KPIs are reported by the [Batteries](kpis_reference.md#batteries) family.
+
+Passing `evaluate_v2(include_battery_health_audit=True)` (default `False`) emits four opt-in `ev_battery_health_*` rows for EV batteries:
+
+```text
+C_i      = nominal capacity of EV battery i (> 0), in kWh
+T_i      = Σ_t (charge_i,t + discharge_i,t), accepted gross battery-terminal energy in kWh
+C_deg,i  = clip(degraded capacity of EV battery i, 0, C_i), in kWh
+fade_i   = max(0, C_i − C_deg,i), in kWh
+
+ev_battery_health_terminal_soh_ratio             = clip(Σ_i C_deg,i / Σ_i C_i, 0, 1)      undefined when Σ_i C_i ≤ 0
+ev_battery_health_capacity_fade_kwh              = Σ_i fade_i                             0 when Σ_i C_i ≤ 0
+ev_battery_health_capacity_fade_ratio            = clip(Σ_i fade_i / Σ_i C_i, 0, 1)       undefined when Σ_i C_i ≤ 0
+ev_battery_health_equivalent_full_cycles_count   = Σ_i T_i / (2 · Σ_i C_i)                undefined when Σ_i C_i ≤ 0
+```
+
+At building level, `building_ev_battery_health_*` uses only realized connections (`past_connected_evs[t]`) and executed transfers during the member's active executed steps (`0 ≤ t < time_step`). Throughput and capacity loss are attributed strictly to the building whose charger executed each transfer, `Σ C_i` counts once each unique EV (`capacity > 0`) that actually connected at that building, and `building_ev_battery_health_terminal_soh_ratio` reads each connected EV's degraded capacity at the end of its last actual connection at that building. EVs listed only in disconnected charger schedules (or only on unexecuted steps) are excluded (`capacity_fade_kwh = 0`, ratios and cycles undefined when no EV actually connects).
+
+Because `building_ev_battery_health_terminal_soh_ratio` reflects cumulative battery state at the EV's last connection at that building (including wear received at other buildings), while `building_ev_battery_health_capacity_fade_ratio` counts only wear from transfers executed at that building, building SOH can be below `1 − building_ev_battery_health_capacity_fade_ratio` (whereas at district and portfolio levels SOH equals `1 − capacity_fade_ratio`). For example, when a `60 kWh` EV (`capacity_loss_coefficient = 1e-3`) charges `6 kWh` at `Building_1` in step `0` (`0.05` equivalent full cycles, `0.003 kWh` fade, fade ratio `0.00005`, terminal SOH `59.997 / 60 = 0.99995`) and then connects at `Building_2` in step `1` with `0 kWh` exchanged, `Building_2` reports `0.0` equivalent full cycles, `0.0 kWh` fade, `0.0` fade ratio, and `0.99995` terminal SOH from the cumulative wear carried into `Building_2`. If the same EV then charges another `6 kWh` at `Building_2` in step `2` (degrading further to `59.994 kWh`), `Building_1` keeps terminal SOH `0.99995` from its last actual connection in step `0`, while `Building_2` updates to `59.994 / 60 = 0.99990`.
+
 ### District and portfolio
 
 **District:**
 - counts, energies and the SOC gain are sums over members;
 - rates and means are recomputed from the summed numerators and denominators;
 - the shortfall is the sum of the member shortfalls, each already clipped at 0, not the clip of the district totals;
-- the tolerance row is the configured value.
+- the tolerance row is the configured value;
+- the opt-in `ev_battery_health_*` rows pool the district EV fleet population, defined as the unique eligible EVs with `capacity > 0` (`electric_vehicles` in static topology, or the EVs that entered participation during the episode, `electric_vehicles` union suspended EVs, in dynamic topology), counting each eligible EV once regardless of how many buildings it visits (eligible fleet EVs that never connect contribute their nominal capacity with zero throughput, zero fade and terminal SOH `1.0`).
 
 **Portfolio:**
-- counts and energies are summed;
-- the rates and means are pooled: weighted by `ev_events_departure_count`, or by the matching `*_feasible_count` for the feasible rates;
+- counts, energies and `portfolio_ev_battery_health_capacity_fade_kwh` are summed;
+- the departure rates and means are pooled: weighted by `ev_events_departure_count`, or by the matching `*_feasible_count` for the feasible rates;
+- `portfolio_ev_battery_health_terminal_soh_ratio`, `portfolio_ev_battery_health_capacity_fade_ratio` and `portfolio_ev_battery_health_equivalent_full_cycles_count` are pooled by nominal EV battery capacity from the communities' capacity and fade/cycle totals (undefined when total nominal EV capacity is zero);
 - the ratios to the BAU are ratios of the summed totals;
 - the tolerance row is the mean of the communities' settings weighted by community `weight`.
 
@@ -699,6 +723,8 @@ shortfall_kwh (member) = max(connected_soc_gain_kwh - ev_total_charge_kwh, 0)
 To compare controllers on departure service, use the [EV departure audit](kpis_reference.md#ev-departure-audit) ratios, which the default scorecard reports:
 - `ev_departure_audit_min_acceptable_service_feasible_ratio` for service;
 - `ev_departure_audit_within_tolerance_service_feasible_ratio` for target accuracy.
+
+To evaluate EV battery wear from charging and V2G dispatch, pass `include_battery_health_audit=True` and report `ev_battery_health_terminal_soh_ratio` and `ev_battery_health_capacity_fade_kwh` alongside `ev_battery_health_equivalent_full_cycles_count`.
 
 The legacy feasible rates count departures with missing data as feasible, and they do not report how many departures could be judged. Keep the `ev_performance` rows for continuity with earlier results.
 
