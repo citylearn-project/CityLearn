@@ -153,6 +153,55 @@ def test_constructor_rejects_boolean_weight(weight):
         MultiCommunityEnv(communities=[_community("a", weight=weight), _community("b")])
 
 
+@pytest.mark.parametrize("weight", ["2", "1.5", b"2", [1.0], {"w": 1.0}])
+def test_constructor_rejects_non_numeric_weight(weight):
+    # float() would turn '2' into 2.0; the weight must be a number, as for booleans.
+    with pytest.raises(ValueError, match="weight must be a non-negative finite number"):
+        MultiCommunityEnv(communities=[_community("a", weight=weight), _community("b")])
+
+
+@pytest.mark.parametrize(
+    "setting, value_a, value_b",
+    [
+        ("business_as_usual_ev_charge_target", "full", "requested"),
+        ("ev_soc_carryover", False, True),
+    ],
+)
+def test_constructor_rejects_communities_with_different_bau_or_ev_settings(setting, value_a, value_b):
+    # Portfolio BAU totals and ratios to the BAU add the district BAU runs, which these settings define.
+    with pytest.raises(ValueError, match=f"share {setting}") as excinfo:
+        MultiCommunityEnv(
+            communities=[
+                _community("community_a", **{setting: value_a}),
+                _community("community_b", **{setting: value_b}),
+            ]
+        )
+    message = str(excinfo.value)
+    assert "community_a" in message and "community_b" in message
+    assert repr(value_a) in message and repr(value_b) in message
+
+    env = MultiCommunityEnv(
+        communities=[
+            _community("community_a", **{setting: value_b}),
+            _community("community_b", **{setting: value_b}),
+        ]
+    )
+    try:
+        assert {getattr(child, setting) for child in env.envs.values()} == {value_b}
+    finally:
+        env.close()
+
+
+def test_reset_rejects_ev_soc_carryover_changed_on_one_community():
+    env = MultiCommunityEnv(communities=[_community("community_a"), _community("community_b")])
+    try:
+        env.envs["community_b"].ev_soc_carryover = True
+        with pytest.raises(ValueError, match="share ev_soc_carryover"):
+            env.reset(seed=0)
+    finally:
+        env.close()
+
+
 def test_constructor_keeps_valid_entries_with_every_accepted_key():
     env = MultiCommunityEnv(
         communities=[
