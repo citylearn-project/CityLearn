@@ -165,6 +165,14 @@ the simulation window. For the thermal observations:
 | `indoor_dry_bulb_temperature_heating_delta`, `indoor_dry_bulb_temperature_cooling_delta` | Fixed at ±`maximum_temperature_delta`, [−20, 20] by default. |
 | Heating and cooling set points | Range of the dataset schedule. For occupant-interaction buildings under physics version 2, widened to `set_point_limits` (15–30 °C by default); the occupants never move the set point past those limits, so these bounds are exact. |
 
+The deferrable appliance energies are bounded by the appliances' cycle
+definitions: `cycle_energy_kwh` and `remaining_energy_kwh` by [0, the largest
+cycle energy of the building's appliances], and `current_step_energy_kwh` by
+[0, the largest step energy of their cycle profiles]. No cycle can report more,
+so these bounds hold under any controller. The entity `deferrable_appliance`
+table bounds the three by [0, the largest cycle energy in the district, at least
+1 kWh].
+
 Every bound is then widened by `observation_space_limit_delta` (0 by default).
 
 The indoor temperature of the LSTM buildings depends on how the HVAC is run, so

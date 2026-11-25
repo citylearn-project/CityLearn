@@ -168,6 +168,14 @@ dataset na janela de simulação. Para as observações térmicas:
 | `indoor_dry_bulb_temperature_heating_delta`, `indoor_dry_bulb_temperature_cooling_delta` | Fixo em ±`maximum_temperature_delta`, [−20, 20] por omissão. |
 | Set points de aquecimento e de arrefecimento | Intervalo do horário do dataset. Nos edifícios com interação dos ocupantes, com a física da versão 2, alargado a `set_point_limits` (15–30 °C por omissão); os ocupantes nunca levam o set point para além desses limites, pelo que estes limites são exatos. |
 
+As energias dos aparelhos diferíveis são limitadas pelas definições dos ciclos
+dos aparelhos: `cycle_energy_kwh` e `remaining_energy_kwh` por [0, a maior
+energia de ciclo dos aparelhos do edifício], e `current_step_energy_kwh` por
+[0, a maior energia por passo dos seus perfis de ciclo]. Nenhum ciclo pode
+indicar mais, pelo que estes limites valem com qualquer controlador. A tabela
+entity `deferrable_appliance` limita as três por [0, a maior energia de ciclo da
+comunidade, pelo menos 1 kWh].
+
 Cada limite é depois alargado de `observation_space_limit_delta` (0 por omissão).
 
 A temperatura interior dos edifícios LSTM depende da forma como o AVAC é usado,

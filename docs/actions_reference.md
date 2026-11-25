@@ -8,7 +8,7 @@ Portuguese version: [pt/actions_reference.md](pt/actions_reference.md).
 
 | Rule | Contract |
 |---|---|
-| Bounds | Read from `env.action_space` and `env.action_names`. |
+| Bounds | Read from `env.action_space` and `env.action_names`. An action outside its bounds is clipped to them; see [Out-of-range actions](#out-of-range-actions). |
 | Storage actions | Positive charges, negative discharges. |
 | EV charger actions | Positive charges the EV, negative discharges/V2G if enabled. |
 | Deferrable actions | Binary start command. `action > trigger_threshold` attempts to start the next pending cycle (`trigger_threshold` default: `0.5`). |
@@ -31,6 +31,20 @@ Portuguese version: [pt/actions_reference.md](pt/actions_reference.md).
 | `electric_vehicle_storage_{charger_id}` | `[-1, 1]` or `[0, 1]` | charger | Controls the EV connected to a charger. Negative bound depends on `max_discharging_power`. |
 | `deferrable_appliance_{appliance_id}` | `[0, 1]` | appliance | Binary start command (`0` off, `1` on) for the next feasible cycle. |
 | `escalator_{escalator_id}` | `[0, 1]` | escalator | Selects standby, slow or normal operation. |
+
+## Out-of-Range Actions
+
+Both interfaces apply one rule to an action outside `env.action_space`: it is
+clipped to the nearest bound before it reaches the device. This holds for flat
+action vectors, flat vectors sent to an entity environment, and entity `tables`
+and `map` payloads. An action inside the bounds is applied as sent, bit for bit.
+`NaN` and infinite actions are not clipped: `step()` rejects them with a
+`ValueError`. Under `physics_version=1` flat actions are applied as given, as in
+CityLearn 3.6.0, and only entity tables and maps are clipped.
+
+For example, with `cooling_storage` bounded by `[-0.25, 0.25]`, an action of
+`0.75` charges the tank as `0.25` does. The device limits (power, capacity, SOC)
+then apply as usual.
 
 ## Physical Conversion
 

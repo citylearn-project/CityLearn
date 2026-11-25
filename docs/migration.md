@@ -385,6 +385,33 @@ departures, met departures and feasibility classes match one run, but the
 connected SOC gain of the energy accounting is each episode's own gain, so its
 sum is lower than in one run, and energy totals can differ slightly ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
 
+### Out-of-range flat actions are clipped
+
+A flat action outside `env.action_space`, or a flat vector sent to an entity
+environment, is now clipped to the nearest bound, as entity `tables` and `map`
+payloads already were. Actions inside the space are applied exactly as before.
+A controller that sends actions beyond the bounds, for example a scripted
+thermal-storage rule above `±limit`, now gets the clipped simulation, and its
+earlier results are not comparable with new runs. `physics_version=1` keeps
+the 3.6.0 rule, flat actions applied as given, to reproduce such runs. Read the
+bounds from `env.action_space`. See
+[out-of-range actions](actions_reference.md#out-of-range-actions).
+
+### Deferrable energy observation bounds
+
+The flat bounds of `deferrable_appliance_*_cycle_energy_kwh`,
+`*_remaining_energy_kwh` and `*_current_step_energy_kwh` change from
+[-1, 1e6] to [0, largest cycle energy] and [0, largest step energy] of the
+building's appliances. The observation values and the simulation do not change.
+Normalised (`NormalizedObservationWrapper`) and discretised observations, and the
+encoders of `SAC` and `MARLISA`, read these bounds, so a policy trained on a
+dataset with deferrable appliances (`pt_rec_*`,
+`citylearn_challenge_2022_phase_all_plus_evs`, the three-phase demos) sees
+different inputs: retrain it, and do not compare its earlier results with new
+runs. A saved normaliser that stores the old bounds keeps working, but then
+still hides these features. See
+[observation bounds](interfaces_flat_entity.md#observation-bounds).
+
 ### Observation spaces follow the observations
 
 The observation values, their order and `observation_names` do not change, and
@@ -752,6 +779,9 @@ It also changes runs that use the following:
   1 gave them 50 kW of V2G
   ([#369](https://github.com/citylearn-project/CityLearn/issues/369), see
   [charger defaults and attribute names](#charger-defaults-and-attribute-names)).
+- **Flat actions outside the action space.** They are clipped to the space, as
+  entity tables are; version 1 applied them as given (see
+  [out-of-range flat actions are clipped](#out-of-range-flat-actions-are-clipped)).
 - **Occupant set points under arbitrary control.** An occupant change stops at
   `set_point_limits`, [15, 30] °C by default; version 1 had no limit
   ([#352](https://github.com/citylearn-project/CityLearn/issues/352), see
