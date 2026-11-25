@@ -10,7 +10,12 @@ from array import array
 
 from citylearn.electric_vehicle import EV_SERVICE_SOC_TOLERANCE
 from citylearn.energy_model import Battery
-from citylearn.internal import ev_departure_audit, deferrable_service_audit, grid_availability
+from citylearn.internal import (
+    ev_departure_audit,
+    deferrable_service_audit,
+    grid_availability,
+    outage_resilience,
+)
 from citylearn.internal import kpi_energy, kpi_equipment, kpi_community, kpi_service_metrics
 from citylearn.internal.kpi_catalogue import attach_kpi_metadata
 from citylearn.internal.service_energy import service_energy_components
@@ -1439,6 +1444,12 @@ class CityLearnKPIService:
     def deferrable_service_audit(self):
         return deferrable_service_audit.environment_audit(self)
 
+    def outage_resilience_audit(self):
+        return outage_resilience.environment_audit(self)
+
+    def evaluate_outage_events(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        return outage_resilience.to_dataframes(self.outage_resilience_audit())
+
     def _deferrable_appliances_for_metrics(self, building) -> Sequence:
         topology_service = getattr(self.env, '_topology_service', None)
         if (
@@ -2568,7 +2579,39 @@ class CityLearnKPIService:
             put('district', 'District', v2('district', 'emissions', 'total', 'business_as_usual', 'member_sum', 'kgco2'),
                 bau('district', 'District', member_sum_key))
 
+        for direction in ('import', 'export'):
+            sub = f'feeder_limit_{direction}'
+            for metric, unit in (
+                ('exceedance_energy_total', 'kwh'),
+                ('exceedance_peak', 'kw'),
+                ('exceedance_step', 'count'),
+            ):
+                c_key = v2('district', 'energy_grid', sub, metric, 'control', unit)
+                if ('district', 'District', c_key) not in records:
+                    continue
+                c_val = current('district', 'District', c_key)
+                b_val = bau('district', 'District', c_key)
+                put('district', 'District', v2('district', 'energy_grid', sub, metric, 'business_as_usual', unit), b_val)
+                put(
+                    'district',
+                    'District',
+                    v2('district', 'energy_grid', sub, metric, 'delta_to_business_as_usual', unit),
+                    finite_delta(c_val, b_val),
+                )
+
         self._add_business_as_usual_shape_records(records, result.env, v2, simulated_days)
+        if getattr(env, 'evaluation_window_enabled', False):
+            for level, names in names_by_level.items():
+                control_win_key = f'{level}_energy_grid_window_average_power_control_kw'
+                bau_win_key = f'{level}_energy_grid_window_average_power_business_as_usual_kw'
+                delta_win_key = f'{level}_energy_grid_window_average_power_delta_to_business_as_usual_kw'
+                for name in names:
+                    if (level, name, control_win_key) not in records:
+                        continue
+                    c_val = current(level, name, control_win_key)
+                    b_val = bau(level, name, control_win_key)
+                    put(level, name, bau_win_key, b_val)
+                    put(level, name, delta_win_key, finite_delta(c_val, b_val))
         return bau_df.attrs.get(BATTERY_NOMINAL_CAPACITY_ATTR, {}).get('control')
 
     def _add_business_as_usual_shape_records(
@@ -2669,13 +2712,16 @@ class CityLearnKPIService:
     @settled_cost_scope
     def evaluate_v2(
         self, control_condition=None, baseline_condition=None, comfort_band=None,
-        include_business_as_usual=True, *, evaluation_condition_cls,
+        include_business_as_usual=True, *,
+        include_battery_health_audit: bool = False,
+        evaluation_condition_cls,
         dynamics_building_cls, progress_callback=None,
     ) -> pd.DataFrame:
         progress = None if progress_callback is None else EvaluationProgress(progress_callback)
         return run(progress, 'evaluation', self._evaluate_v2,
                    control_condition=control_condition, baseline_condition=baseline_condition,
                    comfort_band=comfort_band, include_business_as_usual=include_business_as_usual,
+                   include_battery_health_audit=include_battery_health_audit,
                    evaluation_condition_cls=evaluation_condition_cls,
                    dynamics_building_cls=dynamics_building_cls, progress=progress)
 
@@ -2686,6 +2732,7 @@ class CityLearnKPIService:
         comfort_band: float = None,
         include_business_as_usual: bool = True,
         *,
+        include_battery_health_audit: bool = False,
         evaluation_condition_cls,
         dynamics_building_cls,
         progress=None,
@@ -3211,6 +3258,54 @@ class CityLearnKPIService:
             for metric, value in district.items():
                 put('district', 'District', f'district_energy_provenance_{metric}', value)
 
+        if getattr(env, 'district_electrical_service_enabled', False):
+            from citylearn.internal.electrical_limits import district_feeder_direction_configured
+
+            executed_steps = min(
+                len(getattr(env, 'net_electricity_consumption', []) or []),
+                max(int(getattr(env, 'time_step', 0) or 0), 0),
+            )
+            step_hours = max(float(getattr(env, 'seconds_per_time_step', 3600.0) or 3600.0) / 3600.0, 1.0e-12)
+            ep_start = int(getattr(getattr(env, 'episode_tracker', None), 'episode_start_time_step', 0) or 0)
+            parsed_feeder = getattr(env, '_district_electrical_service_parsed', None)
+
+            for direction, raw_series in (
+                ('import', getattr(env, 'feeder_import_exceedance_kw', None)),
+                ('export', getattr(env, 'feeder_export_exceedance_kw', None)),
+            ):
+                sub = f'feeder_limit_{direction}'
+                if not district_feeder_direction_configured(
+                    parsed_feeder,
+                    direction,
+                    executed_steps,
+                    episode_start_time_step=ep_start,
+                ):
+                    put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_energy_total', 'control', 'kwh'), None)
+                    put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_peak', 'control', 'kw'), None)
+                    put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_step', 'control', 'count'), None)
+                    continue
+
+                arr = (
+                    np.asarray(raw_series[:executed_steps], dtype='float64')
+                    if executed_steps > 0 and raw_series is not None
+                    else np.zeros(0, dtype='float64')
+                )
+                finite = arr[np.isfinite(arr)]
+                energy_total_kwh = float(np.sum(finite) * step_hours) if finite.size > 0 else 0.0
+                peak_kw = float(np.max(finite)) if finite.size > 0 else 0.0
+                step_count = float(int(np.count_nonzero(finite * step_hours > 1.0e-9))) if finite.size > 0 else 0.0
+                put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_energy_total', 'control', 'kwh'), energy_total_kwh)
+                put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_peak', 'control', 'kw'), peak_kw)
+                put('district', 'District', v2('district', 'energy_grid', sub, 'exceedance_step', 'control', 'count'), step_count)
+        if getattr(env, 'evaluation_window_enabled', False):
+            from citylearn.internal.evaluation_window import compute_evaluation_window_control_records
+            for row in compute_evaluation_window_control_records(
+                self,
+                kpi_buildings=kpi_buildings,
+                building_windows=building_windows,
+            ):
+                put(str(row['level']), str(row['name']), str(row['cost_function']), row['value'])
+
         capacities = all_metrics.attrs[BATTERY_NOMINAL_CAPACITY_ATTR]
         if include_business_as_usual and not bool(getattr(env, '_business_as_usual_sidecar', False)):
             capacities['business_as_usual'] = run(progress, 'business_as_usual', self._add_business_as_usual_records,
@@ -3220,6 +3315,21 @@ class CityLearnKPIService:
                 evaluation_condition_cls=evaluation_condition_cls,
                 dynamics_building_cls=dynamics_building_cls,
             )
+
+        if bool(include_battery_health_audit):
+            from citylearn.internal import battery_health_audit
+
+            health_rows, d_ev_cap_kwh = run(
+                progress,
+                'battery_health_audit',
+                battery_health_audit.compute_battery_health_audit_records,
+                self,
+                kpi_buildings=kpi_buildings,
+                building_windows=building_windows,
+            )
+            capacities['ev_control'] = d_ev_cap_kwh
+            for row in health_rows:
+                put(str(row['level']), str(row['name']), str(row['cost_function']), row['value'])
 
         self._undefine_zero_over_zero_ratios(records)
         output = pd.DataFrame(list(records.values()))

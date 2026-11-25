@@ -133,6 +133,7 @@ Todos os ambientes filhos têm de usar:
 | A mesma `physics_version` | Os totais do portefólio somam valores dos distritos, pelo que todas as comunidades têm de simular a mesma física. |
 | A mesma `random_stream_version` | As predefinições sorteadas (curvas e eficiências das baterias, ruído) têm de vir da mesma definição do fluxo aleatório para que os totais sejam comparáveis. |
 | A mesma `baseline_version` | Os KPI de referência do portefólio somam as referências dos distritos, pelo que a definição da referência tem de coincidir. |
+| A mesma `evaluation_window` quando ativa | Mantém alinhados os KPIs da janela recorrente entre comunidades. |
 
 O wrapper valida estas condições na construção e novamente depois do reset, e
 lança um `ValueError` que indica a definição, por exemplo:
@@ -189,6 +190,7 @@ pelo que igualam o rácio entre o numerador e o denominador agregados e ignoram 
 `weight`:
 
 | Taxa ou média | Peso |
+| `energy_grid_window_average_power_*_kw` | Soma com sinal entre comunidades que partilham `evaluation_window` (`NaN` se alguma comunidade for indefinida). |
 |---|---|
 | Taxas de sucesso, de mínimo aceitável e dentro da tolerância nas partidas dos VE; médias de défice, falta, excedente e erro absoluto do SOC | `ev_events_departure_count` |
 | Taxas de partida `*_feasible` dos VE | O `ev_events_departure_*_feasible_count` correspondente |

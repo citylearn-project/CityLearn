@@ -345,9 +345,9 @@ class CostFunction:
         })
         data['expected_energy'] = data['expected_energy'].where(np.isfinite(data['expected_energy']), 0.0).clip(lower=0.0)
         data['served_energy'] = data['served_energy'].where(np.isfinite(data['served_energy']), 0.0).clip(lower=0.0)
-        data['power_outage'] = pd.to_numeric(data['power_outage'], errors='coerce').fillna(0.0)
+        outage_num = pd.to_numeric(data['power_outage'], errors='coerce').to_numpy(dtype='float64', na_value=np.nan)
         data['unserved_energy'] = (data['expected_energy'] - data['served_energy']).clip(lower=0.0)
-        data.loc[data['power_outage'] == 0, ['unserved_energy', 'expected_energy']] = 0.0
+        data.loc[~np.isfinite(outage_num) | (outage_num == 0.0), ['unserved_energy', 'expected_energy']] = 0.0
         data['unserved_energy'] = data['unserved_energy'].rolling(window=data.shape[0], min_periods=1).sum()
         expected_energy = data['expected_energy'].sum()
 

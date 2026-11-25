@@ -51,6 +51,7 @@ class MultiCommunityEnv(Env):
         communities: Sequence[Mapping[str, Any]],
         render_directory: Union[str, Path] = None,
         render_session_name: str = None,
+        evaluation_window: Any = None,
     ):
         self.render_output_root = self._resolve_render_directory(render_directory)
         self.render_session_name = self._resolve_render_session_name(render_session_name)
@@ -67,6 +68,8 @@ class MultiCommunityEnv(Env):
         try:
             for config in configs:
                 child_kwargs = dict(config.env_kwargs)
+                if evaluation_window is not None and "evaluation_window" not in child_kwargs:
+                    child_kwargs["evaluation_window"] = evaluation_window
                 child_kwargs["render_directory"] = self.render_output_root
                 child_kwargs["render_session_name"] = str(Path(self.render_session_name) / config.community_id)
                 env = CityLearnEnv(config.schema, **child_kwargs)
@@ -236,6 +239,7 @@ class MultiCommunityEnv(Env):
         baseline_condition: EvaluationCondition = None,
         comfort_band: float = None,
         include_business_as_usual: bool = True,
+        include_battery_health_audit: bool = False,
     ) -> pd.DataFrame:
         """Return each community's KPIs plus portfolio rows aggregated from their district KPIs.
 
@@ -243,7 +247,7 @@ class MultiCommunityEnv(Env):
         ``community_id`` column. Each community contributes its ``'building'`` and ``'district'`` rows under its
         own ``community_id``. The ``'portfolio'`` rows (``community_id`` ``'__portfolio__'``, names starting
         ``portfolio_``) aggregate the district rows: ratios of totals are recomputed from the summed totals,
-        rates and stationary-battery equivalent full cycles are pooled by their denominators,
+        rates, EV battery health ratios, and battery equivalent full cycles are pooled by their denominators,
         other ``_kwh``/``_eur``/``_kgco2``/``_count`` rows are summed,
         other ratios and percentages are means weighted by the community ``weight``, and other rows (``_kw``,
         ``_c``, ``_hours``) have no portfolio row. When some communities have a community market and others do
@@ -259,6 +263,7 @@ class MultiCommunityEnv(Env):
                 baseline_condition=baseline_condition,
                 comfort_band=comfort_band,
                 include_business_as_usual=include_business_as_usual,
+                include_battery_health_audit=include_battery_health_audit,
             )
             for community_id, env in self.envs.items()
         })
@@ -351,6 +356,7 @@ class MultiCommunityEnv(Env):
             "time_step": self.time_step,
             "render_directory": str(self.render_output_root),
             "render_session_name": self.render_session_name,
+            "evaluation_window": dict(next(iter(self.envs.values()))._evaluation_window_effective),
             "communities": {
                 community_id: env.get_metadata()
                 for community_id, env in self.envs.items()
@@ -499,6 +505,15 @@ class MultiCommunityEnv(Env):
                     f"MultiCommunityEnv requires all communities to share {setting}, got {values}."
                 )
 
+        window_configs = [getattr(env, "_evaluation_window_effective", None) or {} for env in self.envs.values()]
+        if any(bool(cfg.get("enabled")) for cfg in window_configs):
+            window_keys = {
+                (bool(cfg.get("enabled")), cfg.get("start"), cfg.get("end"), cfg.get("timezone"))
+                for cfg in window_configs
+            }
+            if len(window_keys) != 1:
+                raise ValueError("MultiCommunityEnv requires all communities to share the same evaluation_window.")
+
     def _validate_reset_synchronization(self):
         self._validate_constructor_homogeneity()
         time_steps = {int(env.time_step) for env in self.envs.values()}
@@ -644,6 +659,37 @@ class MultiCommunityEnv(Env):
                 cycles = float(throughput.sum() / (2.0 * nominal_capacity))
             pooled_mean_values[f"district_battery_health_equivalent_full_cycles{suffix}_count"] = cycles
 
+        ev_fade_rows = district[district["cost_function"] == "district_ev_battery_health_capacity_fade_kwh"]
+        if not ev_fade_rows.empty:
+            ev_fade = ev_fade_rows.set_index("community_id")["numeric_value"]
+            ev_cap_fade = pd.Series({
+                community_id: values.get("ev_control", np.nan)
+                for community_id, values in capacities.items()
+            }, dtype="float64").reindex(ev_fade.index)
+            ev_nominal_capacity = ev_cap_fade.sum()
+            ev_fade_ratio = np.nan
+            ev_soh = np.nan
+            if ev_nominal_capacity > 0.0 and np.isfinite(ev_cap_fade).all() and np.isfinite(ev_fade).all():
+                ev_fade_total = float(np.clip(ev_fade, 0.0, None).sum())
+                ev_fade_ratio = float(np.clip(ev_fade_total / ev_nominal_capacity, 0.0, 1.0))
+                ev_soh = float(np.clip((ev_nominal_capacity - ev_fade_total) / ev_nominal_capacity, 0.0, 1.0))
+            pooled_mean_values["district_ev_battery_health_capacity_fade_ratio"] = ev_fade_ratio
+            pooled_mean_values["district_ev_battery_health_terminal_soh_ratio"] = ev_soh
+
+        ev_efc_name = "district_ev_battery_health_equivalent_full_cycles_count"
+        ev_efc_rows = district[district["cost_function"] == ev_efc_name]
+        if not ev_efc_rows.empty:
+            ev_efc = ev_efc_rows.set_index("community_id")["numeric_value"]
+            ev_cap = pd.Series({
+                community_id: values.get("ev_control", np.nan)
+                for community_id, values in capacities.items()
+            }, dtype="float64").reindex(ev_efc.index)
+            positive_ev = ev_cap > 0.0
+            ev_cycles = np.nan
+            if np.isfinite(ev_cap).all() and positive_ev.any() and np.isfinite(ev_efc[positive_ev]).all():
+                ev_cycles = float((ev_efc[positive_ev] * ev_cap[positive_ev]).sum() / ev_cap[positive_ev].sum())
+            pooled_mean_values[ev_efc_name] = ev_cycles
+
         for cost_function, group in district.groupby("cost_function", sort=True):
             metric = str(cost_function)
             aggregate: Optional[float]
@@ -666,6 +712,15 @@ class MultiCommunityEnv(Env):
                         control, reference, zero_over_zero=CityLearnKPIService.ratio_zero_over_zero(metric),
                     )
                     aggregate = np.nan if value is None else float(value)
+            elif (
+                (metric.startswith("district_energy_grid_window_average_power_") and metric.endswith("_kw"))
+                or metric == "district_ev_window_net_exchange_control_kwh"
+            ):
+                values = group["numeric_value"].dropna()
+                if values.empty or len(values) != len(group):
+                    aggregate = np.nan
+                else:
+                    aggregate = float(values.sum())
             elif metric.endswith(self._SUM_SUFFIXES):
                 values = group["numeric_value"].dropna()
                 if values.empty:

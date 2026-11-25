@@ -96,7 +96,9 @@ controlador que carregasse os carros parecia pior do que a baseline
   sem V2G, e a baseline é a mesma para todos os controladores, pelo que as
   linhas `baseline` creditam ao controlador o despacho do armazenamento, o
   carregamento dos VE e o V2G, face a carregar à chegada. Os aparelhos
-  diferíveis e o AVAC ficam como o controlador os operou.
+  diferíveis ficam como o controlador os operou. O AVAC também, exceto nos
+  edifícios com dinâmica de temperatura (LSTM), onde a condição predefinida usa
+  a procura de aquecimento e de arrefecimento de carga ideal do dataset.
 - Nos datasets com carregadores de VE, cada avaliação executa o sidecar do BAU
   para obter esse carregamento, também o `evaluate()` antigo e
   `evaluate_v2(include_business_as_usual=False)`, e usa o alvo `'full'` qualquer
