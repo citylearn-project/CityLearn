@@ -499,6 +499,11 @@ Estas alterações afetam apenas `topology_mode='dynamic'`:
   `net_electricity_consumption`. Este ponto não altera os KPIs.
 - Um evento no passo terminal já não move os edifícios para a linha terminal não
   executada, pelo que as suas séries guardam apenas intervalos executados.
+- Um membro clonado com `source_member_id` dá aos seus carregadores ids próprios
+  (`charger_1_1` de `Building_1` passa a `charger_19_1` em `Building_19`), pelo
+  que os nomes das observações, ações e entidades do clone mudam; atualize os
+  agentes guardados e os eventos de robustez que identificam os carregadores do
+  clone pelo id da origem.
 
 ### Passo de controlo diferente do passo do dataset
 

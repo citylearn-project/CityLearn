@@ -660,12 +660,55 @@ class CityLearnTopologyService:
 
         return renamed if renamed != charger_id else f'{charger_id}_{target_member_id}'
 
+    @classmethod
+    def cloned_charger_renames(
+        cls, charger_ids: Iterable[str], members: Iterable[Building], source_member_id: str, target_member_id: str,
+    ) -> Dict[str, str]:
+        """New id of each charger of a member cloned from `source_member_id`, keyed by its current id.
+
+        Each id becomes :py:meth:`cloned_charger_id`, with ``_2``, ``_3``... appended when another charger
+        of `members` already has it.
+        """
+
+        taken = {charger.charger_id for member in members for charger in member.electric_vehicle_chargers or []}
+        renames: Dict[str, str] = {}
+
+        for old in charger_ids:
+            new = cls.cloned_charger_id(old, source_member_id, target_member_id)
+            candidate, suffix = new, 2
+
+            while candidate in taken or candidate in renames.values():
+                candidate, suffix = f'{new}_{suffix}', suffix + 1
+
+            renames[old] = candidate
+
+        return renames
+
+    @classmethod
+    def renamed_charger_key(cls, key: str, renames: Dict[str, str]) -> str:
+        """Observation or action name `key` with the charger id it embeds renamed by `renames`."""
+
+        if key.startswith('electric_vehicle_storage_'):
+            charger_id = key[len('electric_vehicle_storage_'):]
+            return f'electric_vehicle_storage_{renames[charger_id]}' if charger_id in renames else key
+
+        # Longest ids first, so an id that starts another one is never matched in its place.
+        ordered = sorted(renames.items(), key=lambda item: len(item[0]), reverse=True)
+
+        for prefix in cls._CHARGER_NAME_PREFIXES:
+            if key.startswith(prefix):
+                for old, new in ordered:
+                    if key.startswith(f'{prefix}{old}_'):
+                        return f'{prefix}{new}{key[len(prefix) + len(old):]}'
+
+        return key
+
     def _rename_cloned_member_chargers(self, building: Building, source_member_id: str, target_member_id: str):
         """Give the chargers of a member cloned from `source_member_id` ids of their own.
 
         The deep copy keeps the source's charger ids, so warnings, observation and action names and exports
-        named the clone's chargers after the source's. Each id becomes :py:meth:`cloned_charger_id`, made
-        unique among the chargers of every member, and the names and phase assignments that embed it follow.
+        named the clone's chargers after the source's. Each id becomes :py:meth:`cloned_charger_renames`,
+        and the names and phase assignments that embed it follow.
         """
 
         chargers = list(building.electric_vehicle_chargers or [])
@@ -673,39 +716,16 @@ class CityLearnTopologyService:
         if not chargers:
             return
 
-        taken = {
-            charger.charger_id
-            for member in self._member_pool.values()
-            for charger in member.electric_vehicle_chargers or []
-        }
-        renames: Dict[str, str] = {}
+        renames = self.cloned_charger_renames(
+            [charger.charger_id for charger in chargers], self._member_pool.values(), source_member_id,
+            target_member_id,
+        )
 
         for charger in chargers:
-            old = charger.charger_id
-            new = self.cloned_charger_id(old, source_member_id, target_member_id)
-            candidate, suffix = new, 2
-
-            while candidate in taken or candidate in renames.values():
-                candidate, suffix = f'{new}_{suffix}', suffix + 1
-
-            renames[old] = candidate
-            charger.charger_id = candidate
-
-        # Longest ids first, so an id that starts another one is never matched in its place.
-        ordered = sorted(renames.items(), key=lambda item: len(item[0]), reverse=True)
+            charger.charger_id = renames[charger.charger_id]
 
         def rename(key: str) -> str:
-            if key.startswith('electric_vehicle_storage_'):
-                charger_id = key[len('electric_vehicle_storage_'):]
-                return f'electric_vehicle_storage_{renames[charger_id]}' if charger_id in renames else key
-
-            for prefix in self._CHARGER_NAME_PREFIXES:
-                if key.startswith(prefix):
-                    for old, new in ordered:
-                        if key.startswith(f'{prefix}{old}_'):
-                            return f'{prefix}{new}{key[len(prefix) + len(old):]}'
-
-            return key
+            return self.renamed_charger_key(key, renames)
 
         for attribute in ('observation_metadata', 'action_metadata'):
             metadata = getattr(building, attribute, None)
