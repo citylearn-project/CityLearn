@@ -373,3 +373,34 @@ def test_documented_entity_action_map_ids_run(page, plus_evs_entity_env):
             assert entity_id in env.entity_specs["actions"][kind]["ids"], (page, key)
         env.reset()
         env.step(scope["actions"])
+
+
+def test_markdown_tables_are_not_split_by_blank_lines():
+    """A blank line inside a table turns the rows after it into plain text."""
+    separator = re.compile(r"^\|\s*:?-{3,}")
+    problems = []
+    for path in sorted((ROOT / "docs").rglob("*.md")):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        fenced = False
+        for index, line in enumerate(lines):
+            if line.startswith("```"):
+                fenced = not fenced
+            if fenced or index < 2:
+                continue
+            if line.startswith("|") and not lines[index - 1].strip() and lines[index - 2].startswith("|"):
+                following = lines[index + 1] if index + 1 < len(lines) else ""
+                if not separator.match(following):
+                    problems.append(f"{path.relative_to(ROOT)}:{index + 1}")
+    assert problems == []
+
+
+def _synchronization_settings(path, heading):
+    section = path.read_text(encoding="utf-8").split(heading, 1)[1].split("\n## ", 1)[0]
+    return [re.findall(r"`([a-z_]+)`", line) for line in section.splitlines() if line.startswith("| ")][1:]
+
+
+def test_multi_community_synchronization_table_matches_in_portuguese():
+    english = _synchronization_settings(ROOT / "docs/multi_community_reference.md", "## Synchronization Contract")
+    portuguese = _synchronization_settings(ROOT / "docs/pt/multi_community_reference.md", "## Contrato de sincronização")
+    assert english == portuguese
+    assert ["evaluation_window"] in english
