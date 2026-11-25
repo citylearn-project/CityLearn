@@ -468,6 +468,31 @@ carregamento dos VE antes de as comparar. Para reproduzir um resultado com o BAU
 anterior, use a versão ou o commit do CityLearn registado no seu manifesto
 original. Consulte a [referência do BAU](baselines.md#limitações-conhecidas).
 
+### As referências baseadas em regras usam a carga e a produção solar do passo atual
+
+`RBCBasicPolicy`, `RBCSmartPolicy` e `RBCCommunityPolicy` planeiam agora o
+orçamento da bateria, dos VE e dos aparelhos com a carga e a produção FV do passo
+que estão a planear, como o BAU nativo, em vez das observações já liquidadas do
+passo anterior. `RBCSmartPolicy` e `RBCCommunityPolicy` deixam também de carregar
+a bateria a partir da rede a preço baixo quando há produção FV prevista e nenhuma
+previsão de excedente FV é observada (sem o grupo `entity_forecasts_derived`).
+As suas definições passam a `basic-v4`, `smart-local-v4` e `community-v4`.
+
+- As suas ações e KPIs mudam em todos os datasets com bateria. A bateria do
+  `RBCBasicPolicy` por omissão segue agora exatamente a regra do BAU; nos
+  datasets sem VE nem aparelhos flexíveis, dá os resultados do BAU.
+- A alteração do carregamento a partir da rede só atua em datasets com previsão
+  solar e sem `entity_forecasts_derived`, por exemplo
+  `citylearn_challenge_2022_phase_all` e
+  `citylearn_three_phase_electrical_service_demo`; em `pt_rec_*` e
+  `citylearn_challenge_2022_phase_all_plus_evs` só se aplica a alteração do passo
+  atual.
+- Volte a executá-las antes de comparar um controlador com elas. Para reproduzir
+  um resultado das definições anteriores, use a versão ou o commit do CityLearn
+  registado no seu manifesto, tal como para o BAU. Consulte
+  [as referências baseadas em regras](baselines.md#referências-baseadas-em-regras)
+  e a [#400](https://github.com/citylearn-project/CityLearn/issues/400).
+
 ### Higiene numérica e de configuração
 
 Estas alterações não exigem migração de datasets, schemas ou KPIs. As execuções válidas dão os mesmos resultados; alguns erros silenciosos passam a gerar exceções.

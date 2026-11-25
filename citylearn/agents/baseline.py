@@ -409,6 +409,9 @@ class _RuleBasedPolicy(_RuleBaselineAgent):
 
     #: Suffix of the definition identifier when the HVAC delivers the dataset demand on a dataset with HVAC.
     HVAC_DEFINITION_SUFFIX: ClassVar[str] = '+hvac-dataset-demand-v1'
+    # Plan the battery, EV and appliance budget from the load and PV of the step being planned, as the BAU
+    # does, instead of the settled observations of the previous step (#400).
+    _use_current_step_load = True
 
     def __init__(self, env: CityLearnEnv, hvac: str = 'dataset_demand', **hyperparameters: Any):
         self.hvac = self._validate_hvac(hvac)
@@ -438,7 +441,7 @@ class RBCBasicPolicy(_RuleBasedPolicy):
     """
 
     ENGINE_CLASS = engines.RBCBasicPolicy
-    DEFINITION_VERSION = 'basic-v3'
+    DEFINITION_VERSION = 'basic-v4'
 
 
 class RBCSmartPolicy(_RuleBasedPolicy):
@@ -450,7 +453,7 @@ class RBCSmartPolicy(_RuleBasedPolicy):
     """
 
     ENGINE_CLASS = engines.RBCSmartLocalPolicy
-    DEFINITION_VERSION = 'smart-local-v3'
+    DEFINITION_VERSION = 'smart-local-v4'
 
 
 class RBCCommunityPolicy(_RuleBasedPolicy):
@@ -465,7 +468,7 @@ class RBCCommunityPolicy(_RuleBasedPolicy):
     """
 
     ENGINE_CLASS = engines.RBCCommunityPolicy
-    DEFINITION_VERSION = 'community-v3'
+    DEFINITION_VERSION = 'community-v4'
 
 
 class ZeroActionAgent(Agent):

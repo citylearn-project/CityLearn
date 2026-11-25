@@ -280,6 +280,20 @@ Two sets of rows use different series:
 
 Note the word order of the signed-net names: `load_factor_penalty_daily_average_to_baseline_signed_net_ratio`, but `load_factor_penalty_daily_average_signed_net_to_business_as_usual_ratio`.
 
+**Portfolio.** Energy totals and daily averages are summed over communities. Import, export and net-exchange ratios are ratios of the summed totals (signed for net exchange). The shape ratios and the `building_mean` ratios are means weighted by community `weight`. The shape rows in kW are not carried over. Feeder exceedance energies (`_kwh`) and step counts (`_count`) are summed over communities, while feeder exceedance peaks (`_kw`) are not carried over ([district feeder limit exceedances](kpis_reference.md#district-feeder-limit-exceedances)). When `evaluation_window` is enabled, `energy_grid_window_average_power_*_kw` is summed signed across communities sharing that window and is undefined when any community value is undefined ([recurring evaluation window](kpis_reference.md#recurring-evaluation-window)).
+
+**Which KPI.**
+- Use the district ratio `ratio_to_baseline_import_total_ratio`. `*_building_mean_ratio` is the mean of the building ratios, kept only to compare with results up to 3.6.0.
+- Use the import-based load-factor penalty. The `_signed_net` rows keep the 3.6.0 definition.
+- Use `ramping_average`, which does not grow with the episode length. `ramping_total` keeps the 3.6.0 value.
+- Read import, export and net exchange together: net exchange alone can hide large imports and exports.
+
+**Known limits.**
+- The BAU shape rows ignore `control_condition`; the ratios to the baseline honour it.
+- `ramping_average_to_baseline_ratio` is a ratio of total ramps, despite its name.
+- No monthly peak is computed.
+- The shape windows are counted from the episode start, not from midnight or the start of a month.
+
 ### District feeder limit exceedances
 
 When `district_electrical_service.enabled` is true (see the [schema reference](schema_reference.md#district-electrical-service)), `evaluate_v2()` measures and reports settled district feeder limit exceedances at district level without enforcing or curtailing device dispatch:
@@ -298,7 +312,6 @@ exceedance_step_control_count       = number of executed steps with Δh · excee
 
 Per-step exceedance series are exposed on `env.feeder_import_exceedance_kw` and `env.feeder_export_exceedance_kw` (empty right after `reset()` until `step()` executes, and `0.0` at steps without a limit in that direction). Each metric publishes `_control`, `_business_as_usual` and `_delta_to_business_as_usual` (`control − business_as_usual`); when `evaluate_v2(include_business_as_usual=False)` is called, only `_control` is emitted. If `district_electrical_service` is enabled with only one direction configured, the unconfigured direction is undefined (`NaN`); enabling it with no limit at all raises `ValueError`. When `district_electrical_service` is disabled, no feeder exceedance KPI rows are emitted.
 
-**Portfolio.** Energy totals and daily averages are summed over communities. Import, export and net-exchange ratios are ratios of the summed totals (signed for net exchange). The shape ratios and the `building_mean` ratios are means weighted by community `weight`. The shape rows in kW are not carried over. Feeder exceedance energies (`_kwh`) and step counts (`_count`) are summed over communities, while feeder exceedance peaks (`_kw`) are not carried over.
 ### Recurring evaluation window
 
 When `evaluation_window.enabled` is true (see the [schema reference](schema_reference.md#evaluation-window)), `evaluate_v2()` and KPI exports include recurring local-window power rows at building, district and portfolio levels:
@@ -354,20 +367,6 @@ for path in sorted(export_dir.glob("exported_data_*_ep0.csv")):
         ac = np.maximum(df["Charger Consumption-kWh"], 0.0) - np.maximum(df["Charger Production-kWh"], 0.0)
         ev_net_kwh += float((weights * ac).sum())
 ```
-
-**Portfolio.** Energy totals and daily averages are summed over communities. Import, export and net-exchange ratios are ratios of the summed totals (signed for net exchange). The shape ratios and the `building_mean` ratios are means weighted by community `weight`. The shape rows in kW are not carried over. When `evaluation_window` is enabled, `energy_grid_window_average_power_*_kw` is summed signed across communities sharing that window and is undefined when any community value is undefined.
-
-**Which KPI.**
-- Use the district ratio `ratio_to_baseline_import_total_ratio`. `*_building_mean_ratio` is the mean of the building ratios, kept only to compare with results up to 3.6.0.
-- Use the import-based load-factor penalty. The `_signed_net` rows keep the 3.6.0 definition.
-- Use `ramping_average`, which does not grow with the episode length. `ramping_total` keeps the 3.6.0 value.
-- Read import, export and net exchange together: net exchange alone can hide large imports and exports.
-
-**Known limits.**
-- The BAU shape rows ignore `control_condition`; the ratios to the baseline honour it.
-- `ramping_average_to_baseline_ratio` is a ratio of total ramps, despite its name.
-- No monthly peak is computed.
-- The shape windows are counted from the episode start, not from midnight or the start of a month.
 
 ## Emissions
 

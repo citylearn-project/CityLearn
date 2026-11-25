@@ -745,17 +745,20 @@ def test_bau_reference_cache_follows_the_selected_target():
         env.close()
 
 
-@pytest.mark.parametrize("seconds", [15, 900, 3600])
-@pytest.mark.parametrize("core_bundle", [False, True])
-@pytest.mark.parametrize("interface", ["flat", "entity"])
-def test_bau_bess_uses_current_step_load_and_pv_without_one_step_lag(
-    tmp_path: Path, seconds: int, core_bundle: bool, interface: str,
-):
-    # Issue #190, consequence 1: with settled t-1 electrical observations, the
-    # battery charged from the grid at sunset (when step 0 had PV surplus and
-    # step 1 had dark load) and discharged into export when load dropped to zero.
+def _sunset_env(
+    tmp_path: Path, seconds: int, core_bundle: bool, interface: str, expensive_after_sunset: bool = False,
+) -> CityLearnEnv:
+    """One building with a battery: 3 kW of PV and no load at step 0, 2 kW of load in the dark at step 1, then nothing.
+
+    With `expensive_after_sunset` the price is flat at step 0 and expensive against its forecast from step 1.
+    """
     dataset_dir = tmp_path / f"lag_{seconds}_{core_bundle}"
     shutil.copytree(SOURCE_DATASET, dataset_dir)
+    if expensive_after_sunset:
+        pricing = pd.read_csv(dataset_dir / "pricing.csv")
+        pricing.loc[:, :] = 0.10
+        pricing.loc[1:, "electricity_pricing"] = 0.30
+        pricing.to_csv(dataset_dir / "pricing.csv", index=False)
     load_path = dataset_dir / "Building_1.csv"
     frame = pd.read_csv(load_path)
     # Dataset rows are 900 s: 0.5 kWh per row is 2.0 kW.
@@ -791,12 +794,27 @@ def test_bau_bess_uses_current_step_load_and_pv_without_one_step_lag(
         episode_time_steps=4,
         random_seed=0,
     )
+    env.reset(seed=0)
+    return env
+
+
+@pytest.mark.parametrize("seconds", [15, 900, 3600])
+@pytest.mark.parametrize("core_bundle", [False, True])
+@pytest.mark.parametrize("interface", ["flat", "entity"])
+@pytest.mark.parametrize("agent_class", [BusinessAsUsualAgent, RBCBasicPolicy])
+def test_bau_bess_uses_current_step_load_and_pv_without_one_step_lag(
+    tmp_path: Path, seconds: int, core_bundle: bool, interface: str, agent_class,
+):
+    # Issue #190, consequence 1: with settled t-1 electrical observations, the
+    # battery charged from the grid at sunset (when step 0 had PV surplus and
+    # step 1 had dark load) and discharged into export when load dropped to zero.
+    # RBCBasicPolicy runs the BAU battery rule and, since #400, also plans it with current-step load and PV.
+    env = _sunset_env(tmp_path, seconds, core_bundle, interface)
     try:
-        env.reset(seed=0)
         building = env.buildings[0]
 
         storage_idx = env.action_names[0].index("electrical_storage")
-        agent = BusinessAsUsualAgent(env)
+        agent = agent_class(env)
 
         # Step 0: PV surplus -> charge battery.
         a0 = agent.predict([])
@@ -810,6 +828,43 @@ def test_bau_bess_uses_current_step_load_and_pv_without_one_step_lag(
         env.step(a1)
 
         # Step 2: 0 PV, 0 load -> must stay idle (0.0), not export stored energy.
+        a2 = agent.predict([])
+        assert a2[0][storage_idx] == pytest.approx(0.0, abs=1.0e-6)
+        env.step(a2)
+        assert building.net_electricity_consumption[2] == pytest.approx(0.0, abs=1.0e-5)
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("seconds", [900, 3600])
+@pytest.mark.parametrize("core_bundle", [False, True])
+@pytest.mark.parametrize("interface", ["flat", "entity"])
+@pytest.mark.parametrize("agent_class", [RBCSmartPolicy, RBCCommunityPolicy])
+def test_economic_rule_baselines_plan_the_battery_with_current_step_load_and_pv(
+    tmp_path: Path, seconds: int, core_bundle: bool, interface: str, agent_class,
+):
+    # Issue #400: the rule-based baselines planned the battery from the settled load, PV, battery and EV
+    # power of the previous step, while the BAU uses the step being planned. In an expensive hour Smart
+    # discharged nothing into the load that had just appeared, and in the next step it discharged that
+    # load into a house that no longer needed it, exporting the stored energy.
+    env = _sunset_env(tmp_path, seconds, core_bundle, interface, expensive_after_sunset=True)
+    try:
+        building = env.buildings[0]
+        storage_idx = env.action_names[0].index("electrical_storage")
+        agent = agent_class(env)
+        assert agent._engine._current_step_load_ratios
+
+        a0 = agent.predict([])
+        assert a0[0][storage_idx] > 0.0
+        env.step(a0)
+
+        # Step 1: dark, 2 kW of load at an expensive price. The battery serves that load.
+        a1 = agent.predict([])
+        assert a1[0][storage_idx] == pytest.approx(-2.0 / building.electrical_storage.nominal_power)
+        env.step(a1)
+        assert building.net_electricity_consumption[1] == pytest.approx(0.0, abs=1.0e-5)
+
+        # Step 2: no load and no PV. The battery stays idle instead of exporting.
         a2 = agent.predict([])
         assert a2[0][storage_idx] == pytest.approx(0.0, abs=1.0e-6)
         env.step(a2)
@@ -964,18 +1019,66 @@ def test_battery_does_not_recharge_from_the_grid_after_its_own_export(agent_clas
         random_seed=0, interface="flat",
     )
     try:
-        observations, _ = env.reset(seed=0)
-        agent = agent_class(env)
-        while not env.terminated:
-            observations, *_ = env.step(agent.predict(observations))
-        steps = env.time_step
-        grid_charge = 0.0
-        for building in env.buildings:
-            battery = np.asarray(building.electrical_storage.electricity_consumption[:steps], dtype="float64")
-            net = np.asarray(building.net_electricity_consumption[:steps], dtype="float64")
-            charge = np.clip(battery, 0.0, None)
-            surplus_without_battery = np.clip(battery - net, 0.0, None)
-            grid_charge += float(np.sum(charge - np.minimum(charge, surplus_without_battery)))
-        assert grid_charge == pytest.approx(0.0, abs=1.0e-6)
+        assert _battery_grid_charge_kwh(env, agent_class(env)) == pytest.approx(0.0, abs=1.0e-6)
     finally:
         env.close()
+
+
+def _battery_grid_charge_kwh(env: CityLearnEnv, agent) -> float:
+    """Run an episode and return the battery charge that PV surplus did not cover, summed over buildings."""
+    observations, _ = env.reset(seed=0)
+    while not env.terminated:
+        observations, *_ = env.step(agent.predict(observations))
+    steps = env.time_step
+    grid_charge = 0.0
+    for building in env.buildings:
+        battery = np.asarray(building.electrical_storage.electricity_consumption[:steps], dtype="float64")
+        net = np.asarray(building.net_electricity_consumption[:steps], dtype="float64")
+        charge = np.clip(battery, 0.0, None)
+        surplus_without_battery = np.clip(battery - net, 0.0, None)
+        grid_charge += float(np.sum(charge - np.minimum(charge, surplus_without_battery)))
+    return grid_charge
+
+
+@pytest.mark.parametrize("agent_class", [RBCSmartPolicy, RBCCommunityPolicy])
+def test_economic_rule_baselines_do_not_grid_charge_before_forecast_pv_without_a_surplus_forecast(agent_class):
+    # Issue #400: Smart and Community charge the battery from the grid at a cheap price unless a local PV
+    # surplus is forecast. This dataset has irradiance forecasts but no PV-surplus forecast (no
+    # entity_forecasts_derived bundle), so the surplus read as zero. Its tariff makes 4-8 h cheap every
+    # day, and the batteries filled from the grid before sunrise and then exported the PV they could not
+    # store. The solar forecast now stands in for the missing surplus forecast.
+    env = CityLearnEnv(
+        "citylearn_challenge_2022_phase_all", central_agent=True, episode_time_steps=48, random_seed=0,
+    )
+    try:
+        assert _battery_grid_charge_kwh(env, agent_class(env)) == pytest.approx(0.0, abs=1.0e-6)
+    finally:
+        env.close()
+
+
+def test_solar_forecast_stands_in_for_a_missing_pv_surplus_forecast():
+    with CityLearnEnv(str(SOURCE_DATASET / "schema.json"), episode_time_steps=4) as env:
+        engine = RBCSmartPolicy(env)._engine
+
+        def pv_expected(**observations) -> bool:
+            engine._obs_match_cache = {}
+            names = {name: index for index, name in enumerate(observations)}
+            values = np.asarray(list(observations.values()), dtype="float64")
+            return engine._pv_expected_without_surplus_forecast(values, names)
+
+        assert pv_expected(active_pvs_count=1.0, direct_solar_irradiance_predicted_2=400.0)
+        assert pv_expected(active_pvs_count=1.0, forecast_pv_next_1h_kw=2.0)
+        # No sun in the forecast, or no PV to use it.
+        assert not pv_expected(active_pvs_count=1.0, direct_solar_irradiance_predicted_2=50.0)
+        assert not pv_expected(active_pvs_count=0.0, direct_solar_irradiance_predicted_2=400.0)
+        # With a surplus forecast the rule reads the forecast surplus itself, as before.
+        assert not pv_expected(
+            active_pvs_count=1.0, direct_solar_irradiance_predicted_2=400.0, forecast_net_next_1h_kw=1.0,
+        )
+
+
+def test_rule_baseline_definition_versions():
+    # #400 changed the battery planning of all three and the grid charge of Smart and Community.
+    assert RBCBasicPolicy.DEFINITION_VERSION == "basic-v4"
+    assert RBCSmartPolicy.DEFINITION_VERSION == "smart-local-v4"
+    assert RBCCommunityPolicy.DEFINITION_VERSION == "community-v4"

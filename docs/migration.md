@@ -446,6 +446,30 @@ before comparing them. To reproduce a result using the previous BAU, use the
 CityLearn release or commit recorded in its original manifest. See the
 [BAU reference](baselines.md#known-limits).
 
+### The rule-based baselines use current-step load and solar
+
+`RBCBasicPolicy`, `RBCSmartPolicy` and `RBCCommunityPolicy` now plan the battery,
+EV and appliance budget with the load and PV of the step being planned, as the
+native BAU does, instead of the settled observations of the previous step.
+`RBCSmartPolicy` and `RBCCommunityPolicy` also stop charging the battery from the
+grid at a cheap price when PV is forecast and no PV-surplus forecast is observed
+(no `entity_forecasts_derived` bundle).
+Their definitions become `basic-v4`, `smart-local-v4` and `community-v4`.
+
+- Their actions and KPIs change on every dataset with a battery. The default
+  `RBCBasicPolicy` battery now follows the BAU rule exactly, so on datasets
+  without EVs or flexible appliances it gives the BAU results.
+- The grid-charge change acts only on datasets with a solar forecast and without
+  `entity_forecasts_derived`, for example `citylearn_challenge_2022_phase_all`
+  and `citylearn_three_phase_electrical_service_demo`; on `pt_rec_*` and
+  `citylearn_challenge_2022_phase_all_plus_evs` only the current-step change
+  applies.
+- Run them again before comparing a controller with them. To reproduce a result
+  of the earlier definitions, use the CityLearn release or commit recorded in its
+  manifest, as for the BAU. See
+  [the rule-based baselines](baselines.md#rule-based-baselines) and
+  [#400](https://github.com/citylearn-project/CityLearn/issues/400).
+
 ### Numeric and configuration hygiene
 
 These changes require no dataset, schema or KPI migration. Valid runs give the same results; a few silent mistakes now raise.

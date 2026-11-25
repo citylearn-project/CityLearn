@@ -130,12 +130,12 @@ All child environments must use:
 | Same effective episode length | Keeps training batches rectangular. |
 | Same `interface` | Keeps observation/action payload contracts stable. |
 | Same `central_agent` mode | Avoids mixing centralized and decentralized reward/action semantics. |
-| Same `evaluation_window` when enabled | Keeps recurring window KPIs aligned across communities. |
 | Same `physics_version` | Portfolio totals add up district values, so every community must simulate the same physics. |
 | Same `random_stream_version` | Randomly drawn defaults (battery curves, efficiencies, noise) must come from the same stream definition for the totals to be comparable. |
 | Same `baseline_version` | Portfolio baseline KPIs add up district baselines, so the baseline definition must match. |
 | Same `business_as_usual_ev_charge_target` | Portfolio BAU totals and ratios to the BAU add up the district BAU runs, so every community must charge its EVs in the BAU to the same target (`full` or `requested`). |
 | Same `ev_soc_carryover` | It changes the EV state at the start of each episode in the controlled and BAU runs, so portfolio totals would otherwise mix two EV definitions. |
+| Same `evaluation_window` when enabled | Keeps recurring window KPIs aligned across communities. |
 
 The wrapper validates these conditions at construction and again after reset, and
 raises a `ValueError` that names the setting, for example:
