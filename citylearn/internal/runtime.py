@@ -11,7 +11,7 @@ import numpy as np
 
 from citylearn.internal.histories import default_history
 from citylearn.internal.physics_version import physics_version_of
-from citylearn.internal.scalars import numpy1_scalar
+from citylearn.internal.scalars import clip_action, numpy1_scalar
 
 from citylearn import random_streams
 from citylearn.base import Environment
@@ -881,14 +881,21 @@ class CityLearnRuntimeService:
 
         active_actions = env._active_actions_cache
         parsed_actions = []
+        # Out-of-range actions are clipped to the action space, as entity tables are; physics version 1
+        # applies them as given, as CityLearn 3.6.0 did.
+        clip = physics_version_of(env) >= 2
 
-        for i, _building in enumerate(env.buildings):
+        for i, building in enumerate(env.buildings):
             action_dict = {}
             electric_vehicle_actions = {}
             deferrable_appliance_actions = {}
             escalator_actions = {}
+            space = building.action_space
+            lows, highs = space.low.tolist(), space.high.tolist()
 
-            for action_name, action in zip(active_actions[i], building_actions[i]):
+            for action_name, action, low, high in zip(active_actions[i], building_actions[i], lows, highs):
+                if clip:
+                    action = clip_action(action, low, high)
                 if 'electric_vehicle_storage' in action_name:
                     charger_id = action_name.replace('electric_vehicle_storage_', '')
                     electric_vehicle_actions[charger_id] = action

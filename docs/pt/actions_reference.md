@@ -8,7 +8,7 @@ Versão em inglês: [../actions_reference.md](../actions_reference.md).
 
 | Regra | Contrato |
 |---|---|
-| Limites | Lidos de `env.action_space` e `env.action_names`. |
+| Limites | Lidos de `env.action_space` e `env.action_names`. Uma ação fora dos limites é cortada para eles; ver [Ações fora dos limites](#ações-fora-dos-limites). |
 | Ações de armazenamento | Positivo carrega, negativo descarrega. |
 | Ações de carregadores de VE | Positivo carrega o VE, negativo descarrega/V2G se estiver ativado. |
 | Ações de aparelhos diferíveis | Comando binário de arranque. `action > trigger_threshold` tenta arrancar o próximo ciclo pendente (`trigger_threshold` predefinido: `0.5`). |
@@ -31,6 +31,21 @@ Versão em inglês: [../actions_reference.md](../actions_reference.md).
 | `electric_vehicle_storage_{charger_id}` | `[-1, 1]` ou `[0, 1]` | charger | Controla o VE ligado a um carregador. O limite negativo depende de `max_discharging_power`. |
 | `deferrable_appliance_{appliance_id}` | `[0, 1]` | appliance | Comando binário de arranque (`0` desligado, `1` ligado) para o próximo ciclo viável. |
 | `escalator_{escalator_id}` | `[0, 1]` | escalator | Seleciona o funcionamento em standby, lento ou normal. |
+
+## Ações fora dos limites
+
+As duas interfaces aplicam uma só regra a uma ação fora de `env.action_space`:
+é cortada para o limite mais próximo antes de chegar ao equipamento. Vale para
+os vetores de ações flat, para os vetores flat enviados a um ambiente entity e
+para os payloads entity `tables` e `map`. Uma ação dentro dos limites é aplicada
+tal como foi enviada, bit a bit. As ações `NaN` e infinitas não são cortadas:
+`step()` rejeita-as com um `ValueError`. Com `physics_version=1` as ações flat
+são aplicadas tal como são enviadas, como no CityLearn 3.6.0, e só as tabelas e
+os mapas entity são cortados.
+
+Por exemplo, com `cooling_storage` limitado a `[-0.25, 0.25]`, uma ação de
+`0.75` carrega o depósito como `0.25`. Depois aplicam-se os limites do
+equipamento (potência, capacidade, SOC) como habitualmente.
 
 ## Conversão física
 

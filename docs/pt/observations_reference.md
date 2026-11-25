@@ -138,6 +138,11 @@ As chaves auxiliares `deferrable_appliance_*` são expandidas por aparelho. Os m
 | `remaining_duration_steps` | passos | Duração restante do ciclo. |
 | `remaining_average_power_kw`, `current_step_power_kw` | kW | Potência média restante e potência do passo atual. |
 
+Os limites das features `*_kwh` vêm das definições dos ciclos dos aparelhos do
+edifício: `cycle_energy_kwh` e `remaining_energy_kwh` ficam em [0, maior energia
+de ciclo] e `current_step_energy_kwh` em [0, maior energia por passo]. Ver
+[limites das observações](interfaces_flat_entity.md#limites-das-observações).
+
 ### Observações flat de escadas rolantes
 
 As chaves auxiliares `escalator_*` são expandidas por escada rolante na interface flat.
