@@ -1,5 +1,6 @@
 """Scalar helpers for per-step hot paths."""
 
+import math
 from typing import Any, Optional
 
 import numpy as np
@@ -50,3 +51,33 @@ def clip_scalar(value: float, low: Optional[float] = None, high: Optional[float]
         x = float(high)
 
     return x
+
+
+def clip_action(value: Any, low: float, high: float) -> Any:
+    """Return an action clipped to its action-space bounds ``[low, high]``.
+
+    This is the one rule for actions outside ``action_space``, shared by the flat interface, flat
+    vectors sent to an entity environment and entity table or map payloads. A finite value outside
+    the bounds becomes the nearest bound, as a Python float. A value inside the bounds is returned
+    as given, the same object, so in-range actions reach the devices bit for bit as sent. NaN, inf
+    and non-numeric values are returned as given, so that the finiteness check rejects them rather
+    than a bound hiding them.
+    """
+
+    try:
+        x = float(value)
+    except (TypeError, ValueError):
+        return value
+
+    if not math.isfinite(x):
+        return value
+
+    low, high = float(low), float(high)
+
+    if x < low:
+        return low
+
+    if x > high:
+        return high
+
+    return value

@@ -406,6 +406,39 @@ coincidem com a execução única, mas o ganho de SOC ligado da contabilidade
 energética é o ganho de cada episódio, pelo que a sua soma é menor do que na
 execução única, e os totais de energia podem diferir ligeiramente ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
 
+### As ações flat fora dos limites são cortadas
+
+Uma ação flat fora de `env.action_space`, ou um vetor flat enviado a um ambiente
+entity, passa a ser cortada para o limite mais próximo, como já acontecia com os
+payloads entity `tables` e `map`. As ações dentro do espaço são aplicadas
+exatamente como antes. Um controlador que envie ações para além dos limites, por
+exemplo uma regra de armazenamento térmico acima de `±limit`, passa a obter a
+simulação cortada, e os seus resultados anteriores não são comparáveis com
+corridas novas. Isto inclui os RBC horários (`BasicRBC`, `OptimizedRBC`,
+`BasicBatteryRBC`) em `baeda_3dem`, nos datasets
+`citylearn_challenge_2020_climate_zone_*` e em `citylearn_challenge_2021`,
+cuja regra de armazenamento excede o limite do armazenamento térmico de alguns
+edifícios. `physics_version=1` mantém a regra da versão 3.6.0, ações flat
+aplicadas tal como são enviadas, para reproduzir essas corridas. Leia os limites
+de `env.action_space`. Ver
+[ações fora dos limites](actions_reference.md#ações-fora-dos-limites).
+
+### Limites das observações de energia dos diferíveis
+
+Os limites flat de `deferrable_appliance_*_cycle_energy_kwh`,
+`*_remaining_energy_kwh` e `*_current_step_energy_kwh` passam de [-1, 1e6] para
+[0, maior energia de ciclo] e [0, maior energia por passo] dos aparelhos do
+edifício, com a versão da física 2, a predefinida; `physics_version=1` mantém
+[-1, 1e6]. Os valores das observações e a simulação não mudam. As observações
+normalizadas (`NormalizedObservationWrapper`) e discretizadas, e os codificadores
+do `SAC` e do `MARLISA`, leem estes limites, pelo que uma política treinada num
+dataset com aparelhos diferíveis (`pt_rec_*`,
+`citylearn_challenge_2022_phase_all_plus_evs`, as demos trifásicas) vê entradas
+diferentes: volte a treiná-la e não compare os seus resultados anteriores com
+corridas novas. Um normalizador guardado com os limites antigos continua a
+funcionar, mas continua a esconder estas features. Ver
+[limites das observações](interfaces_flat_entity.md#limites-das-observações).
+
 ### Os espaços de observação seguem as observações
 
 Os valores das observações, a sua ordem e `observation_names` não mudam, nem as
@@ -835,6 +868,12 @@ Altera também as execuções que usam o seguinte:
   dava-lhes 50 kW de V2G
   ([#369](https://github.com/citylearn-project/CityLearn/issues/369), ver
   [valores predefinidos e nomes dos atributos dos carregadores](#valores-predefinidos-e-nomes-dos-atributos-dos-carregadores)).
+- **Ações flat fora do espaço de ações.** São cortadas para o espaço, como as
+  tabelas entity; a versão 1 aplicava-as tal como eram enviadas (ver
+  [as ações flat fora dos limites são cortadas](#as-ações-flat-fora-dos-limites-são-cortadas)).
+- **Limites das observações de energia dos diferíveis.** Os limites flat `*_kwh`
+  vêm dos ciclos dos aparelhos; a versão 1 mantinha [-1, 1e6] (ver
+  [limites das observações de energia dos diferíveis](#limites-das-observações-de-energia-dos-diferíveis)).
 - **Set points dos ocupantes sob controlo arbitrário.** Uma alteração do ocupante
   para em `set_point_limits`, [15, 30] °C por omissão; a versão 1 não tinha limite
   ([#352](https://github.com/citylearn-project/CityLearn/issues/352), ver

@@ -11,6 +11,7 @@ import numpy as np
 
 from citylearn.internal import entity_layout, entity_observations
 from citylearn.internal.physics_version import physics_version_of
+from citylearn.internal.scalars import clip_action
 
 
 @dataclass(frozen=True)
@@ -584,7 +585,7 @@ class CityLearnEntityInterfaceService:
                     raise ValueError(
                         f"Action '{action_name}' of building '{building.name}' is {value!r}; actions must be finite numbers."
                     )
-                value = float(np.clip(value, low, high))
+                value = float(clip_action(value, low, high))
                 if action_name.startswith("electric_vehicle_storage_"):
                     charger_id = action_name.replace("electric_vehicle_storage_", "")
                     electric_vehicle_actions[charger_id] = value
@@ -805,12 +806,20 @@ class CityLearnEntityInterfaceService:
         parsed_actions = []
         active_actions = self.env._active_actions_cache
 
-        for i, _building in enumerate(self.env.buildings):
+        # Flat vectors follow the flat rule: clipped to the action space, as the entity tables are, except
+        # under physics version 1, which applies them as given, as CityLearn 3.6.0 did.
+        clip = physics_version_of(self.env) >= 2
+
+        for i, building in enumerate(self.env.buildings):
             action_dict = {}
             electric_vehicle_actions = {}
             deferrable_appliance_actions = {}
+            space = building.action_space
+            lows, highs = space.low.tolist(), space.high.tolist()
 
-            for action_name, action in zip(active_actions[i], vectors[i]):
+            for action_name, action, low, high in zip(active_actions[i], vectors[i], lows, highs):
+                if clip:
+                    action = clip_action(action, low, high)
                 if "electric_vehicle_storage" in action_name:
                     charger_id = action_name.replace("electric_vehicle_storage_", "")
                     electric_vehicle_actions[charger_id] = action
