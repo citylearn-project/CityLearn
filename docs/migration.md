@@ -559,6 +559,14 @@ These changes only affect `topology_mode='dynamic'`:
   (`charger_1_1` of `Building_1` becomes `charger_19_1` in `Building_19`), so
   the clone's observation, action and entity names change; update saved agents
   and robustness events that name the clone's chargers by the source's id.
+- Under the default `baseline_version=2`, a battery removed or replaced by
+  `remove_asset` or `add_asset` keeps what it moved before the event in the
+  building's battery series, so the baselines without storage of that building
+  and the district no longer keep its dispatch and no longer depend on the
+  controller. Only the baseline rows (`*_baseline_*`, ratios and deltas to the
+  baseline) of runs that remove or replace a battery change. Set
+  `baseline_version=1` to keep the CityLearn 3.6.0 series, where the history
+  was lost.
 
 ### Control step different from the dataset step
 

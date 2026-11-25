@@ -1320,7 +1320,9 @@ inativos, o primeiro é ativado).
 
 Acrescentar FV ou armazenamento substitui o que o edifício já tem. Remover um aparelho diferível cancela os ciclos
 pendentes/em curso e limpa o consumo futuro. Remover a FV cria uma FV nula. Remover o armazenamento cria uma BESS nula.
-Um schema com `topology_events` lança `ValueError` salvo se `topology_mode` for `dynamic`.
+O que uma FV ou bateria substituída ou removida produziu ou consumiu antes do evento fica nas séries do edifício, pelo
+que as referências sem armazenamento e as somas do distrito o mantêm (na bateria, a partir da `baseline_version` 2). Um schema com `topology_events` lança
+`ValueError` salvo se `topology_mode` for `dynamic`.
 
 Os ficheiros de séries temporais de um membro (simulação energética, carregadores, escadas rolantes) cobrem o horizonte completo, com uma linha por passo do dataset, ou a janela do membro, mais curtos do que o dataset e com a primeira linha no passo do evento `add_member` do membro. Um ficheiro da janela do membro deve cobrir os passos ativos do membro na janela de simulação (caso contrário a última linha é repetida, com um aviso), e um membro que volta a entrar depois de sair precisa de ficheiros do horizonte completo. Um membro que entra a meio do episódio começa a bateria e o armazenamento térmico em `initial_soc`.
 
@@ -1361,7 +1363,8 @@ episódio, `physics_version`, `random_stream_version` e `baseline_version`. `ren
 
 Nos datasets sem ações de AVAC, o BAU, a sua definição e a sua identidade são os mesmos nas duas versões. Qualquer outro
 valor lança `ValueError`. Com a versão 2, avaliar um dataset com carregadores corre o BAU nativo; se não puder correr, um `ValueError`
-sugere `baseline_version=1`. Consulte [Referências](baselines.md#avac-e-a-versão-da-baseline).
+sugere `baseline_version=1`. Consulte [Referências](baselines.md#avac-e-a-versão-da-baseline). Com topologia dinâmica, a versão 2
+também mantém nas séries do edifício o passado de uma bateria removida ou substituída; a versão 1 perde-o, como a 3.6.0.
 
 ### `random_stream_version`
 

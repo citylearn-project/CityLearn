@@ -7,6 +7,7 @@ Look-ahead controllers, parallel rollouts and checkpoints copy a stepped environ
 
 import copy
 import pickle
+from collections.abc import Mapping
 
 import numpy as np
 import pytest
@@ -118,3 +119,71 @@ def test_uncopied_lstm_temperatures_are_unchanged(monkeypatch):
 
     assert any(h.grad_fn is not None for h in before_hidden_state)
     assert temperatures == before
+
+
+
+def _seeded_actions(env, steps, seed=5):
+    rng = np.random.default_rng(seed)
+    return [[rng.uniform(space.low, space.high).astype('float32') for space in env.action_space] for _ in range(steps)]
+
+
+def _step(env, actions):
+    """Step `env` once; return its observation, the buildings' unnormalized observations and the reward."""
+
+    observation, reward, *_ = env.step(actions[env.time_step])
+    # The building view of the observations, unnormalized, as rewards and rule-based controllers read it.
+    building_observations = [
+        value for building in env.buildings
+        for value in building.observations(include_all=True, normalize=False, periodic_normalization=False).values()
+        if not isinstance(value, Mapping)
+    ]
+    return (
+        np.asarray(observation, dtype='float64'), np.asarray(building_observations, dtype='float64'),
+        np.asarray(reward, dtype='float64'),
+    )
+
+
+def _assert_step_matches(actual, expected, label):
+    for name, a, e in zip(('observation', 'building observations', 'reward'), actual, expected):
+        np.testing.assert_array_equal(a, e, err_msg=f'{label}: {name}')
+
+
+@pytest.mark.parametrize('dataset', [
+    'quebec_neighborhood_without_demand_response_set_points', 'citylearn_challenge_2022_phase_all_plus_evs',
+])
+def test_copies_observe_and_are_rewarded_on_their_own_state(dataset):
+    # Buildings cache the arrays their observations read. A copy used to keep arrays frozen at copy time, so on
+    # LSTM datasets it observed, and was rewarded on, an indoor temperature its simulation no longer had.
+    kwargs = {}
+    if dataset.startswith('quebec'):
+        pytest.importorskip('torch')
+        kwargs['buildings'] = [0, 1, 2]
+
+    steps, copy_points = 24, (6, 15)
+
+    def make():
+        env = CityLearnEnv(dataset, simulation_start_time_step=0, simulation_end_time_step=steps, random_seed=0,
+                           central_agent=True, **kwargs)
+        env.reset(seed=0)
+        return env
+
+    reference = make()
+    actions = _seeded_actions(reference, steps + 1)
+    expected = []
+    while not reference.terminated:
+        expected.append(_step(reference, actions))
+
+    # Copy the environment at several points, by deepcopy and by pickle, and keep stepping the original.
+    original = make()
+    copies = []
+    while not original.terminated:
+        if original.time_step in copy_points:
+            copies.append((f'deepcopy at {original.time_step}', copy.deepcopy(original)))
+            copies.append((f'pickle at {original.time_step}', pickle.loads(pickle.dumps(original))))
+        t = original.time_step
+        _assert_step_matches(_step(original, actions), expected[t], f'original at {t}')
+
+    for label, env in copies:
+        while not env.terminated:
+            t = env.time_step
+            _assert_step_matches(_step(env, actions), expected[t], f'{label}, step {t}')

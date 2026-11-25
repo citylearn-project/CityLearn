@@ -389,6 +389,10 @@ class BuildingOpsService:
                 deferrable_appliances_dict[appliance.name] = dict(appliance.observations())
 
         observations = {}
+        if building.__dict__.get('_observation_source_cache_stale'):
+            # A copied building rebuilds the views of its own series (Building.__getstate__).
+            building._refresh_observation_source_cache()
+
         for key, series in building._energy_simulation_observation_sources:
             if wants(key) and t < len(series):
                 observations[key] = series[t]
