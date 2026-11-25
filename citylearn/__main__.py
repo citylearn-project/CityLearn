@@ -16,6 +16,7 @@ from typing import Any, List, Mapping, Tuple, Union
 import uuid
 from citylearn.agents.base import Agent as CityLearnAgent
 from citylearn.citylearn import CityLearnEnv
+from citylearn.internal.histories import default_history
 from citylearn.data import DataSet, get_settings
 from citylearn.__init__ import __version__
 from citylearn.utilities import FileHandler
@@ -273,17 +274,25 @@ class Simulator:
     def overwrite(self, value: bool):
         self.__overwrite = True if value is None else value
 
-    def __get_evaluation_summary(self):        
+    def __get_evaluation_summary(self, *, stream_rewards: bool = False):
+        unwrapped = self.env.unwrapped
+        rewards_history = default_history(unwrapped, 'rewards')
+        episode_rewards = (
+            rewards_history.rows()
+            if stream_rewards and rewards_history is not None
+            else unwrapped.rewards
+        )
+
         return {
             'evaluation_episode_time_steps': [
-                self.env.unwrapped.episode_tracker.episode_start_time_step, 
-                self.env.unwrapped.episode_tracker.episode_end_time_step
+                unwrapped.episode_tracker.episode_start_time_step, 
+                unwrapped.episode_tracker.episode_end_time_step
             ],
             'evaluation_start_timestamp': self.__evaluation_start_timestamp,
             'evaluation_end_timestamp': self.__evaluation_end_timestamp,
-            'evaluation': self.env.unwrapped.evaluate().pivot(index='name', columns='cost_function', values='value').to_dict('index'),
-            'episode_reward_summary': self.env.unwrapped.episode_rewards[-1],
-            'episode_rewards': self.env.unwrapped.rewards,
+            'evaluation': unwrapped.evaluate().pivot(index='name', columns='cost_function', values='value').to_dict('index'),
+            'episode_reward_summary': unwrapped.episode_rewards[-1],
+            'episode_rewards': episode_rewards,
             'time_series': self.__get_time_series().to_dict('list'),
             'actions': self.__actions_list,
         }
@@ -291,7 +300,11 @@ class Simulator:
     def __write_evaluation(self):
         # The JSON keeps its format, with the legacy evaluate() table under 'evaluation', for existing parsers.
         filepath = os.path.join(self.output_directory, f'{self.simulation_id}-evaluation.json')
-        FileHandler.write_json(filepath, self.__get_evaluation_summary())
+        FileHandler.write_json(
+            filepath,
+            self.__get_evaluation_summary(stream_rewards=True),
+            iterable_as_array=True,
+        )
         print(f'Wrote the evaluation to {filepath}')
 
         # The evaluate_v2() table, the one the KPI reference and the scorecard use: one row per KPI and scope,
