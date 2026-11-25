@@ -1721,6 +1721,22 @@ class Building(Environment):
 
         return self._ops_service.get_observations_data(include_all=include_all)
 
+    _OBSERVATION_SOURCE_CACHES = (
+        '_energy_simulation_observation_sources', '_weather_observation_sources', '_pricing_observation_sources',
+        '_carbon_observation_sources', '_additional_observation_sources',
+    )
+
+    def __getstate__(self) -> Dict[str, Any]:
+        state = self.__dict__.copy()
+        # The observation-source caches hold views of the time series arrays. Copied (deepcopy or pickle), they
+        # become arrays of their own, frozen at copy time, while the copy keeps writing its series (the LSTM
+        # indoor temperature, for example). The copy rebuilds them from its own series before it next reads them.
+        if any(state.get(name) for name in self._OBSERVATION_SOURCE_CACHES):
+            for name in self._OBSERVATION_SOURCE_CACHES:
+                state[name] = []
+            state['_observation_source_cache_stale'] = True
+        return state
+
     def _refresh_observation_source_cache(self):
         """Cache episode-sliced observation sources to avoid per-step dynamic lookups."""
 
@@ -1749,6 +1765,7 @@ class Building(Environment):
             for name, series in _collect(source)
             if name in self.observation_metadata
         ]
+        self._observation_source_cache_stale = False
 
     def _additional_observation_data_sources(self) -> List[Any]:
         """Time series data objects, beyond the building's own, whose declared observations subclasses expose."""

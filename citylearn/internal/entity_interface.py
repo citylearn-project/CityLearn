@@ -373,6 +373,12 @@ class CityLearnEntityInterfaceService:
         self._observation_bundles = self._resolve_observation_bundles()
         self._action_feedback_series_cache: Dict[int, Dict[str, Any]] = {}
 
+    def __getstate__(self) -> Dict[str, Any]:
+        state = self.__dict__.copy()
+        # The feedback cache is keyed by object ids, which mean other objects in a copy (or in another process).
+        state['_action_feedback_series_cache'] = {}
+        return state
+
     def reset(self):
         """Rebuild specs and reusable buffers for the current episode layout."""
 
