@@ -50,7 +50,7 @@ repositório não é criado por `pip install`.
 O [histórico de versões](releases.md) mantém as alterações específicas de cada
 versão e o histórico da linha de desenvolvimento.
 
-## Por publicar
+## Atualizar da 3.6.0 para a 3.7.0
 
 ### Cache de datasets identificada pelo conteúdo
 

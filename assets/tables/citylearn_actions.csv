@@ -1,7 +1,0 @@
-Name,Controlled Device,Unit
-cooling_storage,:py:attr:`citylearn.building.Building.cooling_storage`,kWh/kWh_capacity
-heating_storage,:py:attr:`citylearn.building.Building.heating_storage`,kWh/kWh_capacity
-dhw_storage,:py:attr:`citylearn.building.Building.dhw_storage`,kWh/kWhcapacity
-electrical_storage,:py:attr:`citylearn.building.Building.electrical_storage`,kWh/kWh_capacity
-cooling_device,:py:attr:`citylearn.building.Building.cooling_device`,kW/kW_nominal
-heating_device,:py:attr:`citylearn.building.Building.heating_device`,kW/kW_nominal
