@@ -21,6 +21,10 @@ from citylearn.agents._rule_engine import ChargerInfo, RulePolicyBase, StorageIn
 # citylearn.electric_vehicle.EV_SERVICE_SOC_TOLERANCE, so their departures meet the target.
 EV_CHARGE_STOP_SOC_TOLERANCE = 0.001
 
+# In the last interval before departure the engines may draw this much more AC energy than the
+# battery-side SOC gap, to cover charger and battery losses they cannot observe.
+EV_LAST_INTERVAL_LOSS_ALLOWANCE = 1.25
+
 # Fixed reference tariff: Core30 2023 OMIE terciles, rounded to 4 decimals.
 # Selection uses prices only, never controller outcomes or 2024 data.
 BASIC_PRICE_DEFAULTS = {
@@ -1612,9 +1616,10 @@ class _OperationalBaselinePolicy(RulePolicyBase):
         if float(ctx["soc"]) >= target_soc - tolerance:
             return 0.0
         gap_to_target = max(target_soc - float(ctx["soc"]), 0.0)
-        max_target_rate = (
+        gap_rate = (
             gap_to_target * float(ctx["capacity"]) / (self.step_hours * float(ctx["max_power"]))
         )
+        max_target_rate = gap_rate
         # A command below the charger minimum does not trickle-charge: it is
         # zero output. Allow the final viable charging interval to cross the
         # requested SOC slightly, rather than permanently stopping below it.
@@ -1627,9 +1632,10 @@ class _OperationalBaselinePolicy(RulePolicyBase):
         elif float(ctx.get("hours_to_departure", float("inf"))) <= self.step_hours + 1.0e-9:
             # In the last charging interval, the battery-side SOC gap is not
             # an AC energy cap: charger and battery losses can leave a deficit
-            # with no later interval to correct it. Honour the service request
-            # (already bounded by power/PV availability), accepting overshoot.
-            max_target_rate = 1.0
+            # with no later interval to correct it. Allow enough extra AC energy
+            # for those losses, instead of full power, which overshot the
+            # target by far more than the losses.
+            max_target_rate = max(gap_rate * EV_LAST_INTERVAL_LOSS_ALLOWANCE, minimum_rate)
         simulator_required = self._ctx_float(ctx, "min_required_action")
         if not math.isnan(simulator_required):
             max_target_rate = max(max_target_rate, simulator_required)

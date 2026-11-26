@@ -258,6 +258,29 @@ def test_rule_based_baselines_serve_a_tight_departure(agent_class):
         env.close()
 
 
+@pytest.mark.parametrize("engine_name", ["RBCBasicPolicy", "RBCSmartPolicy", "RBCCommunityPolicy"])
+def test_rule_based_baselines_cover_losses_in_the_last_interval_without_full_power(engine_name):
+    from gymnasium import spaces
+    from citylearn.agents import _baseline_engine as engines
+
+    engine = getattr(engines, engine_name)({"algorithm": {"hyperparameters": {}}})
+    engine.attach_environment(
+        observation_names=[["solar_generation"]], action_names=[["electrical_storage"]],
+        action_space=[spaces.Box(-1.0, 1.0, (1,))], observation_space=[None],
+        metadata={"seconds_per_time_step": 3600, "building_names": ["B"]},
+    )
+    # 40 kWh EV at 0.6 SOC, target 0.8, leaving within the hour, on a 22 kW charger (3.7 kW minimum).
+    ctx = {"connected": True, "soc": 0.6, "required_soc": 0.8, "capacity": 40.0, "max_power": 22.0,
+           "min_power": 3.7, "hours_to_departure": 1.0}
+    gap_rate = 0.2 * 40.0 / 22.0
+    # Full power would put 22 kWh into an 8 kWh gap; the allowance covers the losses only.
+    rate = engine._safe_ev_charge_rate(ctx, 1.0, (-1.0, 1.0))
+    assert rate == pytest.approx(gap_rate * engines.EV_LAST_INTERVAL_LOSS_ALLOWANCE)
+    # A small gap still gets the charger minimum, so the EV does not leave below its target.
+    ctx["soc"] = 0.79
+    assert engine._safe_ev_charge_rate(ctx, 1.0, (-1.0, 1.0)) == pytest.approx(3.7 / 22.0)
+
+
 @pytest.mark.parametrize(
     "agent_class",
     [BusinessAsUsualAgent, RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy],
