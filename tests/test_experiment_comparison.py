@@ -39,6 +39,8 @@ def test_relocated_exports_pair_with_distinct_controller_identity(tmp_path):
     b=export_run(moved_schema,tmp_path/'b',identity='controller-b')
     report=compare_exports(a,b)
     assert report['status']=='paired',report
+    left,right=(json.loads(x.with_suffix('.manifest.json').read_text()) for x in (a,b))
+    assert left['schema_sha256']==right['schema_sha256']
     assert report['permitted_claim']=='controller_difference'
     assert report['baseline_reference']['evaluated']
     assert report['baseline_reference']['definition_version']=='immediate-full-charge-v4'
@@ -56,6 +58,36 @@ def test_relocated_exports_pair_with_distinct_controller_identity(tmp_path):
     assert 'data_files_sha256' in compare_manifests(manifest,other)['mismatches']
     other=deepcopy(manifest);other['comparison_context']['observation']['interface']='entity'
     assert 'observation' in compare_manifests(manifest,other)['mismatches']
+
+
+def test_schema_hash_depends_on_content_not_on_dataset_folder(tmp_path):
+    import hashlib, shutil
+    path=_schema_with_deferrable_appliance(tmp_path/'source')
+    # A dataset folder as shipped: the schema finds its data next to itself.
+    data=json.loads(path.read_text());data['root_directory']=None;path.write_text(json.dumps(data))
+    copies=[]
+    for name in ('first','second/nested'):
+        target=tmp_path/name/'dataset'
+        shutil.copytree(path.parent,target)
+        copies.append(json.loads(export_run(target/'schema.json',tmp_path/'out'/name).with_suffix('.manifest.json').read_text()))
+    a,b=copies
+    assert a['effective_schema']['root_directory']!=b['effective_schema']['root_directory']
+    assert a['schema_sha256']==b['schema_sha256']
+    assert a['schema_file']==b['schema_file']=='schema.json'
+    assert a['schema_file_sha256']==b['schema_file_sha256']==hashlib.sha256(path.read_bytes()).hexdigest()
+    assert a['data_files_sha256']==b['data_files_sha256']
+    from citylearn.internal.experiment import schema_sha256
+    schema=a['effective_schema']
+    moved=deepcopy(schema);moved['root_directory']='/elsewhere'
+    assert schema_sha256(moved,'/elsewhere')==a['schema_sha256']
+    changed=deepcopy(schema);changed['seconds_per_time_step']=float(changed['seconds_per_time_step'])*2
+    assert schema_sha256(changed,schema['root_directory'])!=a['schema_sha256']
+    changed=deepcopy(schema);name=next(iter(changed['buildings']));changed['buildings'][name]['include']=False
+    assert schema_sha256(changed,schema['root_directory'])!=a['schema_sha256']
+    # Absolute paths inside the dataset folder count as their relative path.
+    absolute=deepcopy(schema);building=absolute['buildings'][name]
+    building['energy_simulation']=str(Path(schema['root_directory'])/building['energy_simulation'])
+    assert schema_sha256(absolute,schema['root_directory'])==a['schema_sha256']
 
 
 def test_market_difference_requires_explicit_sharing_comparison(tmp_path):

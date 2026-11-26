@@ -2,15 +2,65 @@
 import hashlib
 import json
 import subprocess
-from pathlib import Path
+from pathlib import Path, PurePath
 
 
-def _sha256(path):
+def file_sha256(path):
     digest = hashlib.sha256()
-    with path.open('rb') as stream:
+    with Path(path).open('rb') as stream:
         for block in iter(lambda: stream.read(1024*1024), b''):
             digest.update(block)
     return digest.hexdigest()
+
+
+def portable_schema(schema, root):
+    """Return the effective schema without its location on this machine.
+
+    `root_directory` is dropped and absolute paths inside the dataset folder become relative to it, so the same
+    scenario and data in two folders or on two machines give the same `schema_sha256`. The data files themselves
+    are covered by `data_files_sha256`.
+    """
+    root = Path(root).resolve()
+
+    def canonical(value):
+        if isinstance(value, PurePath):
+            value = str(value)
+        if isinstance(value, dict):
+            return {key: canonical(item) for key, item in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [canonical(item) for item in value]
+        if isinstance(value, str) and value and Path(value).is_absolute():
+            try:
+                return Path(value).resolve().relative_to(root).as_posix()
+            except ValueError:
+                return value
+        return value
+
+    return {key: canonical(value) for key, value in schema.items() if key != 'root_directory'}
+
+
+def schema_sha256(schema, root):
+    payload = json.dumps(portable_schema(schema, root), sort_keys=True, default=str).encode()
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _schema_file(env, root):
+    """Return the scenario file the env was built from, relative to the dataset folder, and its SHA-256."""
+    source = getattr(env, '_schema_source', None)
+    if not source:
+        return None, None
+    path = Path(source['path'])
+    try:
+        name = path.relative_to(root).as_posix()
+    except ValueError:
+        # A scenario outside its data folder: record its location relative to the data folder, or only its
+        # name when no relative path exists (another drive on Windows).
+        import os
+        try:
+            name = Path(os.path.relpath(path, root)).as_posix()
+        except ValueError:
+            name = path.name
+    return name, source['sha256']
 
 
 def experiment_manifest(env):
@@ -32,7 +82,7 @@ def experiment_manifest(env):
             path = Path(value)
             path = path if path.is_absolute() else root/path
             if path.is_file():
-                files[value] = _sha256(path)
+                files[value] = file_sha256(path)
             else:
                 missing.append(value)
     collect(schema)
@@ -47,7 +97,7 @@ def experiment_manifest(env):
                                             cwd=repo, stderr=subprocess.DEVNULL, text=True, timeout=5).strip())
     except (OSError, subprocess.SubprocessError):
         pass
-    payload = json.dumps(schema, sort_keys=True, default=str).encode()
+    schema_file, schema_file_sha256 = _schema_file(env, root)
     snapshot = getattr(env, '_input_snapshot', None)
     from citylearn.internal.temporal import input_changes, runtime_versions
     changed = input_changes(snapshot) if snapshot is not None else {}
@@ -67,7 +117,8 @@ def experiment_manifest(env):
                 business_as_usual_reference=native_reference(env),
                 controller_identity=getattr(env, '_controller_identity', None),
                 comparison_context=context(env, files), final_inventory=inventory(env),
-                schema_sha256=hashlib.sha256(payload).hexdigest(), effective_schema=schema,
+                schema_sha256=schema_sha256(schema, root), schema_file=schema_file,
+                schema_file_sha256=schema_file_sha256, effective_schema=schema,
                 data_files_sha256=files, unresolved_file_references=sorted(set(missing)),
                 runtime_versions=runtime_versions(),
                 input_file_changes=changed, temporal_reproducibility=metadata['temporal_reproducibility'],

@@ -572,6 +572,19 @@ resultados da simulação não mudam
 ([#301](https://github.com/citylearn-project/CityLearn/issues/301),
 [#302](https://github.com/citylearn-project/CityLearn/issues/302)).
 
+### Hash portável do schema
+
+O `schema_sha256` de `exported_kpis.manifest.json` deixa de depender da pasta do
+dataset: é o hash do schema efetivo sem `root_directory`, com os caminhos
+absolutos dentro da pasta do dataset tornados relativos a ela. O mesmo cenário
+em dois checkouts ou em duas máquinas tem agora o mesmo hash, e todos os hashes
+registados antes desta alteração diferem do novo para o mesmo cenário. Se um
+protocolo fixa um `schema_sha256` registado, registe-o de novo com esta versão,
+ou fixe o novo `schema_file_sha256`, o SHA-256 dos bytes do ficheiro do cenário,
+ao lado de `schema_file`, o seu caminho relativo à pasta do dataset. O
+`data_files_sha256` e o `compare_manifests()` não mudam, e os resultados da
+simulação também não.
+
 ### Divisões consecutivas de episódios partilham a linha de fronteira
 
 Um episódio de N linhas de dados executa N - 1 passos de controlo: a sua última
