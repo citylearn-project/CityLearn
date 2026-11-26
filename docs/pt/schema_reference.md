@@ -730,7 +730,9 @@ atributos dimensionados são substituídos.
 
 O dimensionamento da bateria e da FV descarrega dados de dimensionamento se não estiverem em cache (`offline=True`
 impede a descarga); a FV precisa de `pip install nrel-pysam`. Na versão 1 da física, o dimensionamento da FV assume
-dados horários.
+dados horários. Na versão 2, a procura da janela é escalada para um ano antes de ser comparada com a produção anual do
+PVWatts, pelo que uma janela de uma semana dimensiona o painel como uma janela de um ano com a mesma procura média (uma
+janela sazonal continua a dar um dimensionamento sazonal).
 
 ## Serviço elétrico
 

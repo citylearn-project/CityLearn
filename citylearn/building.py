@@ -2838,8 +2838,9 @@ class Building(Environment):
                 if getattr(self, '_electrical_service_enabled', False):
                     min_total_kw = base_power_min_kw - control_margin_kw
                     max_total_kw = base_power_max_kw + control_margin_kw
-                    if phase:
-                        # A phase carries a share of the building power, which can be none of it.
+                    if phase or self.simulate_power_outage:
+                        # A phase carries a share of the building power, which can be none of it,
+                        # and an outage takes the base power to zero.
                         min_total_kw, max_total_kw = min(min_total_kw, 0.0), max(max_total_kw, 0.0)
                     if export:
                         bounds = [limit_low + min_total_kw, limit + max_total_kw]
@@ -3185,11 +3186,13 @@ class Building(Environment):
         if legacy:
             # Physics version 1 assumes an hourly 8760-row year whatever the data resolution.
             demand['year'] = (demand.index / (self.seconds_per_time_step * 24 * 365 / self.seconds_per_time_step)).astype(int)
+            demand = demand.groupby('year')['value'].sum().mean()
         else:
+            # The PVWatts yield is for a full year, so the window's demand is scaled to one year.
+            # A one-year window is unchanged; a shorter one no longer gives a smaller array.
             rows_per_year = max(int(round(365.0 * 24.0 / self._dataset_step_hours())), 1)
-            demand['year'] = demand.index // rows_per_year
+            demand = float(demand['value'].sum()) * (rows_per_year / len(demand))
 
-        demand = demand.groupby('year')['value'].sum().mean()
         epw_filepath = kwargs.pop('epw_filepath')
         self.pv.nominal_power, solar_generation = self.pv.autosize(demand, epw_filepath, **kwargs)
         self.pv.generation_mode = 'per_kw'

@@ -2056,7 +2056,10 @@ class NormalTargetPolicy(NormalPolicy):
 
     The last command is bounded by the remaining stored-energy gap, without
     assuming unobserved charger/battery efficiencies. If that command is below
-    the charger minimum, stop below the target instead of overshooting it.
+    the charger minimum, the last step charges at the minimum power and crosses
+    the target slightly, as the rule-based baselines do, rather than leaving
+    the EV below it. Charging stops ``EV_CHARGE_STOP_SOC_TOLERANCE`` below the
+    target, inside the KPI service tolerance.
     """
 
     def __init__(self, config: Dict[str, Any]) -> None:
@@ -2115,15 +2118,18 @@ class NormalTargetPolicy(NormalPolicy):
             return 0.0
         # Float32 observations/actions need a tiny SOC margin at the cap.
         gap = max(0.0, float(ctx["required_soc"]) - float(ctx["soc"]) - 1.0e-6)
-        if gap <= 0.0:
+        if gap <= EV_CHARGE_STOP_SOC_TOLERANCE:
             return 0.0
         energy_cap_rate = gap * float(ctx["capacity"]) / (self.step_hours * float(ctx["max_power"]))
         rate = min(self.ev_normal_charge_rate, energy_cap_rate, 1.0)
         minimum_rate = float(ctx["min_power"]) / float(ctx["max_power"])
-        if rate <= 0.0 or rate < minimum_rate:
+        # A command below the charger minimum is zero output, so the EV would
+        # leave below its target. Charge the last step at the minimum instead.
+        rate = max(rate, minimum_rate)
+        if rate <= 0.0:
             return 0.0
         clipped = self._clip_non_v2g_charge(rate, bounds)
-        return clipped if minimum_rate <= clipped <= energy_cap_rate else 0.0
+        return clipped if clipped >= minimum_rate and clipped > 0.0 else 0.0
 
 
 class RBCBasicPolicy(_OperationalBaselinePolicy):

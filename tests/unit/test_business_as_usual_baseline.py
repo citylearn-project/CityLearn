@@ -178,7 +178,7 @@ def test_bau_battery_does_not_discharge_for_a_faded_full_ev(tmp_path: Path, seco
     assert actions[-1] == 0.0
 
 
-def test_business_as_usual_stops_below_target_instead_of_overshooting_charger_minimum(tmp_path: Path):
+def test_business_as_usual_finishes_at_charger_minimum_instead_of_stopping_below_target(tmp_path: Path):
     dataset_dir = tmp_path / "minute_ev_demo"
     shutil.copytree(SOURCE_DATASET, dataset_dir)
     schema_path = dataset_dir / "schema.json"
@@ -190,9 +190,14 @@ def test_business_as_usual_stops_below_target_instead_of_overshooting_charger_mi
     env = CityLearnEnv(str(schema_path), central_agent=True, episode_time_steps=4, random_seed=0)
     try:
         env.reset(seed=0)
-        env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = 0.79
+        battery = env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery
+        # A command below the minimum is zero output: the last step charges at the minimum.
+        battery.soc[0] = 0.79
+        assert _ev_action(BusinessAsUsualAgent, env, ev_charge_target="requested") == pytest.approx(1.38 / 7.2)
+        # Within the stop tolerance of the target the EV already counts as served.
+        battery.soc[0] = 0.7995
         assert _ev_action(BusinessAsUsualAgent, env, ev_charge_target="requested") == pytest.approx(0.0)
-        env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = 0.4
+        battery.soc[0] = 0.4
         assert _ev_action(BusinessAsUsualAgent, env, ev_charge_target="requested") == pytest.approx(1.0)
     finally:
         env.close()

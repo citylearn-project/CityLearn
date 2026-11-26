@@ -327,8 +327,8 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
     to 100%, as the BAU of CityLearn 3.1–3.3 did. With
     ``ev_charge_target='requested'`` (``immediate-user-target-v3``) it stops at the
     user's requested departure SOC: the last command is limited to the remaining
-    energy gap, and when that command is below the charger minimum the EV stops
-    slightly below the target instead of overshooting it. Appliances start at the first admissible
+    energy gap, and when that command is below the charger minimum the last step
+    charges at the minimum and crosses the target slightly. Appliances start at the first admissible
     step and the home battery uses observed current-step demand and PV when
     estimating local surplus or import.
 

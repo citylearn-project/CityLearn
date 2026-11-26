@@ -267,6 +267,28 @@ def test_issue_233_hourly_pv_profile_is_resampled_to_the_dataset_resolution(tmp_
     np.testing.assert_array_equal(building._hourly_profile_to_dataset_resolution(hourly, 24)[:3], [0.5, 2.5, 4.5])
 
 
+def test_pv_autosize_scales_the_window_demand_to_one_year(tmp_path, monkeypatch):
+    _, schema = _minute_dataset(tmp_path)
+    env = CityLearnEnv(schema)
+    building = env.buildings[0]
+    rows_per_year = int(round(365.0 * 24.0 / building._dataset_step_hours()))
+    sized = []
+
+    def fake_autosize(self, demand, epw_filepath, **kwargs):
+        sized.append(demand)
+        return 1.0, np.zeros(8760)
+
+    monkeypatch.setattr(type(building.pv), 'autosize', fake_autosize)
+
+    # PVWatts gives a full year of yield, so a one-week window must not give a smaller array.
+    for rows in (rows_per_year // 52, rows_per_year, 2 * rows_per_year + rows_per_year // 2):
+        monkeypatch.setattr(type(building), '_estimate_baseline_electricity_consumption',
+                            lambda self, rows=rows: np.full(rows, 0.5))
+        building.autosize_pv(epw_filepath='unused.epw')
+
+    assert sized == pytest.approx([0.5 * rows_per_year] * 3)
+
+
 # --- Efficiency naming and history -------------------------------------------------------------------
 
 def _battery(**kwargs) -> Battery:

@@ -67,3 +67,14 @@ def test_zero_over_zero_keeps_its_value_and_a_single_member_keeps_its_ratio():
     assert values['building', 'Building_1'] == 1.0
     values = _apply(_records(IMPORT, {'Building_1': (5.0, 0.01, 500.0), 'District': (5.0, 0.01, 500.0)}))
     assert values['building', 'Building_1'] == 500.0
+
+
+def test_equal_control_and_negligible_reference_keep_the_no_change_ratio():
+    # Building_15 on plus_evs with the BAU as controller: 0.4295 / 0.4295 kWh is "no change", not undefined.
+    values = _apply(_records(THROUGHPUT, {
+        'Building_1': (120.0, 100.0, 1.2),
+        'Building_2': (90.0, 100.0, 0.9),
+        'Building_15': (0.4295, 0.4295, 1.0),
+        'District': (210.4295, 200.4295, 210.4295 / 200.4295),
+    }))
+    assert values['building', 'Building_15'] == 1.0

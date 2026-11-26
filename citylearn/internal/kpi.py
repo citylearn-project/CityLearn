@@ -2218,7 +2218,8 @@ class CityLearnKPIService:
           so a district ratio is undefined only if the district reference is itself below 1% of a
           member's (a signed total, e.g. net exchange, whose members cancel). Using absolute values
           keeps the scale of signed totals positive. A single-building env, or a reference that is
-          zero for every member, leaves only the 0/0 rule.
+          zero for every member, leaves only the 0/0 rule. Control and reference totals equal
+          within the zero tolerance keep their ratio of 1.0: the controller changed nothing.
         """
         eps = float(ZERO_DIVISION_PLACEHOLDER)
         share = float(self.NEGLIGIBLE_REFERENCE_SHARE)
@@ -2245,7 +2246,8 @@ class CityLearnKPIService:
                     record['value'] = None
                 continue
             scale = scales.get(self._building_level_name(level, reference_name), 0.0)
-            if scale > eps and abs(reference) <= share * scale:
+            # Equal totals are "no change" whatever their size, as in the 0/0 rule: keep the 1.0.
+            if scale > eps and abs(reference) <= share * scale and abs(control - reference) > eps:
                 record['value'] = None
 
     @classmethod
