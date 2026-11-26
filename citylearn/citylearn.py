@@ -1559,6 +1559,8 @@ class CityLearnEnv(Environment, Env):
     @schema.setter
     def schema(self, schema: Union[str, Path, Mapping[str, Any]]):
         dataset = DataSet(offline=self.offline)
+        # The scenario file the schema was read from, kept so the export manifest can record its bytes.
+        source_path = None
 
         if isinstance(schema, (str, Path)):
             schema_path = Path(schema).expanduser()
@@ -1569,6 +1571,7 @@ class CityLearnEnv(Environment, Env):
             if schema_path.is_file():
                 schema = FileHandler.read_json(schema_path)
                 schema['root_directory'] = str(FileHandler.resolve_schema_root(schema, schema_path))
+                source_path = schema_path
 
             elif isinstance(schema, str):
                 try:
@@ -1579,6 +1582,7 @@ class CityLearnEnv(Environment, Env):
                 if schema in dataset_names:
                     schema = dataset.get_schema(schema)
                     schema['root_directory'] = '' if schema['root_directory'] is None else schema['root_directory']
+                    source_path = Path(schema['root_directory']) / 'schema.json'
                 else:
                     if self.offline:
                         raise UnknownSchemaError(
@@ -1597,7 +1601,14 @@ class CityLearnEnv(Environment, Env):
         
         else:
             raise UnknownSchemaError()
-        
+
+        self._schema_source = None
+
+        if source_path is not None and source_path.is_file():
+            from citylearn.internal.experiment import file_sha256
+            source_path = source_path.resolve()
+            self._schema_source = dict(path=str(source_path), sha256=file_sha256(source_path))
+
         self.__schema = schema
 
     @offline.setter
