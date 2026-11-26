@@ -238,8 +238,10 @@ def run(args):
                 if not np.isfinite(reward).all():raise AssertionError('Non-finite reward')
                 if meters.steps!=before+1:raise AssertionError('Exactly one executed meter sample required per transition')
                 writer.writerow(observer.row)
-                if truncated and not terminated:raise AssertionError('Unexpected truncated episode')
-                if meters.steps % args.block_steps==0 or terminated:
+                # The window ends at a time limit, reported as truncation by default (`episode_end`); either flag
+                # must coincide with the end of the episode.
+                if (terminated or truncated)!=env.done:raise AssertionError('Episode end flags disagree with env.done')
+                if meters.steps % args.block_steps==0 or terminated or truncated:
                     now=time.monotonic();collect_batteries();ledger=env._provenance_service
                     aggregates=[ledger.sources,ledger.sinks,ledger.internal_transfers,[s.bag for s in ledger.stocks.values()]]
                     block=dict(completed_intervals=meters.steps,global_last_executed=args.start+t,
