@@ -329,6 +329,21 @@ A schema that omits `max_discharging_power` and relied on the 50 kW of V2G
 needs it set explicitly, or `physics_version=1`, which keeps the 50 kW defaults
 of CityLearn 3.6.0 (the name check applies to both versions).
 
+### Charger ids are unique across the schema
+
+Two buildings may no longer declare a charger with the same id: loading raises
+`ValueError: Charger id 'charger_1_1' is declared by both Building_1 and
+Building_2` ([#402](https://github.com/citylearn-project/CityLearn/issues/402)).
+Give each charger its own id in the schema, for example `charger_2_1` for the
+copy in `Building_2`. If you built the second building by copying the first,
+check its `charger_simulation` file too: a copy that schedules the same EV
+plugs one car into two chargers, and the second stays idle with a warning.
+
+Deferrable-appliance names may still repeat across buildings. In an entity
+action map, address such an appliance with its building,
+`Building_2/washer_1`; the bare `washer_1` (or `deferrable_appliance:washer_1`)
+now raises when two buildings have it instead of reaching the last of them.
+
 ### EV departures at the end of the window
 
 A session that is still connected at the last step of a member's KPI window,
@@ -707,6 +722,18 @@ lists every changed row and the name that keeps its 3.6.0 value.
   for example the emissions ratios on Quebec (zero carbon intensity) and the
   cost ratios on the `citylearn_challenge_2020_climate_zone_*` and
   `citylearn_challenge_2021` datasets (no prices), for every controller.
+- **Total ratios with a negligible reference** are undefined instead of a
+  finite but arbitrarily large quotient: a `*_ratio_to_baseline_*_total_ratio`
+  or `*_ratio_to_business_as_usual_*_ratio` whose reference total is at most 1%
+  of the mean |reference| of the building rows
+  ([#403](https://github.com/citylearn-project/CityLearn/issues/403)). Only
+  building rows changed on the bundled datasets: 8 of 8,774 rows on
+  `citylearn_challenge_2022_phase_all_plus_evs` (336 steps, RBCSmart or random
+  actions), 3 over the full year with zero actions, 3 of 8,789 on
+  `citylearn_three_phase_electrical_service_demo`, none on `pt_rec_4`; no
+  district row changed. Code that reads these cells must handle `None`/NaN. The
+  control and reference totals and their delta stay in the table; divide them
+  if you need the raw quotient.
 
 ### Physics version
 

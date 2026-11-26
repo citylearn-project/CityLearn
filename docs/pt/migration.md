@@ -346,6 +346,23 @@ contava com os 50 kW de V2G tem de o definir explicitamente, ou usar
 `physics_version=1`, que mantém os 50 kW do CityLearn 3.6.0 (a verificação dos
 nomes aplica-se às duas versões).
 
+### Os ids dos carregadores são únicos no schema
+
+Dois edifícios deixam de poder declarar um carregador com o mesmo id: o
+carregamento lança `ValueError: Charger id 'charger_1_1' is declared by both
+Building_1 and Building_2`
+([#402](https://github.com/citylearn-project/CityLearn/issues/402)). Dê a cada
+carregador um id próprio no schema, por exemplo `charger_2_1` para a cópia em
+`Building_2`. Se construiu o segundo edifício copiando o primeiro, verifique
+também o seu ficheiro `charger_simulation`: uma cópia que agenda o mesmo VE liga
+um carro a dois carregadores, e o segundo fica parado com um aviso.
+
+Os nomes dos aparelhos diferíveis podem continuar a repetir-se entre edifícios.
+Num mapa de ações de entidades, designe esse aparelho com o seu edifício,
+`Building_2/washer_1`; o nome simples `washer_1` (ou
+`deferrable_appliance:washer_1`) passa a lançar um erro quando dois edifícios o
+têm, em vez de chegar ao último deles.
+
 ### Partidas de VE no fim da janela
 
 Uma sessão ainda ligada no último passo da janela de KPIs de um membro, com
@@ -751,6 +768,18 @@ todas as linhas alteradas e o nome que mantém o seu valor da 3.6.0.
   vez de 1, por exemplo os rácios de emissões em Quebec (intensidade carbónica
   nula) e os rácios de custo nos datasets `citylearn_challenge_2020_climate_zone_*`
   e `citylearn_challenge_2021` (sem preços), para todos os controladores.
+- **Os rácios de totais com uma referência desprezável** são indefinidos em vez
+  de um quociente finito mas arbitrariamente grande: um
+  `*_ratio_to_baseline_*_total_ratio` ou `*_ratio_to_business_as_usual_*_ratio`
+  cujo total de referência é no máximo 1% da média de |referência| das linhas
+  de edifício ([#403](https://github.com/citylearn-project/CityLearn/issues/403)).
+  Nos datasets incluídos só mudaram linhas de edifício: 8 de 8774 linhas em
+  `citylearn_challenge_2022_phase_all_plus_evs` (336 passos, RBCSmart ou ações
+  aleatórias), 3 no ano completo com ações nulas, 3 de 8789 em
+  `citylearn_three_phase_electrical_service_demo`, nenhuma em `pt_rec_4`; nenhuma
+  linha do distrito mudou. O código que lê estas células tem de tratar
+  `None`/NaN. Os totais control e de referência e o seu delta continuam na
+  tabela; divida-os se precisar do quociente bruto.
 
 ### Versão da física
 

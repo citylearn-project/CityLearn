@@ -39,24 +39,83 @@ class BalanceAuditError(AssertionError):
 
 def plus(target, values, factor=1.0):
     for key, value in values.items():
-        target[key] = target.get(key, np.zeros(2)) + np.asarray(value) * factor
+        current = target.get(key)
+        scaled = np.asarray(value) * factor
+        target[key] = (_ZERO if current is None else current) + scaled
     return target
 
 
+_ZERO = np.zeros(2)
+
+
 def total(values):
+    """Energy of a bag: a mapping label -> [kWh, kgCO2], or a `LabelSpace` array of such rows."""
+
+    if values is None:
+        return 0.0
+    if isinstance(values, np.ndarray):
+        return float(values[:, 0].sum())
     return sum(float(v[0]) for v in values.values())
+
+
+class LabelSpace:
+    """Index of the (origin, producer) labels of an audit, so a bag is one (labels, 2) array.
+
+    Labels are only added, so an array made earlier is padded with zero rows by `fit`.
+    """
+
+    def __init__(self):
+        self.keys, self.index = [], {}
+
+    def id(self, key):
+        i = self.index.get(key)
+        if i is None:
+            i = self.index[key] = len(self.keys)
+            self.keys.append(key)
+        return i
+
+    def fit(self, values):
+        missing = len(self.keys) - len(values)
+        return np.vstack([values, np.zeros((missing, 2))]) if missing else values
+
+    def array(self, bag):
+        """A bag as an array; `bag` is an array already or a mapping label -> [kWh, kgCO2]."""
+
+        if isinstance(bag, np.ndarray):
+            return self.fit(bag)
+        ids = [self.id(key) for key in bag]
+        values = np.zeros((len(self.keys), 2))
+        for i, value in zip(ids, bag.values()):
+            values[i] = values[i] + np.asarray(value)
+        return values
+
+    def add(self, target, key, bag, factor=1.0):
+        """``target[key] += bag * factor`` on arrays, creating the entry with zeros."""
+
+        bag = self.array(bag) * factor
+        current = target.get(key)
+        target[key] = bag if current is None else self.fit(current) + bag
+        return target[key]
+
+    def rows(self, values):
+        """The nonzero rows of an array bag, as label -> [kWh, kgCO2]."""
+
+        return {self.keys[i]: values[i] for i in np.flatnonzero(np.any(values != 0.0, axis=1))}
 
 
 class FlowNetwork:
     """Solve concentrations from Kirchhoff balances on explicit operation nodes."""
 
-    def __init__(self):
+    def __init__(self, space=None):
+        """With a `LabelSpace`, inputs may be arrays and `solve` returns array bags over it."""
+
         self.mass, self.inputs, self.edges, self.sinks = [], [], [], []
+        self.space = space
 
     def node(self, mass, inputs=None):
         i = len(self.mass)
         self.mass.append(float(mass))
-        self.inputs.append(inputs or {})
+        self.inputs.append({} if inputs is None else inputs)
         return i
 
     def edge(self, source, target, amount):
@@ -65,42 +124,87 @@ class FlowNetwork:
     def sink(self, node, key, amount):
         self.sinks.append((node, key, float(amount)))
 
-    def solve(self, check):
+    def solve(self, check, check_many=None):
+        """Solve the network and return each sink's origin bag.
+
+        ``check_many(label, actual, expected)`` checks arrays element by element with the same rule
+        as ``check``; ``label`` may be a callable that names element ``k``. Without it, ``check`` is
+        called once per element. With a `LabelSpace`, each bag is an array over it and the returned
+        labels are the label ids of the concentration columns.
+        """
+
+        if check_many is None:
+
+            def check_many(label, actual, expected):
+                actual = np.asarray(actual, dtype=float).ravel()
+                expected = np.broadcast_to(np.asarray(expected, dtype=float), actual.shape)
+                for k, (a, e) in enumerate(zip(actual, expected)):
+                    check(label(k) if callable(label) else label, float(a), float(e))
+
         size = len(self.mass)
-        labels = sorted({key for source in self.inputs for key in source})
-        index = {key: i for i, key in enumerate(labels)}
-        matrix = np.diag(self.mass)
-        rhs = np.zeros((size, 2 * len(labels)))
+        mass = np.asarray(self.mass, dtype=float)
+        matrix = np.diag(mass)
         incoming = np.zeros(size)
         outgoing = np.zeros(size)
-        for node, source in enumerate(self.inputs):
-            incoming[node] += total(source)
-            for key, value in source.items():
-                rhs[node, 2 * index[key] : 2 * index[key] + 2] += value
-        for a, b, flow in self.edges:
-            if flow < -1e-10:
+        if self.space is None:
+            labels = sorted({key for source in self.inputs for key in source})
+            index = {key: i for i, key in enumerate(labels)}
+            rhs = np.zeros((size, 2 * len(labels)))
+            for node, source in enumerate(self.inputs):
+                incoming[node] += total(source)
+                for key, value in source.items():
+                    rhs[node, 2 * index[key] : 2 * index[key] + 2] += value
+        else:
+            # Columns are the labels with a nonzero input; the others are zero in every equation.
+            inputs = [self.space.array(source) for source in self.inputs]
+            inputs = np.stack([self.space.fit(v) for v in inputs]) if inputs else np.zeros((0, 0, 2))
+            incoming += inputs[:, :, 0].sum(axis=1)
+            labels = np.flatnonzero(np.any(inputs != 0.0, axis=(0, 2)))
+            rhs = inputs[:, labels, :].reshape(size, 2 * len(labels))
+        sources = targets = np.zeros(0, dtype=int)
+        flows = np.zeros(0)
+        if self.edges:
+            edges = np.asarray(self.edges, dtype=float).reshape(-1, 3)
+            sources, targets, flows = edges[:, 0].astype(int), edges[:, 1].astype(int), edges[:, 2]
+            if np.any(flows < -1e-10):
                 raise BalanceAuditError("Negative physical edge")
-            matrix[b, a] -= flow
-            incoming[b] += flow
-            outgoing[a] += flow
+            np.subtract.at(matrix, (targets, sources), flows)
+            np.add.at(incoming, targets, flows)
+            np.add.at(outgoing, sources, flows)
         for node, key, flow in self.sinks:
             outgoing[node] += flow
-        for i, mass in enumerate(self.mass):
-            check(f"node_{i}_input", incoming[i], mass)
-            check(f"node_{i}_output", outgoing[i], mass)
-        active = np.flatnonzero(np.asarray(self.mass) > 1e-12)
+        # Interleaved as node_0_input, node_0_output, node_1_input, ... so the first failure is the same.
+        check_many(
+            lambda k: f"node_{k // 2}_{'input' if k % 2 == 0 else 'output'}",
+            np.column_stack([incoming, outgoing]).ravel(),
+            np.repeat(mass, 2),
+        )
+        active = np.flatnonzero(mass > 1e-12)
         concentrations = np.zeros_like(rhs)
         rank = len(active)
         if len(active):
-            a = matrix[np.ix_(active, active)] / np.asarray(self.mass)[active, None]
-            b = rhs[active] / np.asarray(self.mass)[active, None]
-            x, _, rank, _ = np.linalg.lstsq(a, b, rcond=1e-12)
-            for value in (a @ x - b).ravel():
-                check("flow_network_equation", float(value), 0.0)
+            a = matrix[np.ix_(active, active)] / mass[active, None]
+            b = rhs[active] / mass[active, None]
+            positive = flows > 0.0
+            if _acyclic(size, sources[positive], targets[positive], active):
+                # a is unit lower triangular in a topological order of the nodes, so it is
+                # nonsingular and LU gives the solution lstsq would, at a fraction of the cost.
+                x, rank = np.linalg.solve(a, b), len(active)
+            else:
+                x, _, rank, _ = np.linalg.lstsq(a, b, rcond=1e-12)
+            check_many("flow_network_equation", a @ x - b, 0.0)
             if x.size and float(x.min()) < -1e-7:
                 raise BalanceAuditError("Negative source concentration")
             concentrations[active] = np.maximum(x, 0.0)
         output = {}
+        if self.space is not None:
+            width = len(self.space.keys)
+            for node, key, flow in self.sinks:
+                values = np.zeros((width, 2))
+                values[labels] = (concentrations[node] * flow).reshape(-1, 2)
+                current = output.get(key)
+                output[key] = values if current is None else current + values
+            return output, concentrations, labels, len(active) - rank
         for node, key, flow in self.sinks:
             bag = {
                 label: concentrations[node, 2 * i : 2 * i + 2] * flow
@@ -108,6 +212,31 @@ class FlowNetwork:
             }
             plus(output.setdefault(key, {}), bag)
         return output, concentrations, labels, len(active) - rank
+
+
+def _acyclic(size, sources, targets, active):
+    """Whether the edges between active nodes have no directed cycle (Kahn's algorithm)."""
+
+    keep = np.zeros(size, dtype=bool)
+    keep[active] = True
+    inside = keep[sources] & keep[targets]
+    sources, targets = sources[inside], targets[inside]
+    if np.any(sources == targets):
+        return False
+    indegree = np.bincount(targets, minlength=size)
+    order = np.argsort(sources, kind="stable")
+    starts = np.searchsorted(sources[order], np.arange(size + 1))
+    children = targets[order]
+    ready = [int(i) for i in active if indegree[i] == 0]
+    seen = 0
+    while ready:
+        node = ready.pop()
+        seen += 1
+        for child in children[starts[node] : starts[node + 1]]:
+            indegree[child] -= 1
+            if indegree[child] == 0:
+                ready.append(int(child))
+    return seen == len(active)
 
 
 def weighted_imports(demands, traded, weights):
@@ -141,6 +270,18 @@ class IndependentBalanceAudit:
 
     The optional instrumentation observes both normal and no-feedback transitions.
     It adds no dispatch decisions and preserves the original runtime methods.
+
+    Cost (#401). Each interval builds a flow network with one node per member bus and per
+    storage operation, and one column pair per (origin, producer) label with a nonzero input.
+    Once members trade, every bus and battery carries most labels, so the work per interval
+    grows with members x labels, about quadratically with the number of members. Bags are
+    arrays over a `LabelSpace`, the node, flow-equation and cohort checks are vectorised, the
+    trade graph is built with array operations, and an acyclic network (the usual case: a
+    battery does not charge and discharge in one interval) is solved by LU instead of the SVD
+    of ``lstsq``, which is kept for networks with a cycle so that a source-free circulation is
+    still counted. Checks of label columns that are zero in every equation are no longer
+    counted, so ``checks`` is lower for the same evidence. Measured times are in the release
+    notes (#401).
     """
 
     def __init__(
@@ -169,6 +310,8 @@ class IndependentBalanceAudit:
         self.rtol = float(relative_tolerance)
         self.flow_rtol = float(flow_relative_tolerance)
         self.stocks = {}
+        # Sources are kept per label; sink, transfer and stock bags are arrays over `space` (#401).
+        self.space = LabelSpace()
         self.sources = {}
         self.sinks = {}
         self.transfers = {}
@@ -214,6 +357,34 @@ class IndependentBalanceAudit:
                 f"{label}: actual={actual:.12g}, expected={expected:.12g}, tolerance={limit:.3g}"
             )
 
+    def check_many(self, label, actual, expected, scale=0.0):
+        """Apply ``check`` to every element of ``actual`` against ``expected`` in one vectorised pass.
+
+        The rule, the tolerance and the check count are those of ``check``, and the first failing
+        element (in order) is reported. ``label`` is a string or a callable that names element ``k``.
+        """
+
+        actual = np.asarray(actual, dtype=float).ravel()
+        if not actual.size:
+            return
+        expected = np.broadcast_to(np.asarray(expected, dtype=float).ravel(), actual.shape)
+        with np.errstate(invalid="ignore", over="ignore"):
+            error = np.abs(actual - expected)
+            limit = (
+                self.atol
+                + self.rtol * np.maximum(np.abs(actual), np.abs(expected))
+                + self.flow_rtol * abs(float(scale))
+            )
+            bad = ~np.isfinite(actual) | ~np.isfinite(expected) | (error > limit)
+        if bad.any():
+            k = int(np.flatnonzero(bad)[0])
+            if k:
+                self.check_many(label, actual[:k], expected[:k], scale)
+            self.check(label(k) if callable(label) else label, actual[k], expected[k], scale)
+        self.check_count += actual.size
+        self.max_error = max(self.max_error, float(error.max()))
+        self.max_scaled_error = max(self.max_scaled_error, float((error / limit).max()))
+
     def _assets(self):
         result = {}
         for b in self.env.buildings:
@@ -243,10 +414,10 @@ class IndependentBalanceAudit:
     def _source(self, key, amount, carbon=0.0):
         bag = {key: np.array([amount, carbon])}
         plus(self.sources, bag)
-        return bag
+        return self.space.array(bag)
 
     def _sink(self, owner, destination, bag):
-        plus(self.sinks.setdefault((owner, destination), {}), bag)
+        self.space.add(self.sinks, (owner, destination), bag)
 
     def boundary(self):
         for building in self.env.buildings:
@@ -292,12 +463,8 @@ class IndependentBalanceAudit:
                     ratio = (
                         event["after"] / event["before"] if event["before"] > 0 else 0.0
                     )
-                    self._sink(
-                        owner,
-                        "loss",
-                        {k: v * (1 - ratio) for k, v in stock["mix"].items()},
-                    )
-                    stock["mix"] = {k: v * ratio for k, v in stock["mix"].items()}
+                    self._sink(owner, "loss", stock["mix"] * (1 - ratio))
+                    stock["mix"] = stock["mix"] * ratio
                 stock["cursor"] += 1
             self.check("boundary inventory", total(stock["mix"]), battery.energy_init)
         self._check_cohorts()
@@ -368,7 +535,7 @@ class IndependentBalanceAudit:
         t = int(env.time_step)
         if t != len(self.intervals):
             raise BalanceAuditError("Repeated/missing interval or reset during audit")
-        graph = FlowNetwork()
+        graph = FlowNetwork(self.space)
         buses = {}
         rows = {}
         transfers = defaultdict(float)
@@ -464,8 +631,9 @@ class IndependentBalanceAudit:
             origin = "grid" if np.isfinite(ci) else "grid_unknown_carbon"
             inputs = {}
             available = self._source(("pv", name), row["pv"])
-            plus(
+            self.space.add(
                 inputs,
+                "bus",
                 available,
                 (row["pv"] - row["curtailed"]) / row["pv"] if row["pv"] > 0 else 0.0,
             )
@@ -475,12 +643,14 @@ class IndependentBalanceAudit:
                     "curtailment",
                     {("pv", name): np.array([row["curtailed"], 0.0])},
                 )
-            plus(
+            self.space.add(
                 inputs,
+                "bus",
                 self._source(
                     (origin, name), grid_in, grid_in * ci if np.isfinite(ci) else 0.0
                 ),
             )
+            inputs = inputs["bus"]
             discharge = sum(
                 -e["bus"]
                 for s in self.stocks.values()
@@ -549,12 +719,16 @@ class IndependentBalanceAudit:
                     self.check(
                         "market " + name + " " + field, observed[field], expected
                     )
-        # Trade is a complete bipartite graph between net sellers and buyers.
-        for i, seller in enumerate(names):
-            for j, buyer in enumerate(names):
-                flow = float(local_out[i] * local_in[j] / traded) if traded > 0 else 0.0
-                if flow:
-                    graph.edge(buses[seller], buses[buyer], flow)
+        # Trade is a complete bipartite graph between net sellers and buyers:
+        # trade[i, j] = local_out[i] * local_in[j] / traded is what seller i sends to buyer j.
+        bus_index = np.array([buses[n] for n in names], dtype=int)
+        trade = (
+            np.outer(local_out, local_in) / traded
+            if traded > 0
+            else np.zeros((len(names), len(names)))
+        )
+        for i, j in zip(*np.nonzero(trade)):
+            graph.edge(bus_index[i], bus_index[j], trade[i, j])
         final_nodes = {}
         for key, stock in self.stocks.items():
             owner = stock["owner"]
@@ -604,46 +778,28 @@ class IndependentBalanceAudit:
             self.check(
                 "operation final inventory", current, stock["battery"].energy_init
             )
-        result, concentrations, labels, singular = graph.solve(self.check)
+        result, concentrations, labels, singular = graph.solve(self.check, self.check_many)
         self.singular_networks += int(singular > 0)
         for (owner, destination), bag in result.items():
             if owner == "inventory":
                 self.stocks[destination]["mix"] = bag
             else:
                 self._sink(owner, destination, bag)
+        # A buyer's import mix is the trade-weighted sum of the sellers' bus concentrations; a seller's
+        # export mix is its own bus concentration.
+        imported = trade.T @ concentrations[bus_index] if len(names) else None
+        width = len(self.space.keys)
         for i, name in enumerate(names):
-            for direction, amount in [
-                ("local_import", local_in[i]),
-                ("local_export", local_out[i]),
+            for direction, values in [
+                ("local_import", imported[i]),
+                ("local_export", concentrations[bus_index[i]] * local_out[i]),
             ]:
-                if direction == "local_export":
-                    node = buses[name]
-                    mix = {
-                        label: concentrations[node, 2 * k : 2 * k + 2] * amount
-                        for k, label in enumerate(labels)
-                    }
-                else:
-                    mix = {}
-                    for j, seller in enumerate(names):
-                        flow = local_out[j] * amount / traded if traded > 0 else 0.0
-                        for k, label in enumerate(labels):
-                            plus(
-                                mix,
-                                {
-                                    label: concentrations[
-                                        buses[seller], 2 * k : 2 * k + 2
-                                    ]
-                                    * flow
-                                },
-                            )
-                plus(self.transfers.setdefault((name, direction), {}), mix)
+                mix = np.zeros((width, 2))
+                mix[labels] = values.reshape(-1, 2)
+                self.space.add(self.transfers, (name, direction), mix)
         # A second network tracks fresh PV without carrying it through storage.
-        direct_matrix = np.diag([graph.mass[buses[n]] for n in names])
+        direct_matrix = np.diag([graph.mass[buses[n]] for n in names]) - trade.T
         direct_rhs = np.array([rows[n]["pv"] - rows[n]["curtailed"] for n in names])
-        for i, seller in enumerate(names):
-            for j, buyer in enumerate(names):
-                if traded > 0:
-                    direct_matrix[j, i] -= local_out[i] * local_in[j] / traded
         direct = (
             np.linalg.lstsq(direct_matrix, direct_rhs, rcond=1e-12)[0] if names else []
         )
@@ -680,11 +836,12 @@ class IndependentBalanceAudit:
         rows = {}
         bags = dict(self.sinks)
         for stock in self.stocks.values():
-            plus(bags.setdefault((stock["owner"], "stored"), {}), stock["mix"])
+            self.space.add(bags, (stock["owner"], "stored"), stock["mix"])
+        keys = self.space.keys
         for (recipient, destination), bag in bags.items():
-            for (origin, producer), value in bag.items():
-                if abs(value[0]) > 1e-10:
-                    rows[origin, producer, recipient, destination] = np.asarray(value)
+            for i in np.flatnonzero(np.abs(bag[:, 0]) > 1e-10):
+                origin, producer = keys[i]
+                rows[origin, producer, recipient, destination] = bag[i]
         return rows
 
     def _check_cohorts(self):
@@ -695,13 +852,13 @@ class IndependentBalanceAudit:
             )
             observed[key] = np.array([row["energy_kwh"], row["carbon_kgco2"]])
         expected = self.expected_rows()
-        for key in set(expected) | set(observed):
-            for component, unit in enumerate(("kwh", "kgco2")):
-                self.check(
-                    "provenance " + str(key) + " " + unit,
-                    observed.get(key, np.zeros(2))[component],
-                    expected.get(key, np.zeros(2))[component],
-                )
+        keys = list(set(expected) | set(observed))
+        zero = np.zeros(2)
+        self.check_many(
+            lambda k: "provenance " + str(keys[k // 2]) + " " + ("kwh", "kgco2")[k % 2],
+            np.array([observed.get(key, zero) for key in keys]).ravel(),
+            np.array([expected.get(key, zero) for key in keys]).ravel(),
+        )
 
     def finish(self, *, check_kpis=True):
         self.boundary()
@@ -728,7 +885,7 @@ class IndependentBalanceAudit:
             )
         for direction in ("local_import", "local_export"):
             for name in self.members:
-                bag = self.transfers.get((name, direction), {})
+                bag = self.transfers.get((name, direction))
                 self.check(
                     "local transfer " + name + " " + direction,
                     actual_members[name][direction + "_kwh"],
@@ -875,7 +1032,7 @@ class IndependentBalanceAudit:
                     if origin in {"unknown", "grid_unknown_carbon"}
                 )
             for direction in ("local_import", "local_export"):
-                bag = self.transfers.get((name, direction), {})
+                bag = self.space.rows(self.space.fit(self.transfers.get((name, direction), np.zeros((0, 2)))))
                 summary[direction + "_kwh"] = total(bag)
                 summary["pv_" + direction + "_kwh"] = sum(
                     v[0] for (origin, _), v in bag.items() if origin == "pv"

@@ -185,6 +185,35 @@ Todos os ratios usam divisão segura:
   indefinidos quando os dois totais são zero. Nada foi faturado nem emitido, como
   num dataset com intensidade carbónica nula, pelo que não há nada a comparar. As
   variantes `*_building_mean_ratio` mantêm o valor da 3.6.0.
+- **referência desprezável:** um ratio de totais
+  (`*_ratio_to_baseline_*_total_ratio`, `*_ratio_to_business_as_usual_*_ratio`
+  de um total aditivo: custo, emissões, importação, exportação e net exchange da
+  rede, geração e exportação solar, carga e exportação V2G dos VE, carga,
+  descarga e throughput da bateria, ciclos e energia dos equipamentos
+  diferíveis) é indefinido quando o seu total de referência é desprezável, sem
+  que os dois totais sejam zero:
+
+  ```text
+  |reference_x| <= 0.01 * scale_x
+  scale_x = média de |reference_x| nas linhas de edifício do env
+  ```
+
+  `scale_x` é a dimensão dessa referência para um membro típico da comunidade,
+  na unidade do total. Abaixo de 1% dela, o ratio mede quão pequena é a
+  referência do membro e não o que o controlador fez: em
+  `citylearn_challenge_2022_phase_all_plus_evs`, um edifício cujo BAU quase não
+  cicla a bateria tinha um ratio de throughput face ao BAU de cerca de 2400, e um
+  edifício cujas importações e exportações de baseline quase se anulam tinha um
+  ratio de net exchange de -720. Nas execuções medidas para o #403 (plus_evs,
+  `pt_rec_4` e a demo trifásica), todos os ratios acima de 100 tinham uma
+  referência abaixo de 0,5% da escala, e todas as referências acima de 1% davam
+  ratios abaixo de 75. Os totais control e de referência e o seu delta
+  continuam na tabela. A linha do distrito usa a mesma escala, pelo que um ratio
+  do distrito só é indefinido quando a própria referência do distrito está
+  abaixo de 1% da de um membro, o que só acontece num total com sinal cujos
+  membros se anulam. Num env com um só edifício, ou com uma referência nula em
+  todos os membros, aplica-se apenas a regra 0/0 acima. Os ratios do portfólio
+  do `MultiCommunityEnv` dividem totais agregados e não usam esta regra.
 
 Os ratios mantêm-se lower-is-better quando o total de referência é negativo. Os
 totais de net exchange e de custo podem ser negativos, para um exportador
@@ -1704,6 +1733,7 @@ A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_
 | `*_ev_events_departure_met_count` (antigo `ev_departure_met_events_count`), `*_ev_performance_departure_success_ratio`, `*_ev_performance_departure_success_feasible_ratio`, `*_ev_events_departure_target_{feasible,infeasible}_count`, `*_ev_departure_audit_target_*` | Uma partida cumpre o alvo a menos de 0,005 de SOC (era 1e-6), pelo que um carro que as baselines baseadas em regras param 0,001 abaixo do alvo conta como servido. | nenhum |
 | Linhas de conforto (`*_comfort_resilience_*`, linhas de desconforto `*_thermal_service_audit_*`, `discomfort_*` e `one_minus_thermal_resilience_proportion` antigos) de um edifício sem colunas de set points | Indefinidas (eram avaliadas contra um set point de arrefecimento de 0 °C). | nenhum |
 | `*_{cost,emissions}_ratio_to_{baseline,business_as_usual}_total_ratio` com os dois totais a zero, e os seus valores de portfólio | Indefinido (era 1). | nenhum |
+| Ratios de totais face ao baseline ou ao BAU cujo total de referência está abaixo de 1% da média de \|referência\| dos membros (#403) | Indefinido (era o quociente finito, arbitrariamente grande). | nenhum; os totais control e de referência continuam na tabela |
 | `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Alocados a partir do settlement district. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostico) |
 | Taxas e medias EV de departure, service levels dos deferrable appliances e das escadas rolantes, start delay e self-consumption solar do portefólio (`MultiCommunityEnv`) | Agregadas a partir dos seus denominadores aditivos. | nenhum |
 | Shares locais do mercado comunitário, compliance de demand response e ratios de cobertura das auditorias de demand response do portefólio (`MultiCommunityEnv`, #285) | Agregados a partir da energia local mais a da rede, da energia pedida válida, da energia pedida e dos intervalos ativos. | nenhum |

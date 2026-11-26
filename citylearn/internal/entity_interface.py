@@ -58,6 +58,23 @@ class DeferrableApplianceRef:
     global_id: str
 
 
+class _RawIdLookup(dict):
+    """Raw (building-less) entity id -> building-qualified id; refuses an id two buildings share."""
+
+    def __init__(self, kind: str):
+        super().__init__()
+        self.kind = kind
+
+    def __getitem__(self, raw_id):
+        global_ids = super().__getitem__(raw_id)
+        if len(global_ids) > 1:
+            raise AssertionError(
+                f"{self.kind} id '{raw_id}' in the action map is ambiguous: it names "
+                f"{', '.join(global_ids)}. Use the building-qualified id."
+            )
+        return global_ids[0]
+
+
 class CityLearnEntityInterfaceService:
     """Build and parse canonical entity payloads."""
 
@@ -648,9 +665,15 @@ class CityLearnEntityInterfaceService:
 
         building_ids = set(self._building_ids)
         charger_global_ids = {ref.global_id for ref in self._charger_refs}
-        charger_raw_to_global = {ref.charger_id: ref.global_id for ref in self._charger_refs}
+        charger_raw_to_global = self._raw_id_lookup(
+            "Charger", ((ref.charger_id, ref.global_id) for ref in self._charger_refs)
+        )
         deferrable_global_ids = {ref.global_id for ref in self._deferrable_appliance_refs}
-        deferrable_raw_to_global = {ref.appliance_id: ref.global_id for ref in self._deferrable_appliance_refs}
+        # Appliance names are scoped to their building and may repeat across buildings.
+        deferrable_raw_to_global = self._raw_id_lookup(
+            "Deferrable appliance",
+            ((ref.appliance_id, ref.global_id) for ref in self._deferrable_appliance_refs),
+        )
         building_overrides: Dict[str, Mapping[str, Any]] = {}
         charger_overrides: Dict[str, Mapping[str, Any]] = {}
         deferrable_appliance_overrides: Dict[str, Mapping[str, Any]] = {}
@@ -702,6 +725,13 @@ class CityLearnEntityInterfaceService:
 
         self._validate_override_keys(building_overrides, charger_overrides, deferrable_appliance_overrides)
         return building_overrides, charger_overrides, deferrable_appliance_overrides
+
+    @staticmethod
+    def _raw_id_lookup(kind: str, pairs) -> "_RawIdLookup":
+        lookup = _RawIdLookup(kind)
+        for raw_id, global_id in pairs:
+            lookup.setdefault(raw_id, []).append(global_id)
+        return lookup
 
     @staticmethod
     def _split_map_id(raw_key: str) -> Tuple[Optional[str], Optional[str]]:
