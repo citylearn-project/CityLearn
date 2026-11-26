@@ -29,7 +29,7 @@ Com essa conversão, as séries de eletricidade simuladas ficam em kWh por passo
 | `energy_simulation.cooling_demand` | `kWh/step` | Procura térmica no passo. |
 | `energy_simulation.heating_demand` | `kWh/step` | Procura térmica no passo. |
 | `energy_simulation.dhw_demand` | `kWh/step` | Procura térmica no passo. |
-| `energy_simulation.solar_generation` | perfil FV por kW instalado ou `kWh/step` | Depende de `pv.attributes.generation_mode`; consulte a secção FV. |
+| `energy_simulation.solar_generation` | potência média por kW instalado (W/kW) ou `kWh/step` | Depende de `pv.attributes.generation_mode`; consulte a secção FV. |
 | `pricing.electricity_pricing` | moeda/`kWh` | Não é escalado pela duração do passo. |
 | `carbon_intensity.carbon_intensity` | CO2/`kWh` | Não é escalado pela duração do passo. |
 | `weather` | unidade física de cada variável | Temperatura, irradiância e humidade não são energia. |
@@ -180,8 +180,13 @@ Na interface entity, a flexibilidade dos VE deve, de preferência, ser consumida
 Modo predefinido `per_kw`:
 
 ```text
-pv_generation_kwh_step = pv.nominal_power_kw * solar_generation / 1000
+pv_generation_kwh_step = pv.nominal_power_kw * solar_generation / 1000 * step_hours
 ```
+
+`solar_generation` é a potência AC média por kW instalado durante o passo, em W/kW, e `step_hours` é a duração do
+passo em horas (`seconds_per_time_step / 3600`). Em resolução horária o fator do passo é 1, pelo que um valor em
+Wh/kW dá o mesmo resultado; a 15 minutos, um perfil guardado como energia por passo em vez de potência média fica
+4 vezes pequeno demais.
 
 Para dados reais absolutos, declare:
 
