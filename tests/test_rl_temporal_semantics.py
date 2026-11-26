@@ -119,8 +119,9 @@ def test_step_after_terminal_raises_runtime_error():
     try:
         env.reset()
         _, _, terminated, truncated, _ = env.step(_zero_actions(env))
-        assert terminated
-        assert not truncated
+        assert not terminated
+        assert truncated
+        assert env.done
 
         with pytest.raises(RuntimeError, match="reset"):
             env.step(_zero_actions(env))

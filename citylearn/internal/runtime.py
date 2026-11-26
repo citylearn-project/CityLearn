@@ -138,7 +138,7 @@ class CityLearnRuntimeService:
             info['step_many_parse_actions_time'] = parse_time
             info['step_many_total_time'] = time.perf_counter() - macro_start
 
-        return final_observations, self._reward_total_to_list(reward_total), env.terminated, env.truncated, info
+        return final_observations, self._reward_total_to_list(reward_total), *env._episode_end_flags(), info
 
     @staticmethod
     def _reward_to_array(reward) -> np.ndarray:
@@ -420,7 +420,8 @@ class CityLearnRuntimeService:
             info.update(timings)
             info['step_total_time'] = time.perf_counter() - step_start
 
-        return next_observations, reward, env.terminated, env.truncated, info
+        terminated, truncated = env._episode_end_flags()
+        return next_observations, reward, terminated, truncated, info
 
     def _entity_action_execution(
         self,
@@ -764,7 +765,7 @@ class CityLearnRuntimeService:
         self.next_time_step()
 
         env._provenance_service.synchronize()
-        return env.terminated, env.truncated
+        return env._episode_end_flags()
 
     def _require_finite_actions(self, parsed_actions) -> None:
         """Reject NaN and infinite actions before they reach the device models.

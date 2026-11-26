@@ -60,7 +60,8 @@ Portuguese version: [pt/schema_full_reference.md](pt/schema_full_reference.md).
   "rolling_episode_split": false,
   "random_episode_split": false,
   "episode_split_boundary": "shared",
-  "ev_soc_carryover": false
+  "ev_soc_carryover": false,
+  "episode_end": "truncated"
 }
 ```
 
@@ -76,6 +77,7 @@ Portuguese version: [pt/schema_full_reference.md](pt/schema_full_reference.md).
 | `random_episode_split` | `false` | `false` | `true`: draw the episode at each reset. |
 | `episode_split_boundary` | `"shared"` | `"shared"` | `"disjoint"`: the 3.6.0 splits, which skip one interval between episodes. |
 | `ev_soc_carryover` | `false` | `false` | `true`: an episode that continues the previous one in time starts each EV from its SOC at the end of that episode. |
+| `episode_end` | `"truncated"` | `"truncated"` | `"terminated"`: the last step returns `terminated=True`, as 3.7.0 and earlier did. |
 
 ## Calendar and dataset clock
 

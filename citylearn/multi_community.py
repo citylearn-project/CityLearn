@@ -82,8 +82,8 @@ class MultiCommunityEnv(Env):
                 env.close()
             raise
 
-        self._terminated = any(env.terminated for env in self.envs.values())
-        self._truncated = any(env.truncated for env in self.envs.values())
+        self._terminated = any(env._episode_end_flags()[0] for env in self.envs.values())
+        self._truncated = any(env._episode_end_flags()[1] for env in self.envs.values())
 
     @property
     def community_ids(self) -> List[str]:
@@ -137,14 +137,24 @@ class MultiCommunityEnv(Env):
         return int(next(iter(self.envs.values())).time_step)
 
     @property
-    def terminated(self) -> bool:
-        """Whether any child environment has terminated."""
+    def done(self) -> bool:
+        """Whether the episode is over in any child environment, whatever the reason."""
 
-        return bool(self._terminated)
+        return bool(self._terminated or self._truncated)
+
+    @property
+    def terminated(self) -> bool:
+        """Whether the episode is over, the same as `done`.
+
+        Kept with this meaning so that loops such as `while not env.terminated` keep working, as on
+        :class:`CityLearnEnv`. The `terminated` flag that `step()` returns follows the children's `episode_end`.
+        """
+
+        return self.done
 
     @property
     def truncated(self) -> bool:
-        """Whether any child environment has truncated."""
+        """Whether any child environment ended its episode at its time limit, as `step()` reports it."""
 
         return bool(self._truncated)
 
@@ -195,14 +205,14 @@ class MultiCommunityEnv(Env):
             child_infos[community_id] = info
 
         self._validate_reset_synchronization()
-        self._terminated = any(env.terminated for env in self.envs.values())
-        self._truncated = any(env.truncated for env in self.envs.values())
+        self._terminated = any(env._episode_end_flags()[0] for env in self.envs.values())
+        self._truncated = any(env._episode_end_flags()[1] for env in self.envs.values())
         return observations, self._build_info(child_infos=child_infos)
 
     def step(self, actions: Mapping[str, Any]) -> Tuple[Mapping[str, Any], Mapping[str, Any], bool, bool, Mapping[str, Any]]:
         """Apply one action payload per community and advance all child envs once."""
 
-        if self.terminated or self.truncated:
+        if self.done:
             raise RuntimeError("Cannot call step() after termination/truncation. Call reset() first.")
 
         if not isinstance(actions, Mapping):
@@ -232,7 +242,7 @@ class MultiCommunityEnv(Env):
             terminated_by_community=terminated_by_community,
             truncated_by_community=truncated_by_community,
         )
-        return observations, rewards, self.terminated, self.truncated, info
+        return observations, rewards, bool(self._terminated), bool(self._truncated), info
 
     def evaluate_v2(
         self,
@@ -513,6 +523,7 @@ class MultiCommunityEnv(Env):
             "baseline_version",
             "business_as_usual_ev_charge_target",
             "ev_soc_carryover",
+            "episode_end",
         ):
             values = {community_id: getattr(env, setting) for community_id, env in self.envs.items()}
             if len(set(values.values())) != 1:
@@ -581,11 +592,11 @@ class MultiCommunityEnv(Env):
     ) -> Mapping[str, Any]:
         rewards = {} if rewards is None else rewards
         terminated_by_community = {
-            community_id: bool(env.terminated)
+            community_id: bool(env._episode_end_flags()[0])
             for community_id, env in self.envs.items()
         } if terminated_by_community is None else dict(terminated_by_community)
         truncated_by_community = {
-            community_id: bool(env.truncated)
+            community_id: bool(env._episode_end_flags()[1])
             for community_id, env in self.envs.items()
         } if truncated_by_community is None else dict(truncated_by_community)
         community_rewards_scalar = {

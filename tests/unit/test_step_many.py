@@ -197,8 +197,8 @@ def test_step_many_stops_at_episode_end_and_reports_executed_steps():
 
         _assert_nested_allclose(many_obs, loop_obs)
         np.testing.assert_allclose(many_reward, loop_reward, rtol=1e-6, atol=1e-6)
-        assert many_terminated == loop_terminated is True
-        assert many_truncated == loop_truncated
+        assert many_terminated == loop_terminated is False
+        assert many_truncated == loop_truncated is True
         assert many_info["executed_steps"] == loop_steps < 20
         assert many_info["macro_seconds"] == pytest.approx(loop_steps * env_many.seconds_per_time_step)
         assert env_many.time_step == env_loop.time_step

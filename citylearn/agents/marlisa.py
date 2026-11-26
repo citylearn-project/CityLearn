@@ -179,7 +179,8 @@ class MARLISA(SAC):
 
                     if terminated or truncated:
                         # No action, hence no coordination variables, is computed for the episode's final observation,
-                        # so c stands in for them (as before); they do not enter the TD target when terminated.
+                        # so c stands in for them (as before). They do not enter the TD target when terminated; at a
+                        # truncation, the default end of a CityLearn episode, the target bootstraps with them.
                         self.__push_transition(i, o, a, r, np.hstack(np.concatenate((n, c), dtype=float)), terminated)
 
                     else:

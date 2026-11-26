@@ -50,6 +50,16 @@ repositório não é criado por `pip install`.
 O [histórico de versões](releases.md) mantém as alterações específicas de cada
 versão e o histórico da linha de desenvolvimento.
 
+## Por publicar
+
+### O fim de um episódio é indicado como truncagem
+
+O último passo de um episódio devolve agora `terminated=False, truncated=True`, porque um episódio do CityLearn acaba sempre num limite de tempo (o fim da sua janela ou divisão). Os resultados da simulação e os KPIs não mudam.
+
+- **O seu algoritmo.** Deixe de estimar o valor futuro só com `terminated` e reinicie com `terminated or truncated`: o alvo é `reward + gamma * (1 - terminated) * next_value`. Um algoritmo que usa `terminated or truncated` como máscara comporta-se como antes.
+- **Ciclos.** `while not env.terminated:` continua a funcionar, porque a propriedade `env.terminated` continua a significar que o episódio acabou; `env.done` diz o mesmo. Um ciclo que só lê a indicação `terminated` devolvida pelo `step()`, como `while not terminated:`, chama agora o `step()` mais uma vez e dá `RuntimeError`; verifique `terminated or truncated`.
+- **Reproduzir treinos da 3.7.0.** Passe `episode_end='terminated'` ao `CityLearnEnv`, ou defina-o no schema. Todas as comunidades de um `MultiCommunityEnv` têm de usar o mesmo valor.
+
 ## Atualizar da 3.6.0 para a 3.7.0
 
 ### Cache de datasets identificada pelo conteúdo

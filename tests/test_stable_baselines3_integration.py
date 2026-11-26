@@ -63,7 +63,7 @@ def test_short_training_predicts_a_whole_episode_inside_the_spaces(algorithm, kw
         if terminated or truncated:
             break
 
-    assert terminated and not truncated
+    assert truncated and not terminated
     assert steps == env.unwrapped.time_steps - 1
     kpis = env.unwrapped.evaluate_v2()
     assert len(kpis) > 0 and kpis['value'].notna().any()

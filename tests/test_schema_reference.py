@@ -18,7 +18,7 @@ INVENTORY = {
         "root_directory", "random_seed", "random_stream_version", "physics_version", "baseline_version",
         "central_agent", "interface", "seconds_per_time_step", "time_step_ratio_mode", "simulation_start_time_step",
         "simulation_end_time_step", "episode_time_steps", "rolling_episode_split", "random_episode_split",
-        "episode_split_boundary", "ev_soc_carryover", "evaluation_window", "district_electrical_service", "time_axis", "timezone", "dataset_seconds_per_time_step",
+        "episode_split_boundary", "ev_soc_carryover", "episode_end", "evaluation_window", "district_electrical_service", "time_axis", "timezone", "dataset_seconds_per_time_step",
         "dataset_contract_version", "terminal_observation_padding", "start_date", "reward_function", "agent",
         "observations", "actions", "observation_bundles", "derived_forecasts", "topology_mode", "topology_events",
         "buildings", "electric_vehicles_def", "ev_departure_within_tolerance", "ev_departure_service_tolerance",
