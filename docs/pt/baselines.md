@@ -232,6 +232,8 @@ membros, ficheiros, janelas, sementes e condições de mercado que o candidato.
 | `RBCSmartPolicy` | Usa previsões de preço e o excedente FV local previsto para agendar o carregamento dos VE e os arranques dos aparelhos. A bateria combina autoconsumo, arbitragem de preços e uma reserva de serviço. Usa apenas observações locais do edifício e públicas. |
 | `RBCCommunityPolicy` | Acrescenta a energia partilhável entre membros da comunidade. Com o mercado comunitário ativo, as baterias podem apoiar os períodos caros quando a importação da comunidade atinge `community_import_threshold_kw` (15 kW por omissão). Este valor desencadeia uma ação; o pico observado pode excedê-lo. Sem mercado comunitário, não partilha energia e segue as regras económicas da Smart mas, ao contrário da Smart, não está restrita a observações locais do edifício. |
 
+Os três param de carregar um VE 0,001 de SOC abaixo do alvo. No último intervalo antes da partida podem pedir até mais 25% de energia AC do que a energia em falta do lado da bateria (`EV_LAST_INTERVAL_LOSS_ALLOWANCE`), para cobrir as perdas do carregador e da bateria que não observam, e pelo menos a potência mínima do carregador.
+
 ### AVAC das referências baseadas em regras
 
 Os motores despacham as baterias, os carregadores de VE e os aparelhos flexíveis.
