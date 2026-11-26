@@ -483,6 +483,7 @@ windows, seeds and market conditions as the candidate.</p>
 </tr>
 </tbody>
 </table>
+<p>All three stop charging an EV 0.001 SOC below its target. In the last interval before departure they may draw up to 25% more AC energy than the battery-side gap (<code class="docutils literal notranslate"><span class="pre">EV_LAST_INTERVAL_LOSS_ALLOWANCE</span></code>), to cover the charger and battery losses they cannot observe, and at least the charger’s minimum power.</p>
 <section id="hvac-of-the-rule-based-baselines">
 <h3>HVAC of the rule-based baselines<a class="headerlink" href="#hvac-of-the-rule-based-baselines" title="Link to this heading"></a></h3>
 <p>The engines dispatch the batteries, EV chargers and flexible appliances. The

@@ -219,6 +219,8 @@ windows, seeds and market conditions as the candidate.
 | `RBCSmartPolicy` | Uses price forecasts and the forecast local PV surplus to schedule EV charging and appliance starts. The battery combines self-consumption, price arbitrage and a service reserve. It uses only building-local and public observations. |
 | `RBCCommunityPolicy` | Adds energy shareable between community members. When the community market is enabled, the batteries can support expensive periods once community import reaches `community_import_threshold_kw` (15 kW by default). This value triggers an action; the observed peak can exceed it. Without a community market it shares no energy and follows Smart's economic rules, but, unlike Smart, it is not restricted to building-local observations. |
 
+All three stop charging an EV 0.001 SOC below its target. In the last interval before departure they may draw up to 25% more AC energy than the battery-side gap (`EV_LAST_INTERVAL_LOSS_ALLOWANCE`), to cover the charger and battery losses they cannot observe, and at least the charger's minimum power.
+
 ### HVAC of the rule-based baselines
 
 The engines dispatch the batteries, EV chargers and flexible appliances. The
