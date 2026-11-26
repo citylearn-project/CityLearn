@@ -1,0 +1,688 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.base &mdash; CityLearn 3.7.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+ 
+<script src="../../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/schema_full_reference.html">Full Reference Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.base</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.base</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_streams</span>
+
+<div class="viewcode-block" id="EpisodeTracker">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.EpisodeTracker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EpisodeTracker</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Class for keeping track of current episode time steps for reading observations from data files.</span>
+
+<span class="sd">    An EpisodeTracker object is shared amongst the environment, buildings in environment and all descendant </span>
+<span class="sd">    building devices. The object however, should be updated at the environment level only so that its changes </span>
+<span class="sd">    propagate to all other evironment decscendants. `simulation_start_time_step` and `simulation_end_time_step`</span>
+<span class="sd">    are useful to separate training data from test data in the same data file. There may be one or more episodes betweeen </span>
+<span class="sd">    `simulation_start_time_step` and `simulation_end_time_step` and their values should be defined in `schema` </span>
+<span class="sd">    or parsed to :py:class:`citylearn.citylearn.CityLearnEnv.__init__`. Both `simulation_start_time_step` and </span>
+<span class="sd">    `simulation_end_time_step` are used to select time series for building device and storage sizing as well as </span>
+<span class="sd">    action and observation space estimation in :py:class:`citylearn.buiLding.Building`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    simulation_start_time_step: int</span>
+<span class="sd">        Time step to start reading from data files. </span>
+<span class="sd">    simulation_end_time_step: int</span>
+<span class="sd">        Time step to end reading from data files.</span>
+<span class="sd">    """</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulation_start_time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">simulation_end_time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode_start_time_step</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode_end_time_step</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode_random_seed</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__random_stream_episode</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__simulation_start_time_step</span> <span class="o">=</span> <span class="n">simulation_start_time_step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__simulation_end_time_step</span> <span class="o">=</span> <span class="n">simulation_end_time_step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_episode_index</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">episode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Current episode index"""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__episode</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">episode_random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Environment seed captured when the current episode was selected."""</span>
+
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_EpisodeTracker__episode_random_seed'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_stream_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Episode key of the per-episode random streams (``random_stream_version='v2'``).</span>
+
+<span class="sd">        The environment sets it at reset: the episode index, or 0 after a reset with an explicit</span>
+<span class="sd">        seed, so that ``reset(seed=s)`` uses the streams of the first episode of an environment</span>
+<span class="sd">        built with `s`. Parameters drawn at construction keep their values and the episode window</span>
+<span class="sd">        still advances, so the episode itself repeats only on a new environment built with `s`.</span>
+<span class="sd">        Unset, it is the episode index.</span>
+<span class="sd">        """</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_EpisodeTracker__random_stream_episode'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+
+    <span class="nd">@random_stream_episode</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_stream_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__random_stream_episode</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">episode_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Number of time steps in current episode split."""</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_end_time_step</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_start_time_step</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulation_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Number of time steps between `simulation_start_time_step` and `simulation_end_time_step`."""</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__simulation_end_time_step</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">__simulation_start_time_step</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulation_start_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Time step to start reading from data files."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__simulation_start_time_step</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulation_end_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Time step to end reading from data files."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__simulation_end_time_step</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">episode_start_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Start time step in current episode split."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__episode_start_time_step</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">episode_end_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""End time step in current episode split."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__episode_end_time_step</span>
+
+    <span class="n">EPISODE_SPLIT_BOUNDARIES</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'shared'</span><span class="p">,</span> <span class="s1">'disjoint'</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EpisodeTracker.validate_episode_split_boundary">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.EpisodeTracker.validate_episode_split_boundary">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_episode_split_boundary</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">episode_split_boundary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the normalised episode split boundary mode, `'shared'` when `None`."""</span>
+
+        <span class="k">if</span> <span class="n">episode_split_boundary</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">'shared'</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">episode_split_boundary</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">EPISODE_SPLIT_BOUNDARIES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">'episode_split_boundary must be one of </span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">EPISODE_SPLIT_BOUNDARIES</span><span class="si">}</span><span class="s1">, got </span><span class="si">{</span><span class="n">episode_split_boundary</span><span class="si">!r}</span><span class="s1">.'</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="EpisodeTracker.next_episode">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.EpisodeTracker.next_episode">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">next_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]],</span> <span class="n">rolling_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">episode_split_boundary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'shared'</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Advance to next episode and set `episode_start_time_step` and `episode_end_time_step` for reading data files.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        episode_time_steps: Union[int, List[Tuple[int, int]]], optional</span>
+<span class="sd">            If type is `int`, it is the number of time steps in an episode. If type is `List[Tuple[int, int]]]` is provided, it is a list of </span>
+<span class="sd">            episode start and end time steps between `simulation_start_time_step` and `simulation_end_time_step`. Defaults to (`simulation_end_time_step` </span>
+<span class="sd">        - `simulation_start_time_step`) + 1. Will ignore `rolling_episode_split` if `episode_splits` is of type `List[Tuple[int, int]]]`.</span>
+<span class="sd">        rolling_episode_split: bool, default: False</span>
+<span class="sd">            True if episode sequences are split such that each time step is a candidate for `episode_start_time_step` otherwise, False to split episodes </span>
+<span class="sd">            in steps of `episode_time_steps`.</span>
+<span class="sd">        random_episode_split: bool, default: False</span>
+<span class="sd">            True if episode splits are to be selected at random during training otherwise, False to select sequentially.</span>
+<span class="sd">        episode_split_boundary: str, default: 'shared'</span>
+<span class="sd">            How consecutive (non-rolling) splits of an integer `episode_time_steps` meet. An episode of N data rows</span>
+<span class="sd">            executes N - 1 control steps, because its last row is only the terminal observation. With `'shared'`,</span>
+<span class="sd">            consecutive episodes advance by N - 1 rows, so the terminal row of one episode is the first row of the next</span>
+<span class="sd">            and every interval between them is simulated; N must then be at least 2. With `'disjoint'`, consecutive</span>
+<span class="sd">            episodes advance by N rows and do not overlap, so the interval between the last row of one episode and the</span>
+<span class="sd">            first row of the next is never simulated (the CityLearn 3.6.0 behaviour). Rolling and explicit list splits</span>
+<span class="sd">            are not affected.</span>
+<span class="sd">        """</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__next_episode_time_steps</span><span class="p">(</span>
+            <span class="n">episode_time_steps</span><span class="p">,</span>
+            <span class="n">rolling_episode_split</span><span class="p">,</span>
+            <span class="n">random_episode_split</span><span class="p">,</span>
+            <span class="n">random_seed</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_episode_split_boundary</span><span class="p">(</span><span class="n">episode_split_boundary</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode_random_seed</span> <span class="o">=</span> <span class="n">random_seed</span></div>
+
+        
+<div class="viewcode-block" id="EpisodeTracker.validate_episode_splits">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.EpisodeTracker.validate_episode_splits">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_episode_splits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Return explicit episode splits as ``[start, end]`` pairs, or raise `ValueError` for an invalid one.</span>
+
+<span class="sd">        Only the rows of the simulation window are loaded, so every split must lie inside</span>
+<span class="sd">        [`simulation_start_time_step`, `simulation_end_time_step`] (CityLearn #308).</span>
+<span class="sd">        """</span>
+
+        <span class="n">splits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">simulation_start</span><span class="p">,</span> <span class="n">simulation_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__simulation_start_time_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__simulation_end_time_step</span>
+
+        <span class="k">for</span> <span class="n">split</span> <span class="ow">in</span> <span class="n">episode_time_steps</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">split</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Each episode window must be a (start, end) pair of integers, got </span><span class="si">{</span><span class="n">split</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">start</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Episode window (</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s1">) must satisfy 0 &lt;= start &lt;= end.'</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">simulation_start</span> <span class="o">&lt;=</span> <span class="n">start</span> <span class="ow">and</span> <span class="n">end</span> <span class="o">&lt;=</span> <span class="n">simulation_end</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">'Episode window (</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s1">) lies outside the simulation window '</span>
+                    <span class="sa">f</span><span class="s1">'(</span><span class="si">{</span><span class="n">simulation_start</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">simulation_end</span><span class="si">}</span><span class="s1">); only the rows of the simulation window are loaded. '</span>
+                    <span class="s1">'Pass episode_time_steps inside the window, or widen simulation_start_time_step/'</span>
+                    <span class="s1">'simulation_end_time_step.'</span>
+                <span class="p">)</span>
+            <span class="n">splits</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">splits</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__next_episode_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]],</span> <span class="n">rolling_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">episode_split_boundary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'shared'</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Sets `episode_start_time_step` and `episode_end_time_step` for reading data files."""</span>
+
+        <span class="n">splits</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">episode_time_steps</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">splits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_episode_splits</span><span class="p">(</span><span class="n">episode_time_steps</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">episode_time_steps</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'episode_time_steps must be &gt;= 1, got </span><span class="si">{</span><span class="n">episode_time_steps</span><span class="si">}</span><span class="s1">.'</span><span class="p">)</span>
+
+            <span class="n">earliest_start_time_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__simulation_start_time_step</span> 
+            <span class="n">latest_start_time_step</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__simulation_end_time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">episode_time_steps</span>
+
+            <span class="k">if</span> <span class="n">latest_start_time_step</span> <span class="o">&lt;</span> <span class="n">earliest_start_time_step</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">'episode_time_steps (</span><span class="si">{</span><span class="n">episode_time_steps</span><span class="si">}</span><span class="s1">) exceeds available simulation window '</span>
+                    <span class="sa">f</span><span class="s1">'(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">simulation_time_steps</span><span class="si">}</span><span class="s1">). Reduce episode_time_steps or adjust '</span>
+                    <span class="s1">'simulation_start_time_step/simulation_end_time_step.'</span>
+                <span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">rolling_episode_split</span><span class="p">:</span>
+                <span class="n">start_time_steps</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">earliest_start_time_step</span><span class="p">,</span> <span class="n">latest_start_time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">episode_split_boundary</span> <span class="o">==</span> <span class="s1">'shared'</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">episode_time_steps</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">latest_start_time_step</span> <span class="o">&gt;</span> <span class="n">earliest_start_time_step</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s1">'episode_time_steps must be &gt;= 2 for consecutive episode splits, got </span><span class="si">{</span><span class="n">episode_time_steps</span><span class="si">}</span><span class="s1">: '</span>
+                        <span class="s1">'an episode of one data row has no interval to simulate. Use '</span>
+                        <span class="s2">"episode_split_boundary='disjoint' to keep the CityLearn 3.6.0 splits."</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Consecutive episodes share their boundary row, so no interval falls between two episodes.</span>
+                <span class="n">start_time_steps</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span>
+                    <span class="n">earliest_start_time_step</span><span class="p">,</span> <span class="n">latest_start_time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">episode_time_steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">start_time_steps</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">earliest_start_time_step</span><span class="p">,</span> <span class="n">latest_start_time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">)</span>
+
+            <span class="n">end_time_steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">start_time_steps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">+</span> <span class="n">episode_time_steps</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">splits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">start_time_steps</span><span class="p">,</span> <span class="n">end_time_steps</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">splits</span> <span class="o">=</span> <span class="n">splits</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'No valid episode splits could be created from the provided episode_time_steps.'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">random_episode_split</span><span class="p">:</span>
+            <span class="c1"># A bounded seed per episode also varies for zero and cannot overflow.</span>
+            <span class="n">payload</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">random_seed</span><span class="p">)</span><span class="si">}</span><span class="s1">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="si">}</span><span class="s1">'</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'ascii'</span><span class="p">)</span>
+            <span class="n">seed</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span><span class="o">.</span><span class="n">digest</span><span class="p">()[:</span><span class="mi">4</span><span class="p">],</span> <span class="s1">'big'</span><span class="p">)</span>
+            <span class="n">nprs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+            <span class="n">ix</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">nprs</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">)))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode_start_time_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__episode_end_time_step</span> <span class="o">=</span> <span class="n">splits</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span>
+
+<div class="viewcode-block" id="EpisodeTracker.reset_episode_index">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.EpisodeTracker.reset_episode_index">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_episode_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Resets episode index to -1 before any simulation."""</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="EpisodeTracker.set_next_episode_index">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.EpisodeTracker.set_next_episode_index">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_next_episode_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Select a reproducible episode split on the next environment reset."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">!=</span> <span class="n">index</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'episode_index must be a nonnegative integer'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span></div>
+</div>
+
+
+<div class="viewcode-block" id="Environment">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.Environment">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Environment</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Base class for all `citylearn` classes that have a spatio-temporal dimension.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    seconds_per_time_step: float, default: 3600.0</span>
+<span class="sd">        Number of seconds in 1 `time_step` and must be set to &gt;= 1.</span>
+<span class="sd">    random_seed : int, optional</span>
+<span class="sd">        Pseudorandom number generator seed for repeatable results.</span>
+<span class="sd">    random_stream_version : str, optional</span>
+<span class="sd">        Derivation of the object's random streams, ``'v2'`` (default) or ``'v1'`` (CityLearn 3.6.0 and earlier).</span>
+<span class="sd">        See :py:mod:`citylearn.random_streams`.</span>
+<span class="sd">    random_stream_key : Tuple[Any, ...], optional</span>
+<span class="sd">        Identity of the object in its random streams, so objects that share a seed draw independent values.</span>
+<span class="sd">    simulation_start_time_step: int, optional</span>
+<span class="sd">        Time step to start reading from data files. Should be set at the :py:class:`citylearn.citylearn.CityLearnEnv` level so that it propagates to other descendant objects.</span>
+<span class="sd">    simulation_end_time_step: int, optional</span>
+<span class="sd">        Time step to end reading from data files. Should be set at the :py:class:`citylearn.citylearn.CityLearnEnv` level so that it propagates to other descendant objects.</span>
+<span class="sd">    episode_tracker: EpisodeTracker, optional</span>
+<span class="sd">        :py:class:`citylearn.base.EpisodeTracker` object used to keep track of current episode time steps for reading observations from data files.</span>
+<span class="sd">    """</span>
+
+    <span class="n">DEFAULT_SECONDS_PER_TIME_STEP</span> <span class="o">=</span> <span class="mf">3600.0</span>
+    <span class="n">DEFAULT_RANDOM_SEED_RANGE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100_000_000</span><span class="p">)</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">seconds_per_time_step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">episode_tracker</span><span class="p">:</span> <span class="n">EpisodeTracker</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">time_step_ratio</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">random_stream_version</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_stream_key</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span> <span class="o">=</span> <span class="n">seconds_per_time_step</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__uid</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_random_stream</span><span class="p">(</span><span class="n">random_stream_version</span><span class="p">,</span> <span class="n">random_stream_key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="n">random_seed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__time_step</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span> <span class="o">=</span> <span class="n">episode_tracker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="o">=</span> <span class="n">time_step_ratio</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Unique environment ID."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__uid</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Pseudorandom number generator seed for repeatable results."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__random_seed</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">episode_tracker</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EpisodeTracker</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">""":py:class:`citylearn.base.EpisodeTracker` object used to keep track of </span>
+<span class="sd">        current episode time steps for reading observations from data files."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__episode_tracker</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">time_step_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">""":py:class:`citylearn.base.EpisodeTracker` object used to keep track of </span>
+<span class="sd">        current episode time steps for reading observations from data files."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__time_step_ratio</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Current environment time step."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__time_step</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">seconds_per_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Number of seconds in 1 time step."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__seconds_per_time_step</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">numpy_random_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Stream for randomly drawn parameters of this object.</span>
+
+<span class="sd">        With ``random_stream_version='v1'`` it is a new ``RandomState(random_seed)`` on every</span>
+<span class="sd">        access, as in CityLearn 3.6.0, so every draw is the first value of that seed. With ``'v2'``</span>
+<span class="sd">        it is one persistent generator per object, derived from `random_seed` and</span>
+<span class="sd">        :py:attr:`random_stream_key`, so successive draws are independent.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">==</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_generator</span><span class="p">(</span><span class="n">random_streams</span><span class="o">.</span><span class="n">DEVICE_PARAMETERS</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_stream_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Derivation of this object's random streams; see :py:mod:`citylearn.random_streams`."""</span>
+
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_Environment__random_stream_version'</span><span class="p">,</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">DEFAULT_RANDOM_STREAM_VERSION</span><span class="p">)</span>
+
+    <span class="nd">@random_stream_version</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_stream_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">parse_random_stream_version</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_Environment__random_stream_version'</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__random_stream_version</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'_random_generators'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_stream_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Identity of this object in its random streams, e.g. ``('building', 'Building_1', 'pv')``."""</span>
+
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_Environment__random_stream_key'</span><span class="p">,</span> <span class="p">())</span>
+
+    <span class="nd">@random_stream_key</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_stream_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="p">()</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">((</span><span class="n">value</span><span class="p">,)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_key</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_Environment__random_stream_key'</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__random_stream_key</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'_random_generators'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Environment.random_generator">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.Environment.random_generator">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Persistent generator for `purpose` and `parts` of this object (``random_stream_version='v2'``).</span>
+
+<span class="sd">        The generator is derived from :py:attr:`random_seed`, `purpose`, :py:attr:`random_stream_key`</span>
+<span class="sd">        and `parts`, and is kept until the seed, version or key changes.</span>
+<span class="sd">        """</span>
+
+        <span class="n">generators</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_random_generators'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">generators</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">generators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_random_generators</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">purpose</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">generators</span><span class="p">:</span>
+            <span class="n">generators</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">generator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span> <span class="n">purpose</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">random_stream_key</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">generators</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_random_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">random_stream_version</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_stream_key</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Set the stream version and key; None keeps the current value (or the default).</span>
+
+<span class="sd">        Storage devices draw parameters before :py:meth:`__init__` runs, so they call this first. Defaults</span>
+<span class="sd">        are not stored, so objects pickled before these attributes existed load with the same state.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">random_stream_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">=</span> <span class="n">random_stream_version</span>
+
+        <span class="k">if</span> <span class="n">random_stream_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_key</span> <span class="o">=</span> <span class="n">random_stream_key</span>
+
+    <span class="nd">@random_seed</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">random_seed</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_RANDOM_SEED_RANGE</span><span class="p">)</span> <span class="k">if</span> <span class="n">random_seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">random_seed</span>
+
+        <span class="k">if</span> <span class="n">random_seed</span> <span class="o">!=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_Environment__random_seed'</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'_random_generators'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__random_seed</span> <span class="o">=</span> <span class="n">random_seed</span>
+
+    <span class="nd">@seconds_per_time_step</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">seconds_per_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seconds_per_time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">seconds_per_time_step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_SECONDS_PER_TIME_STEP</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">seconds_per_time_step</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">'seconds_per_time_step &gt;= 1'</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__seconds_per_time_step</span> <span class="o">=</span> <span class="n">seconds_per_time_step</span>
+
+    <span class="nd">@episode_tracker</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">episode_tracker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_tracker</span><span class="p">:</span> <span class="n">EpisodeTracker</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode_tracker</span> <span class="o">=</span> <span class="n">episode_tracker</span>
+    
+    <span class="nd">@time_step_ratio</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">time_step_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step_ratio</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__time_step_ratio</span> <span class="o">=</span> <span class="n">time_step_ratio</span>
+
+    <span class="nd">@time_step</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__time_step</span> <span class="o">=</span> <span class="n">time_step</span>    
+
+<div class="viewcode-block" id="Environment.get_metadata">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.Environment.get_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Returns general static information."""</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">'uid'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">,</span>
+            <span class="s1">'random_seed'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
+            <span class="s1">'simulation_time_steps'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_time_steps</span><span class="p">,</span>
+            <span class="s1">'seconds_per_time_step'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span>
+            <span class="s1">'time_step_ratio'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="Environment.next_time_step">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.Environment.next_time_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">next_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Advance to next `time_step` value.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Override in subclass for custom implementation when advancing to next `time_step`.</span>
+<span class="sd">        """</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__time_step</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="Environment.reset">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.Environment.reset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Reset environment to initial state.</span>
+
+<span class="sd">        Calls `reset_time_step`.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Override in subclass for custom implementation when reseting environment.</span>
+<span class="sd">        """</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_time_step</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Environment.reset_time_step">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.Environment.reset_time_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Reset `time_step` to initial state.</span>
+
+<span class="sd">        Sets `time_step` to 0.</span>
+<span class="sd">        """</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__time_step</span> <span class="o">=</span> <span class="mi">0</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

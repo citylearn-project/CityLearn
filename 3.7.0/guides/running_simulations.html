@@ -1,0 +1,1007 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Running Simulations &mdash; CityLearn 3.7.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Dataset catalogue" href="dataset_catalogue.html" />
+    <link rel="prev" title="Features and configuration" href="features.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Running Simulations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#episode-loop-without-a-controller">Episode Loop Without a Controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#entity-interface-example">Entity Interface Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multi-community-example">Multi-Community Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citylearnenv-parameters"><code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#extra-kwargs">Extra <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reward-observation-payloads">Reward Observation Payloads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#macro-steps-action-repeat">Macro-Steps / Action Repeat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reading-latest-step-values">Reading Latest Step Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cli">CLI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stable-baselines3-agent">Stable Baselines3 agent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#evaluation-window">Evaluation window</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#host-information">Host information</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#render-and-export">Render and Export</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#comparing-two-exported-runs">Comparing two exported runs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#smoke-test-a-large-dataset">Smoke-Test a Large Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validation-from-a-source-checkout">Validation from a Source Checkout</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_full_reference.html">Full Reference Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Running Simulations</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/running_simulations.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="running-simulations">
+<h1>Running Simulations<a class="headerlink" href="#running-simulations" title="Link to this heading"></a></h1>
+<p>This page is the operational reference for installing the simulator, creating environments, running episodes, using the CLI and understanding the main execution parameters.</p>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Case</p></th>
+<th class="head"><p>Command</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Standard install</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">citylearn</span></code></p></td>
+<td><p>The Python import path is <code class="docutils literal notranslate"><span class="pre">citylearn</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>LSTM thermal dynamics</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[dynamics]&quot;</span></code></p></td>
+<td><p>Adds PyTorch; required by the 2023 challenge, Quebec, <code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code> and EULP neighbourhood datasets.</p></td>
+</tr>
+<tr class="row-even"><td><p>SAC and MARLISA</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[rl]&quot;</span></code></p></td>
+<td><p>Adds PyTorch and scikit-learn. For a CPU-only PyTorch, first run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">torch</span> <span class="pre">--index-url</span> <span class="pre">https://download.pytorch.org/whl/cpu</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Parquet datasets</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[parquet]&quot;</span></code></p></td>
+<td><p>Required when schemas or exports use Parquet.</p></td>
+</tr>
+<tr class="row-even"><td><p>Stable Baselines3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;stable-baselines3&gt;=2.4&quot;</span></code></p></td>
+<td><p>Required only for Stable Baselines3 agents, in Python or in the CLI.</p></td>
+</tr>
+<tr class="row-odd"><td><p>PV autosizing</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[pysam]&quot;</span></code></p></td>
+<td><p>Required only for EPW/PySAM autosizing.</p></td>
+</tr>
+<tr class="row-even"><td><p>Local development</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code></p></td>
+<td><p>Use the repo <code class="docutils literal notranslate"><span class="pre">.venv</span></code> when available.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="episode-loop-without-a-controller">
+<h2>Episode Loop Without a Controller<a class="headerlink" href="#episode-loop-without-a-controller" title="Link to this heading"></a></h2>
+<p>For a first run with its expected output, and a comparison with the
+business-as-usual controller, follow the
+<a class="reference external" href="../quickstart.html">quickstart</a>. The loop below is the
+smallest possible episode: it sends zero for every action, whose effect
+follows each device’s action contract.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+
+<span class="n">schema</span> <span class="o">=</span> <span class="s2">"citylearn_challenge_2022_phase_all_plus_evs"</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="s2">"flat"</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">render_mode</span><span class="o">=</span><span class="s2">"none"</span><span class="p">)</span>
+
+<span class="n">observations</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="n">terminated</span> <span class="o">=</span> <span class="n">truncated</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="k">while</span> <span class="ow">not</span> <span class="p">(</span><span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">):</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float32"</span><span class="p">)</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">]</span>
+    <span class="n">observations</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+<span class="n">kpis_v2</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="entity-interface-example">
+<h2>Entity Interface Example<a class="headerlink" href="#entity-interface-example" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span>
+    <span class="s2">"citylearn_three_phase_dynamic_topology_demo"</span><span class="p">,</span>
+    <span class="n">interface</span><span class="o">=</span><span class="s2">"entity"</span><span class="p">,</span>
+    <span class="n">topology_mode</span><span class="o">=</span><span class="s2">"dynamic"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">obs</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="n">specs</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">entity_specs</span>
+
+<span class="n">actions</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"tables"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"building"</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">[</span><span class="s2">"tables"</span><span class="p">][</span><span class="s2">"building"</span><span class="p">]</span><span class="o">.</span><span class="n">sample</span><span class="p">(),</span>
+        <span class="s2">"charger"</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">[</span><span class="s2">"tables"</span><span class="p">][</span><span class="s2">"charger"</span><span class="p">]</span><span class="o">.</span><span class="n">sample</span><span class="p">(),</span>
+        <span class="s2">"deferrable_appliance"</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">[</span><span class="s2">"tables"</span><span class="p">][</span><span class="s2">"deferrable_appliance"</span><span class="p">]</span><span class="o">.</span><span class="n">sample</span><span class="p">(),</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">obs</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="multi-community-example">
+<h2>Multi-Community Example<a class="headerlink" href="#multi-community-example" title="Link to this heading"></a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> when one training loop should step several independent communities in lockstep. Each child keeps its own physics, KPIs and demand-response files.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.multi_community</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiCommunityEnv</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">MultiCommunityEnv</span><span class="p">(</span>
+    <span class="n">communities</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"community_id"</span><span class="p">:</span> <span class="s2">"community_a"</span><span class="p">,</span>
+            <span class="s2">"schema"</span><span class="p">:</span> <span class="s2">"citylearn_challenge_2022_phase_all_plus_evs"</span><span class="p">,</span>
+            <span class="s2">"env_kwargs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"interface"</span><span class="p">:</span> <span class="s2">"entity"</span><span class="p">,</span> <span class="s2">"episode_time_steps"</span><span class="p">:</span> <span class="mi">48</span><span class="p">},</span>
+            <span class="s2">"weight"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">"community_id"</span><span class="p">:</span> <span class="s2">"community_b"</span><span class="p">,</span>
+            <span class="s2">"schema"</span><span class="p">:</span> <span class="s2">"citylearn_challenge_2022_phase_all"</span><span class="p">,</span>
+            <span class="s2">"env_kwargs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"interface"</span><span class="p">:</span> <span class="s2">"entity"</span><span class="p">,</span> <span class="s2">"episode_time_steps"</span><span class="p">:</span> <span class="mi">48</span><span class="p">},</span>
+            <span class="s2">"weight"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">observations</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All communities must share <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code>, effective episode length, <code class="docutils literal notranslate"><span class="pre">interface</span></code>, <code class="docutils literal notranslate"><span class="pre">central_agent</span></code> mode, <code class="docutils literal notranslate"><span class="pre">physics_version</span></code>, <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> and <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code>. <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> returns local rows with <code class="docutils literal notranslate"><span class="pre">community_id</span></code> plus portfolio rows with <code class="docutils literal notranslate"><span class="pre">level=&quot;portfolio&quot;</span></code>. See <a class="reference internal" href="multi_community_reference.html"><span class="std std-doc">multi_community_reference.md</span></a>.</p>
+</section>
+<section id="citylearnenv-parameters">
+<h2><code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> Parameters<a class="headerlink" href="#citylearnenv-parameters" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head text-right"><p>Default</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">schema</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <code class="docutils literal notranslate"><span class="pre">Path</span></code>, <code class="docutils literal notranslate"><span class="pre">Mapping</span></code></p></td>
+<td class="text-right"><p>required</p></td>
+<td><p>Dataset name, schema path or preloaded dict.</p></td>
+<td><p>Relative paths are resolved from <code class="docutils literal notranslate"><span class="pre">root_directory</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">root_directory</span></code></p></td>
+<td class="text-right"><p>path</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Base folder for dataset files.</p></td>
+<td><p>Overrides schema value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">buildings</span></code></p></td>
+<td class="text-right"><p>list</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Subset of buildings to load.</p></td>
+<td><p>Names or indices.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicles</span></code></p></td>
+<td class="text-right"><p>list</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Accepted, but it does not select EVs.</p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">electric_vehicles_def.&lt;ev&gt;.include</span></code> in the schema.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">simulation_start_time_step</span></code></p></td>
+<td class="text-right"><p>int</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>First global timestep.</p></td>
+<td><p>Inclusive.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">simulation_end_time_step</span></code></p></td>
+<td class="text-right"><p>int</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Last global timestep.</p></td>
+<td><p>Inclusive.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">episode_time_steps</span></code></p></td>
+<td class="text-right"><p>int/list</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Episode size or explicit windows.</p></td>
+<td><p>Can be used with rolling/random splits.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_episode_split</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Every row can start an episode (overlapping windows).</p></td>
+<td><p>Useful for training.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_episode_split</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Random window episodes.</p></td>
+<td><p>Uses <code class="docutils literal notranslate"><span class="pre">random_seed</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">episode_split_boundary</span></code></p></td>
+<td class="text-right"><p>str</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">shared</span></code></p></td>
+<td><p>How consecutive (non-rolling) splits meet.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">shared</span></code> shares the boundary row so every interval is simulated; <code class="docutils literal notranslate"><span class="pre">disjoint</span></code> restores the 3.6.0 splits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_soc_carryover</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Start each EV of an episode that continues the previous one in time from its SOC at the end of that episode.</p></td>
+<td><p>Only the EV SOC is carried. Off, episodes are independent but a session across a boundary loses its charge; on, consecutive episodes depend on the previous controller. See the <a class="reference internal" href="kpis_reference.html#departures"><span class="std std-ref">KPI reference</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code></p></td>
+<td class="text-right"><p>float</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Physical duration of each step.</p></td>
+<td><p>Examples: 15, 60, 300, 900, 3600.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code></p></td>
+<td class="text-right"><p>int/float</p></td>
+<td class="text-right"><p>inferred</p></td>
+<td><p>Ratio between control step and dataset spacing.</p></td>
+<td><p>Inferred from the data; a value passed here must match it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode</span></code></p></td>
+<td class="text-right"><p>str</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">reject</span></code></p></td>
+<td><p>What to do when the control step differs from the dataset step.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">reject</span></code> raises an error; <code class="docutils literal notranslate"><span class="pre">compress</span></code> keeps the 3.6.0 behaviour (one data row per step, energies scaled).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reward_function</span></code></p></td>
+<td class="text-right"><p>class/path</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Reward used by <code class="docutils literal notranslate"><span class="pre">step</span></code>.</p></td>
+<td><p>Supports <code class="docutils literal notranslate"><span class="pre">reward_function_kwargs</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reward_function_kwargs</span></code></p></td>
+<td class="text-right"><p>dict</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p></td>
+<td><p>Constructor kwargs for the reward.</p></td>
+<td><p>Pass-through.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">central_agent</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Single controller for all buildings.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code> returns one vector per building.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">shared_observations</span></code></p></td>
+<td class="text-right"><p>list</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Shared observations in central mode.</p></td>
+<td><p>Included once in central vectors.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">active_observations</span></code></p></td>
+<td class="text-right"><p>list/list[list]</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Enable only these observations.</p></td>
+<td><p>Global or per-building override.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">inactive_observations</span></code></p></td>
+<td class="text-right"><p>list/list[list]</p></td>
+<td class="text-right"><p>schema/building</p></td>
+<td><p>Disable observations.</p></td>
+<td><p>Applied after active selection.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">active_actions</span></code></p></td>
+<td class="text-right"><p>list/list[list]</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Enable only these actions.</p></td>
+<td><p>Global or per-building override.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">inactive_actions</span></code></p></td>
+<td class="text-right"><p>list/list[list]</p></td>
+<td class="text-right"><p>schema/building</p></td>
+<td><p>Disable actions.</p></td>
+<td><p>Applied after active selection.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>schema/building</p></td>
+<td><p>Enable outage simulation.</p></td>
+<td><p>Uses data series or stochastic model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">solar_generation</span></code></p></td>
+<td class="text-right"><p>bool/list</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code> (or one bool per building) removes the PV.</p></td>
+<td><p>Constructor only; there is no schema key.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
+<td class="text-right"><p>int</p></td>
+<td class="text-right"><p>schema</p></td>
+<td><p>Random seed.</p></td>
+<td><p>Affects splits and stochastic attributes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">offline</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Disable network fallbacks.</p></td>
+<td><p>Requires local datasets.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interface</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">flat</span></code>/<code class="docutils literal notranslate"><span class="pre">entity</span></code></p></td>
+<td class="text-right"><p>schema/flat</p></td>
+<td><p>Observation/action contract.</p></td>
+<td><p>Entity returns tables and edges.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">topology_mode</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">static</span></code>/<code class="docutils literal notranslate"><span class="pre">dynamic</span></code></p></td>
+<td class="text-right"><p>schema/static</p></td>
+<td><p>Enable dynamic topology events.</p></td>
+<td><p>Dynamic requires <code class="docutils literal notranslate"><span class="pre">interface=&quot;entity&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">start_date</span></code></p></td>
+<td class="text-right"><p>date/string</p></td>
+<td class="text-right"><p>schema/2024-01-01</p></td>
+<td><p>Base date for render/export timestamps.</p></td>
+<td><p>Does not change physics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">render_mode</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">none</span></code>/<code class="docutils literal notranslate"><span class="pre">during</span></code>/<code class="docutils literal notranslate"><span class="pre">end</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
+<td><p>CSV export policy.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">end</span></code> is preferred for performance.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">render_session_name</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td class="text-right"><p>schema/None</p></td>
+<td><p>Export session subfolder.</p></td>
+<td><p>Must be relative.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>render flag</p></td>
+<td><p>Export KPIs at episode end.</p></td>
+<td><p>Can be enabled without full render.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="extra-kwargs">
+<h2>Extra <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code><a class="headerlink" href="#extra-kwargs" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head text-right"><p>Default</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">render_directory</span></code></p></td>
+<td class="text-right"><p>path</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">./render_logs</span></code></p></td>
+<td><p>Base export folder; relative paths resolve against the working directory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">render_directory_name</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">render_logs</span></code></p></td>
+<td><p>Legacy export folder name.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">render</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>derived</p></td>
+<td><p>Legacy render switch.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">debug_timing</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>schema/False</p></td>
+<td><p>Runtime timing logs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">check_observation_limits</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>schema/False</p></td>
+<td><p>Validate observations against estimated bounds.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">physics_invariant_checks</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>schema/False</p></td>
+<td><p>Run physical invariant checks at runtime.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metrics_log_interval</span></code></p></td>
+<td class="text-right"><p>int</p></td>
+<td class="text-right"><p>schema/0</p></td>
+<td><p>Runtime metric log cadence.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="reward-observation-payloads">
+<h2>Reward Observation Payloads<a class="headerlink" href="#reward-observation-payloads" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">step()</span></code> builds a smaller reward observation payload when the reward function declares which observation names it needs. Built-in rewards already do this. Custom rewards can opt in with one of these compatible forms:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyReward</span><span class="p">:</span>
+    <span class="n">required_observation_names</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"net_electricity_consumption"</span><span class="p">,)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="o">-</span><span class="nb">sum</span><span class="p">(</span><span class="n">o</span><span class="p">[</span><span class="s2">"net_electricity_consumption"</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">observations</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>The alias <code class="docutils literal notranslate"><span class="pre">required_observations</span></code> and method <code class="docutils literal notranslate"><span class="pre">get_required_observation_names()</span></code> are also supported. If a custom reward does not declare requirements, CityLearn falls back to full <code class="docutils literal notranslate"><span class="pre">include_all</span></code> observations for backward compatibility.</p>
+</section>
+<section id="macro-steps-action-repeat">
+<span id="macro-steps--action-repeat"></span><h2>Macro-Steps / Action Repeat<a class="headerlink" href="#macro-steps-action-repeat" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">step_many()</span></code> repeats one selected action across multiple internal simulator steps and returns one macro transition for RL replay buffers:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step_many</span><span class="p">(</span>
+    <span class="n">action</span><span class="p">,</span>
+    <span class="n">repeat_steps</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">stop_on_done</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">return_substeps</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The simulator still advances every internal step at <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> resolution. Constraints, EV charging/departures, batteries, deferrables, phases/headroom, rewards, KPIs and render/export time series are updated exactly as they are for repeated <code class="docutils literal notranslate"><span class="pre">step()</span></code> calls. The returned observation is only the final observation after the executed substeps, and <code class="docutils literal notranslate"><span class="pre">rewards</span></code> is the per-agent reward sum.</p>
+<p><code class="docutils literal notranslate"><span class="pre">info[&quot;executed_steps&quot;]</span></code> is always present so RL code can discount macro transitions correctly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gamma_macro</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">**</span> <span class="n">info</span><span class="p">[</span><span class="s2">"executed_steps"</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">return_substeps=True</span></code>, <code class="docutils literal notranslate"><span class="pre">info</span></code> also includes <code class="docutils literal notranslate"><span class="pre">substep_rewards</span></code>, <code class="docutils literal notranslate"><span class="pre">substep_infos</span></code> and <code class="docutils literal notranslate"><span class="pre">substep_actions_applied</span></code> for debugging. Keep it disabled in long training runs.</p>
+</section>
+<section id="reading-latest-step-values">
+<h2>Reading Latest Step Values<a class="headerlink" href="#reading-latest-step-values" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> stores episode rewards and the three district net-consumption series in preallocated <code class="docutils literal notranslate"><span class="pre">float64</span></code> buffers. Accessing a full-history list property (<code class="docutils literal notranslate"><span class="pre">env.rewards</span></code>, <code class="docutils literal notranslate"><span class="pre">env.net_electricity_consumption</span></code>, <code class="docutils literal notranslate"><span class="pre">env.net_electricity_consumption_cost</span></code>, <code class="docutils literal notranslate"><span class="pre">env.net_electricity_consumption_emission</span></code>) lazily materializes a tracked Python <code class="docutils literal notranslate"><span class="pre">list</span></code> that extends incrementally per step and detaches before any in-place mutation, so existing <code class="docutils literal notranslate"><span class="pre">[-1]</span></code> monitoring loops remain <code class="docutils literal notranslate"><span class="pre">O(1)</span></code> per step while caller edits stay isolated.</p>
+<p>Read the latest value with <code class="docutils literal notranslate"><span class="pre">[-1]</span></code>. Each read takes constant time per step. Once read, the list is kept for the rest of the episode, so the memory saving of the buffers holds only while nothing reads these properties during the episode. In training loops, use the reward returned by <code class="docutils literal notranslate"><span class="pre">env.step()</span></code>, as the CityLearn agents do, and read the histories at the end of the episode.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">latest_reward_row</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">rewards</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">latest_net_kwh</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">net_electricity_consumption</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">latest_cost_eur</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">net_electricity_consumption_cost</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">latest_emission_kgco2</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">net_electricity_consumption_emission</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="cli">
+<h2>CLI<a class="headerlink" href="#cli" title="Link to this heading"></a></h2>
+<p>The CLI needs only CityLearn for its listing commands and for the default
+agent, the business-as-usual <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code>. Training or evaluating a
+Stable Baselines3 agent also needs <code class="docutils literal notranslate"><span class="pre">stable-baselines3&gt;=2.4</span></code>, and the bundled
+<code class="docutils literal notranslate"><span class="pre">SAC</span></code> and <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code> agents need the <code class="docutils literal notranslate"><span class="pre">rl</span></code> extra. Every command works on Python
+3.10 or newer.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>citylearn<span class="w"> </span>--version
+citylearn<span class="w"> </span>list_datasets
+citylearn<span class="w"> </span>list_default_time_series_variables
+citylearn<span class="w"> </span>simulate<span class="w"> </span>data/datasets/my_dataset/schema.json<span class="w"> </span>train<span class="w"> </span>-e<span class="w"> </span><span class="m">3</span>
+citylearn<span class="w"> </span>simulate<span class="w"> </span>data/datasets/my_dataset/schema.json<span class="w"> </span>evaluate
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">simulate</span></code> writes a training summary (<code class="docutils literal notranslate"><span class="pre">&lt;simulation_id&gt;-train.json</span></code>), the
+evaluation files and, with <code class="docutils literal notranslate"><span class="pre">--save_agent</span></code>, the agent to the output directory,
+and prints the path of each file it writes. <code class="docutils literal notranslate"><span class="pre">evaluate</span></code> and <code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code>
+write two evaluation files:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;simulation_id&gt;-evaluation_v2.csv</span></code>: the <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> table, with the
+columns <code class="docutils literal notranslate"><span class="pre">cost_function</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">level</span></code>, <code class="docutils literal notranslate"><span class="pre">unit</span></code> and <code class="docutils literal notranslate"><span class="pre">description</span></code>,
+one row per KPI and scope. It holds the community market rows when the
+scenario has a market, and the <code class="docutils literal notranslate"><span class="pre">*_business_as_usual_*</span></code> rows. This is the table
+that the <a class="reference internal" href="kpis_reference.html"><span class="std std-doc">KPI reference</span></a> and the scorecard describe; read
+it with <code class="docutils literal notranslate"><span class="pre">pandas.read_csv</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;simulation_id&gt;-evaluation.json</span></code>: the evaluation window and timestamps, the
+rewards, the actions and the time series, plus the legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> KPIs
+under <code class="docutils literal notranslate"><span class="pre">evaluation</span></code>. Its format does not change, so existing parsers keep
+working, but compare controllers with the <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> file.</p></li>
+</ul>
+<p>The business-as-usual rows need a second rollout of <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> on the
+evaluation window, as <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> does in Python. <code class="docutils literal notranslate"><span class="pre">--no_business_as_usual</span></code>
+skips it and writes the table without those rows.</p>
+<section id="stable-baselines3-agent">
+<h3>Stable Baselines3 agent<a class="headerlink" href="#stable-baselines3-agent" title="Link to this heading"></a></h3>
+<p>A Stable Baselines3 agent needs its policy in the agent arguments and the
+environment wrapped into one flat observation and action vector, which requires
+a central agent. This command trains SAC for five daily episodes on the first
+week and evaluates it on the first training episode:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>citylearn<span class="w"> </span>simulate<span class="w"> </span>citylearn_challenge_2022_phase_all_plus_evs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-a<span class="w"> </span>stable_baselines3.SAC<span class="w"> </span>-ka<span class="w"> </span><span class="s1">'{"policy": "MlpPolicy"}'</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-w<span class="w"> </span>citylearn.wrappers.NormalizedObservationWrapper<span class="w"> </span>citylearn.wrappers.StableBaselines3Wrapper<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-ke<span class="w"> </span><span class="s1">'{"central_agent": true, "episode_time_steps": 24, "simulation_end_time_step": 167}'</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-rs<span class="w"> </span><span class="m">0</span><span class="w"> </span>-d<span class="w"> </span>outputs/sb3_sac<span class="w"> </span>-sid<span class="w"> </span>sb3_sac<span class="w"> </span>train<span class="w"> </span>-e<span class="w"> </span><span class="m">5</span><span class="w"> </span>--evaluate<span class="w"> </span>--save_agent
+</pre></div>
+</div>
+<p>Without <code class="docutils literal notranslate"><span class="pre">&quot;policy&quot;</span></code>, the CLI raises a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> that shows the argument to add.
+Use <code class="docutils literal notranslate"><span class="pre">-te</span> <span class="pre">start</span> <span class="pre">end</span></code> to evaluate on other windows, such as unseen days.</p>
+<p>To evaluate or keep training a saved model, pass it with <code class="docutils literal notranslate"><span class="pre">-fa</span></code> and name the
+algorithm that saved it with <code class="docutils literal notranslate"><span class="pre">-a</span></code>, for example <code class="docutils literal notranslate"><span class="pre">-a</span> <span class="pre">stable_baselines3.SAC</span> <span class="pre">-fa</span> <span class="pre">outputs/sb3_sac/sb3_sac-agent.zip</span></code>. Write to another directory with <code class="docutils literal notranslate"><span class="pre">-d</span></code>:
+<code class="docutils literal notranslate"><span class="pre">simulate</span></code> empties its output directory first, so it refuses to run when that
+directory holds the model to load.</p>
+<p>What the Stable Baselines3 integration supports:</p>
+<ul class="simple">
+<li><p><strong>Central agent, flat interface.</strong> <code class="docutils literal notranslate"><span class="pre">StableBaselines3Wrapper</span></code> turns the central
+agent’s observation and action vectors into one <code class="docutils literal notranslate"><span class="pre">Box</span></code> each. With
+<code class="docutils literal notranslate"><span class="pre">central_agent=False</span></code> there is one vector per building, and the wrapper raises
+an error; for one policy per building, use <code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code>.</p></li>
+<li><p><strong>No entity interface.</strong> The entity observations are dictionaries of tables
+whose sizes can change, which the SB3 policies cannot take. The <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code>,
+three-phase, demand-response and robustness datasets default to the entity
+interface, so pass <code class="docutils literal notranslate"><span class="pre">&quot;interface&quot;:</span> <span class="pre">&quot;flat&quot;</span></code> in <code class="docutils literal notranslate"><span class="pre">-ke</span></code> (or <code class="docutils literal notranslate"><span class="pre">interface=&quot;flat&quot;</span></code> in
+Python). Dynamic topology and demand response need the entity interface and
+cannot be used with SB3.</p></li>
+<li><p><strong>Action bounds.</strong> The action space keeps each device’s bounds, for example
+[-1, 1] for storage and EV chargers and [0, 1] for others, so <code class="docutils literal notranslate"><span class="pre">check_env</span></code>
+warns that it is not symmetric. SAC rescales its actions to the bounds and PPO
+clips them, so both work as they are.</p></li>
+<li><p><strong>Robustness faults.</strong> A missing sensor reading is replaced by
+<code class="docutils literal notranslate"><span class="pre">missing_replacement_value</span></code> (-9999 in <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_robustness</span></code>),
+which normalises far outside [0, 1]. SB3 does not check observation bounds,
+but the policy sees that value as it is.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">tests/test_stable_baselines3_integration.py</span></code> runs <code class="docutils literal notranslate"><span class="pre">check_env</span></code>, a few SAC and PPO
+updates, <code class="docutils literal notranslate"><span class="pre">predict</span></code> over one episode with every observation inside its space,
+<code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>, and the CLI saving and loading a model.</p>
+</section>
+<section id="evaluation-window">
+<h3>Evaluation window<a class="headerlink" href="#evaluation-window" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code> runs one episode of the environment’s episode windows, or the
+windows that <code class="docutils literal notranslate"><span class="pre">-te</span></code> gives. <code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code> evaluates on the first training
+episode window: with <code class="docutils literal notranslate"><span class="pre">-ke</span> <span class="pre">'{&quot;episode_time_steps&quot;:</span> <span class="pre">24}'</span></code> it evaluates 24 time
+steps, not the whole dataset. Without <code class="docutils literal notranslate"><span class="pre">episode_time_steps</span></code>, the episode, and so
+the evaluation, covers the whole simulation window.</p>
+</section>
+<section id="host-information">
+<h3>Host information<a class="headerlink" href="#host-information" title="Link to this heading"></a></h3>
+<p>The training summary records the machine host name and the user name only with
+<code class="docutils literal notranslate"><span class="pre">--record_host</span></code>, so results can be shared without them.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Example</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">schema</span></code></p></td>
+<td><p>dataset name or <code class="docutils literal notranslate"><span class="pre">schema.json</span></code> path</p></td>
+<td><p>Dataset to run.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-a</span></code>, <code class="docutils literal notranslate"><span class="pre">--agent_name</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">citylearn.agents.baseline.BusinessAsUsualAgent</span></code></p></td>
+<td><p>Agent class path.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-ke</span></code>, <code class="docutils literal notranslate"><span class="pre">--env_kwargs</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'{&quot;interface&quot;:&quot;entity&quot;}'</span></code></p></td>
+<td><p>JSON kwargs for <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-ka</span></code>, <code class="docutils literal notranslate"><span class="pre">--agent_kwargs</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'{&quot;x&quot;:1}'</span></code></p></td>
+<td><p>JSON kwargs for the agent.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code>, <code class="docutils literal notranslate"><span class="pre">--wrappers</span></code></p></td>
+<td><p>wrapper class paths</p></td>
+<td><p>Gymnasium wrappers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-tv</span></code>, <code class="docutils literal notranslate"><span class="pre">--time_series_variables</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">net_electricity_consumption</span></code></p></td>
+<td><p>Series stored after evaluation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-sid</span></code>, <code class="docutils literal notranslate"><span class="pre">--simulation_id</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_001</span></code></p></td>
+<td><p>Output naming ID.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-fa</span></code>, <code class="docutils literal notranslate"><span class="pre">--agent_filepath</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">outputs/agent.pkl</span></code></p></td>
+<td><p>Load/save agent path.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-d</span></code>, <code class="docutils literal notranslate"><span class="pre">--output_directory</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">outputs/run_001</span></code></p></td>
+<td><p>Output folder.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-te</span></code>, <code class="docutils literal notranslate"><span class="pre">--evaluation_episode_time_steps</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">2879</span></code></p></td>
+<td><p>Evaluation window. Can repeat.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-p</span></code>, <code class="docutils literal notranslate"><span class="pre">--append</span></code></p></td>
+<td><p>flag</p></td>
+<td><p>Do not overwrite existing output.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-rs</span></code>, <code class="docutils literal notranslate"><span class="pre">--random_seed</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">42</span></code></p></td>
+<td><p>Seed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--offline</span></code></p></td>
+<td><p>flag</p></td>
+<td><p>Require local files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--record_host</span></code></p></td>
+<td><p>flag</p></td>
+<td><p>Record the host and user names in the training summary.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--no_business_as_usual</span></code></p></td>
+<td><p>flag</p></td>
+<td><p>Write the <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> table without the business-as-usual rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">-e</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">-e</span> <span class="pre">10</span></code></p></td>
+<td><p>Number of training episodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--save_agent</span></code></p></td>
+<td><p>flag</p></td>
+<td><p>Save agent at the end.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code></p></td>
+<td><p>flag</p></td>
+<td><p>Evaluate after training, on the first training episode window unless <code class="docutils literal notranslate"><span class="pre">-te</span></code> is given.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code></p></td>
+<td><p>subcommand</p></td>
+<td><p>Deterministic evaluation.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="render-and-export">
+<h2>Render and Export<a class="headerlink" href="#render-and-export" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">render_mode</span></code></p></th>
+<th class="head text-right"><p>Runtime cost</p></th>
+<th class="head"><p>Output</p></th>
+<th class="head"><p>Use case</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
+<td class="text-right"><p>lowest</p></td>
+<td><p>No render CSV</p></td>
+<td><p>Training.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">during</span></code></p></td>
+<td class="text-right"><p>high</p></td>
+<td><p>Writes rows each step</p></td>
+<td><p>Short debugging runs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">end</span></code></p></td>
+<td class="text-right"><p>medium</p></td>
+<td><p>Writes full episode at end</p></td>
+<td><p>Long episodes with final CSV output.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Set <code class="docutils literal notranslate"><span class="pre">render_file_format=&quot;parquet&quot;</span></code> to write render, KPI and BAU time-series exports as chunked parquet part files instead of CSV. <code class="docutils literal notranslate"><span class="pre">render_chunk_size</span></code> controls the number of rows per parquet part; the default is <code class="docutils literal notranslate"><span class="pre">50000</span></code> for parquet and <code class="docutils literal notranslate"><span class="pre">100000</span></code> for CSV.</p>
+<p>KPI and BAU exports are episode-scoped, so training loops can keep export disabled and turn it on only for the final episode. If normal time-series outputs are needed on that final episode, create the environment with <code class="docutils literal notranslate"><span class="pre">render_mode=&quot;end&quot;</span></code> and toggle <code class="docutils literal notranslate"><span class="pre">render_enabled</span></code>; for KPI-only output, leave render disabled and call <code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code> manually after the final episode.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">episode</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">episodes</span><span class="p">):</span>
+    <span class="n">last_episode</span> <span class="o">=</span> <span class="n">episode</span> <span class="o">==</span> <span class="n">episodes</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">render_enabled</span> <span class="o">=</span> <span class="n">last_episode</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">export_kpis_on_episode_end</span> <span class="o">=</span> <span class="n">last_episode</span>
+    <span class="n">observations</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+    <span class="c1"># run episode...</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code> controls the BAU cost separately:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Call</p></th>
+<th class="head"><p>Output</p></th>
+<th class="head text-right"><p>BAU sidecar cost</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">env.export_final_kpis(include_business_as_usual=False)</span></code></p></td>
+<td><p>KPI file and audit metadata</p></td>
+<td class="text-right"><p>no</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">env.export_final_kpis(include_business_as_usual=True,</span> <span class="pre">export_business_as_usual_timeseries=False)</span></code></p></td>
+<td><p>KPI file with BAU rows and audit metadata</p></td>
+<td class="text-right"><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">env.export_final_kpis(include_business_as_usual=True,</span> <span class="pre">export_business_as_usual_timeseries=True)</span></code></p></td>
+<td><p>KPI file with BAU rows and BAU time-series file</p></td>
+<td class="text-right"><p>yes</p></td>
+</tr>
+</tbody>
+</table>
+<p>Normal episode time series are controlled by <code class="docutils literal notranslate"><span class="pre">render_mode</span></code>/<code class="docutils literal notranslate"><span class="pre">render_enabled</span></code>, not by <code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code>.</p>
+<p>For exact final-episode choices, keep <code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end=False</span></code> and call <code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code> yourself after the episode terminates.</p>
+<section id="comparing-two-exported-runs">
+<h3>Comparing two exported runs<a class="headerlink" href="#comparing-two-exported-runs" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code> writes <code class="docutils literal notranslate"><span class="pre">exported_kpis.manifest.json</span></code> next to the KPI file. <code class="docutils literal notranslate"><span class="pre">compare_exports(left,</span> <span class="pre">right)</span></code>
+reads two KPI files and their manifests; <code class="docutils literal notranslate"><span class="pre">compare_manifests(left,</span> <span class="pre">right)</span></code> does the same check on manifests already
+loaded as dictionaries. Both are in <code class="docutils literal notranslate"><span class="pre">citylearn.internal.comparison</span></code>. They report whether the difference between the
+two runs can be read as a controller difference:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">status</span></code></p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">'paired'</span></code></p></td>
+<td><p>Only the controller differs. <code class="docutils literal notranslate"><span class="pre">permitted_claim</span></code> is <code class="docutils literal notranslate"><span class="pre">'controller_difference'</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">'incompatible'</span></code></p></td>
+<td><p>A setting that changes the results differs; it is listed in <code class="docutils literal notranslate"><span class="pre">mismatches</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">'unknown'</span></code></p></td>
+<td><p>Evidence is missing from a manifest; it is listed in <code class="docutils literal notranslate"><span class="pre">missing_evidence</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The simulator cannot tell which controller chose the actions, so each run declares it with
+<code class="docutils literal notranslate"><span class="pre">env.set_experiment_identity(implementation,</span> <span class="pre">version,</span> <span class="pre">parameters,</span> <span class="pre">observation_access='agent_payload')</span></code>.
+<strong>Without it, two otherwise identical runs compare as <code class="docutils literal notranslate"><span class="pre">status='unknown'</span></code> with
+<code class="docutils literal notranslate"><span class="pre">missing_evidence=['controller_identity']</span></code>.</strong></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>What it records</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">implementation</span></code></p></td>
+<td><p>The controller’s name, for example its import path. Required.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">version</span></code></p></td>
+<td><p>The version of the controller code or of its trained weights. Required.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">parameters</span></code></p></td>
+<td><p>A dictionary with the settings that define this controller. It must be JSON-serializable with finite numbers; use <code class="docutils literal notranslate"><span class="pre">{}</span></code> when there are none.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">observation_access</span></code></p></td>
+<td><p>What the controller observes. The default <code class="docutils literal notranslate"><span class="pre">'agent_payload'</span></code> is the observations returned by <code class="docutils literal notranslate"><span class="pre">reset()</span></code> and <code class="docutils literal notranslate"><span class="pre">step()</span></code>. Two runs with different values are <code class="docutils literal notranslate"><span class="pre">incompatible</span></code> (<code class="docutils literal notranslate"><span class="pre">controller_observation_access</span></code>).</p></td>
+</tr>
+</tbody>
+</table>
+<p>The identity is written to the manifest as <code class="docutils literal notranslate"><span class="pre">controller_identity</span></code>. It stays on the environment across <code class="docutils literal notranslate"><span class="pre">reset()</span></code>,
+so call it once after creating the environment; it must be set before <code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code> runs, including the
+automatic export at the end of the episode when <code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end=True</span></code>. The rule-based baselines
+declare their own identity through <code class="docutils literal notranslate"><span class="pre">agent.comparison_identity()</span></code>: pass the agent to
+<code class="docutils literal notranslate"><span class="pre">env.export_final_kpis(model=agent)</span></code> and it is recorded for you, with <code class="docutils literal notranslate"><span class="pre">observation_access='entity_observations'</span></code>.
+With <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code>, call it on each community in <code class="docutils literal notranslate"><span class="pre">mc.envs</span></code>, whose own exports carry the manifests.
+<code class="docutils literal notranslate"><span class="pre">compare_exports(left,</span> <span class="pre">right,</span> <span class="pre">mode='sharing')</span></code> compares one controller with sharing on and off, and also
+requires the two identities to be equal.</p>
+<p>This example runs one simple controller with two parameter values, exports both runs and compares them:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.comparison</span><span class="w"> </span><span class="kn">import</span> <span class="n">compare_exports</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">battery_action</span><span class="p">):</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span>
+        <span class="s2">"citylearn_challenge_2022_phase_all_plus_evs"</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+        <span class="n">render_directory</span><span class="o">=</span><span class="s2">"runs"</span><span class="p">,</span> <span class="n">render_session_name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">export_kpis_on_episode_end</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">set_experiment_identity</span><span class="p">(</span>
+        <span class="n">implementation</span><span class="o">=</span><span class="s2">"my_project.ConstantBattery"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"1.0"</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">"battery_action"</span><span class="p">:</span> <span class="n">battery_action</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">terminated</span><span class="p">:</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="p">[[</span><span class="n">battery_action</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"electrical_storage"</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">action_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]]]</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">export_final_kpis</span><span class="p">(</span><span class="n">export_business_as_usual_timeseries</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">new_folder_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"exported_kpis.csv"</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="n">report</span> <span class="o">=</span> <span class="n">compare_exports</span><span class="p">(</span><span class="n">run</span><span class="p">(</span><span class="s2">"idle"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">run</span><span class="p">(</span><span class="s2">"charge"</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="p">[</span><span class="s2">"status"</span><span class="p">],</span> <span class="n">report</span><span class="p">[</span><span class="s2">"missing_evidence"</span><span class="p">],</span> <span class="n">report</span><span class="p">[</span><span class="s2">"mismatches"</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>paired [] []
+</pre></div>
+</div>
+</section>
+</section>
+<section id="smoke-test-a-large-dataset">
+<h2>Smoke-Test a Large Dataset<a class="headerlink" href="#smoke-test-a-large-dataset" title="Link to this heading"></a></h2>
+<p>For large 15s datasets, always run a short window first:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;'PY'</span>
+<span class="s">import numpy as np</span>
+<span class="s">from citylearn.citylearn import CityLearnEnv</span>
+
+<span class="s">env = CityLearnEnv(</span>
+<span class="s">    "citylearn_three_phase_electrical_service_demo_15s_parquet",</span>
+<span class="s">    simulation_start_time_step=0,</span>
+<span class="s">    simulation_end_time_step=120,</span>
+<span class="s">    episode_time_steps=120,</span>
+<span class="s">)</span>
+<span class="s">obs, info = env.reset()</span>
+<span class="s">for _ in range(100):</span>
+<span class="s">    if isinstance(env.action_space, list):</span>
+<span class="s">        actions = [np.zeros(space.shape, dtype="float32") for space in env.action_space]</span>
+<span class="s">    else:</span>
+<span class="s">        actions = {</span>
+<span class="s">            "tables": {</span>
+<span class="s">                name: np.zeros(space.shape, dtype="float32")</span>
+<span class="s">                for name, space in env.action_space["tables"].spaces.items()</span>
+<span class="s">            }</span>
+<span class="s">        }</span>
+<span class="s">    obs, reward, terminated, truncated, info = env.step(actions)</span>
+<span class="s">    if terminated or truncated:</span>
+<span class="s">        break</span>
+<span class="s">print(env.evaluate_v2().head())</span>
+<span class="s">PY</span>
+</pre></div>
+</div>
+</section>
+<section id="validation-from-a-source-checkout">
+<h2>Validation from a Source Checkout<a class="headerlink" href="#validation-from-a-source-checkout" title="Link to this heading"></a></h2>
+<p>The test suite and the audit scripts are in the repository, not in the package
+that <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">citylearn</span></code> installs. Run them from a clone, with the test
+requirements installed (see the <a class="reference internal" href="developer_guide.html"><span class="std std-doc">developer guide</span></a> and the
+<a class="reference internal" href="validation.html"><span class="std std-doc">validation guide</span></a>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q
+python<span class="w"> </span>scripts/audit/audit_entity_contract.py<span class="w"> </span>--strict
+python<span class="w"> </span>scripts/audit/audit_physics.py
+python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>citylearn<span class="w"> </span>tests<span class="w"> </span>scripts/manual<span class="w"> </span>scripts/ci
+</pre></div>
+</div>
+<p>KPI-only exports include a manifest and service-audit JSON sidecars. They do not
+enable episode time-series output; CityLearn UI can load the folder as before.
+The manifest identifies input files by their path below the dataset root;
+<a class="reference internal" href="developer_guide.html#portable-experiment-evidence"><span class="std std-ref">Portable experiment evidence</span></a>
+lists which spellings of a file reference record the same evidence.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="features.html" class="btn btn-neutral float-left" title="Features and configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dataset_catalogue.html" class="btn btn-neutral float-right" title="Dataset catalogue" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

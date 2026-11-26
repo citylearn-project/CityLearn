@@ -1,0 +1,290 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.exporter module &mdash; CityLearn 3.7.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="citylearn.multi_community module" href="citylearn.multi_community.html" />
+    <link rel="prev" title="citylearn.energy_model module" href="citylearn.energy_model.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_full_reference.html">Full Reference Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../python_api.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">All modules</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="citylearn.html">citylearn package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="citylearn.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="citylearn.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../python_api.html">Python API</a></li>
+          <li class="breadcrumb-item"><a href="modules.html">citylearn</a></li>
+          <li class="breadcrumb-item"><a href="citylearn.html">citylearn package</a></li>
+      <li class="breadcrumb-item active">citylearn.exporter module</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/api/citylearn.exporter.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="module-citylearn.exporter">
+<span id="citylearn-exporter-module"></span><h1>citylearn.exporter module<a class="headerlink" href="#module-citylearn.exporter" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.exporter.</span></span><span class="sig-name descname"><span class="pre">EpisodeExporter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><span class="pre">CityLearnEnv</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Internal helper that owns rendering/export behaviour for <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.DEFAULT_RENDER_START_DATE">
+<span class="sig-name descname"><span class="pre">DEFAULT_RENDER_START_DATE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.date(2024,</span> <span class="pre">1,</span> <span class="pre">1)</span></em><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.DEFAULT_RENDER_START_DATE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.ensure_output_dir">
+<span class="sig-name descname"><span class="pre">ensure_output_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensure_exists</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.ensure_output_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.ensure_output_dir" title="Link to this definition"></a></dt>
+<dd><p>Prepare the render output directory and optionally create it on disk.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.export_business_as_usual_timeseries">
+<span class="sig-name descname"><span class="pre">export_business_as_usual_timeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><span class="pre">CityLearnEnv</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.export_business_as_usual_timeseries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.export_business_as_usual_timeseries" title="Link to this definition"></a></dt>
+<dd><p>Export a compact time-series audit for the business-as-usual baseline.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.export_episode_render_data">
+<span class="sig-name descname"><span class="pre">export_episode_render_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">final_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.export_episode_render_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.export_episode_render_data" title="Link to this definition"></a></dt>
+<dd><p>Export full episode render rows in one pass for <code class="docutils literal notranslate"><span class="pre">render_mode='end'</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.export_final_kpis">
+<span class="sig-name descname"><span class="pre">export_final_kpis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.agents.base.html#citylearn.agents.base.Agent" title="citylearn.agents.base.Agent"><span class="pre">Agent</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'exported_kpis.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_business_as_usual</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_business_as_usual_timeseries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kpi_round_decimals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluated_kpis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pd.DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.export_final_kpis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.export_final_kpis" title="Link to this definition"></a></dt>
+<dd><p>Export episode KPIs to csv.</p>
+<p><cite>evaluated_kpis</cite> is this env’s <cite>evaluate_v2(include_business_as_usual=include_business_as_usual)</cite>
+table when the caller already has it, so it is not evaluated twice.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.flush_render_buffer">
+<span class="sig-name descname"><span class="pre">flush_render_buffer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.flush_render_buffer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.flush_render_buffer" title="Link to this definition"></a></dt>
+<dd><p>Write any buffered render rows to disk.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.get_iso_timestamp">
+<span class="sig-name descname"><span class="pre">get_iso_timestamp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.get_iso_timestamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.get_iso_timestamp" title="Link to this definition"></a></dt>
+<dd><p>Return current episode timestamp string in ISO format.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.override_render_time_step">
+<span class="sig-name descname"><span class="pre">override_render_time_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.override_render_time_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.override_render_time_step" title="Link to this definition"></a></dt>
+<dd><p>Temporarily set time_step to <cite>index</cite> for the environment and descendants.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.parse_render_start_date">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_render_start_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">date</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">date</span></span></span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.parse_render_start_date"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.parse_render_start_date" title="Link to this definition"></a></dt>
+<dd><p>Return a valid start date for rendering timestamps.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.render" title="Link to this definition"></a></dt>
+<dd><p>Render one time step to configured time-series outputs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.reset_time_tracking">
+<span class="sig-name descname"><span class="pre">reset_time_tracking</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.reset_time_tracking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.reset_time_tracking" title="Link to this definition"></a></dt>
+<dd><p>Reset render timestamp tracking to episode start.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.restore_render_time_step">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">restore_render_time_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">snapshot</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.restore_render_time_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.restore_render_time_step" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.save_to_csv">
+<span class="sig-name descname"><span class="pre">save_to_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.save_to_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.save_to_csv" title="Link to this definition"></a></dt>
+<dd><p>Save one render row to configured output format.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.exporter.EpisodeExporter.write_render_rows">
+<span class="sig-name descname"><span class="pre">write_render_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/exporter.html#EpisodeExporter.write_render_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.exporter.EpisodeExporter.write_render_rows" title="Link to this definition"></a></dt>
+<dd><p>Write one or more render rows to disk with minimal rewrites.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="citylearn.energy_model.html" class="btn btn-neutral float-left" title="citylearn.energy_model module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="citylearn.multi_community.html" class="btn btn-neutral float-right" title="citylearn.multi_community module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

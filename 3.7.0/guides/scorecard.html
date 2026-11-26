@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to read the scorecard &mdash; CityLearn 3.7.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Default scorecard KPI names" href="scorecard_kpi_names.html" />
+    <link rel="prev" title="KPIs" href="../kpis.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_full_reference.html">Full Reference Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../kpis.html">KPIs</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../kpis.html#choose-what-to-read">Choose what to read</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">How to read the scorecard</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#start-with-these-questions">Start with these questions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#build-a-compact-scorecard">Build a compact scorecard</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#two-different-baselines">Two different baselines</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ev-service-versus-target-accuracy">EV service versus target accuracy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#extend-the-scorecard-for-your-experiment">Extend the scorecard for your experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="KPI_V2_TREE.html">KPI catalogue</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../kpis.html#list-the-kpis-in-your-run">List the KPIs in your run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kpis.html#families">Families</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kpis.html#which-kpi-to-use">Which KPI to use</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../kpis.html">KPIs</a></li>
+      <li class="breadcrumb-item active">How to read the scorecard</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/scorecard.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="how-to-read-the-scorecard">
+<h1>How to read the scorecard<a class="headerlink" href="#how-to-read-the-scorecard" title="Link to this heading"></a></h1>
+<p>A scorecard puts a small set of energy, cost, service and electrical indicators
+side by side. It is a view of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>, not a new reward or a single
+weighted score. Keep the full KPI export so each headline result can be traced.</p>
+<section id="start-with-these-questions">
+<h2>Start with these questions<a class="headerlink" href="#start-with-these-questions" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Question</p></th>
+<th class="head"><p>Metric</p></th>
+<th class="head"><p>How to read it</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>What did operation cost?</p></td>
+<td><p>Total cost, BAU cost and delta</p></td>
+<td><p>Lower cost is favourable when the same services and tariff rules apply. A negative control-minus-BAU delta is a saving.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Were EVs ready to leave?</p></td>
+<td><p>Minimum acceptable departure service</p></td>
+<td><p>Higher is better; the feasible variant evaluates departures whose service threshold was reachable.</p></td>
+</tr>
+<tr class="row-even"><td><p>How accurately was the EV target followed?</p></td>
+<td><p>Symmetric within-tolerance departure ratio</p></td>
+<td><p>Higher means closer target tracking. Charging above the band can meet minimum service but fail this accuracy measure.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Were electrical limits respected?</p></td>
+<td><p>Residual violation energy</p></td>
+<td><p>Lower is better. This measures excess after constraint handling.</p></td>
+</tr>
+<tr class="row-even"><td><p>How much did constraints intervene?</p></td>
+<td><p>Requested-pressure energy</p></td>
+<td><p>Excess associated with the unprojected request; it is not the same as an applied-power violation.</p></td>
+</tr>
+<tr class="row-odd"><td><p>How much storage activity was used?</p></td>
+<td><p>Battery throughput and V2G export</p></td>
+<td><p>Report with costs, service and degradation; higher or lower is not universally better.</p></td>
+</tr>
+<tr class="row-even"><td><p>How much solar energy stayed local?</p></td>
+<td><p>Solar self-consumption ratio</p></td>
+<td><p>Higher means more PV-backed generation consumed locally. Read alongside total generation and imports.</p></td>
+</tr>
+<tr class="row-odd"><td><p>How much energy crossed the grid boundary?</p></td>
+<td><p>Import, export and net exchange</p></td>
+<td><p>Read all three: net exchange alone can hide large imports and exports.</p></td>
+</tr>
+<tr class="row-even"><td><p>How demanding was the import profile?</p></td>
+<td><p>Peak and load-factor-penalty ratios to BAU</p></td>
+<td><p>Below 1 is lower than BAU and above 1 is higher. Load-factor penalties use import power; peaks use signed net power, so a community that exports at every step has a zero or negative peak (see <a class="reference internal" href="kpis_reference.html#grid-energy-and-load-shape"><span class="std std-ref">grid energy and load shape</span></a>).</p></td>
+</tr>
+</tbody>
+</table>
+<p>The simulator defines a default selection for both building and district rows,
+which <code class="docutils literal notranslate"><span class="pre">env.scorecard()</span></code> returns. The
+<a class="reference external" href="scorecard_kpi_names.html">exact default names</a>
+are generated from that selection when the documentation is built.</p>
+</section>
+<section id="build-a-compact-scorecard">
+<h2>Build a compact scorecard<a class="headerlink" href="#build-a-compact-scorecard" title="Link to this heading"></a></h2>
+<p>After the simulation loop, select meaningful rows from the returned table:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">kpis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
+<span class="n">selected</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"district_cost_total_control_eur"</span><span class="p">,</span>
+    <span class="s2">"district_cost_total_business_as_usual_eur"</span><span class="p">,</span>
+    <span class="s2">"district_energy_grid_total_import_control_kwh"</span><span class="p">,</span>
+    <span class="s2">"district_ev_performance_departure_min_acceptable_feasible_ratio"</span><span class="p">,</span>
+    <span class="s2">"district_ev_performance_departure_within_tolerance_feasible_ratio"</span><span class="p">,</span>
+    <span class="s2">"district_electrical_service_phase_violations_energy_total_kwh"</span><span class="p">,</span>
+    <span class="s2">"district_electrical_service_phase_requested_pressure_energy_total_kwh"</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">scorecard</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+    <span class="p">(</span><span class="n">kpis</span><span class="p">[</span><span class="s2">"level"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"district"</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">kpis</span><span class="p">[</span><span class="s2">"cost_function"</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">selected</span><span class="p">),</span>
+    <span class="p">[</span><span class="s2">"cost_function"</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">],</span>
+<span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">scorecard</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">scorecard</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">"scorecard.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To compare multiple controllers, run the same scenario, window and service
+settings for each one, label their KPI tables, and pivot <code class="docutils literal notranslate"><span class="pre">cost_function</span></code> against
+controller name. Use the same random seeds for matched stochastic scenarios.
+Keep missing/not-applicable values as missing, not as zero.</p>
+</section>
+<section id="two-different-baselines">
+<h2>Two different baselines<a class="headerlink" href="#two-different-baselines" title="Link to this heading"></a></h2>
+<p>The <a class="reference internal" href="baselines.html"><span class="std std-doc">Baselines guide</span></a> explains the native BAU policy, its default
+parameters and the separate references used for evaluation and DR settlement.</p>
+<p>Names containing <code class="docutils literal notranslate"><span class="pre">baseline</span></code> refer to the configured conventional evaluation
+counterfactual, normally without storage and partial-load control, with PV
+retained. This uses the simulator’s counterfactual series.</p>
+<p>Names containing <code class="docutils literal notranslate"><span class="pre">business_as_usual</span></code> refer to a separate native BAU rollout
+under the scenario and episode conditions. The BAU agent charges EVs toward full
+charge by default, starts ready flexible loads and operates stationary storage
+for PV self-consumption. <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> runs or reuses that comparison unless
+<code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code>.</p>
+<p>Do not mix <code class="docutils literal notranslate"><span class="pre">ratio_to_baseline</span></code> and <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> columns in a
+comparison without identifying the reference. A ratio is dimensionless.
+For a zero denominator the safe division rule returns 1 when both values are
+effectively zero, and a missing value when the numerator is non-zero. The
+flexible-appliance ratios to the BAU are the exception: they are missing when
+both of their totals are zero (see
+<a class="reference internal" href="kpis_reference.html#shared-rules"><span class="std std-ref">shared rules</span></a>).</p>
+</section>
+<section id="ev-service-versus-target-accuracy">
+<h2>EV service versus target accuracy<a class="headerlink" href="#ev-service-versus-target-accuracy" title="Link to this heading"></a></h2>
+<p>At a target SOC of 80% and tolerance of 5 percentage points:</p>
+<ul class="simple">
+<li><p>76% satisfies minimum service and lies within the symmetric target band.</p></li>
+<li><p>90% satisfies minimum service but is outside that band.</p></li>
+<li><p>70% satisfies neither.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">minimum_acceptable</span></code> uses the lower service threshold; <code class="docutils literal notranslate"><span class="pre">within_tolerance</span></code> uses
+both the lower and upper bounds. Feasible variants restrict the population to
+departures where the relevant threshold was physically reachable. Report the
+departure counts and feasibility counts together with these ratios.</p>
+</section>
+<section id="extend-the-scorecard-for-your-experiment">
+<h2>Extend the scorecard for your experiment<a class="headerlink" href="#extend-the-scorecard-for-your-experiment" title="Link to this heading"></a></h2>
+<p>The REC application comparisons also use emissions, flexible-load completion,
+residual import/export after local exchange and settlement savings. These
+complement the default selection:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Indicator</p></th>
+<th class="head"><p>KPI name or calculation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Emissions</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">district_emissions_total_control_kgco2</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Flexible-load service</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">district_deferrable_appliance_service_service_level_ratio</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Import after local sharing</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_community_market_grid_import_after_local_total_kwh</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Export after local sharing</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_community_market_grid_export_after_local_total_kwh</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Settlement savings</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">district_cost_community_market_savings_total_eur</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Peak relative to BAU</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_peak_all_time_average_to_business_as_usual_ratio</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>The absolute peaks are <code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_peak_all_time_average_control_kw</span></code>
+and its <code class="docutils literal notranslate"><span class="pre">_business_as_usual_kw</span></code> counterpart; do not label a peak ratio as kW.
+For DR experiments add request, delivery, compliance, shortfall and net revenue;
+for thermal studies add <code class="docutils literal notranslate"><span class="pre">district_thermal_service_audit_discomfort_ratio</span></code>, the
+canonical discomfort KPI, with its coverage counts; for failure studies add the
+robustness counters.</p>
+<p>Use the <a class="reference internal" href="kpis_reference.html"><span class="std std-doc">KPI reference</span></a> for units and definitions, the
+<a class="reference internal" href="KPI_V2_TREE.html"><span class="std std-doc">KPI catalogue</span></a> for every other name and the
+<a class="reference external" href="../ui.html">UI guide</a> for visual comparisons.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../kpis.html" class="btn btn-neutral float-left" title="KPIs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scorecard_kpi_names.html" class="btn btn-neutral float-right" title="Default scorecard KPI names" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

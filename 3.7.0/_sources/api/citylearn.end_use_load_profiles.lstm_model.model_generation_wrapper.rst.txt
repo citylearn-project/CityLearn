@@ -1,0 +1,7 @@
+citylearn.end\_use\_load\_profiles.lstm\_model.model\_generation\_wrapper module
+================================================================================
+
+.. automodule:: citylearn.end_use_load_profiles.lstm_model.model_generation_wrapper
+   :members:
+   :show-inheritance:
+   :undoc-members:

@@ -6,19 +6,19 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Observations Reference &mdash; CityLearn 3.6.0 documentation</title>
+  <title>Observations Reference &mdash; CityLearn 3.7.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -58,13 +58,16 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_full_reference.html">Full Reference Schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
@@ -88,6 +91,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#charger"><code class="docutils literal notranslate"><span class="pre">charger</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ev"><code class="docutils literal notranslate"><span class="pre">ev</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#storage"><code class="docutils literal notranslate"><span class="pre">storage</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#energy-to-full">Energy to full</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pv"><code class="docutils literal notranslate"><span class="pre">pv</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#deferrable-appliance"><code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code></a></li>
 </ul>
@@ -103,33 +107,32 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 
 <div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
@@ -164,7 +167,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -466,11 +469,11 @@
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">solar_generation</span></code></p></td>
 <td class="text-right"><p>kWh/step</p></td>
-<td><p>PV generation after PV mode conversion.</p></td>
+<td><p>PV generation after PV mode conversion, for the coming interval (row t+1 when the observation is for t+1), as a positive value. <code class="docutils literal notranslate"><span class="pre">Building.solar_generation</span></code> stores the same series as negative values.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">net_electricity_consumption</span></code></p></td>
 <td class="text-right"><p>kWh/step</p></td>
-<td><p>Import positive, export negative.</p></td>
+<td><p>Import positive, export negative, in the last settled interval (row t when the observation is for t+1).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">power_outage</span></code></p></td>
 <td class="text-right"><p>binary</p></td>
@@ -615,6 +618,10 @@
 </tr>
 </tbody>
 </table>
+<p>The <code class="docutils literal notranslate"><span class="pre">*_kwh</span></code> bounds come from the cycle definitions of the building’s appliances:
+<code class="docutils literal notranslate"><span class="pre">cycle_energy_kwh</span></code> and <code class="docutils literal notranslate"><span class="pre">remaining_energy_kwh</span></code> lie in [0, largest cycle energy],
+<code class="docutils literal notranslate"><span class="pre">current_step_energy_kwh</span></code> in [0, largest step energy]. See
+<a class="reference internal" href="interfaces_flat_entity.html#observation-bounds"><span class="std std-ref">observation bounds</span></a>.</p>
 </section>
 <section id="escalator-flat-observations">
 <h3>Escalator Flat Observations<a class="headerlink" href="#escalator-flat-observations" title="Link to this heading"></a></h3>
@@ -955,7 +962,7 @@
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">connected_ev_soc_min_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_energy_available_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_energy_to_full_kwh</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>mixed</p></td>
-<td><p>Connected EV usable discharge energy and remaining charge headroom.</p></td>
+<td><p>Connected EV usable discharge energy and remaining charge headroom (<a class="reference internal" href="#energy-to-full"><span class="std std-ref">energy to full</span></a>).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_action_normalized</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
@@ -1039,7 +1046,7 @@
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">energy_available_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kWh</p></td>
-<td><p>Usable energy and energy to full.</p></td>
+<td><p>Usable energy and <a class="reference internal" href="#energy-to-full"><span class="std std-ref">energy to full</span></a>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1065,57 +1072,62 @@
 <td class="text-right"><p>kW</p></td>
 <td><p>Technical minimum powers.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">efficiency_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">round_trip_efficiency_ratio</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">efficiency_ratio</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
 <td class="text-right"><p>ratio</p></td>
-<td><p>Base and round-trip efficiency.</p></td>
+<td><p>Rated round-trip efficiency.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phase_connection_L1/L2/L3</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">round_trip_efficiency_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>One-way efficiency at the last operation, the square root of the current round-trip efficiency. The name is kept for existing observation layouts.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phase_connection_L1/L2/L3</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
 <td class="text-right"><p>one-hot</p></td>
 <td><p>Storage phase connection.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_storage_soc_ratio</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_storage_soc_ratio</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>ratio</p></td>
 <td><p>Canonical BESS SOC.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_charge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharge_power_kw</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_charge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharge_power_kw</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kW</p></td>
 <td><p>Current max powers.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">energy_available_kwh</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">energy_available_kwh</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kWh</p></td>
-<td><p>Energy headroom and available energy.</p></td>
+<td><p>Energy headroom (<a class="reference internal" href="#energy-to-full"><span class="std std-ref">energy to full</span></a>) and available energy.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_action_normalized</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_action_normalized</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>mixed</p></td>
 <td><p>Current feasible BESS action capacity after SOC, outage and headroom limits.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">available_charge_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">available_discharge_energy_kwh_step</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">available_charge_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">available_discharge_energy_kwh_step</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kWh/step</p></td>
 <td><p>Feasible BESS energy this step after SOC/headroom/outage limits.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_charge_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharge_energy_kwh_step</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_charge_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharge_energy_kwh_step</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kWh/step</p></td>
 <td><p>Nominal BESS power limit converted to this step duration.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charge_headroom_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">discharge_available_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">usable_soc_ratio</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">charge_headroom_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">discharge_available_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">usable_soc_ratio</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>ratio</p></td>
 <td><p>Normalized BESS charge room, discharge energy and SOC within usable range.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">current_efficiency_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">degraded_capacity_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_min_ratio</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">current_efficiency_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">degraded_capacity_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_min_ratio</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>mixed</p></td>
 <td><p>Current efficiency, degraded capacity and minimum SOC.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">last_requested_*</span></code>, <code class="docutils literal notranslate"><span class="pre">last_limited_*</span></code>, <code class="docutils literal notranslate"><span class="pre">last_applied_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">last_projection_error_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">clip_reason_*</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">last_requested_*</span></code>, <code class="docutils literal notranslate"><span class="pre">last_limited_*</span></code>, <code class="docutils literal notranslate"><span class="pre">last_applied_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">last_projection_error_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">clip_reason_*</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_action_feedback</span></code></p></td>
 <td class="text-right"><p>mixed</p></td>
 <td><p>Previous BESS action request, limited command, applied power and clipping causes.</p></td>
@@ -1123,9 +1135,27 @@
 </tbody>
 </table>
 </section>
+<section id="energy-to-full">
+<h3>Energy to full<a class="headerlink" href="#energy-to-full" title="Link to this heading"></a></h3>
+<p>SOC is relative to the nominal capacity (<code class="docutils literal notranslate"><span class="pre">capacity_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">battery_capacity_kwh</span></code>).
+Capacity fade lowers a battery’s degraded capacity (<code class="docutils literal notranslate"><span class="pre">degraded_capacity_kwh</span></code> for
+storage), where <code class="docutils literal notranslate"><span class="pre">Battery.charge</span></code> stops, so a faded battery is full below an SOC
+of 1. Under physics version 2, the default, <code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">connected_ev_energy_to_full_kwh</span></code> and <code class="docutils literal notranslate"><span class="pre">flexible_energy_to_full_kwh</span></code> are the
+energy the battery still accepts: the lower of <code class="docutils literal notranslate"><span class="pre">soc_max_ratio</span></code> times the
+capacity and the degraded capacity, minus the stored energy. The charge
+features derived from them (<code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge_power_kw</span></code>,
+<code class="docutils literal notranslate"><span class="pre">available_charge_action_normalized</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge_energy_kwh_step</span></code>,
+<code class="docutils literal notranslate"><span class="pre">charge_headroom_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">max_deliverable_energy_until_departure_kwh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">departure_energy_margin_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">departure_feasibility_ratio</span></code> and the
+<code class="docutils literal notranslate"><span class="pre">flexible_charge_*</span></code> and <code class="docutils literal notranslate"><span class="pre">community_flexible_*</span></code> sums) follow. Under physics
+version 1 they are computed from the nominal capacity, as in CityLearn 3.6.0,
+and report a full faded battery as able to charge. Batteries without fade
+(<code class="docutils literal notranslate"><span class="pre">capacity_loss_coefficient</span></code> 0) give the same values in both versions.</p>
+</section>
 <section id="pv">
 <h3><code class="docutils literal notranslate"><span class="pre">pv</span></code><a class="headerlink" href="#pv" title="Link to this heading"></a></h3>
-<p>Only present when <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> is enabled.</p>
+<p>Only present when <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> is enabled. Like the other core-bundle electrical features, these are endogenous values of the last settled interval, not exogenous inputs of the coming one.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Feature</p></th>
@@ -1136,11 +1166,11 @@
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">generation_power_kw</span></code></p></td>
 <td class="text-right"><p>kW</p></td>
-<td><p>PV generation as power.</p></td>
+<td><p>PV generation as power, in the last settled interval (row t).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">generation_energy_kwh_step</span></code></p></td>
 <td class="text-right"><p>kWh/step</p></td>
-<td><p>PV generation in current step.</p></td>
+<td><p>PV generation in the last settled interval (row t when the observation is for t+1); <code class="docutils literal notranslate"><span class="pre">building.solar_generation</span></code> is the upcoming interval (row t+1).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">installed_power_kw</span></code></p></td>
 <td class="text-right"><p>kW</p></td>

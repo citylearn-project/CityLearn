@@ -12,9 +12,9 @@ supplied; dynamic-temperature building models allow HVAC control to affect indoo
 temperature. Comfort and outage indicators report the resulting service.
 
 Choose devices under each building's schema entry and enable their actions.
-[Device configuration](schema_reference.md#device-sections),
+[Device configuration](schema_reference.md#devices),
 [action meanings](actions_reference.md#flat-actions) and
-[comfort KPIs](kpis_reference.md#kpi-families) provide the details.
+[comfort KPIs](kpis_reference.md#comfort-and-resilience) provide the details.
 
 ## Photovoltaics and batteries
 
@@ -24,9 +24,11 @@ PV can use a normalized per-kW generation profile or measured generation in
 `kWh/step` with `generation_mode="absolute"`. Stationary batteries have capacity,
 SOC, charging/discharging power, efficiency and degradation parameters. Positive
 storage actions charge and negative actions discharge; physical and connection
-limits determine the applied energy.
+limits determine the applied energy. Battery efficiencies are round-trip values, and
+power curves left out of the schema are drawn from the random stream.
 
 See [PV configuration](schema_reference.md#pv), the
+[battery model](schema_reference.md#battery), the
 [unit contract](data_unit_contract.md) and [storage actions](actions_reference.md#physical-conversion).
 
 ## Electric vehicles and chargers
@@ -62,7 +64,7 @@ A normalized action selects one of those states; demand and availability inputs
 determine passenger-service indicators and energy use. This is a state-and-demand
 model, not an individual passenger or queue simulation.
 
-Provide your own schedule using the [escalator schema](schema_reference.md#escalators-flat-interface).
+Provide your own schedule using the [escalator schema](schema_reference.md#escalators).
 The [actions guide](actions_reference.md#escalator-control) explains state
 thresholds.
 
@@ -78,7 +80,7 @@ Configure `buildings.<name>.electrical_service` using the
 [schema reference](schema_reference.md#buildings). Start with
 `citylearn_three_phase_electrical_service_demo`. These are active-power
 connection constraints; they do not calculate feeder voltage or AC power flow.
-See [electrical KPIs](kpis_reference.md#electrical-service-and-phase-kpis).
+See [electrical KPIs](kpis_reference.md#electrical-service-and-phases).
 
 The import limit can also vary in time. An [available grid power](schema_reference.md#available-grid-power)
 series lowers it below the connection capacity per step, for example when a distribution system
@@ -92,9 +94,11 @@ among members. Local prices and importer weights determine financial allocation;
 exports expose settled costs, the grid-only counterfactual and savings for each
 member and the community. Settlement values the recorded physical trajectory.
 
-Configure the [community market](schema_reference.md#community-market).
-Residual grid exports currently receive zero remuneration. Local settlement
-is within a community; multi-community reporting is described below.
+Configure the [community market](schema_reference.md#community-market-and-settlement).
+Residual grid exports earn nothing by default; with `"settlement_version": 2`
+they are paid `grid_export_price`, and `tariff_files` give each member its own
+prices. Invalid market settings raise an error when the env is built. Local
+settlement is within a community; multi-community reporting is described below.
 
 ## Demand-response requests
 
@@ -106,7 +110,7 @@ Controllers respond through the existing storage, EV and flexible-load actions.
 The baseline is the mean net power over the configured pre-event history window,
 frozen for that request. Delivered energy, credited response and penalized
 shortfall are separate quantities. See the [request format and baseline](schema_reference.md#demand-response)
-and [settlement KPIs](kpis_reference.md#demand-response-kpis).
+and [settlement KPIs](kpis_reference.md#demand-response).
 Use `citylearn_challenge_2022_phase_all_demand_response` for a public example.
 
 ## Changing members and assets
@@ -163,8 +167,9 @@ The [interface guide](interfaces_flat_entity.md),
 ## Multiple communities
 
 `MultiCommunityEnv` steps independent communities in lockstep and reports local
-and portfolio results. Children share timestep, episode length, interface and
-central-agent mode. Each keeps its own physical state, DR requests and settlement.
+and portfolio results. Children share timestep, episode length, interface,
+central-agent mode, `physics_version`, `random_stream_version` and
+`baseline_version`. Each keeps its own physical state, DR requests and settlement.
 The wrapper aggregates results; it does not physically transfer energy between
 communities or optimize inter-community dispatch.
 

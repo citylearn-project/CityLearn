@@ -6,19 +6,19 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dataset Reference &mdash; CityLearn 3.6.0 documentation</title>
+  <title>Dataset Reference &mdash; CityLearn 3.7.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -28,7 +28,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Portugal REC Datasets" href="portugal_rec_datasets.html" />
-    <link rel="prev" title="Schema Reference" href="schema_reference.html" />
+    <link rel="prev" title="Full Reference Schema" href="schema_full_reference.html" />
  
 <script src="../_static/version_switcher.js" defer></script>
 
@@ -58,20 +58,26 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_full_reference.html">Full Reference Schema</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Dataset Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#supported-file-formats">Supported File Formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#public-datasets-and-local-data">Public datasets and local data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#unit-contract">Unit Contract</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#energy-simulation-columns"><code class="docutils literal notranslate"><span class="pre">energy_simulation</span></code> Columns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#weather-pricing-and-carbon-files">Weather, Pricing and Carbon Files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#charger-simulation-columns">Charger Simulation Columns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#charger-simulation-columns">Charger Simulation Columns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#soc-unit">SOC unit</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#entity-observation-bundles-in-packaged-datasets">Entity Observation Bundles in Packaged Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#demand-response-request-files">Demand Response Request Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#robustness-event-files">Robustness Event Files</a></li>
@@ -98,33 +104,32 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 
 <div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
@@ -159,7 +164,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -208,9 +213,10 @@ Each first download uses two GitHub API requests; anonymous clients get 60 per
 hour. Set <code class="docutils literal notranslate"><span class="pre">CITYLEARN_GITHUB_TOKEN</span></code> or <code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code> to raise that limit.
 A cached dataset is used only when its <code class="docutils literal notranslate"><span class="pre">schema.json</span></code> and every input file the
 schema loads exist: the files of the buildings that load and the event, tariff
-and calendar files. Otherwise it is replaced in one step by a complete local copy or, online,
-by a new download; offline without a complete copy, <code class="docutils literal notranslate"><span class="pre">OfflineDataError</span></code> names the
-missing files.</p>
+and calendar files. A complete local copy is cached under the digest of its files, so a
+copy made from other files is never read, and a copy in use is never replaced. Without a
+local copy, an incomplete cached download is replaced in one step by a new download;
+offline without a complete copy, <code class="docutils literal notranslate"><span class="pre">OfflineDataError</span></code> names the missing files.</p>
 <p>The <a class="reference internal" href="portugal_rec_datasets.html"><span class="std std-doc">Portugal REC datasets</span></a> provide four 15-minute
 communities of 4 to 100 members, each with evaluation scenarios.</p>
 </section>
@@ -236,7 +242,7 @@ communities of 4 to 100 members, each with evaluation scenarios.</p>
 <td class="text-right"><p>kW</p></td>
 </tr>
 <tr class="row-even"><td><p>EV required/estimated SOC in charger files</p></td>
-<td class="text-right"><p>percent in the raw file, converted to ratio internally</p></td>
+<td class="text-right"><p>percent or ratio, one unit per column (see <a class="reference internal" href="#soc-unit"><span class="std std-ref">SOC unit</span></a>), converted to ratio internally</p></td>
 </tr>
 <tr class="row-odd"><td><p>Prices</p></td>
 <td class="text-right"><p>currency/kWh</p></td>
@@ -435,7 +441,7 @@ kW = kWh_per_step * 3600 / seconds_per_time_step
 <td><p>Steps until departure. Internal default <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_required_soc_departure</span></code></p></td>
-<td class="text-right"><p>percent</p></td>
+<td class="text-right"><p>percent or ratio</p></td>
 <td><p>Required departure SOC. Converted to ratio.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_estimated_arrival_time</span></code></p></td>
@@ -443,7 +449,7 @@ kW = kWh_per_step * 3600 / seconds_per_time_step
 <td><p>Steps until arrival. Internal default <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_estimated_soc_arrival</span></code></p></td>
-<td class="text-right"><p>percent</p></td>
+<td class="text-right"><p>percent or ratio</p></td>
 <td><p>Estimated arrival SOC on the incoming (state 2) rows. Converted to ratio. At connection the EV starts from the latest estimate on the row just before it and the contiguous incoming rows of the same EV and session before that row, usually the last incoming row. The lookup does not pass an away (state 3) row, another EV or a change of <code class="docutils literal notranslate"><span class="pre">electric_vehicle_session_id</span></code>. Without such an estimate the EV starts from the estimate on its connection row, if any, and otherwise keeps its simulated SOC. The KPI and departure-audit arrival references use the same value.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_current_soc</span></code></p></td>
@@ -453,6 +459,22 @@ kW = kWh_per_step * 3600 / seconds_per_time_step
 </tbody>
 </table>
 <p>For sub-hourly datasets, countdown fields must be expressed in timesteps at the dataset resolution. Example: 1 hour at 15s is 240 steps.</p>
+<section id="soc-unit">
+<h3>SOC unit<a class="headerlink" href="#soc-unit" title="Link to this heading"></a></h3>
+<p>Each SOC column of a charger file has one unit. Under physics version 2 it is decided once from the
+whole column of the file, not only the simulation window: the column is in percent if any of its
+values is above 1 (a rounding margin of 1e-6 is allowed, so <code class="docutils literal notranslate"><span class="pre">1.0000000000000013</span></code> in a ratio column
+stays a ratio), and in ratio otherwise. In a percent column a value of 1 is therefore 1 %. Negative
+values and blanks are missing. The columns are decided separately, so <code class="docutils literal notranslate"><span class="pre">electric_vehicle_current_soc</span></code>
+may be in ratio while the targets are in percent. A column whose values are all between 0 and 1 is
+read as ratio; declare <code class="docutils literal notranslate"><span class="pre">&quot;soc_unit&quot;:</span> <span class="pre">&quot;percent&quot;</span></code> on the charger in the schema if such a file is in
+percent (the declared unit applies to all its SOC columns). A column read as percent that also
+holds values between 0 and 1 gives a warning, since one stray value above 1 in a ratio column would
+turn 0.3 into 0.3 %. Physics version 1
+keeps the rule of CityLearn 3.6.0, value by value: a value in [0, 1] is a ratio and a value above 1 a
+percentage, so 1 (1 %) in a percent file was read as 100 %, unless the charger declares <code class="docutils literal notranslate"><span class="pre">soc_unit</span></code>
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/368">#368</a>).</p>
+</section>
 </section>
 <section id="entity-observation-bundles-in-packaged-datasets">
 <h2>Entity Observation Bundles in Packaged Datasets<a class="headerlink" href="#entity-observation-bundles-in-packaged-datasets" title="Link to this heading"></a></h2>
@@ -813,7 +835,7 @@ kW = kWh_per_step * 3600 / seconds_per_time_step
           </div>
 
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="schema_reference.html" class="btn btn-neutral float-left" title="Schema Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="schema_full_reference.html" class="btn btn-neutral float-left" title="Full Reference Schema" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="portugal_rec_datasets.html" class="btn btn-neutral float-right" title="Portugal REC Datasets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

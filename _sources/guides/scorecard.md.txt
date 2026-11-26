@@ -16,10 +16,11 @@ weighted score. Keep the full KPI export so each headline result can be traced.
 | How much storage activity was used? | Battery throughput and V2G export | Report with costs, service and degradation; higher or lower is not universally better. |
 | How much solar energy stayed local? | Solar self-consumption ratio | Higher means more PV-backed generation consumed locally. Read alongside total generation and imports. |
 | How much energy crossed the grid boundary? | Import, export and net exchange | Read all three: net exchange alone can hide large imports and exports. |
-| How demanding was the import profile? | Peak and load-factor-penalty ratios to BAU | For these non-negative penalty/peak ratios, below 1 is lower than BAU and above 1 is higher. |
+| How demanding was the import profile? | Peak and load-factor-penalty ratios to BAU | Below 1 is lower than BAU and above 1 is higher. Load-factor penalties use import power; peaks use signed net power, so a community that exports at every step has a zero or negative peak (see [grid energy and load shape](kpis_reference.md#grid-energy-and-load-shape)). |
 
-The simulator defines a default selection for both building and district rows.
-The [exact default names](https://www.citylearn.net/guides/scorecard_kpi_names.html)
+The simulator defines a default selection for both building and district rows,
+which `env.scorecard()` returns. The
+[exact default names](https://www.citylearn.net/guides/scorecard_kpi_names.html)
 are generated from that selection when the documentation is built.
 
 ## Build a compact scorecard
@@ -68,7 +69,10 @@ for PV self-consumption. `evaluate_v2()` runs or reuses that comparison unless
 Do not mix `ratio_to_baseline` and `ratio_to_business_as_usual` columns in a
 comparison without identifying the reference. A ratio is dimensionless.
 For a zero denominator the safe division rule returns 1 when both values are
-effectively zero, and a missing value when the numerator is non-zero.
+effectively zero, and a missing value when the numerator is non-zero. The
+flexible-appliance ratios to the BAU are the exception: they are missing when
+both of their totals are zero (see
+[shared rules](kpis_reference.md#shared-rules)).
 
 ## EV service versus target accuracy
 
@@ -98,11 +102,13 @@ complement the default selection:
 | Settlement savings | `district_cost_community_market_savings_total_eur` |
 | Peak relative to BAU | `district_energy_grid_shape_quality_peak_all_time_average_to_business_as_usual_ratio` |
 
-An absolute peak in kW can be calculated from the recorded step energy divided
-by the timestep duration in hours. Do not label a normalized peak ratio as kW.
+The absolute peaks are `district_energy_grid_shape_quality_peak_all_time_average_control_kw`
+and its `_business_as_usual_kw` counterpart; do not label a peak ratio as kW.
 For DR experiments add request, delivery, compliance, shortfall and net revenue;
-for thermal studies add comfort; for failure studies add the robustness counters.
+for thermal studies add `district_thermal_service_audit_discomfort_ratio`, the
+canonical discomfort KPI, with its coverage counts; for failure studies add the
+robustness counters.
 
 Use the [KPI reference](kpis_reference.md) for units and definitions, the
-[naming catalogue](KPI_V2_TREE.md) for further names and the
+[KPI catalogue](KPI_V2_TREE.md) for every other name and the
 [UI guide](https://www.citylearn.net/ui.html) for visual comparisons.

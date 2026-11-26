@@ -6,19 +6,19 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.agents.rbc module &mdash; CityLearn 3.6.0 documentation</title>
+  <title>citylearn.agents.rbc module &mdash; CityLearn 3.7.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -58,13 +58,16 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_full_reference.html">Full Reference Schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
@@ -78,45 +81,42 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Python API</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="citylearn.html">citylearn package</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="citylearn.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4 current"><a class="reference internal" href="citylearn.agents.html">citylearn.agents package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.end_use_load_profiles.html">citylearn.end_use_load_profiles package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.utils.html">citylearn.utils package</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="citylearn.html#submodules">Submodules</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../python_api.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">All modules</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="citylearn.html">citylearn package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="citylearn.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.html#submodules">Submodules</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 
 <div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
@@ -138,6 +138,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../python_api.html">Python API</a></li>
           <li class="breadcrumb-item"><a href="modules.html">citylearn</a></li>
           <li class="breadcrumb-item"><a href="citylearn.html">citylearn package</a></li>
           <li class="breadcrumb-item"><a href="citylearn.agents.html">citylearn.agents package</a></li>
@@ -153,7 +154,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -191,8 +192,13 @@ Heating device is to 30.0% of nominal power between between 06:00 AM and 02:00 P
 <dt class="sig sig-object py" id="citylearn.agents.rbc.BasicElectricVehicleRBC_ReferenceController">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.agents.rbc.</span></span><span class="sig-name descname"><span class="pre">BasicElectricVehicleRBC_ReferenceController</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><span class="pre">CityLearnEnv</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/rbc.html#BasicElectricVehicleRBC_ReferenceController"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.rbc.BasicElectricVehicleRBC_ReferenceController" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#citylearn.agents.rbc.BasicRBC" title="citylearn.agents.rbc.BasicRBC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicRBC</span></code></a></p>
-<p>A rule-based controller that charges EVs to the maximum of the chargers and to the maximum of the battery upon connection.</p>
-<p>The EV battery is charged at the maximum available charging power whenever it is connected.</p>
+<p>An hour-of-day rule-based reference controller with an EV, battery, HVAC and DHW schedule.</p>
+<p>It does not charge EVs at full power whenever they are connected. The EV action follows a fixed daily
+schedule: 0.4 before 07:00, 1.0 from 07:00, -1.0 (full discharge) from 10:00, -0.6 from 15:00 and 0.8
+from 20:00. The battery discharges at -0.08 from 09:00 to 21:00 and charges at 0.091 otherwise; DHW
+storage and deferrable appliance actions are always 1. Actions it does not know raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>.
+For EV charging that follows the users’ departure targets, use the rule baselines in
+<a class="reference internal" href="citylearn.agents.baseline.html#module-citylearn.agents.baseline" title="citylearn.agents.baseline"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.agents.baseline</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

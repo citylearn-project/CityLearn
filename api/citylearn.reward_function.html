@@ -6,19 +6,19 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.reward_function module &mdash; CityLearn 3.6.0 documentation</title>
+  <title>citylearn.reward_function module &mdash; CityLearn 3.7.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -30,7 +30,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="citylearn.rl module" href="citylearn.rl.html" />
-    <link rel="prev" title="citylearn.preprocessing module" href="citylearn.preprocessing.html" />
+    <link rel="prev" title="citylearn.random_streams module" href="citylearn.random_streams.html" />
  
 <script src="../_static/version_switcher.js" defer></script>
 
@@ -60,13 +60,16 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_full_reference.html">Full Reference Schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
@@ -80,61 +83,42 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Python API</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="citylearn.html">citylearn package</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="citylearn.html#subpackages">Subpackages</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="citylearn.html#submodules">Submodules</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="citylearn.base.html">citylearn.base module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.building.html">citylearn.building module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.citylearn.html">citylearn.citylearn module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.community_dataset.html">citylearn.community_dataset module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.cost_function.html">citylearn.cost_function module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.data.html">citylearn.data module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.dynamics.html">citylearn.dynamics module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.electric_vehicle.html">citylearn.electric_vehicle module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.electric_vehicle_charger.html">citylearn.electric_vehicle_charger module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.energy_model.html">citylearn.energy_model module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.exporter.html">citylearn.exporter module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.multi_community.html">citylearn.multi_community module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.occupant.html">citylearn.occupant module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.power_outage.html">citylearn.power_outage module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.preprocessing.html">citylearn.preprocessing module</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">citylearn.reward_function module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.rl.html">citylearn.rl module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.utilities.html">citylearn.utilities module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="citylearn.wrappers.html">citylearn.wrappers module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../python_api.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">All modules</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="citylearn.html">citylearn package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="citylearn.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="citylearn.html#submodules">Submodules</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 
 <div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
@@ -156,6 +140,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../python_api.html">Python API</a></li>
           <li class="breadcrumb-item"><a href="modules.html">citylearn</a></li>
           <li class="breadcrumb-item"><a href="citylearn.html">citylearn package</a></li>
       <li class="breadcrumb-item active">citylearn.reward_function module</li>
@@ -170,7 +155,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -181,7 +166,7 @@
 <span id="citylearn-reward-function-module"></span><h1>citylearn.reward_function module<a class="headerlink" href="#module-citylearn.reward_function" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="citylearn.reward_function.ComfortReward">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.reward_function.</span></span><span class="sig-name descname"><span class="pre">ComfortReward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_exponent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">higher_exponent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/reward_function.html#ComfortReward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.reward_function.ComfortReward" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.reward_function.</span></span><span class="sig-name descname"><span class="pre">ComfortReward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_exponent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">higher_exponent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/reward_function.html#ComfortReward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.reward_function.ComfortReward" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#citylearn.reward_function.RewardFunction" title="citylearn.reward_function.RewardFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">RewardFunction</span></code></a></p>
 <p>Reward for occupant thermal comfort satisfaction.</p>
 <p>The reward is calculated as the negative difference between the setpoint and indoor dry-bulb temperature raised to some exponent
@@ -198,9 +183,28 @@ building file, or the default time series value of 2.0 is used.</p></li>
 boundary or heating mode but temperature is below setpoint lower boundary.</p></li>
 <li><p><strong>higher_exponent</strong> (<em>float</em><em>, </em><em>default = 2.0</em>) – Penalty exponent for when in cooling mode but temperature is below setpoint lower
 boundary or heating mode but temperature is above setpoint upper boundary.</p></li>
+<li><p><strong>version</strong> (<em>int</em><em>, </em><em>default: 2</em>) – <p>Reward definition version.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code> (default): follows the HVAC mode as described above. In heating mode at 21.5 C with a 20 C set
+point the reward is -1.5 whether the heater runs or not.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> (deprecated): the reward of CityLearn 3.6.0 and earlier, kept only to reproduce earlier runs and to
+be removed in a later release; selecting it raises a <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>. In cooling (<code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> 1)
+and heating (<code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> 2) mode, the side of the set point penalised within the comfort band, and the exponent
+above the upper boundary, follow whether the heating demand exceeds the cooling demand at the time step,
+not the mode. In heating mode at 21.5 C with a 20 C set point, the reward is 0 while the heater is off
+and -1.5 while it runs; passive overheating within the band is not penalised.</p></li>
+</ul>
+<p>In off (<code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> 0) and automatic (<code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> 3) mode, which do not identify a single service,
+both versions use the demands to choose the exponent outside the band.</p>
+</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.reward_function.ComfortReward.VERSIONS">
+<span class="sig-name descname"><span class="pre">VERSIONS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(1,</span> <span class="pre">2)</span></em><a class="headerlink" href="#citylearn.reward_function.ComfortReward.VERSIONS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.reward_function.ComfortReward.band">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">band</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.reward_function.ComfortReward.band" title="Link to this definition"></a></dt>
@@ -240,14 +244,50 @@ boundary or heating mode but temperature is above setpoint upper boundary.</p></
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lower_exponent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.reward_function.ComfortReward.lower_exponent" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.reward_function.ComfortReward.version">
+<span class="sig-name descname"><span class="pre">version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#citylearn.reward_function.ComfortReward.version" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="citylearn.reward_function.Electric_Vehicles_Reward_Function">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.reward_function.</span></span><span class="sig-name descname"><span class="pre">Electric_Vehicles_Reward_Function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/reward_function.html#Electric_Vehicles_Reward_Function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.reward_function.Electric_Vehicles_Reward_Function" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.reward_function.</span></span><span class="sig-name descname"><span class="pre">Electric_Vehicles_Reward_Function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/reward_function.html#Electric_Vehicles_Reward_Function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.reward_function.Electric_Vehicles_Reward_Function" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#citylearn.reward_function.MARL" title="citylearn.reward_function.MARL"><code class="xref py py-class docutils literal notranslate"><span class="pre">MARL</span></code></a></p>
-<p>Reward function for electric vehicle charging behavior in V2G settings.
-Only affects EV-related behavior; other building logic comes from the superclass.</p>
+<p>Reward function for electric vehicle charging behavior in V2G settings.</p>
+<p>The reward combines the <a class="reference internal" href="#citylearn.reward_function.MARL" title="citylearn.reward_function.MARL"><code class="xref py py-class docutils literal notranslate"><span class="pre">MARL</span></code></a> reward of each building (the base reward), terms for the EV chargers
+of the building, weighted by <cite>weights</cite>, and a penalty of <cite>charging_constraint_penalty_coefficient</cite> per kWh of
+<cite>charging_constraint_violation_kwh</cite>. The EV terms of a building are scaled by <span class="math notranslate nohighlight">\(1/(1 + |r|)\)</span>, where
+<span class="math notranslate nohighlight">\(r\)</span> is the base reward.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env_metadata</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – General static information about the environment.</p></li>
+<li><p><strong>weights</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Signed weights of the EV terms: <cite>no_car_charging</cite>, <cite>battery_limits</cite>, <cite>soc_impossible</cite>, <cite>soc_under</cite>,
+<cite>close_soc</cite>, <cite>self_ev_consumption</cite> and <cite>extra_self_production</cite>. Penalties are negative.</p></li>
+<li><p><strong>version</strong> (<em>int</em><em>, </em><em>default: 2</em>) – <p>Reward definition version.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code> (default): every building gets its base reward plus its EV terms; a building without chargers gets
+its base reward. The scale uses the building’s own base reward, with or without a central agent. A
+deficit of 0.25 or more adds <code class="docutils literal notranslate"><span class="pre">min(2</span> <span class="pre">*</span> <span class="pre">w,</span> <span class="pre">-(w</span> <span class="pre">**</span> <span class="pre">2))</span></code> with <code class="docutils literal notranslate"><span class="pre">w</span> <span class="pre">=</span> <span class="pre">weights['soc_under']</span></code> (-25 with the
+default weights), never less than the moderate deficit term.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> (deprecated): the reward of CityLearn 3.6.0 and earlier, kept only to reproduce earlier runs and to
+be removed in a later release; selecting it raises a <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>. A building with chargers gets
+only its EV terms; the base reward scales them but is not added. A building without chargers gets 0.
+With a central agent, the scale uses the district total of the base reward. Leaving with a state of
+charge 0.25 or more below the required departure SOC adds <code class="docutils literal notranslate"><span class="pre">weights['soc_under']</span> <span class="pre">**</span> <span class="pre">2</span></code> (+25 with the default weights), which exceeds
+the moderate deficit term <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">weights['soc_under']</span></code> (-10): severe under-charging is rewarded.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.reward_function.Electric_Vehicles_Reward_Function.VERSIONS">
+<span class="sig-name descname"><span class="pre">VERSIONS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(1,</span> <span class="pre">2)</span></em><a class="headerlink" href="#citylearn.reward_function.Electric_Vehicles_Reward_Function.VERSIONS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.reward_function.Electric_Vehicles_Reward_Function.calculate">
 <span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/reward_function.html#Electric_Vehicles_Reward_Function.calculate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.reward_function.Electric_Vehicles_Reward_Function.calculate" title="Link to this definition"></a></dt>
@@ -276,6 +316,11 @@ Only affects EV-related behavior; other building logic comes from the superclass
 <span class="sig-name descname"><span class="pre">get_required_observation_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/citylearn/reward_function.html#Electric_Vehicles_Reward_Function.get_required_observation_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.reward_function.Electric_Vehicles_Reward_Function.get_required_observation_names" title="Link to this definition"></a></dt>
 <dd><p>Declare inputs of the built-in calculation; custom rewards remain unrestricted.</p>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.reward_function.Electric_Vehicles_Reward_Function.version">
+<span class="sig-name descname"><span class="pre">version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#citylearn.reward_function.Electric_Vehicles_Reward_Function.version" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -356,6 +401,25 @@ Only affects EV-related behavior; other building logic comes from the superclass
 <dt class="sig sig-object py" id="citylearn.reward_function.MultiBuildingRewardFunction">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.reward_function.</span></span><span class="sig-name descname"><span class="pre">MultiBuildingRewardFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_functions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#citylearn.reward_function.RewardFunction" title="citylearn.reward_function.RewardFunction"><span class="pre">RewardFunction</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/reward_function.html#MultiBuildingRewardFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.reward_function.MultiBuildingRewardFunction" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#citylearn.reward_function.RewardFunction" title="citylearn.reward_function.RewardFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">RewardFunction</span></code></a></p>
+<p>Applies one reward function per building.</p>
+<p>Used when the schema’s <code class="docutils literal notranslate"><span class="pre">reward_function.type</span></code> maps building names to reward functions. Each function receives
+one building’s observations and returns that building’s reward; the values are returned in building order, or
+summed as <code class="docutils literal notranslate"><span class="pre">[total]</span></code> with a central agent.</p>
+<p>Each function’s <code class="docutils literal notranslate"><span class="pre">env_metadata</span></code> is the environment metadata with <code class="docutils literal notranslate"><span class="pre">buildings</span></code> reduced to its own building, so
+functions that read building metadata, such as <a class="reference internal" href="#citylearn.reward_function.SolarPenaltyReward" title="citylearn.reward_function.SolarPenaltyReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SolarPenaltyReward</span></code></a>, see that building’s assets.
+Functions are paired with the observations by building name, following <code class="docutils literal notranslate"><span class="pre">env_metadata['buildings']</span></code>, which the
+environment refreshes when members join or leave under a dynamic topology. Without building names in the
+metadata, functions are paired with the observations by position.</p>
+<p>Up to CityLearn 3.6.0 every function received the metadata of all buildings and read the first entry, i.e.
+the first building’s assets, and functions were always paired by position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – General static information about the environment (<code class="docutils literal notranslate"><span class="pre">None</span></code> until the environment sets it).</p></li>
+<li><p><strong>reward_functions</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="#citylearn.reward_function.RewardFunction" title="citylearn.reward_function.RewardFunction"><em>RewardFunction</em></a><em>]</em>) – Reward function of each building, keyed by building name.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.reward_function.MultiBuildingRewardFunction.calculate">
 <span class="sig-name descname"><span class="pre">calculate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/reward_function.html#MultiBuildingRewardFunction.calculate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.reward_function.MultiBuildingRewardFunction.calculate" title="Link to this definition"></a></dt>
@@ -524,7 +588,7 @@ penalty twice.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="citylearn.reward_function.SolarPenaltyAndComfortReward">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.reward_function.</span></span><span class="sig-name descname"><span class="pre">SolarPenaltyAndComfortReward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_exponent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">higher_exponent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficients</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/reward_function.html#SolarPenaltyAndComfortReward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.reward_function.SolarPenaltyAndComfortReward" title="Link to this definition"></a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.reward_function.</span></span><span class="sig-name descname"><span class="pre">SolarPenaltyAndComfortReward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">band</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_exponent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">higher_exponent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficients</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/reward_function.html#SolarPenaltyAndComfortReward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.reward_function.SolarPenaltyAndComfortReward" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#citylearn.reward_function.RewardFunction" title="citylearn.reward_function.RewardFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">RewardFunction</span></code></a></p>
 <p>Addition of <a class="reference internal" href="#citylearn.reward_function.SolarPenaltyReward" title="citylearn.reward_function.SolarPenaltyReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.reward_function.SolarPenaltyReward</span></code></a> and <a class="reference internal" href="#citylearn.reward_function.ComfortReward" title="citylearn.reward_function.ComfortReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.reward_function.ComfortReward</span></code></a>.</p>
 <dl class="field-list simple">
@@ -538,6 +602,8 @@ boundary or heating mode but temperature is below setpoint lower boundary.</p></
 <li><p><strong>higher_exponent</strong> (<em>float</em><em>, </em><em>default = 3.0</em>) – Penalty exponent for when in cooling mode but temperature is below setpoint lower
 boundary or heating mode but temperature is above setpoint upper boundary.</p></li>
 <li><p><strong>coefficients</strong> (<em>Tuple</em><em>, </em><em>default =</em><em> (</em><em>1.0</em><em>, </em><em>1.0</em><em>)</em>) – Coefficents for <cite>citylearn.reward_function.SolarPenaltyReward</cite> and <a class="reference internal" href="#citylearn.reward_function.ComfortReward" title="citylearn.reward_function.ComfortReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.reward_function.ComfortReward</span></code></a> values respectively.</p></li>
+<li><p><strong>version</strong> (<em>int</em><em>, </em><em>default: 2</em>) – Version of the <a class="reference internal" href="#citylearn.reward_function.ComfortReward" title="citylearn.reward_function.ComfortReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.reward_function.ComfortReward</span></code></a> term; see its <cite>version</cite> parameter.
+Version 1 is deprecated.</p></li>
 </ul>
 </dd>
 </dl>
@@ -626,7 +692,7 @@ grid the penalty is maximized.</p>
           </div>
 
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="citylearn.preprocessing.html" class="btn btn-neutral float-left" title="citylearn.preprocessing module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="citylearn.random_streams.html" class="btn btn-neutral float-left" title="citylearn.random_streams module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="citylearn.rl.html" class="btn btn-neutral float-right" title="citylearn.rl module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

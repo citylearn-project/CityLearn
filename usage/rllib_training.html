@@ -1,13 +1,638 @@
+
+
 <!DOCTYPE html>
-<html lang="en" data-citylearn-root-redirect="dev">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8">
-  <title>Redirecting to development documentation</title>
-  <link rel="canonical" href="../dev/usage/rllib_training.html">
-  <meta http-equiv="refresh" content="0; url=../dev/usage/rllib_training.html">
-  <script>location.replace("../dev/usage/rllib_training.html" + location.search + location.hash);</script>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Train a controller with RLlib &mdash; CityLearn 3.7.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Command-line examples" href="cli.html" />
+    <link rel="prev" title="Train and evaluate a reinforcement learning controller" href="rl_training.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
 </head>
-<body>
-  <p>This page is part of the development documentation: <a href="../dev/usage/rllib_training.html">../dev/usage/rllib_training.html</a>.</p>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_full_reference.html">Full Reference Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples and tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="load_environment.html">How to Load an Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulate.html">How to set up a simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_controller.html">Custom agents and rewards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.html">Controller examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rl_training.html">Train and evaluate a reinforcement learning controller</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Train a controller with RLlib</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Environment-configuration">Environment configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Single-agent">Single agent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Multiple-agents">Multiple agents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Next-steps">Next steps</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples and tutorials</a></li>
+      <li class="breadcrumb-item active">Train a controller with RLlib</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/usage/rllib_training.nblink" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <p><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></p>
+<section id="Train-a-controller-with-RLlib">
+<h1>Train a controller with RLlib<a class="headerlink" href="#Train-a-controller-with-RLlib" title="Link to this heading"></a></h1>
+<p>This tutorial trains Proximal Policy Optimization (PPO) controllers from <a class="reference external" href="https://docs.ray.io/en/latest/rllib/index.html">Ray RLlib</a> on a CityLearn energy community with the wrappers <code class="docutils literal notranslate"><span class="pre">RLlibSingleAgentWrapper</span></code> (one central agent) and <code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code> (one agent per building), and runs the trained policies through <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>. For the Stable Baselines3 workflow, see <a class="reference external" href="rl_training.html">Train and evaluate a reinforcement learning controller</a>.</p>
+<p><strong>Versions and installation.</strong> The notebook is tested with Ray 2.60.0 (new API stack, which pins gymnasium 1.2.2) on Python 3.12; Ray 2.60 supports Python 3.10 to 3.14. Ray releases pin their own gymnasium version, so install Ray in a separate environment if you need another gymnasium. Older Ray releases, such as 2.10, use the old API stack and have no wheels for Python 3.12 or newer. CityLearn 3.6.0 on PyPI predates the Ray 2.60 wrapper updates (<code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code> <code class="docutils literal notranslate"><span class="pre">agents</span></code> /
+<code class="docutils literal notranslate"><span class="pre">possible_agents</span></code> and deterministic agent-ID action ordering): until the next release ships on PyPI, install from the <code class="docutils literal notranslate"><span class="pre">master</span></code> branch (as in the cell below) or from a local checkout (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/citylearn-project/CityLearn.git</span> <span class="pre">&amp;&amp;</span> <span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">&quot;./CityLearn[rl]&quot;</span> <span class="pre">&quot;ray[rllib]&quot;</span></code>). Once a release newer than 3.6.0 is published on PyPI, replace the Git URL with <code class="docutils literal notranslate"><span class="pre">&quot;citylearn[rl]&gt;3.6.0&quot;</span></code>. The training is deliberately tiny (two iterations over one day) and only shows
+the workflow; the policies are not expected to beat the business-as-usual operation.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install "citylearn[rl] @ git+https://github.com/citylearn-project/CityLearn.git" "ray[rllib]"
+</pre></div>
+</div>
+</div>
+<section id="Environment-configuration">
+<h2>Environment configuration<a class="headerlink" href="#Environment-configuration" title="Link to this heading"></a></h2>
+<p>The wrappers take an <code class="docutils literal notranslate"><span class="pre">env_config</span></code> dictionary with the <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> arguments in <code class="docutils literal notranslate"><span class="pre">env_kwargs</span></code> and an optional list of wrappers. Normalizing and clipping the observations keeps them inside the observation space.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ray</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.algorithms.ppo</span><span class="w"> </span><span class="kn">import</span> <span class="n">PPOConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.core.columns</span><span class="w"> </span><span class="kn">import</span> <span class="n">Columns</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.utils.spaces.space_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">clip_action</span><span class="p">,</span> <span class="n">unsquash_action</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ClippedObservationWrapper</span><span class="p">,</span> <span class="n">NormalizedObservationWrapper</span><span class="p">,</span> <span class="n">RLlibMultiAgentEnv</span><span class="p">,</span> <span class="n">RLlibSingleAgentWrapper</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">ray</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">num_cpus</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">include_dashboard</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">logging_level</span><span class="o">=</span><span class="s1">'ERROR'</span><span class="p">)</span>
+
+<span class="n">env_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'env_kwargs'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">'schema'</span><span class="p">:</span> <span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span>
+        <span class="s1">'simulation_start_time_step'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s1">'simulation_end_time_step'</span><span class="p">:</span> <span class="mi">23</span><span class="p">,</span>  <span class="c1"># one day of hourly time steps</span>
+        <span class="s1">'random_seed'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s1">'wrappers'</span><span class="p">:</span> <span class="p">[</span><span class="n">NormalizedObservationWrapper</span><span class="p">,</span> <span class="n">ClippedObservationWrapper</span><span class="p">],</span>
+<span class="p">}</span>
+<span class="n">ITERATIONS</span> <span class="o">=</span> <span class="mi">2</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2026-11-26 12:53:28,207 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-26 12:53:29,941 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+</pre></div></div>
+</div>
+</section>
+<section id="Single-agent">
+<h2>Single agent<a class="headerlink" href="#Single-agent" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">RLlibSingleAgentWrapper</span></code> sets <code class="docutils literal notranslate"><span class="pre">central_agent=True</span></code>, so one policy controls every building. <code class="docutils literal notranslate"><span class="pre">num_env_runners=0</span></code> samples in the training process, which keeps the example local.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">config</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">PPOConfig</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">environment</span><span class="p">(</span><span class="n">RLlibSingleAgentWrapper</span><span class="p">,</span> <span class="n">env_config</span><span class="o">=</span><span class="n">env_config</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">env_runners</span><span class="p">(</span><span class="n">num_env_runners</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">training</span><span class="p">(</span><span class="n">train_batch_size_per_learner</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">minibatch_size</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">algo</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">build_algo</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ITERATIONS</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">algo</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">'environment steps sampled:'</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">'num_env_steps_sampled_lifetime'</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2026-11-26 12:53:32,590 WARNING algorithm_config.py:5160 -- You are running PPO on the new API stack! This is the new default behavior for this algorithm. If you don&#39;t want to use the new API stack, set `config.api_stack(enable_rl_module_and_learner=False,enable_env_runner_and_connector_v2=False)`. For a detailed migration guide, see here: https://docs.ray.io/en/master/rllib/new-api-stack-migration-guide.html
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+environment steps sampled: 96.0
+</pre></div></div>
+</div>
+<p>RLlib’s new API stack removed <code class="docutils literal notranslate"><span class="pre">compute_single_action</span></code>. Inference goes through the policy’s <code class="docutils literal notranslate"><span class="pre">RLModule</span></code>: the module returns the parameters of the action distribution, and the deterministic action is the distribution’s mode. Because RLlib trains with <code class="docutils literal notranslate"><span class="pre">normalize_actions=True</span></code> by default, <code class="docutils literal notranslate"><span class="pre">unsquash_action</span></code> rescales (and clips) the policy output from <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code> to <code class="docutils literal notranslate"><span class="pre">action_space</span></code> bounds—for example mapping <code class="docutils literal notranslate"><span class="pre">0.0</span></code> to <code class="docutils literal notranslate"><span class="pre">0.5</span></code> on a <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> <code class="docutils literal notranslate"><span class="pre">cooling_device</span></code> action—matching RLlib’s
+<code class="docutils literal notranslate"><span class="pre">NormalizeAndClipActions</span></code> connector during training.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">deterministic_action</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">observation</span><span class="p">,</span> <span class="n">action_space</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">normalize_actions</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">batch</span> <span class="o">=</span> <span class="p">{</span><span class="n">Columns</span><span class="o">.</span><span class="n">OBS</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">))[</span><span class="kc">None</span><span class="p">]}</span>
+
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">forward_inference</span><span class="p">(</span><span class="n">batch</span><span class="p">)[</span><span class="n">Columns</span><span class="o">.</span><span class="n">ACTION_DIST_INPUTS</span><span class="p">]</span>
+
+    <span class="n">raw_action</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">get_inference_action_dist_cls</span><span class="p">()</span><span class="o">.</span><span class="n">from_logits</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span><span class="o">.</span><span class="n">to_deterministic</span><span class="p">()</span><span class="o">.</span><span class="n">sample</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">normalize_actions</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">unsquash_action</span><span class="p">(</span><span class="n">raw_action</span><span class="p">,</span> <span class="n">action_space</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">clip_action</span><span class="p">(</span><span class="n">raw_action</span><span class="p">,</span> <span class="n">action_space</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
+    <span class="n">observations</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">terminated</span><span class="p">:</span>
+        <span class="n">observations</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">(</span><span class="n">observations</span><span class="p">))</span>
+
+    <span class="n">kpis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
+    <span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">'cost_function'</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">'value'</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">kpis</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s1">'all'</span><span class="p">)</span>
+
+
+<span class="n">single_env</span> <span class="o">=</span> <span class="n">RLlibSingleAgentWrapper</span><span class="p">(</span><span class="n">env_config</span><span class="p">)</span>
+<span class="n">module</span> <span class="o">=</span> <span class="n">algo</span><span class="o">.</span><span class="n">get_module</span><span class="p">()</span>
+<span class="n">evaluate</span><span class="p">(</span>
+    <span class="n">single_env</span><span class="p">,</span>
+    <span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="n">deterministic_action</span><span class="p">(</span>
+        <span class="n">module</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">single_env</span><span class="o">.</span><span class="n">action_space</span><span class="p">,</span> <span class="n">normalize_actions</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">normalize_actions</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>name</th>
+      <th>Building_1</th>
+      <th>Building_2</th>
+      <th>Building_3</th>
+      <th>District</th>
+    </tr>
+    <tr>
+      <th>cost_function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
+      <td>0.0</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
+      <td>-0.0</td>
+      <td>-0.000</td>
+      <td>-0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_ratio</th>
+      <td>0.0</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
+      <td>0.7</td>
+      <td>0.197</td>
+      <td>0.705</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_count</th>
+      <td>0.0</td>
+      <td>0.044</td>
+      <td>0.169</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_served_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>222.161</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_thermal_coverage_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+<p>955 rows × 4 columns</p>
+</div></div>
+</div>
+</section>
+<section id="Multiple-agents">
+<h2>Multiple agents<a class="headerlink" href="#Multiple-agents" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code> sets <code class="docutils literal notranslate"><span class="pre">central_agent=False</span></code> and exposes one agent per building, named <code class="docutils literal notranslate"><span class="pre">agent_0</span></code>, <code class="docutils literal notranslate"><span class="pre">agent_1</span></code>, … in <code class="docutils literal notranslate"><span class="pre">possible_agents</span></code>. The policy mapping below gives every building its own policy.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">multi_env</span> <span class="o">=</span> <span class="n">RLlibMultiAgentEnv</span><span class="p">(</span><span class="n">env_config</span><span class="p">)</span>
+<span class="n">agent_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">multi_env</span><span class="o">.</span><span class="n">possible_agents</span><span class="p">)</span>
+
+<span class="n">multi_config</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">PPOConfig</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">environment</span><span class="p">(</span><span class="n">RLlibMultiAgentEnv</span><span class="p">,</span> <span class="n">env_config</span><span class="o">=</span><span class="n">env_config</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">multi_agent</span><span class="p">(</span><span class="n">policies</span><span class="o">=</span><span class="nb">set</span><span class="p">(</span><span class="n">agent_ids</span><span class="p">),</span> <span class="n">policy_mapping_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">agent_id</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">agent_id</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">env_runners</span><span class="p">(</span><span class="n">num_env_runners</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">training</span><span class="p">(</span><span class="n">train_batch_size_per_learner</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">minibatch_size</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">multi_algo</span> <span class="o">=</span> <span class="n">multi_config</span><span class="o">.</span><span class="n">build_algo</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ITERATIONS</span><span class="p">):</span>
+    <span class="n">multi_algo</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+<span class="n">modules</span> <span class="o">=</span> <span class="p">{</span><span class="n">agent_id</span><span class="p">:</span> <span class="n">multi_algo</span><span class="o">.</span><span class="n">get_module</span><span class="p">(</span><span class="n">agent_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">agent_id</span> <span class="ow">in</span> <span class="n">agent_ids</span><span class="p">}</span>
+<span class="n">evaluate</span><span class="p">(</span>
+    <span class="n">multi_env</span><span class="p">,</span>
+    <span class="k">lambda</span> <span class="n">observations</span><span class="p">:</span> <span class="p">{</span>
+        <span class="n">agent_id</span><span class="p">:</span> <span class="n">deterministic_action</span><span class="p">(</span>
+            <span class="n">modules</span><span class="p">[</span><span class="n">agent_id</span><span class="p">],</span>
+            <span class="n">observations</span><span class="p">[</span><span class="n">agent_id</span><span class="p">],</span>
+            <span class="n">multi_env</span><span class="o">.</span><span class="n">action_space</span><span class="p">[</span><span class="n">agent_id</span><span class="p">],</span>
+            <span class="n">normalize_actions</span><span class="o">=</span><span class="n">multi_config</span><span class="o">.</span><span class="n">normalize_actions</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">agent_id</span> <span class="ow">in</span> <span class="n">agent_ids</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>name</th>
+      <th>Building_1</th>
+      <th>Building_2</th>
+      <th>Building_3</th>
+      <th>District</th>
+    </tr>
+    <tr>
+      <th>cost_function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
+      <td>-0.000</td>
+      <td>0.000</td>
+      <td>-0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
+      <td>0.700</td>
+      <td>0.197</td>
+      <td>0.705</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_count</th>
+      <td>0.429</td>
+      <td>0.449</td>
+      <td>0.198</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_served_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>216.529</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_thermal_coverage_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+<p>955 rows × 4 columns</p>
+</div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">algo</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+<span class="n">multi_algo</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+<span class="n">ray</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Next-steps">
+<h2>Next steps<a class="headerlink" href="#Next-steps" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Train for more iterations on a longer window, and evaluate on a window the policies have not seen.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">.env_runners(num_env_runners=N)</span></code> for parallel sampling, and <code class="docutils literal notranslate"><span class="pre">SACConfig</span></code> for an off-policy algorithm.</p></li>
+<li><p>Compare the result with the business-as-usual operation, as in the Stable Baselines3 tutorial.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rl_training.html" class="btn btn-neutral float-left" title="Train and evaluate a reinforcement learning controller" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cli.html" class="btn btn-neutral float-right" title="Command-line examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
 </body>
 </html>

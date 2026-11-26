@@ -6,19 +6,19 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tutorials &mdash; CityLearn 3.6.0 documentation</title>
+  <title>Tutorials &mdash; CityLearn 3.7.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -58,13 +58,16 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_full_reference.html">Full Reference Schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
@@ -78,41 +81,42 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples and tutorials</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="load_environment.html">How to Load an Environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulate.html">How to set up a simulation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom_controller.html">Custom agents and rewards</a></li>
 <li class="toctree-l2"><a class="reference internal" href="agents.html">Controller examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rl_training.html">Train and evaluate a reinforcement learning controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rllib_training.html">Train a controller with RLlib</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line examples</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Tutorials</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 
 <div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
@@ -147,7 +151,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -157,8 +161,12 @@
   <section id="tutorials">
 <h1>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading"></a></h1>
 <p>For current runnable examples, start with <a class="reference internal" href="../quickstart.html"><span class="doc">Your first simulation</span></a> and
-<a class="reference internal" href="custom_controller.html"><span class="doc">Custom agents and rewards</span></a>. The following longer-form tutorial explains the
-building-control and reinforcement-learning concepts behind CityLearn:</p>
+<a class="reference internal" href="custom_controller.html"><span class="doc">Custom agents and rewards</span></a>. <a class="reference internal" href="rl_training.html"><span class="doc">Train and evaluate a reinforcement learning controller</span></a> trains a Stable Baselines3
+controller with the v3 API, evaluates it on unseen data and compares it with
+the business-as-usual operation. <a class="reference internal" href="rllib_training.html"><span class="doc">Train a controller with RLlib</span></a> trains Ray RLlib PPO
+controllers with the RLlib wrappers. CI runs both with the other example notebooks.</p>
+<p>The following longer-form tutorial explains the building-control and
+reinforcement-learning concepts behind CityLearn:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://www.climatechange.ai/papers/iclr2023/2">CityLearn: A Tutorial on Reinforcement Learning Control for Grid-Interactive Efficient Buildings and Communities</a> <span class="bibtex-citation" id="id1">[<a class="reference internal" href="../references.html#id33" title="Kingsley E Nweye, Allen Wu, Hyun Park, Yara Almilaify, and Zoltan Nagy. Citylearn: a tutorial on reinforcement learning control for grid-interactive efficient buildings and communities. In ICLR 2023 Workshop on Tackling Climate Change with Machine Learning. 2023. URL: https://www.climatechange.ai/papers/iclr2023/2.">17</a>]</span></p></li>
 </ul>

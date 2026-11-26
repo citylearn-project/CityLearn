@@ -6,19 +6,19 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Baselines &mdash; CityLearn 3.6.0 documentation</title>
+  <title>Baselines &mdash; CityLearn 3.7.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -58,13 +58,16 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_full_reference.html">Full Reference Schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
@@ -79,11 +82,13 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Baselines</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#business-as-usual-the-operational-reference">Business as usual: the operational reference</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#choosing-the-bau-charging-target">Choosing the BAU charging target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hvac-and-the-baseline-version">HVAC and the baseline version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#known-limits">Known limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#default-parameters">Default parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#rule-based-baselines">Rule-based baselines</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hvac-of-the-rule-based-baselines">HVAC of the rule-based baselines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#automatic-bau-evaluation">Automatic BAU evaluation</a></li>
 </ul>
 </li>
@@ -93,33 +98,32 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 
 <div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
@@ -154,7 +158,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -184,7 +188,7 @@ It is not a scenario with all equipment switched off.</p>
 <td><p>Requests maximum charging power as soon as an EV is connected, until 100% SOC by default, or until the user’s requested departure SOC (see below). Ignores deadlines, prices and solar forecasts and never requests V2G. Electrical limits share the available power proportionally between simultaneous requests.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Stationary batteries</p></td>
-<td><p>Charges from local PV surplus and discharges to serve local import (self-consumption). EV charging is considered first, so the battery does not discharge into an EV that is already full.</p></td>
+<td><p>Requests charging from estimated local PV surplus and discharging to cover estimated local demand. The dispatch budget accounts for EV charging and appliance starts before the stationary battery.</p></td>
 </tr>
 <tr class="row-even"><td><p>Flexible appliances</p></td>
 <td><p>Requests the next pending cycle at its first feasible start opportunity.</p></td>
@@ -198,8 +202,11 @@ It is not a scenario with all equipment switched off.</p>
 <tr class="row-odd"><td><p>Demand response</p></td>
 <td><p>Runs under the scenario, but has no policy that optimizes an activation target, payment or penalty.</p></td>
 </tr>
-<tr class="row-even"><td><p>Other active actions</p></td>
-<td><p>Requests zero, clipped to the action bounds. This is not a dedicated HVAC, thermal-storage or escalator policy; the effect of zero follows each device’s action contract.</p></td>
+<tr class="row-even"><td><p>HVAC (<code class="docutils literal notranslate"><span class="pre">heating_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code>)</p></td>
+<td><p>With <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code> (default): requests the action that delivers the dataset’s own heating or cooling demand at each step (see <a class="reference internal" href="#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>). With <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code>: requests zero, as in CityLearn 3.6.0, so in buildings with temperature dynamics the BAU neither heats nor cools.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Other active actions</p></td>
+<td><p>Requests zero, clipped to the action bounds. This is not a dedicated thermal-storage or escalator policy; the effect of zero follows each device’s action contract.</p></td>
 </tr>
 </tbody>
 </table>
@@ -215,12 +222,12 @@ It is not a scenario with all equipment switched off.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">'full'</span></code> (default)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v3</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v4</span></code></p></td>
 <td><p>Charges to 100%, as the BAU of CityLearn 3.1–3.3.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">'requested'</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">immediate-user-target-v2</span></code></p></td>
-<td><p>Charges up to the user’s requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger’s minimum power, the EV stops slightly below the target rather than overshooting it. Its difference from the default excludes the extra energy delivered above the requested SOC.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">immediate-user-target-v3</span></code></p></td>
+<td><p>Charges up to the user’s requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger’s minimum power, the last step charges at the minimum power and crosses the target slightly, as the rule-based baselines do, so the EV does not leave below it. Its difference from the default excludes the extra energy delivered above the requested SOC.</p></td>
 </tr>
 </tbody>
 </table>
@@ -244,11 +251,135 @@ same actions. Under the flat interface the env corrupts only the flat vectors, s
 baseline reads, as the entity interface does. <code class="docutils literal notranslate"><span class="pre">predict([])</span></code>, which the native BAU
 reference of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> uses, reads them uncorrupted.</p>
 </section>
+<section id="hvac-and-the-baseline-version">
+<h3>HVAC and the baseline version<a class="headerlink" href="#hvac-and-the-baseline-version" title="Link to this heading"></a></h3>
+<p>In the datasets whose buildings have temperature dynamics (an LSTM model), the
+HVAC is an action: <code class="docutils literal notranslate"><span class="pre">heating_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_device</span></code> or
+<code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code>, the fraction of the device’s nominal power made
+available. The bundled datasets with an active HVAC action are
+<code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_with_demand_response_set_points</span></code>,
+<code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_without_demand_response_set_points</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tx_travis_county_neighborhood</span></code>, <code class="docutils literal notranslate"><span class="pre">vt_chittenden_county_neighborhood</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ca_alameda_county_neighborhood</span></code>, <code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code> and the
+<code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_*</span></code> datasets.</p>
+<p>Under <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code>, the default, the BAU runs the HVAC as a building
+without optimisation does. At each step it requests the action that delivers
+the dataset’s own heating or cooling demand, the as-simulated <code class="docutils literal notranslate"><span class="pre">heating_demand</span></code>
+and <code class="docutils literal notranslate"><span class="pre">cooling_demand</span></code> of the building file (the energy simulation’s
+<code class="docutils literal notranslate"><span class="pre">*_demand_without_control</span></code> series):</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>action = device input energy for the demand / (nominal power × dataset step in hours)
+</pre></div>
+</div>
+<p>clipped to the action bounds. The device limits apply as for any other action:
+the nominal power, the heat pump COP at the outdoor temperature and, during an
+outage, the local supply. A service is used only in the steps whose <code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code>
+allows it; with <code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code> the larger of the two demands sets
+the sign. The BAU does not pre-heat, pre-cool, follow prices or use the thermal
+storage, which still receives zero.</p>
+<p><code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> reproduces CityLearn 3.6.0: the BAU requests zero for
+those actions, so once the LSTM warm-up ends its buildings are neither heated
+nor cooled. Indoor temperatures drift away from the set points and every
+<code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> row compares the controller with unheated (or uncooled)
+houses (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/362">#362</a>).</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">baseline_version</span></code></p></th>
+<th class="head"><p>KPI baseline</p></th>
+<th class="head"><p>BAU HVAC</p></th>
+<th class="head"><p>BAU definition</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>3.6.0: no EV charging added back</p></td>
+<td><p>zero</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v4</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">2</span></code> (default)</p></td>
+<td><p>EV charging of the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> BAU added back</p></td>
+<td><p>delivers the dataset heating and cooling demand</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v4+hvac-dataset-demand-v1</span></code> on datasets with HVAC actions, <code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v4</span></code> on the others</p></td>
+</tr>
+</tbody>
+</table>
+<p>(With <code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target='requested'</span></code> the definition starts
+with <code class="docutils literal notranslate"><span class="pre">immediate-user-target-v3</span></code> instead.)</p>
+<p>The HVAC rule changes the <code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> rows, and the
+<code class="docutils literal notranslate"><span class="pre">*_delta_to_business_as_usual_*</span></code> and <code class="docutils literal notranslate"><span class="pre">*_ratio_to_business_as_usual_*</span></code> values,
+on datasets with HVAC actions only. On datasets without HVAC actions the BAU,
+its definition and identity, and every KPI are the same, bit for bit, as before
+the HVAC rule was added.
+Comparisons report runs with different baseline versions as incompatible.</p>
+<p>On Quebec (<code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_without_demand_response_set_points</span></code>, steps
+0–335), the default BAU now heats the houses:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Quebec, steps 0–335</p></th>
+<th class="head"><p>Before (BAU HVAC at zero)</p></th>
+<th class="head"><p>Now (default)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BAU mean / minimum indoor temperature (°C)</p></td>
+<td><p>3.4 / −12.8</p></td>
+<td><p>20.6 / 17.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>BAU <code class="docutils literal notranslate"><span class="pre">comfort_resilience_discomfort_overall_ratio</span></code></p></td>
+<td><p>0.183</p></td>
+<td><p>0.026</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">district_cost_total_business_as_usual_eur</span></code></p></td>
+<td><p>631.8</p></td>
+<td><p>4,403.8</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> <code class="docutils literal notranslate"><span class="pre">cost_ratio_to_business_as_usual_total_ratio</span></code></p></td>
+<td><p>6.970</p></td>
+<td><p>1.000</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code> <code class="docutils literal notranslate"><span class="pre">cost_ratio_to_business_as_usual_total_ratio</span></code></p></td>
+<td><p>1.000</p></td>
+<td><p>0.143</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'quebec_neighborhood_without_demand_response_set_points'</span><span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>  <span class="c1"># hvac='dataset_demand', from the env</span>
+
+<span class="n">legacy</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'quebec_neighborhood_without_demand_response_set_points'</span><span class="p">,</span> <span class="n">baseline_version</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent(env,</span> <span class="pre">hvac=...)</span></code> overrides the environment for that agent:
+<code class="docutils literal notranslate"><span class="pre">'off'</span></code> sends zero, <code class="docutils literal notranslate"><span class="pre">'dataset_demand'</span></code> delivers the dataset demand. The native
+BAU of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> always follows the environment’s <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code>.</p>
+<p><strong>The rule-based baselines run the HVAC the same way.</strong> <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>,
+<code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> deliver the dataset heating and
+cooling demand with the same rule as the BAU, whatever the <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code>
+(see <a class="reference internal" href="#hvac-of-the-rule-based-baselines"><span class="std std-ref">HVAC of the rule-based baselines</span></a>).
+Under the default version their ratios to the BAU therefore compare houses
+that are heated and cooled alike. <code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code> still sends zero, and so
+does any controller of your own that does not drive the HVAC: its
+<code class="docutils literal notranslate"><span class="pre">*_ratio_to_business_as_usual_*</span></code> values look much better only because the BAU
+pays for heating and cooling and it does not. Read the ratios to the BAU
+together with the comfort KPIs (<code class="docutils literal notranslate"><span class="pre">*_comfort_resilience_discomfort_*</span></code>).
+<code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> has no <code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> comfort rows, so to see the BAU
+comfort, run <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> as the controller and read its comfort
+KPIs.</p>
+</section>
 <section id="known-limits">
 <h3>Known limits<a class="headerlink" href="#known-limits" title="Link to this heading"></a></h3>
-<p>The baselines decide from observations, so the battery reacts to the last
-settled step rather than reading the current step’s load and PV from the
-simulator, as the 3.1–3.3 BAU did. The BAU battery serves only the EV power the
+<p>The BAU estimates the battery’s starting dispatch budget using the observed
+non-shiftable demand, PV and already-running appliance load for the step being
+planned. If a required input is unavailable, it uses the existing estimate
+based on settled observations. Thermal device electricity is determined as the
+step is applied. Using the previous thermal load as current demand would
+introduce another time lag. Actual PV surplus can therefore be smaller than
+the estimate on a step with thermal demand, and a charge request can increase
+grid import. The simulator still enforces the configured electrical limits.
+The rule-based baselines plan their battery, EV and appliance budget with the
+same current-step estimate (since <code class="docutils literal notranslate"><span class="pre">basic-v4</span></code>, <code class="docutils literal notranslate"><span class="pre">smart-local-v4</span></code> and
+<code class="docutils literal notranslate"><span class="pre">community-v4</span></code>); before, they used the settled load, PV, battery and EV power of
+the previous step (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/400">#400</a>).</p>
+<p>The BAU battery serves only the EV power the
 EV can still accept: the <code class="docutils literal notranslate"><span class="pre">available_charge_power_kw</span></code> observation of the
 <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle, or, without that bundle, an estimate from the
 observed SOC, battery capacity, charger power and charger efficiency and the
@@ -256,7 +387,11 @@ step length, computed as the simulator computes that observation. Neither
 includes the EV battery’s capacity-power curve, so at steps of a few seconds
 near 100% SOC the battery can still discharge more than the EV takes. The
 estimate also omits the electrical-service import limit, which the bundle
-includes. The rule-based baselines reserve the EV power they command.</p>
+includes, and capacity fade: under physics version 2 the observation stops at
+the EV battery’s degraded capacity, where charging stops, but without the bundle
+no observation shows the fade, so the estimate stops at the nominal capacity and
+can reserve power for a faded EV that is already full. The rule-based baselines
+reserve the EV power they command.</p>
 <p>Without that bundle the baselines also do not observe the building’s import and
 export, so they take PV generation above the observed load as the surplus the
 battery may store. Export alone is not counted as surplus, because it can come
@@ -346,6 +481,46 @@ windows, seeds and market conditions as the candidate.</p>
 </tr>
 </tbody>
 </table>
+<p>All three stop charging an EV 0.001 SOC below its target. In the last interval before departure they may draw up to 25% more AC energy than the battery-side gap (<code class="docutils literal notranslate"><span class="pre">EV_LAST_INTERVAL_LOSS_ALLOWANCE</span></code>), to cover the charger and battery losses they cannot observe, and at least the charger’s minimum power.</p>
+<section id="hvac-of-the-rule-based-baselines">
+<h3>HVAC of the rule-based baselines<a class="headerlink" href="#hvac-of-the-rule-based-baselines" title="Link to this heading"></a></h3>
+<p>The engines dispatch the batteries, EV chargers and flexible appliances. The
+HVAC actions (<code class="docutils literal notranslate"><span class="pre">heating_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code>)
+follow <code class="docutils literal notranslate"><span class="pre">hvac</span></code>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">hvac</span></code></p></th>
+<th class="head"><p>HVAC actions</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">'dataset_demand'</span></code> (default)</p></td>
+<td><p>Deliver the dataset’s own heating and cooling demand at each step, with the rule of the default BAU (see <a class="reference internal" href="#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>): a thermostat that meets the load, without optimisation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">'off'</span></code></p></td>
+<td><p>Zero, as before. On datasets with temperature dynamics the houses are neither heated nor cooled.</p></td>
+</tr>
+</tbody>
+</table>
+<p>On datasets without HVAC actions both give the same results, bit for bit, and
+the same <code class="docutils literal notranslate"><span class="pre">comparison_identity()</span></code>. On datasets with HVAC actions the identity
+records <code class="docutils literal notranslate"><span class="pre">hvac='dataset_demand'</span></code> and the definition version gets the suffix
+<code class="docutils literal notranslate"><span class="pre">+hvac-dataset-demand-v1</span></code>, so these runs are not mixed with runs from earlier
+releases. Thermal storage still receives zero.</p>
+<p>On Quebec (<code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_without_demand_response_set_points</span></code>, steps
+0–335), the three rule-based baselines heat the houses as the default BAU
+does. The mean indoor temperature is 20.6 °C instead of 3.4 °C, the minimum
+17.2 °C instead of −12.8 °C, and
+<code class="docutils literal notranslate"><span class="pre">district_comfort_resilience_discomfort_overall_ratio</span></code> goes from 0.183 to
+0.026. Quebec has no batteries or EVs, so they then run exactly as the BAU:
+cost 4,403.8 EUR and a cost ratio of 1.000. With <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code> they cost
+631.8 EUR, a ratio of 0.143. Under <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code>, whose BAU does not
+heat, their cost ratio is 6.970; to reproduce the earlier ratio of 1.000 under
+that version, also pass <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">smart</span> <span class="o">=</span> <span class="n">RBCSmartPolicy</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>               <span class="c1"># HVAC meets the dataset demand</span>
+<span class="n">legacy</span> <span class="o">=</span> <span class="n">RBCSmartPolicy</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">hvac</span><span class="o">=</span><span class="s1">'off'</span><span class="p">)</span>  <span class="c1"># HVAC at zero, as before</span>
+</pre></div>
+</div>
 <p>Smart and Community use the entity observation bundles when the schema enables
 them: <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> for measured import and export,
 <code class="docutils literal notranslate"><span class="pre">entity_forecasts_existing</span></code> and <code class="docutils literal notranslate"><span class="pre">entity_forecasts_derived</span></code> for price and PV
@@ -358,6 +533,16 @@ observe community import or surplus; without the forecast bundles, Smart and
 Community fall back to the current price and PV.
 Enable them in the schema, for example
 <code class="docutils literal notranslate"><span class="pre">&quot;observation_bundles&quot;:</span> <span class="pre">{&quot;entity_community_operational&quot;:</span> <span class="pre">true}</span></code>.</p>
+<p>Smart and Community charge the battery from the grid at a cheap price only when
+no local PV surplus is forecast. With <code class="docutils literal notranslate"><span class="pre">entity_forecasts_derived</span></code> that forecast is
+<code class="docutils literal notranslate"><span class="pre">forecast_net_next_*_kw</span></code>. Without it, the solar forecast stands in: a building with
+PV does not charge from the grid at a cheap price while its PV forecast, or an
+irradiance forecast (<code class="docutils literal notranslate"><span class="pre">*_solar_irradiance_predicted_*</span></code>) above 100 W/m², says that
+PV is coming. Without any solar forecast the cheap-price grid charge works as
+before. Until <code class="docutils literal notranslate"><span class="pre">smart-local-v3</span></code> and <code class="docutils literal notranslate"><span class="pre">community-v3</span></code> the missing surplus forecast
+read as zero, so on datasets such as <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all</span></code> the
+batteries filled from the grid before sunrise and then exported the PV they could
+not store (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/400">#400</a>).</p>
 <p><code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code> compares the current price with fixed thresholds,
 <code class="docutils literal notranslate"><span class="pre">basic_cheap_price_eur_kwh=0.0765</span></code> and <code class="docutils literal notranslate"><span class="pre">basic_expensive_price_eur_kwh=0.1078</span></code>.
 They are the terciles of the 2023 Portuguese day-ahead price used to calibrate
@@ -371,9 +556,35 @@ with the price forecast:</p>
 </pre></div>
 </div>
 <p>These policies are ported from the Soft-CPS Algorithms baselines (commit
-<code class="docutils literal notranslate"><span class="pre">725a72a</span></code>). With the same defaults and observations they request the same
-actions at every step. <code class="docutils literal notranslate"><span class="pre">agent.comparison_identity()</span></code> records the class, the
-definition version and the resolved parameters for experiment manifests.</p>
+<code class="docutils literal notranslate"><span class="pre">725a72a</span></code>) and keep their rules and defaults, with three CityLearn changes. The
+HVAC rule above is CityLearn’s own (<code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code> gives the zero HVAC of the
+port). Since <code class="docutils literal notranslate"><span class="pre">basic-v4</span></code>, <code class="docutils literal notranslate"><span class="pre">smart-local-v4</span></code> and <code class="docutils literal notranslate"><span class="pre">community-v4</span></code> they plan with the
+current-step load and PV, as the BAU does, where the port reacts to the settled
+observations of the previous step, so their actions differ from the port on every
+dataset. The solar forecast that stands in for a missing PV-surplus forecast is
+also CityLearn’s own; it never acts where <code class="docutils literal notranslate"><span class="pre">entity_forecasts_derived</span></code> is enabled,
+as on <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> and <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>.
+<code class="docutils literal notranslate"><span class="pre">agent.comparison_identity()</span></code> records the class, the definition version and the
+resolved parameters for experiment manifests.</p>
+<p>The rule baselines can also guide the exploration of <code class="docutils literal notranslate"><span class="pre">SACRBC</span></code> and <code class="docutils literal notranslate"><span class="pre">MARLISARBC</span></code>.
+Pass an instance built on the same environment, the class or its import path as
+<code class="docutils literal notranslate"><span class="pre">rbc</span></code>. On datasets with HVAC actions the exploration then runs the HVAC at the
+dataset demand, as the rule baseline does; pass <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code> to keep the zero
+HVAC. With a class or an import path, the learner’s own hyperparameters stay
+with the learner, and the remaining keyword arguments go to the baseline:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">RBCBasicPolicy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.sac</span><span class="w"> </span><span class="kn">import</span> <span class="n">SACRBC</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">SACRBC</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">rbc</span><span class="o">=</span><span class="n">RBCBasicPolicy</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">3e-4</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">basic_price_policy</span><span class="o">=</span><span class="s1">'forecast_relative'</span><span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">SACRBC</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">rbc</span><span class="o">=</span><span class="n">RBCBasicPolicy</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">basic_price_policy</span><span class="o">=</span><span class="s1">'forecast_relative'</span><span class="p">),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">3e-4</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The reinforcement learning controllers (<code class="docutils literal notranslate"><span class="pre">SAC</span></code>, <code class="docutils literal notranslate"><span class="pre">SACRBC</span></code>, <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code>,
+<code class="docutils literal notranslate"><span class="pre">MARLISARBC</span></code>, <code class="docutils literal notranslate"><span class="pre">TabularQLearning</span></code>) read flat observation vectors and require
+<code class="docutils literal notranslate"><span class="pre">interface='flat'</span></code>; on the entity interface they raise a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. The rule
+baselines, <code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code> and the random <code class="docutils literal notranslate"><span class="pre">Agent</span></code> work with both
+interfaces.</p>
+</section>
 <section id="automatic-bau-evaluation">
 <h3>Automatic BAU evaluation<a class="headerlink" href="#automatic-bau-evaluation" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">env.evaluate_v2()</span></code> runs or reuses a separate BAU simulation up to the current
@@ -426,7 +637,27 @@ recomputes the cached BAU reference.</p>
 evaluation conditions selected through <code class="docutils literal notranslate"><span class="pre">baseline_condition</span></code>. The default uses
 the simulator’s counterfactual series without storage and, for dynamic building
 models, without partial-load control, while retaining PV.</p>
-<p>This is a counterfactual calculation, not a second <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> run.
+<p>“Without storage” removes the battery, the thermal storage and the EV charging
+of the controlled run, and adds back the EV charging of the native BAU with the
+<code class="docutils literal notranslate"><span class="pre">'full'</span></code> target: each car is charged on arrival at maximum power until it is
+full, and never discharged. The cars get the energy they need, without V2G, and
+the baseline does not depend on how the controller charged them, so a controller
+that leaves the cars short does not lower its own baseline. The deferrable
+appliances stay as the controller ran them. So does the HVAC, except in buildings
+with temperature dynamics (LSTM): there the default condition uses the dataset’s
+ideal-load heating and cooling demand instead of the HVAC the controller ran. The
+<code class="docutils literal notranslate"><span class="pre">baseline</span></code> rows therefore credit the controller with its storage dispatch, its
+EV charging and its V2G against charging on arrival, and in buildings with
+temperature dynamics also with its HVAC control. With <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> nothing is added
+back, as in CityLearn 3.6.0, so on EV datasets the baseline is a community whose
+cars never charge.</p>
+<p>Apart from that EV charging, this is a counterfactual calculation from the run’s
+own series, not a second <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> run. On datasets with EV
+chargers the charging comes from the BAU sidecar, which every evaluation then
+runs, also the legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> and <code class="docutils literal notranslate"><span class="pre">evaluate_v2(include_business_as_usual=False)</span></code>,
+with the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target whatever <code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target</span></code> is. Like
+the BAU rows, it cannot be built when inputs, buildings or devices changed after
+loading; evaluate such runs with <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code>.
 <code class="docutils literal notranslate"><span class="pre">EvaluationCondition</span></code> also exposes alternatives, including removing PV.
 Choose the same evaluation condition when comparing controllers. During a
 simulated power outage the counterfactual, like the controlled run, exchanges
@@ -449,7 +680,7 @@ movement in the requested direction during its activation.</p>
 Configure <code class="docutils literal notranslate"><span class="pre">demand_response.baseline_window_seconds</span></code> and inspect baseline
 validity alongside requested, delivered and credited response. See the
 <a class="reference internal" href="schema_reference.html#demand-response"><span class="std std-ref">DR schema</span></a> and
-<a class="reference internal" href="kpis_reference.html#demand-response-kpis"><span class="std std-ref">DR KPIs</span></a>.</p>
+<a class="reference internal" href="kpis_reference.html#demand-response"><span class="std std-ref">DR KPIs</span></a>.</p>
 </section>
 <section id="a-reference-run-selected-in-the-ui">
 <h2>A reference run selected in the UI<a class="headerlink" href="#a-reference-run-selected-in-the-ui" title="Link to this heading"></a></h2>

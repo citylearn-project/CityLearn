@@ -1,0 +1,7 @@
+citylearn.agents.rbc module
+===========================
+
+.. automodule:: citylearn.agents.rbc
+   :members:
+   :show-inheritance:
+   :undoc-members:

@@ -37,6 +37,7 @@ Submodules
    citylearn.occupant
    citylearn.power_outage
    citylearn.preprocessing
+   citylearn.random_streams
    citylearn.reward_function
    citylearn.rl
    citylearn.utilities

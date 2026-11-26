@@ -1,0 +1,1403 @@
+# Schema Reference
+
+This page documents every key of `schema.json` that CityLearn reads: where it goes, what it
+accepts, its default and unit, what it does, what it depends on, which version changes it and
+which `CityLearnEnv` argument overrides it. Start with [Find what you need](#find-what-you-need)
+when you know what you want to model, or with [How a schema is organised](#how-a-schema-is-organised)
+when you are writing a schema from scratch.
+
+A complete schema that sets every option is shipped as
+[`examples/schema_full_reference.json`](https://github.com/citylearn-project/CityLearn/blob/master/examples/schema_full_reference.json),
+and the [full reference schema walkthrough](schema_full_reference.md) explains it key by key.
+
+## Find what you need
+
+| I want to | Set | Section |
+|---|---|---|
+| Run a shorter period | `simulation_start_time_step`, `simulation_end_time_step` | [Time window](#time-window-and-control-step) |
+| Train on many short episodes | `episode_time_steps`, `rolling_episode_split`, `random_episode_split` | [Episodes](#episodes) |
+| Use 15-minute or 15-second data | `seconds_per_time_step` equal to the data step | [Time window](#time-window-and-control-step) |
+| Reproduce a CityLearn 3.6.0 result | `physics_version: 1`, `baseline_version: 1`, `random_stream_version: "v1"`, `episode_split_boundary: "disjoint"`, `time_step_ratio_mode: "compress"` | [Versions](#versions) |
+| Make runs repeatable | `random_seed` | [Seeds and random streams](#seeds-and-random-streams) |
+| Control all buildings with one agent | `central_agent: true`, `shared_in_central_agent` | [Observations](#observations) |
+| Choose what the agent sees | `observations.<name>.active`, `buildings.<b>.inactive_observations` | [Observations and actions](#observations-and-actions) |
+| Choose what the agent controls | `actions.<name>.active`, `buildings.<b>.inactive_actions` | [Actions](#actions) |
+| Use graph or table observations | `interface: "entity"`, `observation_bundles` | [Entity interface](#entity-interface-observation-bundles-and-derived-forecasts) |
+| Give the agent causal forecasts | `derived_forecasts.load_pv_method: "daily_persistence"`, `price_source` | [Derived forecasts](#entity-interface-observation-bundles-and-derived-forecasts) |
+| Change the reward | `reward_function.type`, `reward_function.attributes` | [Reward function](#reward-function) |
+| Add a battery | `buildings.<b>.electrical_storage` | [Battery](#battery) |
+| Add PV from measured energy | `pv.attributes.generation_mode: "absolute"` | [PV](#pv) |
+| Add a heat pump and a hot-water tank | `cooling_device`, `heating_device`, `dhw_device`, `*_storage` | [HVAC devices](#hvac-devices), [Thermal storage](#thermal-storage) |
+| Size equipment from the data | `autosize: true`, `autosize_attributes` | [Autosizing](#autosizing) |
+| Add EV chargers and EVs | `buildings.<b>.chargers`, `electric_vehicles_def` | [EVs and chargers](#electric-vehicles-and-chargers) |
+| Allow vehicle-to-grid | `chargers.<id>.attributes.max_discharging_power` above 0 | [Charger attributes](#charger-attributes) |
+| Limit the grid connection or a phase | `buildings.<b>.electrical_service.limits` | [Electrical service](#electrical-service) |
+| Curtail import over time | `electrical_service.available_grid_power` | [Available grid power](#available-grid-power) |
+| Add a shiftable appliance | `buildings.<b>.deferrable_appliances` | [Deferrable appliances](#deferrable-appliances) |
+| Simulate grid outages | `buildings.<b>.power_outage` | [Power outages](#power-outages) |
+| Back up a house with its EV during an outage | `power_outage.vehicle_to_building: true` and a V2G charger | [Power outages](#power-outages) |
+| Share energy inside the community | `community_market.enabled: true` | [Community market](#community-market-and-settlement) |
+| Pay for exports | `community_market.settlement_version: 2`, `grid_export_price` | [Community market](#community-market-and-settlement) |
+| Use per-member tariffs | `community_market.tariff_files` | [Community market](#community-market-and-settlement) |
+| Answer DSO/TSO flexibility requests | `demand_response` | [Demand response](#demand-response) |
+| Test sensor, actuator or asset failures | `robustness` | [Robustness](#robustness) |
+| Add or remove members and assets during an episode | `topology_mode: "dynamic"`, `topology_events` | [Dynamic topology](#dynamic-topology) |
+| Run several communities together | `MultiCommunityEnv` (not a schema key) | [Multiple communities](#multiple-communities) |
+| Choose the BAU EV charging target | `business_as_usual_ev_charge_target` | [EV evaluation settings](#ev-evaluation-settings) |
+| Export time series | `render_mode`, `render_file_format` | [Output and exports](#output-rendering-and-exports) |
+
+## How a schema is organised
+
+### Levels
+
+```text
+schema.json
+├── root: data location, seeds, time window, episodes, versions, interface, reward, outputs
+├── observations: {name: {active, shared_in_central_agent}}        (catalogue for every building)
+├── actions: {name: {active}}                                      (catalogue for every building)
+├── observation_bundles, derived_forecasts                         (entity interface only)
+├── buildings
+│   └── <building>: data files, type, inactive_observations/actions, equity_group
+│       ├── cooling_device, heating_device, dhw_device              (HVAC devices)
+│       ├── cooling_storage, heating_storage, dhw_storage           (thermal storage)
+│       ├── electrical_storage, pv                                  (battery, PV)
+│       ├── chargers: {<charger_id>: type, charger_simulation, attributes, ...}
+│       ├── deferrable_appliances, escalators
+│       ├── electrical_service | charging_constraints              (grid connection limits)
+│       └── power_outage, dynamics, occupant, set_point_*
+├── electric_vehicles_def: {<ev_id>: type, include, battery}
+├── community_market, demand_response, robustness                  (community services)
+└── topology_mode, topology_events                                 (members and assets that change)
+```
+
+### Where a setting belongs
+
+| Level | Put here | Examples |
+|---|---|---|
+| Root | Anything that is the same for the whole simulation: clock, episodes, versions, seeds, interface, reward, exports, evaluation tolerances. | `seconds_per_time_step`, `physics_version`, `reward_function` |
+| `observations`, `actions` | The catalogue: which names exist and which are on for every building. Turn a name off for one building with `inactive_observations` / `inactive_actions` at building level. | `"electrical_storage_soc": {"active": true}` |
+| `buildings.<b>` | A community member: its data files and everything it owns. | `energy_simulation`, `electrical_service` |
+| `buildings.<b>.<device>` | One device: its class, its constructor attributes and its autosizing. | `electrical_storage.attributes.capacity` |
+| `buildings.<b>.chargers.<id>` | One charger: its schedule file and power limits. | `max_charging_power` |
+| `electric_vehicles_def.<ev>` | One vehicle, shared by all chargers. Charger files name the vehicle that is connected. | `battery.attributes.capacity` |
+| `community_market`, `demand_response`, `robustness` | Services that act on the whole community. | `settlement_version` |
+| `topology_events` | Changes during an episode. | `add_member` |
+
+Each key is read at one level only. A building setting placed at the root (for example a root `power_outage` or
+`noise_std`) is not read, and a root setting repeated inside a building is not read either.
+
+### Loading a schema
+
+`CityLearnEnv(schema)` accepts three forms, which treat `root_directory` differently.
+
+| Form | Example | `root_directory` |
+|---|---|---|
+| Path to a JSON file or to a folder containing `schema.json` | `CityLearnEnv("data/my_dataset/schema.json")` | Optional. `null` or missing: the schema's folder. Absolute: used as is. Relative: resolved from the schema's folder, then from its parent folders. |
+| Name of a public dataset | `CityLearnEnv("citylearn_challenge_2022_phase_all_plus_evs")` | Replaced by the folder that `DataSet().get_dataset(name)` returns, whatever the schema says: a complete local copy, cached under a digest of its files, or else a download of the release. |
+| Python `dict` | `CityLearnEnv(schema_dict)` | **Required key.** `null` means the current working directory, so relative file names are read from there. |
+
+Every file name in the schema (`energy_simulation`, `charger_simulation`, `requests_file`, ...) is resolved from
+`root_directory` unless it is absolute. The `root_directory` argument of `CityLearnEnv` replaces the schema value for
+every file except `community_market.tariff_files`, which is always resolved from the schema's own `root_directory`.
+
+### Schema keys and constructor arguments
+
+A `CityLearnEnv` argument that is not `None` replaces the schema value of the same name, and the schema value replaces
+the built-in default. [Constructor arguments](#constructor-arguments-that-override-schema-keys) lists every pair.
+Exceptions:
+
+- `render_mode` and `render`: a value in the schema wins over the argument.
+- `topology_mode="static"` cannot override a schema that declares dynamic topology or contains `topology_events`; it raises `ValueError`.
+- `start_date` given in the schema is ignored when the dataset has a calendar (`time_axis.calendar_file`); the argument is not.
+- The constructor changes a copy of the schema: `env.schema` keeps the values of the file, not the effective values.
+  Read the effective ones from the env (`env.physics_version`, `env.seconds_per_time_step`, ...) or `env.get_metadata()`.
+
+An unknown constructor argument raises `TypeError` with the closest valid name. An unknown root key in the schema is
+ignored without a warning.
+
+### How keys are validated
+
+| Section | Unknown key | Bad value |
+|---|---|---|
+| Root | ignored | most keys raise `ValueError` at construction |
+| `community_market`, `community_market.kpis` | `ValueError` with the closest valid name | `ValueError` |
+| `chargers.<id>` keys | `UserWarning` with the closest valid name, then ignored | |
+| `chargers.<id>.attributes` | `ValueError` with the closest valid name | |
+| Device `attributes` (battery, PV, heat pump, tank) | `TypeError` | `AssertionError` or `ValueError` |
+| `electric_vehicles_def.<ev>.battery.attributes` | ignored | |
+| `observations` | `KeyError` at construction, even when inactive (per-device template names are not checked) | `ValueError` for a non-boolean `active` |
+| `actions` | an unknown active name raises at construction | `ValueError` for a non-boolean `active` |
+| `electrical_service.available_grid_power` | `ValueError` | `ValueError` |
+| `demand_response`, `robustness`, `derived_forecasts`, `observation_bundles`, `topology_events` | ignored | `ValueError` for most values |
+| `MultiCommunityEnv` entries | `ValueError` | `ValueError` |
+
+### General rules
+
+| Rule | Contract |
+|---|---|
+| Paths | Relative paths are resolved from `root_directory`; absolute paths are allowed (tariff files must be inside the dataset). |
+| Tabular files | CSV and Parquet (`.parquet`, `.pq`, `.parq`) are interchangeable when the columns and units are the same. Community tariff files are CSV only. |
+| Energy | Dataset energy series are `kWh` per dataset step. |
+| Power and limits | Power ratings and limits are `kW`. |
+| Prices | Prices are per `kWh`, in the currency of the dataset (EUR in the market KPIs). |
+| Emissions | Carbon intensity is `kgCO2/kWh`. |
+| Time steps | Windows, deadlines and event times are global data-row indices (row 0 is the first row of the files), inclusive at both ends. |
+| `null` | In device and charger `attributes`, `null` means "use the default" (including drawn defaults). |
+| Booleans | Write JSON `true` / `false`. Most keys also accept `0`/`1` and the strings `"true"`/`"false"`, but some keys treat any non-empty string as true; see [Common mistakes](#common-mistakes-and-what-to-avoid). |
+| Ranges | Device attributes documented as "drawn" accept a number or `null`. A `[low, high]` range raises `TypeError`. |
+| Legacy washing machines | `washing_machines` is not read (a schema with it loads without the appliances). Use `deferrable_appliances`. |
+
+## Root level
+
+### Required keys
+
+| Key | Type | Notes |
+|---|---|---|
+| `root_directory` | string or `null` | Required in a `dict` schema; see [Loading a schema](#loading-a-schema). |
+| `central_agent` | bool | Unless the `central_agent` argument is given. |
+| `seconds_per_time_step` | number | Unless the `seconds_per_time_step` argument is given. |
+| `simulation_start_time_step`, `simulation_end_time_step` | int | Unless the arguments are given. |
+| `observations`, `actions` | object | Can be empty objects. |
+| `reward_function` | object | Required even when a `reward_function` argument is given. |
+| `buildings` | object | At least one building. |
+
+A missing required key raises `KeyError`.
+
+### Time window and control step
+
+| Key | Type | Default | Unit / values | Effect | Argument | Since |
+|---|---|---|---|---|---|---|
+| `seconds_per_time_step` | number | required | s, at least 1 | Duration of one control step. Must equal the dataset step unless `time_step_ratio_mode` is `compress`. | `seconds_per_time_step` | original |
+| `simulation_start_time_step` | int | required | data row | First row read from every time-series file. | `simulation_start_time_step` | original |
+| `simulation_end_time_step` | int | required | data row | Last row read, inclusive. The window has `end - start + 1` rows; rows outside it are not loaded. It must be a row of every time series file: a later value raises `ValueError` at construction that names the file and the last valid end step (one more with `terminal_observation_padding`). | `simulation_end_time_step` | original |
+| `time_step_ratio_mode` | string | `reject` | `reject`, `compress` | What to do when `seconds_per_time_step` differs from the dataset step. `reject` raises `ValueError`. `compress` keeps the 3.6.0 behaviour: one data row per control step, energies scaled by the ratio, and a notice is printed. | `time_step_ratio_mode` | after 3.6.0 |
+
+The dataset step is read, in this order, from `dataset_seconds_per_time_step`, from the calendar file, or from the
+`hour`, `minutes` and `seconds` columns of `energy_simulation` (at least 90 % of the intervals must agree).
+`time_step_ratio` is a constructor argument only: if given, it must match the inferred ratio.
+
+To get 15-minute control on 15-minute data, set `"seconds_per_time_step": 900`. To simulate one week of an hourly
+dataset, set `"simulation_start_time_step": 0` and `"simulation_end_time_step": 168` (169 rows, 168 control steps).
+
+### Episodes
+
+| Key | Type | Default | Values | Effect | Argument | Since |
+|---|---|---|---|---|---|---|
+| `episode_time_steps` | int, list of `[start, end]`, `null` | `null` | | `null`: one episode covering the whole window. An int `N`: episodes of `N` rows (`N - 1` control steps). A list: explicit episodes, both ends inclusive. | `episode_time_steps` | original |
+| `rolling_episode_split` | bool | `false` | | With an int `episode_time_steps`, every row from the window start to `end + 1 - N` is a possible episode start (overlapping windows). Ignored for a list. | `rolling_episode_split` | original |
+| `random_episode_split` | bool | `false` | | Pick the episode at random at every reset (with replacement), seeded by `random_seed` and the episode number. Without it, episodes are used in order and cycle. Applies to int and list episodes. | `random_episode_split` | original |
+| `episode_split_boundary` | string | `shared` | `shared`, `disjoint` | For non-rolling int episodes. `shared`: the last row of an episode is the first row of the next, so every interval is simulated (stride `N - 1`). `disjoint`: the 3.6.0 splits (stride `N`), which skip the interval between two episodes. | `episode_split_boundary` | after 3.6.0 |
+| `ev_soc_carryover` | bool | `false` | | Start each EV of an episode that continues the previous one in time (on its last row with `shared`, on the row after it with `disjoint`) from its SOC at the end of that episode, instead of the schedule SOC. Sequential splits and explicit lists carry; random and rolling splits never do. Only the EV SOC is carried. See the [migration guide](migration.md#ev-soc-carried-across-episode-splits). | `ev_soc_carryover` | after 3.6.0 |
+
+Rules:
+
+- An episode of `N` rows has `N - 1` control steps: the last row is only the terminal observation.
+- An int `N` must be between 1 and the window length; a trailing window shorter than `N` is dropped. With `shared`, `N` must be at least 2 when there is more than one episode.
+- Each `[start, end]` must satisfy `0 <= start <= end` and lie inside the simulation window; otherwise `ValueError`. Write a JSON list of lists: a Python tuple of pairs raises `TypeError`.
+- If a `simulation_*_time_step` argument narrows the window, the schema's episode list is clipped to it and episodes left empty are dropped.
+- `env.reset(options={"episode_index": k})` selects episode `k` directly.
+
+Recipes:
+
+```json
+{"episode_time_steps": 169, "rolling_episode_split": false, "random_episode_split": true}
+```
+
+gives one-week episodes (168 steps) that share their boundary rows, drawn at random at each reset.
+
+```json
+{"episode_time_steps": [[0, 2159], [2160, 4319], [4320, 6479]]}
+```
+
+gives three fixed episodes used in turn.
+
+### Calendar and dataset clock
+
+These keys describe the dataset clock. They change how timestamps and the dataset step are read, not the physics.
+
+| Key | Type | Default | Effect | Since |
+|---|---|---|---|---|
+| `time_axis.calendar_file` | path | none | Calendar with the columns `time_step` (exactly `0..n-1`) and `timestamp_utc` (parseable, strictly increasing, regular, at least 2 rows), and optionally `timestamp_local` (the same instants). Its spacing becomes the dataset step of every building, and exported timestamps come from it unless `start_date` is passed to `CityLearnEnv`. Read as Parquet when the name ends in `.parquet` or `.pq` (lower case), otherwise as CSV. | 3.1.0 |
+| `timezone` | string | none | IANA name, for example `Europe/Lisbon`. Converts calendar timestamps from UTC; an unknown name raises at load. Without a calendar it is only recorded. | 3.1.0 |
+| `dataset_seconds_per_time_step` | number | inferred | Declared dataset step in seconds, finite and positive. It must agree with the calendar when there is one. | 3.1.0 |
+| `dataset_contract_version` | string | none | A value starting with `portugal-native` makes `shared/calendar.parquet` the calendar when `time_axis` is absent and that file exists. Otherwise metadata. | 3.1.0 |
+| `terminal_observation_padding` | bool | `false` | Lets every time-series file stop exactly one row short of the window: the last row is repeated as the terminal observation only (its calendar fields advance by one step, and a connected EV that departs is shown as gone). It is never simulated. A file short by more than one row still raises `ValueError`. | 3.0.0 |
+| `start_date` | `YYYY-MM-DD` | `2024-01-01` | Date of global row 0 in rendered and exported timestamps when there is no calendar. It does not change the simulation. | 2.5.0 |
+
+### Versions
+
+Three version keys select behaviour that changed after CityLearn 3.6.0. Each accepts an int, an integral float or a
+digit string (`2`, `2.0`, `"2"`); a boolean raises `ValueError`. The constructor argument of the same name wins.
+[What each version changes](#what-each-version-changes) lists every difference.
+
+| Key | Values | Default | Selects | Since |
+|---|---|---|---|---|
+| `physics_version` | `1`, `2` | `2` | Device and dispatch physics. `1` reproduces CityLearn 3.6.0. | after 3.6.0 |
+| `baseline_version` | `1`, `2` | `2` | Definition of the KPI baseline (`*_without_storage` series) and of the BAU HVAC. `1` as in 3.6.0: nothing added back, and the BAU sends zero to the HVAC actions. `2` adds back the BAU EV charging, and on datasets with HVAC actions the BAU delivers the dataset heating and cooling demand. Any other value raises `ValueError`. `env.baseline_version = v` also works after construction. | after 3.6.0 |
+| `random_stream_version` | `v1`, `v2` (also `1`, `2`, `"V2"`) | `v2` | How random numbers are drawn from `random_seed`. `v1` reproduces 3.6.0. | after 3.6.0 |
+
+The community market has its own `settlement_version`; see [Community market](#community-market-and-settlement).
+To reproduce a 3.6.0 result, set `physics_version: 1`, `baseline_version: 1`, `random_stream_version: "v1"`,
+`episode_split_boundary: "disjoint"` and, for data whose step differs from the control step,
+`time_step_ratio_mode: "compress"`. See the [migration guide](migration.md#physics-version).
+
+### Seeds and random streams
+
+| Key | Type | Default | Effect | Argument |
+|---|---|---|---|---|
+| `random_seed` | int | a new random seed at every construction | Seeds device parameters that are drawn, EV initial SOC, EV drift while away, occupant draws, stochastic outages, data noise, random episode choice and robustness noise. Set it for repeatable runs. `env.reset(seed=s)` replaces it. | `random_seed` |
+| `random_stream_version` | string | `v2` | `v2`: one independent stream per purpose, object and episode. `v1`: the 3.6.0 scheme (one generator per draw, shared across buildings). The random episode choice, data noise and EV initial SOC do not depend on it. | `random_stream_version` |
+
+### Reward function
+
+```json
+{"reward_function": {"type": "citylearn.reward_function.ComfortReward", "attributes": {"band": 2.0, "version": 2}}}
+```
+
+| Key | Type | Default | Effect |
+|---|---|---|---|
+| `reward_function.type` | import path, or object keyed by building | required | Reward class. Giving the whole section as a string raises `TypeError`. |
+| `reward_function.attributes` | object, `null`, or object keyed by building | `{}` | Constructor keyword arguments. |
+
+Per-building form: give `type` (and optionally `attributes`) as objects keyed by building name, plus `"default"` for
+the others. Without `"default"`, the first entry is used for the buildings that are not listed. `attributes` must be an
+object in this form (not `null`).
+
+```json
+{"reward_function": {
+  "type": {"default": "citylearn.reward_function.RewardFunction", "Building_3": "citylearn.reward_function.ComfortReward"},
+  "attributes": {"default": {}, "Building_3": {"band": 1.5}}
+}}
+```
+
+The `reward_function` argument (instance, class or import path) replaces the schema reward. `reward_function_kwargs`
+replaces the schema attributes; it is not used with the per-building form. With a central agent the per-building rewards
+are summed.
+
+| Class | Attributes and defaults | Reward |
+|---|---|---|
+| `citylearn.reward_function.RewardFunction` | `exponent` (1.0), `charging_constraint_penalty_coefficient` (1.0) | `-(max(net consumption, 0) ** exponent)` per building. |
+| `citylearn.reward_function.MARL` | none | Penalty on the building's consumption coupled to the district's net consumption. |
+| `citylearn.reward_function.IndependentSACReward` | none | `min(-net consumption, 0)`. |
+| `citylearn.reward_function.SolarPenaltyReward` | none | Penalises import, more when storage is not used to absorb PV. |
+| `citylearn.reward_function.ComfortReward` | `band` (`null`: the `comfort_band` column), `lower_exponent` (2.0), `higher_exponent` (2.0), `version` (2) | Penalises the distance outside the comfort band. `version: 1` (deprecated) follows the demand sign instead of the HVAC mode. |
+| `citylearn.reward_function.SolarPenaltyAndComfortReward` | `band`, `lower_exponent` (2.0), `higher_exponent` (2.0), `coefficients` (`[1.0, 1.0]`), `version` (2) | Weighted sum of the two rewards above. |
+| `citylearn.reward_function.Electric_Vehicles_Reward_Function` | `weights` (object with all seven keys `no_car_charging`, `battery_limits`, `soc_impossible`, `soc_under`, `close_soc`, `self_ev_consumption`, `extra_self_production`), `version` (2) | EV-aware reward. A partial `weights` object replaces the defaults, so give all seven keys. |
+| `citylearn.reward_function.OutageUnservedEnergyReward` | `coefficient` (1.0), `base_reward` (import path or `{type, attributes}`, default `RewardFunction`), other keys passed to the base reward | Base reward minus `coefficient` times the unserved energy during outages. |
+
+See the [reward function overview](https://www.citylearn.net/overview/reward_function.html) for the formulas.
+
+### Agent
+
+| Key | Type | Default | Effect |
+|---|---|---|---|
+| `agent.type` | import path | none | Agent class loaded by `env.load_agent()` called without an `agent` argument and by `Simulator(agent_name=None)`. The `citylearn simulate` command does not read it: it uses its `-a` option (default `citylearn.agents.baseline.BusinessAsUsualAgent`). |
+| `agent.attributes` | object | `{}` | Agent keyword arguments; arguments of `load_agent()` win. |
+
+### Interface and topology mode
+
+| Key | Values | Default | Effect | Argument | Since |
+|---|---|---|---|---|---|
+| `interface` | `flat`, `entity` | `flat` | `flat`: one vector per building (or one for the central agent). `entity`: tables and edges; required by demand response, dynamic topology and `hidden_faults`. Escalators are flat only. See [Flat and entity interfaces](interfaces_flat_entity.md). | `interface` | 3.0.0 |
+| `topology_mode` | `static`, `dynamic` | `static` | `dynamic` applies `topology_events` and needs `interface: "entity"`. | `topology_mode` | 3.0.0 |
+
+### Output, rendering and exports
+
+| Key | Type | Default | Effect | Argument |
+|---|---|---|---|---|
+| `render_mode` | `none`, `during`, `end` | `none` | `during` writes the time series every step; `end` writes them at the end of the episode. **The schema value wins over the argument.** | `render_mode` |
+| `render` | bool | follows `render_mode` | Legacy switch for rendering. **The schema value wins over the argument.** | `render` |
+| `render_file_format` | `csv`, `parquet` | `csv` | Format of render, KPI and BAU time-series exports. `parquet` needs `pyarrow`. | `render_file_format` |
+| `render_chunk_size` | int | 100000 (CSV), 50000 (Parquet) | Rows buffered before a write; values below 1 become 1. | `render_chunk_size` |
+| `render_session_name` | string | timestamp | Subfolder under the render folder. Must be relative, without `..`. | `render_session_name` |
+| `export_kpis_on_episode_end` | bool | follows rendering | Write `exported_kpis.csv` when the episode ends. | `export_kpis_on_episode_end` |
+| `evaluation_window` | bool/object | off | Recurring local window KPIs in `evaluate_v2()` and the KPI exports, without changing the simulation. See [Evaluation window](#evaluation-window). | `evaluation_window` |
+| `export_only_final_episode` | bool | `true` | When a run plans its episodes (CLI, `agent.learn`), export only the last one. | `export_only_final_episode` |
+
+`render_directory` and `render_directory_name` are constructor arguments only.
+
+### Diagnostics and accounting
+
+| Key | Type | Default | Effect | Since |
+|---|---|---|---|---|
+| `debug_timing` | bool | `false` | Adds timing fields (`step_total_time`, ...) to the `info` dict of `step()`. It does not log. | 3.0.0 |
+| `check_observation_limits` | bool | `false` | Flat interface: logs, at DEBUG level, observations outside the observation space. It never raises and slows `step_many`. | 3.0.0 |
+| `physics_invariant_checks` | bool | `false` | Checks energy balances every step and raises `PhysicsInvariantError` on a violation. Slower. | 3.0.0 |
+| `energy_provenance` | bool | `true` | Keeps the per-step energy provenance ledger and its KPIs. `false` is faster and changes no simulated value; provenance audits then raise. | 3.2.0 |
+| `metrics_log_interval` | int | `0` | Every N steps, and at the end, log one INFO line with energy, cost and emissions. `0` disables it. | 3.0.0 |
+| `district_electrical_service` | object | off | Opt-in monitoring of the district feeder import and export limits on the settled district net power. It reports the exceedances and does not curtail any device. See [District electrical service](#district-electrical-service). | after 3.6.0 |
+
+All six have a constructor argument of the same name.
+
+### EV evaluation settings
+
+| Key | Type | Default | Effect | Argument | Since |
+|---|---|---|---|---|---|
+| `ev_departure_within_tolerance` | number, SOC fraction | `0.05` | A departure is within tolerance when `abs(SOC - target) <= tolerance`. Finite and at least 0. | yes | 2.6.0 |
+| `ev_departure_service_tolerance` | number, SOC fraction | `0.05` | A departure gives acceptable service when `SOC + tolerance >= target`. Finite and at least 0. It also caps the fixed margin (`EV_SERVICE_SOC_TOLERANCE`, 0.005) of the target met and target-feasibility KPIs, which count a departure as met when `SOC >= target - min(0.005, tolerance)`; see [Departures](kpis_reference.md#departures). | yes | 3.0.0 |
+| `business_as_usual_ev_charge_target` | `full`, `requested` | `full` | Charging policy of the native BAU used by `evaluate_v2()`: `full` charges to 100 % on arrival, `requested` stops at the requested departure SOC. Case-sensitive. The KPI baseline of `baseline_version` 2 always uses `full`. See [Baselines](baselines.md#choosing-the-bau-charging-target). | yes | 3.4.0 |
+
+### Metadata keys
+
+These keys are not read by the simulator. They document where a dataset comes from:
+`dataset_id`, `dataset_family`, `experimental_design`, `native_compatibility`, `_derived_from`, `_derivation`.
+Root keys that are not observation, reward or output settings and do not start with `_` are included in the
+`physical_configuration_sha256` of exported comparisons, so two runs whose schemas differ only in metadata can be
+reported as incompatible. Start the name of a comment or note key with `_` to keep it out of that hash.
+
+### Constructor arguments that override schema keys
+
+| Argument | Schema key | Notes |
+|---|---|---|
+| `root_directory` | `root_directory` | Not used for `community_market.tariff_files`. |
+| `buildings` | `buildings.<b>.include` | Names, indices or `Building` objects; replaces the `include` selection. |
+| `simulation_start_time_step`, `simulation_end_time_step`, `episode_time_steps`, `rolling_episode_split`, `random_episode_split`, `episode_split_boundary`, `ev_soc_carryover`, `seconds_per_time_step`, `time_step_ratio_mode` | same | |
+| `central_agent`, `interface`, `topology_mode`, `random_seed`, `random_stream_version`, `physics_version`, `baseline_version` | same | |
+| `reward_function`, `reward_function_kwargs` | `reward_function.type`, `reward_function.attributes` | See [Reward function](#reward-function). |
+| `shared_observations` | `observations.<name>.shared_in_central_agent` | Replaces the list built from the schema. |
+| `active_observations`, `inactive_observations`, `active_actions`, `inactive_actions` | `observations`, `actions`, `buildings.<b>.inactive_*` | A list for every building or a list of lists, one per building. They replace the schema lists; they do not merge with them. |
+| `simulate_power_outage` | `buildings.<b>.power_outage.simulate_power_outage` | Bool, or one bool per building. |
+| `start_date` | `start_date` | Also overrides the calendar for exported timestamps. |
+| `render_mode`, `render` | same | The schema value wins. |
+| `render_file_format`, `render_chunk_size`, `render_session_name`, `export_kpis_on_episode_end`, `export_only_final_episode`, `debug_timing`, `check_observation_limits`, `physics_invariant_checks`, `energy_provenance`, `metrics_log_interval` | same | |
+| `ev_departure_within_tolerance`, `ev_departure_service_tolerance`, `business_as_usual_ev_charge_target` | same | |
+
+Constructor-only options, which have no schema key: `offline` (or the `CITYLEARN_OFFLINE` environment variable),
+`solar_generation` (`false`, or one bool per building, removes the PV), `time_step_ratio`, `render_directory`,
+`render_directory_name`. The `electric_vehicles` argument is accepted but does not select EVs: use
+`electric_vehicles_def.<ev>.include`.
+
+## Observations and actions
+
+### Observations
+
+```json
+{"observations": {
+  "hour": {"active": true, "shared_in_central_agent": true},
+  "electrical_storage_soc": {"active": true, "shared_in_central_agent": false}
+}}
+```
+
+| Field | Type | Default | Effect |
+|---|---|---|---|
+| `active` | bool | `false` | The observation is returned for every building that can produce it. |
+| `shared_in_central_agent` | bool | `false` | With `central_agent: true`, the observation appears once in the central vector (taken from the first building) instead of once per building. Use it for values that are the same for every building (calendar, weather, a shared tariff). Ignored for charger, deferrable and escalator observations. |
+
+A name that a building cannot produce raises `KeyError` at construction, **even when it is not active**, so list only
+names that exist for your buildings (for example `occupant_interaction_indoor_dry_bulb_temperature_set_point_delta`
+only with the occupant building type). Names that start with `deferrable_appliance_` or `escalator_`, or that contain
+`electric_vehicle_`, are treated as per-device templates (see below): use only the template names listed here.
+
+Observation names, grouped. Full definitions, units and time rows are in the
+[observations reference](observations_reference.md#flat-observations); bounds are in
+[Observation bounds](interfaces_flat_entity.md#observation-bounds).
+
+| Group | Names | Needs |
+|---|---|---|
+| Calendar | `month`, `day_type` (1-7, 8 = holiday), `hour` (1-24), `minutes`, `seconds`, `daylight_savings_status` | `minutes` and `seconds` only when the columns exist |
+| Weather | `outdoor_dry_bulb_temperature`, `outdoor_dry_bulb_temperature_predicted_1`, `outdoor_dry_bulb_temperature_predicted_2`, `outdoor_dry_bulb_temperature_predicted_3`, `outdoor_relative_humidity`, `outdoor_relative_humidity_predicted_1`, `outdoor_relative_humidity_predicted_2`, `outdoor_relative_humidity_predicted_3`, `diffuse_solar_irradiance`, `diffuse_solar_irradiance_predicted_1`, `diffuse_solar_irradiance_predicted_2`, `diffuse_solar_irradiance_predicted_3`, `direct_solar_irradiance`, `direct_solar_irradiance_predicted_1`, `direct_solar_irradiance_predicted_2`, `direct_solar_irradiance_predicted_3` | `weather` file |
+| Pricing and carbon | `electricity_pricing`, `electricity_pricing_predicted_1`, `electricity_pricing_predicted_2`, `electricity_pricing_predicted_3`, `carbon_intensity` | `pricing`, `carbon_intensity` files (zeros without them) |
+| Loads and comfort | `non_shiftable_load`, `cooling_demand`, `heating_demand`, `dhw_demand`, `indoor_dry_bulb_temperature`, `indoor_relative_humidity`, `average_unmet_cooling_setpoint_difference`, `occupant_count`, `indoor_dry_bulb_temperature_cooling_set_point`, `indoor_dry_bulb_temperature_heating_set_point`, `indoor_dry_bulb_temperature_cooling_delta`, `indoor_dry_bulb_temperature_heating_delta`, `comfort_band`, `hvac_mode` | `energy_simulation` columns |
+| Occupant | `occupant_interaction_indoor_dry_bulb_temperature_set_point_delta` | building type `LogisticRegressionOccupantInteractionBuilding` |
+| Device efficiency | `cooling_device_efficiency`, `heating_device_efficiency`, `dhw_device_efficiency` | the device |
+| Device consumption | `cooling_electricity_consumption`, `heating_electricity_consumption`, `dhw_electricity_consumption`, `cooling_storage_electricity_consumption`, `heating_storage_electricity_consumption`, `dhw_storage_electricity_consumption`, `electrical_storage_electricity_consumption` | the device |
+| Storage | `cooling_storage_soc`, `heating_storage_soc`, `dhw_storage_soc`, `electrical_storage_soc` | the storage |
+| PV and net | `solar_generation` (kWh per control step), `net_electricity_consumption` | |
+| Outage | `power_outage`, `power_outage_unserved_energy` | `power_outage.simulate_power_outage` |
+
+Per-device templates are expanded for every device of the building:
+
+| Template | Expanded name | Values |
+|---|---|---|
+| `electric_vehicle_charger_connected_state` | `electric_vehicle_charger_<charger>_connected_state` | 1 when an EV is plugged in, else 0 |
+| `connected_electric_vehicle_at_charger_departure_time` | `connected_electric_vehicle_at_charger_<charger>_departure_time` | dataset steps to departure, -1 without EV |
+| `connected_electric_vehicle_at_charger_required_soc_departure` | `connected_electric_vehicle_at_charger_<charger>_required_soc_departure` | SOC fraction, -0.1 without EV |
+| `connected_electric_vehicle_at_charger_soc` | `connected_electric_vehicle_at_charger_<charger>_soc` | SOC fraction, -0.1 without EV |
+| `connected_electric_vehicle_at_charger_battery_capacity` | `connected_electric_vehicle_at_charger_<charger>_battery_capacity` | kWh, -1 without EV |
+| `electric_vehicle_charger_incoming_state` | `electric_vehicle_charger_<charger>_incoming_state` | 1 when an EV is on its way, else 0 |
+| `incoming_electric_vehicle_at_charger_estimated_arrival_time` | `incoming_electric_vehicle_at_charger_<charger>_estimated_arrival_time` | dataset steps to arrival, -1 without EV |
+| `incoming_electric_vehicle_at_charger_estimated_soc_arrival` | `incoming_electric_vehicle_at_charger_<charger>_estimated_soc_arrival` | SOC fraction, -0.1 without EV |
+| `deferrable_appliance_<feature>` | `deferrable_appliance_<appliance>_<feature>` | `<feature>` is one of `pending`, `running`, `can_start`, `deadline_missed`, `earliest_start_time_step`, `latest_start_time_step`, `deadline_time_step`, `hours_until_latest_start`, `hours_until_deadline`, `slack_steps`, `slack_ratio`, `urgency_ratio`, `cycle_duration_steps`, `cycle_energy_kwh`, `remaining_energy_kwh`, `current_step_energy_kwh`, `priority`, `must_run`, `cycle_average_power_kw`, `cycle_peak_power_kw`, `cycle_load_factor_ratio`, `cycle_peak_step_offset_ratio`, `remaining_duration_steps`, `remaining_average_power_kw`, `current_step_power_kw` |
+| `escalator_<feature>` | `escalator_<escalator>_<feature>` | `<feature>` is one of `passengers_from_trains_15min`, `background_pedestrians_15min`, `passengers_expected_15min`, `people_detected`, `passing_trains`, `minutes_to_next_train`, `available`, `state`, `requested_state`, `power_kw`, `service_required`, `service_met`, `unserved_passengers_15min` |
+
+Observations added by the [electrical service](#electrical-service) (not listed under `observations`):
+`charging_building_headroom_kw`, `charging_building_export_headroom_kw`, `charging_phase_<phase>_headroom_kw`,
+`charging_phase_<phase>_export_headroom_kw`, `charging_constraint_violation_kwh`,
+`charging_phase_one_hot_<charger>_<phase>` and `available_grid_power`. Switch them with
+`electrical_service.observations`. Community-market, demand-response, forecast and temporal features are
+entity-interface only; see [observation bundles](#entity-interface-observation-bundles-and-derived-forecasts).
+
+### Actions
+
+```json
+{"actions": {"electrical_storage": {"active": true}, "electric_vehicle_storage": {"active": true}}}
+```
+
+| Field | Type | Default | Effect |
+|---|---|---|---|
+| `active` | bool | `false` | The action is expected for every building that has the device. |
+
+| Action | Expanded name | Range | 1.0 means | Needs |
+|---|---|---|---|---|
+| `electrical_storage` | same | [-1, 1] | charge `nominal_power` for one step (negative discharges) | a battery with `capacity` and `nominal_power` above 0, otherwise `ValueError` unless the building lists the action in `inactive_actions` |
+| `cooling_storage`, `heating_storage`, `dhw_storage` | same | [-limit, limit], limit = `min(device nominal_power / storage capacity, 1)` | charge one full capacity per hour | the storage and its device |
+| `cooling_device`, `heating_device` | same | [0, 1] | the device at its nominal power | a dynamics building type; on `Building` the action has no effect |
+| `cooling_or_heating_device` | same | [-1, 1] | negative cools, positive heats | a dynamics building type; do not combine with `cooling_device`/`heating_device` |
+| `electric_vehicle_storage` | `electric_vehicle_storage_<charger>` | [-1, 1], or [0, 1] when `max_discharging_power` is 0 | `max_charging_power` (negative: `max_discharging_power`) | chargers |
+| `deferrable_appliance` | `deferrable_appliance_<appliance>` | [0, 1] | start the next feasible cycle when the value exceeds `trigger_threshold` | deferrable appliances |
+| `escalator` | `escalator_<escalator>` | [0, 1] | below 1/3 standby, below 2/3 slow, else normal | escalators (flat interface) |
+
+See the [actions reference](actions_reference.md#physical-conversion) for the conversion to energy and the order in
+which actions are applied.
+
+### Choosing observations and actions per building
+
+- `buildings.<b>.inactive_observations` and `buildings.<b>.inactive_actions` turn catalogue names off for one building.
+  Use the template names (`electric_vehicle_storage`, `deferrable_appliance_pending`), not the expanded per-device names.
+- The constructor arguments `active_observations` / `active_actions` replace all `active` flags (a name is active only if
+  listed); `inactive_observations` / `inactive_actions` replace the building lists. Give one list for every building, or a
+  list of lists in the order of the loaded buildings. Do not pass an empty list for `active_observations`,
+  `inactive_observations` or `active_actions` (it raises `IndexError`): pass `None` instead.
+- Observation order: the order of `observations` in the schema, then per-charger, per-appliance and per-escalator names.
+  Read `env.observation_names` rather than relying on positions.
+
+## Buildings
+
+```json
+{"buildings": {"Building_1": {
+  "include": true,
+  "type": "citylearn.building.Building",
+  "energy_simulation": "Building_1.csv",
+  "weather": "weather.csv",
+  "pricing": "pricing.csv",
+  "carbon_intensity": "carbon_intensity.csv"
+}}}
+```
+
+| Key | Type | Default | Effect | Argument / notes |
+|---|---|---|---|---|
+| `include` | bool | `true` | Load the building. In dynamic topology every building is loaded and `include: false` makes it an inactive member that can join later. | `buildings` argument |
+| `type` | import path | `citylearn.building.Building` | Building class; see [Building types](#building-types). | |
+| `energy_simulation` | path | required | Loads, demands, calendar and PV profile. | [columns](dataset_reference.md#energy_simulation-columns) |
+| `weather` | path | required | 16 weather columns. | |
+| `pricing` | path | zeros | 4 price columns. With zero prices both cost totals are 0, and the `*_cost_ratio_to_*_total_ratio` KPIs are NaN. | |
+| `carbon_intensity` | path | zeros | `carbon_intensity` column. With zero carbon intensity both emissions totals are 0, and the `*_emissions_ratio_to_*_total_ratio` KPIs are NaN. | |
+| `noise_std` | number | `0.0` | Standard deviation of Gaussian noise added to the indoor temperature, humidity, PV profile, all weather columns, prices and carbon intensity of this building, in the unit of each series. Noisy files are not shared between buildings. Keep it `0` when a building has no `pricing` or `carbon_intensity` file, otherwise the zero series get noise too. | |
+| `inactive_observations` | list of names | `[]` | Observations turned off for this building. | replaced by the argument |
+| `inactive_actions` | list of names | `[]` | Actions turned off for this building. | replaced by the argument |
+| `equity_group` | string | none | `asset_rich` or `asset_poor`. The `equity_bpr_asset_poor_over_rich` KPI is computed only when every building has one of the two. | |
+| `cooling_device`, `heating_device`, `dhw_device` | device | none | [HVAC devices](#hvac-devices). | |
+| `cooling_storage`, `heating_storage`, `dhw_storage` | device | none | [Thermal storage](#thermal-storage). | |
+| `electrical_storage` | device | none | [Battery](#battery). | |
+| `pv` | device | none | [PV](#pv). | `solar_generation=False` removes it |
+| `chargers` | object | `{}` | [Chargers](#chargers). | |
+| `deferrable_appliances` | object | `{}` | [Deferrable appliances](#deferrable-appliances). | |
+| `escalators` | object | `{}` | [Escalators](#escalators). | |
+| `electrical_service` | object | none | [Electrical service](#electrical-service). | |
+| `charging_constraints` | object | none | [Legacy charging constraints](#legacy-charging-constraints). Ignored when `electrical_service` is set. | |
+| `power_outage` | object | `{}` | [Power outages](#power-outages). | `simulate_power_outage` |
+| `dynamics` | object | none | [Thermal dynamics](#thermal-dynamics). | |
+| `occupant` | object | none | [Occupant model](#occupant-model). | |
+| `set_point_hold_time_steps` | int, at least 0, or `null` | `null` (hold until the schedule changes) | Control steps an occupant's set-point change is kept. | occupant building type only |
+| `set_point_limits` | `[low, high]`, °C | `[15, 30]` | Range an occupant can move a set point to; `low < high`. Not applied under physics version 1. | occupant building type only; after 3.6.0 |
+
+A device section that is absent becomes a placeholder of size 0, so the building has no such device.
+
+### Building types
+
+| `type` | Use | Needs |
+|---|---|---|
+| `citylearn.building.Building` | Default. Thermal demand comes from the dataset and the HVAC devices serve it. | |
+| `citylearn.building.DynamicsBuilding` | Base class for buildings whose indoor temperature responds to HVAC actions. | a subclass |
+| `citylearn.building.LSTMDynamicsBuilding` | Indoor temperature predicted by an LSTM; `cooling_device`, `heating_device` and `cooling_or_heating_device` actions set the thermal energy. | `dynamics`, PyTorch |
+| `citylearn.building.OccupantInteractionBuilding` | Dynamics building whose occupants change set points. | `dynamics`, `occupant` |
+| `citylearn.building.LogisticRegressionOccupantInteractionBuilding` | Occupants modelled by logistic regression; reads `set_point_hold_time_steps` and `set_point_limits`. | `dynamics`, `occupant`, scikit-learn |
+
+`dynamics`, `occupant`, `set_point_hold_time_steps` and `set_point_limits` are ignored, without a warning, on a type
+that does not use them.
+
+### Time-series files
+
+The [dataset reference](dataset_reference.md) lists every column. In short:
+
+- `energy_simulation`: required `month`, `hour`, `day_type`, `indoor_dry_bulb_temperature`, `non_shiftable_load`,
+  `dhw_demand`, `cooling_demand`, `heating_demand`, `solar_generation`; optional `minutes`, `seconds`,
+  `daylight_savings_status`, `average_unmet_cooling_setpoint_difference`, `indoor_relative_humidity`, `occupant_count`,
+  `indoor_dry_bulb_temperature_cooling_set_point`, `indoor_dry_bulb_temperature_heating_set_point` (both 0 °C when
+  absent, for the physics and the observations; without both columns the comfort KPIs of the building are NaN, see
+  [Comfort and resilience](kpis_reference.md#comfort-and-resilience)), `hvac_mode` (1 = cooling when absent), `power_outage`, `comfort_band` (2 °C when absent). An unknown column
+  raises `TypeError`.
+- `weather`: the four weather variables, each with `_predicted_1`, `_predicted_2` and `_predicted_3`; all 16 are required.
+- `pricing`: `electricity_pricing` and its three predictions.
+- `carbon_intensity`: `carbon_intensity`.
+
+### Thermal dynamics
+
+```json
+{"dynamics": {"type": "citylearn.dynamics.LSTMDynamics", "attributes": {
+  "filename": "Building_1.pth", "input_observation_names": ["indoor_dry_bulb_temperature", "hour_sin"],
+  "input_normalization_minimum": [0.0, -1.0], "input_normalization_maximum": [40.0, 1.0],
+  "hidden_size": 8, "num_layers": 2, "lookback": 12
+}}}
+```
+
+| Attribute | Required | Effect |
+|---|---|---|
+| `filename` | yes | PyTorch state dict, relative to `root_directory`. |
+| `input_observation_names` | yes | Model inputs; must include `indoor_dry_bulb_temperature`. `<name>_sin` / `<name>_cos` of periodic observations are allowed. |
+| `input_normalization_minimum`, `input_normalization_maximum` | yes | One value per input. |
+| `hidden_size`, `num_layers`, `lookback` | yes | LSTM shape; HVAC actions take effect after `lookback` steps. |
+| `input_size` | no | Number of inputs (default: the length of the names). |
+| `dropout` | no | `0.0`; inactive during simulation. |
+
+### Occupant model
+
+```json
+{"occupant": {"type": "citylearn.occupant.LogisticRegressionOccupant", "parameters_filename": "occupant_parameters.csv",
+  "attributes": {"setpoint_increase_model_filename": "increase.pkl", "setpoint_decrease_model_filename": "decrease.pkl",
+                 "delta_output_map": {"0": -1.0, "1": 0.0, "2": 1.0}}}}
+```
+
+| Key | Effect |
+|---|---|
+| `type` | Occupant class, `citylearn.occupant.LogisticRegressionOccupant`. |
+| `parameters_filename` | CSV with `a_increase`, `b_increase`, `a_decrease`, `b_decrease`, one row per global time step. |
+| `attributes.setpoint_increase_model_filename`, `setpoint_decrease_model_filename` | Pickled classifiers, relative to `root_directory`. Load only files you trust. |
+| `attributes.delta_output_map` | Class to set-point change in °C. |
+
+## Devices
+
+Every device section has the same shape:
+
+```json
+{"electrical_storage": {
+  "type": "citylearn.energy_model.Battery",
+  "autosize": false,
+  "autosize_attributes": {},
+  "attributes": {"capacity": 50.0, "nominal_power": 25.0}
+}}
+```
+
+| Field | Type | Default | Effect |
+|---|---|---|---|
+| `type` | import path | required | Device class. `cooling_device` must be a `HeatPump`; `heating_device` and `dhw_device` can be `HeatPump` or `ElectricHeater`. |
+| `attributes` | object | `{}` | Constructor arguments. An unknown name raises `TypeError`; `null` selects the default. |
+| `autosize` | bool | `false` | Size the device from the data; see [Autosizing](#autosizing). Overwrites the sized attributes. |
+| `autosize_attributes` | object | `{}` | Arguments of the autosizer. |
+
+`seconds_per_time_step` and `time_step_ratio` in `attributes` are replaced by the environment's values. A
+`random_seed` attribute seeds the device's drawn defaults instead of the environment stream.
+
+### HVAC devices
+
+| Class | Attribute | Default | Unit | Effect |
+|---|---|---|---|---|
+| `citylearn.energy_model.HeatPump` | `nominal_power` | `0` | kW electric | Maximum electric input. |
+| | `efficiency` | drawn in [0.2, 0.3] | Carnot fraction | COP = efficiency × T_target / (T_target - T_outdoor), in kelvin, capped at 20. |
+| | `target_heating_temperature` | drawn in [45, 50] | °C | Supply temperature for heating and hot water. |
+| | `target_cooling_temperature` | drawn in [7, 10] | °C | Supply temperature for cooling. |
+| `citylearn.energy_model.ElectricHeater` | `nominal_power` | `0` | kW | Maximum electric input. |
+| | `efficiency` | drawn in [0.9, 0.99] | ratio | Heat out per kWh in. |
+
+On `citylearn.building.Building` the devices serve the dataset demand. Under physics version 2 the energy limit of a
+device is its power times the step duration; version 1 compares step energy with kW (a one-hour cap).
+
+### Thermal storage
+
+`cooling_storage`, `heating_storage` and `dhw_storage` use `citylearn.energy_model.StorageTank`.
+
+| Attribute | Default | Unit | Effect |
+|---|---|---|---|
+| `capacity` | `0` | kWh thermal | Storage size. |
+| `efficiency` | drawn in [0.90, 0.98] | round trip | Each direction keeps its square root. |
+| `loss_coefficient` | drawn in [0.001, 0.009] | per hour | Standby loss, compounded per step: `1 - (1 - loss) ** (seconds_per_time_step / 3600)`. |
+| `initial_soc` | `0` | fraction | SOC at the start of an episode. |
+| `max_input_power`, `max_output_power` | `null` (unlimited) | kW | Charging and discharging power limits. |
+
+### Battery
+
+```json
+{"electrical_storage": {
+  "type": "citylearn.energy_model.Battery",
+  "attributes": {
+    "capacity": 6.4,
+    "nominal_power": 5.0,
+    "efficiency": 0.9,
+    "depth_of_discharge": 0.9,
+    "initial_soc": 0.1,
+    "capacity_loss_coefficient": 1e-5,
+    "loss_coefficient": 0.0,
+    "power_efficiency_curve": [[0, 0.83], [0.3, 0.83], [0.7, 0.9], [0.8, 0.9], [1, 0.85]],
+    "capacity_power_curve": [[0.0, 1.0], [0.8, 1.0], [1.0, 0.2]]
+  }
+}}
+```
+
+The stationary battery model works on energy per control step at the battery terminals, the
+building side of the battery. The state of charge (SOC) is a fraction of `capacity`.
+
+| Attribute | Unit | Default | Meaning |
+|---|---:|---|---|
+| `capacity` | kWh | 0 | Rated storage capacity, before fade. |
+| `nominal_power` | kW | 0 | Power that the curves scale. |
+| `efficiency` | ratio | drawn in [0.90, 0.98] | Round-trip efficiency. A generated `power_efficiency_curve` is built around it; during the simulation the curve gives the efficiency at each step. |
+| `power_efficiency_curve` | `[[x, y], ...]` | drawn, see below | Round-trip efficiency `y` against terminal power divided by `nominal_power` (`x` in [0, 1]). |
+| `capacity_power_curve` | `[[x, y], ...]` | drawn, see below | Maximum charging power as a fraction of `nominal_power` (`y`) against SOC (`x`). |
+| `discharge_power_curve` | `[[x, y], ...]` | `[[0, 1], [1, 1]]` | Maximum discharging power as a fraction of `nominal_power` against SOC. Physics version 1 uses `capacity_power_curve` instead. |
+| `depth_of_discharge` | ratio | 1.0 | Fraction of `capacity` that may be discharged. |
+| `initial_soc` | ratio | `1 - depth_of_discharge` | SOC at the start of the episode, in [0, 1]. |
+| `capacity_loss_coefficient` | ratio | drawn in [1e-5, 1e-4] | Fraction of `capacity` lost per equivalent full cycle. |
+| `loss_coefficient` | ratio per hour | drawn in [0.001, 0.009] | Standby loss of the stored energy, compounded per step as for thermal storage. |
+| `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | `L1` (single-phase service), `all_phases` (three-phase) | Phase of the battery under an [electrical service](#electrical-service). |
+
+A default shown as "drawn" is taken from the environment's random stream when the attribute is
+omitted or `null`, so it depends on the seed and on `random_stream_version`. The 2022 challenge datasets
+omit both curves, so each seed gets different curves. Set the attributes explicitly to fix them.
+
+- **Efficiency.** `efficiency` and every value of `power_efficiency_curve` are round-trip
+  efficiencies: energy charged and later discharged keeps `efficiency` of its value. Each
+  conversion uses the square root. Charging `E` kWh at the terminals stores `E * sqrt(eta)`,
+  and delivering `E` kWh takes `E / sqrt(eta)` from storage, where `eta` is read from
+  `power_efficiency_curve` at the applied terminal power. A datasheet one-way efficiency of
+  0.95 must be entered as 0.95² = 0.9025; entered as 0.95, it gives a one-way efficiency of
+  about 0.975.
+- **Power curves.** `capacity_power_curve` and `discharge_power_curve` are evaluated at the SOC
+  at the start of the step, and their values are multiplied by `nominal_power`. Between points
+  the curves are interpolated linearly.
+- **Depth of discharge.** Discharging stops at a SOC of `1 - depth_of_discharge`, a floor
+  measured on the rated `capacity`. Charging stops at the degraded capacity.
+- **Capacity fade.** After each charge or discharge the capacity falls by
+  `capacity_loss_coefficient * capacity * |terminal energy| / (2 * degraded capacity)`. A full
+  charge and discharge of the degraded capacity is one equivalent full cycle and loses
+  `capacity_loss_coefficient * capacity`.
+- **Generated curves.** Without `power_efficiency_curve`, five points are drawn at `x` near 0,
+  0.3, 0.7, 0.8 and 1, with values between 0.85 and 1.0 times `efficiency` (the point near 0.8
+  equals `efficiency`). Without `capacity_power_curve`, three points are drawn: 0.95 to 1.0 at
+  SOC 0, 0.90 to 0.95 at a SOC near 0.8, and 0.20 to 0.30 at SOC 1.
+- With the default `initial_soc`, a battery starts at its reserve: empty when
+  `depth_of_discharge` is 1. Set `initial_soc` to start elsewhere.
+- **Outages.** Under physics version 2 the battery discharges during an outage after the thermal storage, and only up
+  to the islanded load that PV leaves uncovered.
+
+### PV
+
+```json
+{"pv": {
+  "type": "citylearn.energy_model.PV",
+  "attributes": {
+    "nominal_power": 120.0,
+    "generation_mode": "absolute"
+  }
+}}
+```
+
+| Attribute | Default | Unit | Effect |
+|---|---|---|---|
+| `nominal_power` | `0` | kW DC | Installed power. Ignored in `absolute` mode. |
+| `generation_mode` | `per_kw` | | How `energy_simulation.solar_generation` is read; see below. |
+
+| `generation_mode` | Aliases | Interprets `energy_simulation.solar_generation` as | Formula |
+|---|---|---|---|
+| `per_kw` | `profile`, `w_per_kw` | Normalized profile per installed kW in `W/kW`. | `generation_kwh = nominal_power * value / 1000 * seconds_per_time_step / 3600`. |
+| `absolute` | `absolute_kwh`, `kwh`, `kwh_step`, `energy` | Absolute generation already in `kWh/step`. | `generation_kwh = value`. |
+
+Use `absolute` for real measured generation or converter-generated energy series. Use `per_kw` for normalized PV profiles.
+For example, `nominal_power=4.0` and a value of 1000 W/kW give 4.0 kWh per hourly step and
+1.0 kWh per 900 s step. The mode is case-insensitive; another value raises `AssertionError`.
+
+### Autosizing
+
+With `"autosize": true` the device is sized from the building's data over the simulation window, and the sized
+attributes are overwritten.
+
+| Device | Sets | `autosize_attributes` |
+|---|---|---|
+| `HeatPump` | `nominal_power` = peak demand / COP × `safety_factor` | `safety_factor` (1.0) |
+| `ElectricHeater` | `nominal_power` = peak demand / efficiency × `safety_factor` | `safety_factor` (1.0) |
+| `StorageTank` | `capacity`: version 2 = peak demand power × `duration` × `safety_factor`; version 1 = peak step demand × `safety_factor` | `safety_factor` (drawn in [1, 2]), `duration` (h, 1.0) |
+| `Battery` | `capacity`, `nominal_power`, `depth_of_discharge`, `efficiency`, `loss_coefficient`, `capacity_loss_coefficient` from a battery catalogue | `duration` (h, drawn in [1.5, 3.5]), `parallel` (`false`), `safety_factor` (1.0) |
+| `PV` | `nominal_power` and the `solar_generation` profile from PVWatts; forces `generation_mode: per_kw` | `epw_filepath` (required), `use_sample_target` (`false`), `zero_net_energy_proportion` (drawn in [0.7, 1.0]), `roof_area` (m², unlimited), `safety_factor` (1.0) |
+
+Battery and PV autosizing download sizing data unless it is cached (`offline=True` forbids the download); PV needs
+`pip install nrel-pysam`. Under physics version 1 PV autosizing assumes hourly data. Under version 2 the
+window's demand is scaled to one year before it is compared with the PVWatts annual yield, so a one-week window
+sizes the array like a one-year window with the same average demand (a seasonal window still gives a seasonal
+size).
+
+## Electrical service
+
+`buildings.<name>.electrical_service` sets the building's grid connection limits. Limits are
+active power in kW; a missing key means no limit (`null` and `Infinity` also do in the simulation, but see
+[Common mistakes](#common-mistakes-and-what-to-avoid)).
+
+```json
+{"electrical_service": {
+  "mode": "single_phase",
+  "limits": {
+    "total": {"import_kw": 17.25, "export_kw": 6.9},
+    "per_phase": {"L1": {"import_kw": 17.25, "export_kw": 6.9}}
+  },
+  "available_grid_power": {"filename": "available_grid_power.csv", "column": "Building_1"},
+  "observations": {"available_grid_power": true}
+}}
+```
+
+| Field | Type | Default | Purpose |
+|---|---:|---|---|
+| `mode` | `single_phase`, `three_phase` | `single_phase` | Service type. Single-phase services only have `L1`. |
+| `default_split` | `balanced`, `L1`, `L2`, `L3` | `balanced` | Phase split of load without a phase connection. A single-phase service accepts `balanced` and `L1`. |
+| `limits.total.import_kw`, `limits.total.export_kw` | kW | no limit | Static connection capacity. Negative or NaN raises `ValueError`. |
+| `limits.per_phase.<L1/L2/L3>.import_kw`, `export_kw` | kW | no limit | Static per-phase limits. `phase_1` and `l1` are accepted for `L1`. |
+| `available_grid_power` | path or object | none | Optional per-step import availability series, see below. |
+| `observations.headroom` | bool | `true` | Expose `charging_building_headroom_kw` (when there is a total import limit or a series) and `charging_phase_<phase>_headroom_kw` (phases with an import limit). |
+| `observations.headroom_export` | bool | `true` | Expose `charging_building_export_headroom_kw` and `charging_phase_<phase>_export_headroom_kw` for export limits. |
+| `observations.violation` | bool | `true` | Expose `charging_constraint_violation_kwh`. This flag decides; the `observations` catalogue does not. |
+| `observations.phase_encoding` | bool | `false` | Expose one-hot charger phase assignment `charging_phase_one_hot_<charger>_<phase>`. |
+| `observations.available_grid_power` | bool | `true` | Expose the `available_grid_power` observation when a series is set. |
+| `expose_observations` | bool | `true` | Fallback for `observations.headroom` when that key is absent. |
+
+Chargers and the battery are placed on a phase with `phase_connection` in their `attributes` (`L1`, `L2`, `L3` or
+`all_phases`; default `L1` for single-phase and `all_phases` for three-phase services). Headroom observations describe the
+last executed interval. Under physics version 2 the headroom is shared among the powers the devices can actually draw,
+after thermal and non-shiftable loads; version 1 shares the raw requests.
+
+### Available grid power
+
+`available_grid_power` names a CSV or Parquet file with one row per time step, aligned with
+`energy_simulation`. Give it as a file name or as `{"filename": ..., "column": ...}`. Without
+`column`, the column named after the building is used, then a column named
+`available_grid_power`, so one file can hold a column per building. Values are the grid power
+the building may import at that step, in kW (power, not energy per step).
+
+The import limit in force at a step is the smaller of `limits.total.import_kw` and the series
+value. A blank value applies the static limit only; it is an error when `import_kw` is not
+set. Values must be finite and non-negative. Use it for curtailment below the connection
+capacity, such as a distribution system operator dimming controllable devices (German
+§14a EnWG) or a capacity reduction during grid stress.
+
+The limit acts like the static one: EV chargers and the electrical storage are curtailed
+first, and load that cannot be curtailed is still served and counted as an electrical-service
+violation. A limit of 0 kW does not island the building; use [`power_outage`](#power-outages)
+for a blackout. Per-phase limits stay static. The `available_grid_power` observation reports
+the limit for the coming interval; the headroom observations describe the last executed
+interval, so they reflect the limit that was in force then.
+
+### Legacy charging constraints
+
+`buildings.<name>.charging_constraints` is the older limit for EV charging. It is read only when the building has no
+`electrical_service`.
+
+```json
+{"charging_constraints": {
+  "building_limit_kw": 22.0,
+  "phases": [{"name": "phase_1", "limit_kw": 11.0, "chargers": ["charger_4_1"]}],
+  "observations": {"headroom": true, "violation": true, "phase_encoding": false}
+}}
+```
+
+| Field | Default | Effect |
+|---|---|---|
+| `building_limit_kw` | no limit | Limit on the sum of the building's charging requests, in kW. Base load is not counted. |
+| `phases[].name` | `phase_<n>` | Name used in observation names. |
+| `phases[].limit_kw` | no limit | Limit on the sum of the listed chargers' charging requests. |
+| `phases[].chargers` | `[]` | Charger IDs on the phase. Unknown IDs are ignored. |
+| `expose_observations` | `true` | Fallback for `observations.headroom`. |
+| `observations.headroom`, `observations.violation`, `observations.phase_encoding` | `true`, `true`, `false` | As for the electrical service. |
+| `observations.headroom_export` | `false` | No effect: there are no export limits here. |
+
+Only charging is limited; discharging (V2G) is not. Requests above a limit are scaled down proportionally.
+
+## District Electrical Service
+
+`district_electrical_service` monitors shared feeder import and export power limits on the settled district net power without enforcing or curtailing device dispatch (see [KPI reference](kpis_reference.md#district-feeder-limit-exceedances)). Every simulated quantity remains identical to a run without `district_electrical_service`.
+
+```json
+{
+  "district_electrical_service": {
+    "enabled": true,
+    "limits": {
+      "import_kw": 50.0,
+      "export_kw": 20.0
+    }
+  }
+}
+```
+
+| Field | Default | Purpose |
+|---|---:|---|
+| `enabled` | `false` | Enables per-step feeder exceedance tracking (`env.feeder_import_exceedance_kw`, `env.feeder_export_exceedance_kw`) and district feeder exceedance KPIs in `evaluate_v2()`. |
+| `limits.import_kw` | `null` | Non-negative scalar in `kW`, dataset-step-0 anchored sequence of `kW`/`null` values covering all executed steps (`episode_start_time_step + time_step`), or `null` when import is unmonitored. |
+| `limits.export_kw` | `null` | Non-negative scalar in `kW`, dataset-step-0 anchored sequence of `kW`/`null` values covering all executed steps (`episode_start_time_step + time_step`), or `null` when export is unmonitored. |
+
+`limits.total.{import_kw,export_kw}` is also accepted as an alias matching building `electrical_service`. When enabled, at least one of `import_kw` and `export_kw` must be given (a finite value or a sequence); `enabled: true` without a limit raises `ValueError`, because every feeder KPI would be undefined. The normalized configuration is recorded in `effective_schema` and `comparison_context`, not in `physical_configuration_sha256`, because the monitor changes no simulated quantity. `compare_manifests()` follows the [evaluation window](#evaluation-window) rule: when both runs enable `district_electrical_service` with different limits, it adds `'district_electrical_service'` to `mismatches` (`status='incompatible'`); when only one run enables it, it keeps `status='paired'` for all shared KPIs, records `'district_electrical_service_one_sided'` in `declared_differences` (`district_electrical_service.status == 'one_sided'`), and `compare_exports()` flags only the feeder rows in `unpaired_feeder_kpis`.
+
+## Electric vehicles and chargers
+
+An EV is defined once under `electric_vehicles_def`. Each charger reads a schedule file whose `electric_vehicle_id`
+column names the EV connected or arriving at each step.
+
+### Chargers
+
+```json
+{"chargers": {
+  "AC001": {
+    "type": "citylearn.electric_vehicle_charger.Charger",
+    "charger_simulation": "chargers/AC001.parquet",
+    "attributes": {
+      "max_charging_power": 7.4,
+      "min_charging_power": 1.4,
+      "max_discharging_power": 0.0,
+      "min_discharging_power": 0.0,
+      "efficiency": 0.95,
+      "phase_connection": "L1"
+    }
+  }
+}}
+```
+
+| Key | Type | Default | Effect | Since |
+|---|---|---|---|---|
+| (charger ID) | string | | Used in observation and action names and in `charging_constraints.phases[].chargers`. | |
+| `type` | import path | required | Charger class, normally `citylearn.electric_vehicle_charger.Charger`. | |
+| `charger_simulation` | path | required | Charger schedule file; see [charger columns](dataset_reference.md#charger-simulation-columns). | |
+| `attributes` | object | `{}` | See [Charger attributes](#charger-attributes). | |
+| `soc_unit` | `percent`, `fraction` | inferred per column | Unit of the SOC columns of the schedule file. Omitted, it is inferred once per column from the whole file (physics version 2) or per value (version 1); see [SOC unit](dataset_reference.md#soc-unit). | after 3.6.0 |
+| `noise_std` | number | `0.0` | Gaussian noise, in SOC percentage points, added to the required departure SOC and the estimated arrival SOC. It changes the targets the KPIs use, not only the observations. | 2.x |
+| `autosize` | | | Accepted and ignored: chargers have no autosizer. | |
+
+Another key gives a `UserWarning` that suggests the closest key and is ignored.
+
+#### Charger attributes
+
+| Attribute | Unit | Default (physics 2) | Default (physics 1) | Effect |
+|---|---|---|---|---|
+| `nominal_power` | kW | none | not used | Rated power; default of `max_charging_power`. |
+| `max_charging_power` | kW | `nominal_power`, else 50 with a warning | 50 with a warning | Power for an action of 1.0. |
+| `min_charging_power` | kW | 0 | 0 | Requests below it give 0; requests above it are at least this. |
+| `max_discharging_power` | kW | **0** (no V2G) with a warning | 50 with a warning | Power for an action of -1.0. With 0 the action range is [0, 1]. |
+| `min_discharging_power` | kW | 0 | 0 | Minimum discharge power, as for charging. |
+| `efficiency` | ratio, (0, 1] | 1.0, with a warning when used | same | Charging stores `AC × efficiency` in the EV; discharging delivers `battery energy × efficiency`. Used in a direction without a curve. |
+| `charge_efficiency_curve` | `[[power fraction, efficiency], ...]` | none | none | Efficiency against charging power / `max_charging_power`, interpolated linearly. |
+| `discharge_efficiency_curve` | same | none | none | Same for discharging, against `max_discharging_power`. |
+| `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | `L1` / `all_phases` | same | Phase under an [electrical service](#electrical-service); not used by `charging_constraints`. |
+| `charger_type` | any | none | none | Label only (for example 0 for AC, 1 for DC). |
+
+Another attribute name raises `ValueError` that names the charger and suggests the closest valid name. Do not set
+`seconds_per_time_step` or `time_step_ratio` in `attributes`: the loader sets them, and a value given there raises
+`TypeError` (`got multiple values`) at construction.
+
+Recipes:
+
+- **Unidirectional charging (default):** set `max_charging_power` (or `nominal_power`) only.
+- **V2G:** set `"max_discharging_power": 7.2` and activate `electric_vehicle_storage`.
+- **Charger on phase L2 of a three-phase house:** `"mode": "three_phase"` in `electrical_service` and
+  `"phase_connection": "L2"` in the charger attributes.
+
+### EV definitions
+
+```json
+{"electric_vehicles_def": {
+  "EV_1": {
+    "type": "citylearn.electric_vehicle.ElectricVehicle",
+    "include": true,
+    "battery": {
+      "type": "citylearn.energy_model.Battery",
+      "attributes": {
+        "capacity": 60.0,
+        "nominal_power": 50.0,
+        "initial_soc": 0.4,
+        "depth_of_discharge": 0.9
+      }
+    }
+  }
+}}
+```
+
+| Key | Type | Default | Effect |
+|---|---|---|---|
+| (EV ID) | string | | Must match the `electric_vehicle_id` values of the charger files exactly, as text. A charger row naming an unknown or excluded EV is skipped without a warning, and so are IDs written as numbers. |
+| `type` | import path | `citylearn.electric_vehicle.ElectricVehicle` | EV class. |
+| `include` | bool | `true` | Include the EV. Always true under dynamic topology. |
+| `battery.type` | import path | `citylearn.energy_model.Battery` | Must be a `Battery` subclass. |
+| `battery.attributes` | object | required | See below. |
+
+| `battery.attributes` | Default | Effect |
+|---|---|---|
+| `capacity` | required | kWh. |
+| `nominal_power` | required | kW; battery-side power limit together with `capacity_power_curve`. |
+| `initial_soc` | drawn uniformly in [0, 1] from `random_seed` and the EV name | SOC at the start of an episode. The draw ignores `depth_of_discharge`. |
+| `depth_of_discharge` | `1.0` | Discharge floor `1 - depth_of_discharge`. |
+| `loss_coefficient` | **`0.0`** for EVs | Standby loss per hour, compounded per step. |
+| `efficiency`, `capacity_loss_coefficient`, `power_efficiency_curve`, `capacity_power_curve`, `discharge_power_curve` | as for the [Battery](#battery) | |
+| `random_seed` | environment stream | Seed for the EV's drawn defaults. |
+
+With `"battery": {"type": "citylearn.community_dataset.InventoryBattery"}`, the attributes `max_charge_kw`,
+`max_discharge_kw` (which replace `nominal_power`), `min_soc`, `max_soc` (also the bounds of the `initial_soc` draw),
+`charging_efficiency` and `discharging_efficiency` are read too; with a plain `Battery` they raise `TypeError`. Any other
+key in `battery.attributes` is ignored without a warning.
+
+While an EV is not connected its SOC drifts randomly each step. Under physics version 1 the drift ignores standby loss.
+
+### Charger file in brief
+
+The schedule file has one row per data step with `electric_vehicle_charger_state` (1 connected, 2 incoming, other
+values no EV), `electric_vehicle_id`, `electric_vehicle_departure_time`, `electric_vehicle_required_soc_departure`,
+`electric_vehicle_estimated_arrival_time`, `electric_vehicle_estimated_soc_arrival`, and optionally
+`electric_vehicle_session_id` and `electric_vehicle_current_soc`. A valid `electric_vehicle_current_soc` on the
+connection row sets the arriving EV's SOC. See [charger columns](dataset_reference.md#charger-simulation-columns).
+
+## Deferrable appliances
+
+```json
+{"deferrable_appliances": {
+  "washer_1": {
+    "type": "citylearn.energy_model.DeferrableAppliance",
+    "cycle_profiles_file": "deferrables/washer_profiles.csv",
+    "flexibility_schedule_file": "deferrables/washer_schedule.csv",
+    "attributes": {
+      "trigger_threshold": 0.5
+    }
+  }
+}}
+```
+
+| Field | Required | Default | Purpose |
+|---|---:|---|---|
+| `type` | no | `citylearn.energy_model.DeferrableAppliance` | Appliance class. |
+| `cycle_profiles_file` | yes | | Cycle profiles in kWh per control step; see [`cycle_profiles_file`](dataset_reference.md#cycle_profiles_file). |
+| `flexibility_schedule_file` | yes | | Cycles with their windows and deadlines in global time steps; cycles of one appliance must not overlap. See [`flexibility_schedule_file`](dataset_reference.md#flexibility_schedule_file). |
+| `attributes.trigger_threshold` | no | `0.5` | An action above it starts the next feasible cycle. Clipped to [0, 1]. |
+| `attributes.nominal_power` | no | `0` (no check) | kW. When positive, every cycle's peak power must be at or below it. |
+
+Under physics version 2 a cycle starts on current-step information only, and an outage suspends a running cycle.
+
+## Escalators
+
+Escalators work with the flat interface only.
+
+```json
+{"escalators": {
+  "EscadaRolante_1": {
+    "type": "citylearn.energy_model.Escalator",
+    "simulation": "EscadaRolante_1.csv",
+    "attributes": {
+      "standby_power": 0.08,
+      "slow_power": 0.42,
+      "normal_power": 2.10,
+      "minimum_state_steps": 1,
+      "service_threshold_passengers": 0.5
+    }
+  }
+}}
+```
+
+| Field | Required | Default | Purpose |
+|---|---:|---|---|
+| `type` | no | `citylearn.energy_model.Escalator` | Escalator class. |
+| `simulation` | yes | | CSV with one row per simulation step (`simulation_file` is accepted too). |
+| `attributes.standby_power`, `slow_power`, `normal_power` | no | `0` | kW, finite and non-negative, with standby ≤ slow ≤ normal. |
+| `attributes.minimum_state_steps` | no | `1` | Minimum residence in a state. |
+| `attributes.service_threshold_passengers` | no | `0.5` | Passenger demand above which service is required. |
+
+The CSV requires `time_step`, `passengers_from_trains_15min`,
+`background_pedestrians_15min`, `passengers_expected_15min`, `people_detected`,
+`arriving_trains`, `departing_trains`, `minutes_to_next_train` and `available`.
+`passengers_expected_15min` must equal the sum of the two passenger components, and `time_step` must count the loaded
+rows from 0.
+
+## Power outages
+
+```json
+{"power_outage": {
+  "simulate_power_outage": true,
+  "stochastic_power_outage": false,
+  "vehicle_to_building": false
+}}
+```
+
+| Key | Type | Default | Purpose | Argument |
+|---|---:|---|---|---|
+| `simulate_power_outage` | bool | `false` | Simulate grid outages for this building. Without it the `power_outage` observation is always 0. | `simulate_power_outage` |
+| `stochastic_power_outage` | bool | `false` | Draw outages from `stochastic_power_outage_model` instead of the `power_outage` column. | |
+| `stochastic_power_outage_model.type` | import path | `citylearn.power_outage.PowerOutage` | The default model makes each step an outage with probability 0.5. Use `citylearn.power_outage.ReliabilityMetricsPowerOutage` for realistic outages. | |
+| `stochastic_power_outage_model.attributes` | object | `{}` | For `ReliabilityMetricsPowerOutage`: `saifi` (interruptions per year, 1.436), `caidi` (minutes per interruption, 331.2), `start_time_steps` (allowed start steps within a day, default all), `random_seed`. | |
+| `vehicle_to_building` | bool | `false` | Let a connected EV discharge to the building during an outage, up to the islanded load that PV and the battery leave uncovered. The charger needs `max_discharging_power` above 0. The discharge can take the vehicle below its required departure SOC. | |
+
+During an outage the building is islanded: it is supplied by PV, the battery, thermal storage and (with
+`vehicle_to_building`) EVs; unserved energy is reported as `power_outage_unserved_energy`. Under physics version 2 the
+battery and EVs discharge after the thermal storage and before the loads are served; see
+[What each version changes](#what-each-version-changes).
+
+## Community market and settlement
+
+```json
+{"community_market": {
+  "enabled": true,
+  "local_price_ratio_to_grid_import": 0.8,
+  "settlement_version": 2,
+  "grid_export_price": 0.05,
+  "import_member_weights": {"Building_1": 1.0, "Building_2": 2.0},
+  "kpis": {"community_local_traded_enabled": true, "community_self_consumption_enabled": true}
+}}
+```
+
+| Field | Default | Purpose |
+|---|---:|---|
+| `enabled` | `false` | Enables local settlement. |
+| `local_price_ratio_to_grid_import` | `0.8` | Local price relative to the member's grid import price. A number from 0 to 1. |
+| `intra_community_sell_ratio` | alias | Legacy name for the same ratio. If both keys are set, they must be equal. |
+| `settlement_version` | `1` | `1` or `2`, as a number (`2.0` is accepted, the string `"2"` is not). `2` enables `grid_export_price`; with `1`, residual grid exports earn nothing. |
+| `grid_export_price` | `0.0` | EUR/kWh paid for residual grid exports. A finite number; a non-zero value requires `"settlement_version": 2`. |
+| `tariff_files` | `{}` | Per-member CSV tariffs, `{"<building>": "<file inside the dataset>"}`. Each file has one row per global time step with `grid_export_price`, `community_buy_price` and `community_sell_price` (EUR/kWh) and must cover the episode. A member with a file uses these prices instead of the ratio and `grid_export_price`, under both settlement versions. Resolved from the schema's `root_directory`. |
+| `local_trading_enabled` | `true` | `false` keeps the market's settlement and KPIs but trades no energy locally. Booleans or `"true"`/`"false"`; `null` means `false`. |
+| `import_member_weights` | `{}` | Weights for allocating local energy among importers, `{"<building>": weight}`. Each building must be in the schema and each weight a finite number of at least 0. |
+| `kpis.community_local_traded_enabled` | `true` | Reports `district_energy_grid_community_market_local_traded_total_kwh` and its daily average. |
+| `kpis.community_self_consumption_enabled` | `true` | Reports `district_solar_self_consumption_community_market_import_share_ratio`. |
+| `matching_granularity` | `"aggregate_building"` | The only supported value; recorded in the metadata. |
+| `counterfactual` | `"grid_only"` | The only supported value: savings compare each member with buying and selling on the grid alone. |
+
+The other `community_*` KPIs are always reported (zero without a market).
+
+### Settlement per step
+
+For the active members at step `t`, with `n_i` the net consumption of member `i`:
+
+- `import_i = max(n_i, 0)`, `export_i = max(-n_i, 0)`; `traded = min(sum import, sum export)`, or 0 without local trading.
+- Local import of each member: `traded` is shared among importers in proportion to `import_member_weights` (default 1),
+  never above a member's import; what a saturated member cannot take goes to the others. A weight of 0 is served last.
+  Local export: pro rata to each exporter's export.
+- Prices: grid import price `p_imp` from the member's `pricing` file; local buy and sell price `ratio × p_imp`; residual
+  export price `grid_export_price` (0 under settlement version 1). A tariff file supplies the three prices instead.
+- `cost_i = (import_i - local_import_i) × p_imp + local_import_i × p_buy - local_export_i × p_sell - (export_i - local_export_i) × p_export`.
+- Counterfactual: `max(n_i, 0) × p_imp - export_i × p_export`; savings are counterfactual minus cost.
+- Operator balance: `local_import_i × p_buy - local_export_i × p_sell`, summed in
+  `community_operator_balance_total_eur` (positive when the market keeps money; zero with one shared tariff).
+
+Each side of a local trade is priced with its own member's tariff, so with different tariffs importers can pay a
+different amount from what exporters receive. Settlement changes costs, not the physical dispatch. See the
+[community market KPIs](kpis_reference.md#community-market).
+
+### Validation
+
+The settings are checked when the env is built, even with `enabled: false`.
+An unknown key (for example `enable`), a ratio that is not a number or is
+outside `[0, 1]`, a `settlement_version` other than `1` or `2`
+(the string `"2"` included), a non-zero `grid_export_price` without
+`"settlement_version": 2`, and a member weight or tariff file for a building
+that is not in the schema raise a `ValueError`. Tariff files are also loaded when the market is disabled.
+
+The settings are read from the schema at construction. Setting the market
+attributes on the env afterwards (`community_market_enabled`,
+`community_market_sell_ratio`,
+`community_market_grid_export_price`, `community_market_import_member_weights`,
+`community_market_local_enabled`, `community_tariffs`) is not supported: the
+native BAU reference is rebuilt from the schema, so `evaluate_v2()` with the
+BAU comparison raises a `ValueError` when they differ. To change the market,
+edit `schema['community_market']` and build a new env.
+
+## Evaluation Window
+
+`evaluation_window` adds opt-in recurring local-window KPIs (`*_energy_grid_window_average_power_*_kw` and `*_ev_window_net_exchange_control_kwh`; see [KPI reference](kpis_reference.md#recurring-evaluation-window)) without changing simulation physics or KPI names when bounds change.
+
+```json
+{
+  "evaluation_window": {
+    "enabled": true,
+    "start": "16:00",
+    "end": "19:00",
+    "timezone": "scenario_local"
+  }
+}
+```
+
+| Field | Default | Purpose |
+|---|---:|---|
+| `enabled` | `false` (`true` when `start` or `end` is set) | Enables recurring window KPIs in `evaluate_v2()` and KPI exports. Passing `"evaluation_window": true` enables the `16:00:00` to `19:00:00` starter window. |
+| `start` | `"16:00:00"` | Window start in 24-hour `"HH:MM"` or `"HH:MM:SS"` format, supporting sub-hour boundaries. |
+| `end` | `"19:00:00"` | Window end in 24-hour `"HH:MM"` or `"HH:MM:SS"` format. When `start > end` (for example `"22:00"` to `"06:00"`), the window wraps across midnight. |
+| `timezone` | `schema.timezone` or `"scenario_local"` | IANA time zone used when converting a UTC `TimeAxis` calendar, or `"scenario_local"` for local dataset calendar columns. |
+
+The resolved `start`, `end` and `timezone` are recorded in `exported_kpis.manifest.json`. When both runs enable `evaluation_window` with different effective bounds or time zones, `compare_manifests()` adds `'evaluation_window'` to `mismatches` (`status='incompatible'`). When only one run enables `evaluation_window`, and both runs otherwise pair (including a controller identity from `set_experiment_identity()`, see [Comparing two exported runs](running_simulations.md#comparing-two-exported-runs)), `compare_manifests()` keeps `status='paired'` for all shared KPIs, records `'evaluation_window_one_sided'` in `declared_differences` (`evaluation_window.status == 'one_sided'`), and `compare_exports()` flags only the windowed rows in `unpaired_window_kpis`.
+
+## Demand response
+
+Demand response is dataset-driven and requires `interface: "entity"`. The agent observes district-level flexibility
+requests and responds through the physical actions that already exist, such as storage, EVs and flexible loads.
+
+```json
+{"demand_response": {
+  "enabled": true,
+  "requests_file": "demand_response_requests.csv",
+  "baseline_method": "rolling_pre_event_average",
+  "baseline_window_seconds": 3600,
+  "allow_overlapping_requests": false
+}}
+```
+
+| Field | Default | Purpose |
+|---|---:|---|
+| `enabled` | `false` | Enables request loading, observations, settlement and KPIs. With the flat interface it raises `ValueError`. |
+| `requests_file` | required when enabled | CSV or Parquet file, absolute or relative to `root_directory`. |
+| `baseline_method` | `rolling_pre_event_average` | The only method: the average net consumption of the active members over the window before the request. |
+| `baseline_window_seconds` | `3600` | Length of that window, rounded up to whole steps (at least one step). |
+| `allow_overlapping_requests` | `false` | Overlapping requests raise `ValueError`; with `true` they raise `NotImplementedError`. Keep requests apart. |
+| `request_purposes` | `{}` | `{"<request_id>": "service"}` (or `"stress"`, `"unspecified"`); overrides the `purpose` column and splits the demand-response audit KPIs. |
+
+Request file columns:
+
+| Column | Unit/domain | Meaning |
+|---|---:|---|
+| `request_id` | string | Unique request ID. Exposed in observation `meta`. |
+| `issuer` | `dso`/`tso` | Entity that issued the request. |
+| `direction` | `up`/`down` | Load perspective: `up` increases net load, `down` reduces net load. |
+| `start_time_step`, `end_time_step` | global timestep | Inclusive activation window. |
+| `target_power_kw` | kW | District target power, at least 0. |
+| `activation_price_eur_per_kwh` | currency/kWh | Credited delivery price. |
+| `shortfall_penalty_eur_per_kwh` | currency/kWh | Penalty for shortfall. |
+| `tolerance_power_kw` | kW | Optional column; `0` when the column is absent. An empty cell raises. |
+| `purpose` | `service`/`stress`/`unspecified` | Optional column for the audit KPIs. |
+
+Settlement per active step: delivered power = actual minus baseline (`up`) or baseline minus actual (`down`);
+shortfall = `max(target - delivered - tolerance, 0)`; credited = delivered clipped to [0, target]. Revenue is credited
+energy × activation price; the penalty is shortfall energy × penalty price. A request whose baseline window starts
+before the episode, or during which members join or leave, is settled with zeros.
+
+The `entity_demand_response` bundle adds the request to the `district` entity table (`dr_active`, `dr_direction`,
+`dr_target_power_kw`, `dr_baseline_power_kw`, ...). The bundle only adds observations: settlement runs without it. The
+active `request_id` is in `observations["meta"]["demand_response"]`.
+
+## Robustness
+
+Robustness events are dataset-driven and optional. Observation and forecast events corrupt only the payload returned
+to the agent. Rewards, physical KPIs and demand-response settlement continue to use the real simulator state. Action
+and asset-control events change the action effectively applied.
+
+```json
+{"robustness": {
+  "enabled": true,
+  "events_file": "robustness_events.csv",
+  "random_seed": 0,
+  "missing_replacement_value": -9999.0,
+  "modules": {
+    "observations": {"enabled": true},
+    "forecasts": {"enabled": true},
+    "actions": {"enabled": true},
+    "assets": {"enabled": true}
+  }
+}}
+```
+
+| Field | Default | Purpose |
+|---|---:|---|
+| `enabled` | `false` | Enables event loading and application. |
+| `events_file` | required when enabled | CSV or Parquet file, absolute or relative to `root_directory`. |
+| `random_seed` | the environment's `random_seed` | Seed for event noise. Set it, or the root `random_seed`, for repeatable noise. |
+| `missing_replacement_value` | `-9999.0` | Value written for `missing` events and unavailable telemetry. |
+| `modules.<observations/forecasts/actions/assets>` | `true` each | Enable each module; `{"enabled": bool}` or a bool. |
+| `agent_observation_contract.mode` | `known_faults` | `known_faults`: the agent sees fault labels. `hidden_faults`: every entity feature not listed in `features` is masked to `-9999.0` and fault labels are hidden; needs the entity interface. |
+| `agent_observation_contract.features` | `{}` | `{"<table>": ["<feature>", ...]}`: the features the agent sees under `hidden_faults`. At most one feature per measured quantity, and no `robustness_*` or `fault_*` names. |
+
+Event file columns:
+
+| Column | Unit/domain | Meaning |
+|---|---:|---|
+| `event_id` | string | Unique event ID exposed in metadata. |
+| `module` | `observation`/`forecast`/`action`/`asset` | Perturbation module. |
+| `target_type` | entity type | `district`, `building`, `storage`, `charger`, `ev`, `pv` or `deferrable_appliance`. |
+| `target_id` | id or `*` | Target entity name/id, or all compatible targets (empty means `*`). |
+| `target_feature` | feature/action | For assets use `telemetry`, `control` or `both` (empty means `*`). |
+| `start_time_step`, `end_time_step` | global timestep | Inclusive activation window, at least 0. |
+| `mode` | enum | Observation/forecast: `missing`, `noise`, `bias`, `stuck`, `clip`; action: `dropout`, `noise`, `bias`, `stuck`, `delay`, `clip`; asset: `unavailable`. |
+| `value`, `std`, `min_value`, `max_value` | numeric | Optional mode parameters (`std` at least 0, `min_value <= max_value`). |
+| `replacement_value` | numeric | Optional missing/telemetry sentinel. |
+| `delay_steps` | count | Optional action delay horizon, default 1. |
+| `event_domain` | enum | Optional: `ASSET_AVAILABILITY`, `SENSOR_CHANNEL`, `ACTUATOR_CHANNEL`, `COMMUNICATION_LINK`, `VALUE_QUALITY`. |
+
+With entity observations, the `entity_robustness` bundle adds the diagnostics to the district table. Metadata is
+exposed under `observations["meta"]["robustness"]`. See the [robustness reference](robustness_reference.md).
+
+## Entity interface: observation bundles and derived forecasts
+
+### `observation_bundles`
+
+Root key read with `interface: "entity"` only. Each value is a bool or `{"active": bool}`. A misspelt bundle name is
+ignored, so check `env.observation_space` after construction.
+
+```json
+{"observation_bundles": {
+  "entity_core_electrical": true,
+  "entity_community_operational": true,
+  "entity_forecasts_existing": false,
+  "entity_forecasts_derived": false,
+  "entity_demand_response": false,
+  "entity_robustness": false,
+  "entity_action_feedback": false,
+  "entity_temporal_derived": true
+}}
+```
+
+| Bundle | Default | Adds |
+|---|---:|---|
+| `entity_base` | always on | Essential charger, storage, phase and deferrable features. |
+| `entity_core_electrical` | `false` | Power, step energy, PV, BESS, EV, efficiency and building electrical metrics. |
+| `entity_community_operational` | `false` | District/community aggregates, headroom, counts and topology version. |
+| `entity_forecasts_existing` | `false` | Forecasts already present in the dataset. |
+| `entity_forecasts_derived` | `false` | Compact point forecasts for price, load, PV and net demand; see `derived_forecasts`. |
+| `entity_demand_response` | `false` | Current district DR request fields, frozen baseline and previous-step delivery/shortfall. |
+| `entity_robustness` | `false` | Active robustness state and previous-step corruption counters in the district table. |
+| `entity_temporal_derived` | `false` | Short lags, rolling means and calendar sin/cos features. |
+| `entity_action_feedback` | `false` | Requested, limited and applied action feedback plus clipping-reason flags. |
+
+### `derived_forecasts`
+
+Root key (next to `observation_bundles`, not inside it) that configures the `entity_forecasts_derived` features.
+
+```json
+{"derived_forecasts": {
+  "load_pv_method": "daily_persistence",
+  "persistence_period_seconds": 86400,
+  "cold_start": "current_step",
+  "price_source": "publication_aware_day_ahead_market_input",
+  "price_horizon_steps": [4, 24, 96]
+}}
+```
+
+| Key | Default | Values | Effect |
+|---|---|---|---|
+| `load_pv_method` | `actual_future` | `actual_future`, `daily_persistence` | `actual_future` gives the agent the real future load and PV. `daily_persistence` uses the value one period earlier (the current value when that is not available yet). Use it for causal benchmarks. `method` is an older name. |
+| `persistence_period_seconds` | `86400` | number above 0 | Persistence period, rounded to whole steps. |
+| `cold_start` | `current_step` | `current_step` | Fallback when the history is too short. |
+| `price_source` | `known_future_market_input` | `known_future_market_input`, `publication_aware_day_ahead_market_input`, `daily_persistence` | `known_future_market_input` reads the real future price. `publication_aware_day_ahead_market_input` uses the `electricity_pricing_predicted_*` columns as they were published, and daily persistence when a price is not published yet. |
+| `price_horizon_steps` | `[1, 2, 3]` | three increasing positive ints | Lead, in steps, of `electricity_pricing_predicted_1`, `_2` and `_3`. |
+
+Unknown keys are ignored: a misspelt `load_pv_method` falls back to `actual_future`. The keys
+`price_publication_time_local` and `price_unpublished_fallback`, written by some dataset generators, are not read.
+
+## Dynamic topology
+
+`topology_mode: "dynamic"` requires `interface: "entity"`. In dynamic mode every building in the schema is loaded;
+`include: false` makes a building an inactive member until an `add_member` event (if every building is inactive, the
+first one is activated).
+
+```json
+{"topology_events": [
+  {
+    "id": "add_pv_b2_t100",
+    "time_step": 100,
+    "operation": "add_asset",
+    "target_member_id": "Building_2",
+    "target_asset_type": "pv",
+    "target_asset_id": "pv_1",
+    "source_member_id": "Building_1",
+    "source_asset_id": "pv_1",
+    "overrides": {"nominal_power": 80.0}
+  }
+]}
+```
+
+| Field | Required | Purpose |
+|---|---|---|
+| `id` | no | Event ID, unique; default `topology_event_<index>`. |
+| `time_step` | yes | Global time step at which the event is applied. Events before the episode start are applied at its first step. |
+| `operation` | yes | `add_member`, `remove_member`, `add_asset`, `remove_asset`. |
+| `target_member_id` | yes | Target building. `add_member` with a name that is not in the schema clones `source_member_id` under that name. The clone's chargers get ids of their own. The source member's name in the id becomes the target's; otherwise the identifier that ends the member name (`1` in `Building_1`, `001` in `Member_001`) is replaced by the target's at its first standalone occurrence, so `charger_1_1` of `Building_1` becomes `charger_19_1` in `Building_19`. An id that contains neither, or that would not change, gets `_<target member>` appended; a clash with another charger adds `_2`, `_3`, ... Robustness events must name the clone's chargers by the new id. |
+| `target_asset_type` | asset operations | `charger`, `deferrable_appliance`, `pv`, `electrical_storage`. |
+| `target_asset_id` | charger and deferrable operations | Target asset. Not used for `pv` and `electrical_storage` (one per building). |
+| `source_member_id` | no | Building to clone from; defaults to the target member for asset operations. |
+| `source_asset_id` | no | Asset to clone; defaults to `target_asset_id`. |
+| `overrides` | no | Attributes set on the cloned object; each must exist on it. Ignored for remove operations. |
+
+Adding PV or storage replaces the building's current one. Removing a deferrable appliance cancels pending/running
+cycles and clears future consumption. Removing PV creates a zero PV. Removing storage creates a zero BESS. What a
+replaced or removed PV or battery produced or consumed before the event stays in the building's series, so the
+baselines without storage and the district sums keep it (for the battery, from `baseline_version` 2). A schema with `topology_events` raises `ValueError` unless
+`topology_mode` is `dynamic`.
+
+A member's time-series files (energy simulation, chargers, escalators) are either full-horizon, with one row per dataset time step, or member-window files, shorter than the dataset, whose first row is the time step of the member's `add_member` event. A member-window file should cover the member's active steps in the simulation window (otherwise its last row is repeated, with a warning), and a member that joins again after leaving needs full-horizon files. A member that joins mid-episode starts its battery and thermal storage at `initial_soc`.
+
+## Multiple communities
+
+`MultiCommunityEnv` has no schema keys of its own. It takes a list of communities, each
+`{"community_id": ..., "schema": ..., "env_kwargs": {...}, "weight": 1.0}`; other entry keys raise `ValueError`. Every
+community must use the same `interface`, `central_agent`, `seconds_per_time_step`, episode length, `physics_version`,
+`random_stream_version` and `baseline_version`. `render_directory` and `render_session_name` in `env_kwargs` are
+replaced by those of the wrapper. See the [multi-community reference](multi_community_reference.md).
+
+## What each version changes
+
+### `physics_version`
+
+| Area | Version 1 (CityLearn 3.6.0) | Version 2 (default) |
+|---|---|---|
+| Battery and EV discharge power | limited by `capacity_power_curve` | limited by `discharge_power_curve` |
+| HVAC device limit | step energy compared with kW (one-hour cap) | power × step duration |
+| Thermal storage autosize | one step of peak demand × `safety_factor` | peak demand power × `duration` × `safety_factor` |
+| PV autosize | assumes 8760 hourly rows | follows the dataset resolution |
+| Battery during outages | pre-step estimate | after thermal storage, up to the islanded load PV leaves |
+| Outage supply order | vehicle-to-building order only with `vehicle_to_building` | battery and EVs after thermal storage, before the loads |
+| Electrical-service headroom | shared among raw requests, before thermal loads | shared among feasible powers, after thermal and non-shiftable loads; the settled import is recorded |
+| Deferrable cycle start | checks the whole cycle with future data | current step only; an outage suspends the cycle |
+| Charger power defaults | 50 kW charge and discharge | charge = `nominal_power`; discharge 0 |
+| Charger SOC unit | inferred per value | inferred per column |
+| EV drift while away | drops standby loss | keeps standby loss |
+| Occupant `set_point_limits` | not applied | applied, default `[15, 30]` |
+| Entity energy-to-full features | nominal capacity | degraded capacity |
+
+### `baseline_version`
+
+| Version | KPI baseline (`*_without_storage`) | Native BAU HVAC |
+|---|---|---|
+| 1 | removes battery, thermal storage and EV charging; adds nothing back | off |
+| 2 (default) | as 1, then adds back the BAU EV charging with the `full` target | delivers the dataset heating and cooling demand on datasets with HVAC actions |
+
+On datasets without HVAC actions the BAU, its definition and its identity are the same under both versions. Any other
+value raises `ValueError`. With version 2, evaluating a dataset with chargers runs the native BAU; if it cannot run, `ValueError` suggests
+`baseline_version=1`. See [Baselines](baselines.md#hvac-and-the-baseline-version). With dynamic topology, version 2 also keeps a
+removed or replaced battery's past in the building's series; version 1 loses it, as 3.6.0 did.
+
+### `random_stream_version`
+
+`v1` draws device parameters, EV drift, occupant behaviour and stochastic outages as CityLearn 3.6.0 did (the same
+outages every episode, the same occupant draws in every building). `v2` gives each object, purpose and episode its own
+stream. See the [migration guide](migration.md#random-streams).
+
+### `settlement_version`
+
+`community_market.settlement_version: 2` only allows a non-zero `grid_export_price`; the settlement formulas are the
+same.
+
+## Common mistakes and what to avoid
+
+| Mistake | What happens | Do instead |
+|---|---|---|
+| A typo in a root key (`seconds_per_timestep`) or in `demand_response`, `robustness`, `derived_forecasts`, `observation_bundles` | Ignored; the default is used. | Check `env.get_metadata()` and the observation names after construction. |
+| Writing booleans as strings | `"false"` counts as true for `rolling_episode_split`, `random_episode_split`, `power_outage.simulate_power_outage`, `stochastic_power_outage` and `vehicle_to_building`. | Use JSON `true` / `false`. |
+| Leaving `random_seed` out | A new seed at every construction; robustness noise and drawn device parameters change. | Set `random_seed`. |
+| Expecting drawn defaults to be the same for different seeds | Battery curves, efficiencies and loss coefficients are drawn. | Set the attributes. |
+| A `[low, high]` range as an attribute | `TypeError`. | Give a number. |
+| Activating `electrical_storage` for a building without a battery | `ValueError` at construction. | List it in that building's `inactive_actions`. |
+| `cooling_device` / `heating_device` actions on `citylearn.building.Building` | The action exists but does nothing. | Use a dynamics building type. |
+| Omitting `max_discharging_power` and expecting V2G | Physics version 2 sets it to 0. | Set it explicitly. |
+| Charger files with numeric `electric_vehicle_id` values | The EV never connects. | Use text IDs that match `electric_vehicles_def`. |
+| A misspelt key in `battery.attributes` of an EV | Ignored. | Compare `env.electric_vehicles[i].battery` with the schema. |
+| Setting `stochastic_power_outage: true` without a model | Half of the steps are outages. | Use `ReliabilityMetricsPowerOutage`. |
+| Both `electrical_service` and `charging_constraints` | `charging_constraints` is ignored. | Use `electrical_service`. |
+| `set_point_limits`, `dynamics` or `occupant` on `citylearn.building.Building` | Ignored. | Use the matching building type. |
+| `null` for an `electrical_service` limit | The simulation treats it as no limit, but the native BAU used by `evaluate()` and `evaluate_v2()` raises `TypeError`. | Leave the key out for no limit. |
+| `render_mode` in the schema and another value as argument | The schema wins. | Set it in one place. |
+| Changing `env.community_market_*` after construction | `evaluate_v2()` raises. | Edit `schema["community_market"]` and build a new env. |
+| `price_source` or `load_pv_method` left at the default for a benchmark | The agent reads future prices or loads. | Use `daily_persistence` or `publication_aware_day_ahead_market_input`. |
+| Non-zero `noise_std` for a building without `pricing` or `carbon_intensity` | Random prices or emissions appear. | Add the files or keep `noise_std` at 0. |
+| Passing `electric_vehicles=[...]` to select EVs | Ignored. | Use `electric_vehicles_def.<ev>.include`. |
+| EV batteries above 100 kWh with `connected_electric_vehicle_at_charger_battery_capacity` | The observation exceeds its space bound. | Normalise by the capacity, or leave it inactive. |
+| `charging_constraint_penalty_coefficient` in the attributes of `Electric_Vehicles_Reward_Function` | `TypeError` at construction: this reward takes only `weights` and `version`. | Leave it out; the coefficient keeps its default of 1.0. |
+| `request_purposes` written as a list | `AttributeError` when the requests are loaded. | Write an object, `{"<request_id>": "service"}`. |
+| Non-integer or negative `start_time_step` / `end_time_step` in a demand-response request file | Decimals are truncated with `int()` (3.7 becomes 3), and negative values are accepted. | Write whole, non-negative data-row indices. |
+| Per-device names (`electric_vehicle_storage_<charger>`, per-charger observations) in `inactive_actions` or the `active_/inactive_observations` arguments | Static and dynamic topology treat them differently. Static topology ignores expanded per-device names in `inactive_actions`; dynamic topology honours them, but recomputes the charger, deferrable-appliance and battery observation flags from the schema, ignoring the `active_/inactive_observations` arguments and the building's `inactive_observations`. | Turn device features on or off with the catalogue names in `observations` and `actions`, and check `env.observation_names` and `env.action_names`. |
+
+## Full reference schema
+
+[`examples/schema_full_reference.json`](https://github.com/citylearn-project/CityLearn/blob/master/examples/schema_full_reference.json)
+sets every option of this page on a two-building community of the
+`citylearn_challenge_2022_phase_all_plus_evs` dataset. Copy it and change only what you need. The
+[walkthrough](schema_full_reference.md) explains each key and its alternatives.

@@ -6,19 +6,19 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Command Line Interface &mdash; CityLearn 3.6.0 documentation</title>
+  <title>Command Line Interface &mdash; CityLearn 3.7.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
       <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="_static/citylearn.css?v=cc618840" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=5349f462"></script>
+      <script src="_static/documentation_options.js?v=229cbe3b"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -27,7 +27,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="citylearn" href="api/modules.html" />
+    <link rel="next" title="Python API" href="python_api.html" />
     <link rel="prev" title="Tutorials" href="usage/tutorials.html" />
  
 <script src="_static/version_switcher.js" defer></script>
@@ -58,13 +58,16 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/schema_full_reference.html">Full Reference Schema</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/data_unit_contract.html">Data Unit Contract</a></li>
@@ -78,18 +81,13 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="guides/baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guides/scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guides/kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Command Line Interface</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#citylearn-named-arguments">Named Arguments</a></li>
@@ -113,19 +111,23 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/modules.html">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python_api.html">Python API</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 
 <div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
@@ -159,7 +161,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -168,9 +170,11 @@
              
   <section id="command-line-interface">
 <h1>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Link to this heading"></a></h1>
-<p>Install <code class="docutils literal notranslate"><span class="pre">stable-baselines3==2.3.2</span></code> alongside CityLearn for the current CLI.
-Use Python 3.11 or newer for training/evaluation commands. See
-<a class="reference internal" href="guides/running_simulations.html"><span class="doc">Running Simulations</span></a> for setup and runnable command examples.</p>
+<p>The listing commands and the default business-as-usual agent need only
+CityLearn. Stable Baselines3 agents also need <code class="docutils literal notranslate"><span class="pre">stable-baselines3&gt;=2.4</span></code>, and
+the bundled <code class="docutils literal notranslate"><span class="pre">SAC</span></code> and <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code> agents the <code class="docutils literal notranslate"><span class="pre">rl</span></code> extra. See
+<a class="reference internal" href="guides/running_simulations.html"><span class="doc">Running Simulations</span></a> for runnable commands, including a Stable
+Baselines3 example, the evaluation window and the output files.</p>
 <p><p>An open source Farama Foundation Gymnasium environment for benchmarking distributed energy resource control algorithms to provide energy flexibility in a district of buildings. Compatible with training and evaluating internally defined CityLearn agents in <cite>citylearn.agents</cite>, user-defined agents that inherit from <cite>citylearn.agents.base.Agent</cite> and use the same interface as it, and agents provided by stable-baselines3.</p>
 </p>
 <div class="highlight-default notranslate" id="citylearn"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">citylearn</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">version</span><span class="p">]</span>
@@ -251,7 +255,8 @@ Use Python 3.11 or newer for training/evaluation commands. See
                    <span class="p">[</span><span class="o">-</span><span class="n">sid</span> <span class="n">SIMULATION_ID</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">fa</span> <span class="n">AGENT_FILEPATH</span><span class="p">]</span>
                    <span class="p">[</span><span class="o">-</span><span class="n">d</span> <span class="n">OUTPUT_DIRECTORY</span><span class="p">]</span>
                    <span class="p">[</span><span class="o">-</span><span class="n">te</span> <span class="n">EVALUATION_EPISODE_TIME_STEPS</span> <span class="n">EVALUATION_EPISODE_TIME_STEPS</span><span class="p">]</span>
-                   <span class="p">[</span><span class="o">-</span><span class="n">p</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">rs</span> <span class="n">RANDOM_SEED</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">offline</span><span class="p">]</span>
+                   <span class="p">[</span><span class="o">-</span><span class="n">p</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">rs</span> <span class="n">RANDOM_SEED</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">offline</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">record_host</span><span class="p">]</span>
+                   <span class="p">[</span><span class="o">--</span><span class="n">no_business_as_usual</span><span class="p">]</span>
                    <span class="n">schema</span> <span class="p">{</span><span class="n">train</span><span class="p">,</span><span class="n">evaluate</span><span class="p">}</span> <span class="o">...</span>
 </pre></div>
 </div>
@@ -292,7 +297,7 @@ Use Python 3.11 or newer for training/evaluation commands. See
 <dd><p>Directory to save all simulation output to.</p>
 </dd>
 <dt><kbd>-te, --evaluation_episode_time_steps</kbd></dt>
-<dd><p>Start and end time steps in data set to evaluate on otherwise, the agent is evaluated on entire dataset.</p>
+<dd><p>Start and end time steps in data set to evaluate on. Without it, <cite>evaluate</cite> uses the environment episode windows and <cite>train –evaluate</cite> the first training episode window.</p>
 </dd>
 <dt><kbd>-p, --append</kbd></dt>
 <dd><p>Add to output for existing simulation with <cite>simulation_id</cite> i.e. do not overwrite.</p>
@@ -304,6 +309,14 @@ Use Python 3.11 or newer for training/evaluation commands. See
 <dt><kbd>--offline</kbd></dt>
 <dd><p>Disable network access and require datasets/misc files to be available locally.</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+<dt><kbd>--record_host</kbd></dt>
+<dd><p>Record the machine host name and the user name in the training summary JSON.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+<dt><kbd>--no_business_as_usual</kbd></dt>
+<dd><p>Write the evaluate_v2() KPI table (<cite>&lt;simulation_id&gt;-evaluation_v2.csv</cite>) without the business-as-usual rows, which need a second rollout of BusinessAsUsualAgent on the evaluation window.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 </dd>
 </dl>
 </section>
@@ -334,7 +347,7 @@ Use Python 3.11 or newer for training/evaluation commands. See
 <p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 <dt><kbd>--evaluate</kbd></dt>
-<dd><p>Whether to run deterministic evaluation for one episode at the end of training.</p>
+<dd><p>Whether to run deterministic evaluation for one episode at the end of training, on the first training episode window unless <cite>-te</cite> gives evaluation windows.</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 </dd>
 </dl>
@@ -358,7 +371,7 @@ Use Python 3.11 or newer for training/evaluation commands. See
 
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="usage/tutorials.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="api/modules.html" class="btn btn-neutral float-right" title="citylearn" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="python_api.html" class="btn btn-neutral float-right" title="Python API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
