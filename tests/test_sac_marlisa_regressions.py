@@ -266,7 +266,8 @@ def test_marlisa_replay_transitions_carry_their_own_coordination_variables():
             t = next(t for t, e in enumerate(encoded) if np.array_equal(o[:-2], e))
             assert list(o[-2:]) == pytest.approx(predicted[t][1][i])
 
-            if not terminal:
+            # The episode's last observation has no next action, so its own variables stand in for them.
+            if not terminal and t + 1 < len(predicted):
                 assert list(n[-2:]) == pytest.approx(predicted[t + 1][1][i])
 
             checked += 1

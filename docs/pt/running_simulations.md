@@ -41,6 +41,16 @@ while not (terminated or truncated):
 kpis_v2 = env.evaluate_v2()
 ```
 
+### Como acaba um episódio
+
+Um episódio do CityLearn acaba sempre porque a sua janela de simulação ou a sua divisão em episódios acaba. É um limite de tempo: depois dele, os edifícios, as baterias e os VE continuariam, e a energia que fica numa bateria ainda tem valor. Por isso, como a API do Gymnasium o define, o último passo devolve `terminated=False, truncated=True`. Um algoritmo de aprendizagem só deve deixar de estimar o valor futuro com `terminated`, e reiniciar o ambiente com `terminated or truncated`:
+
+```text
+target = reward + gamma * (1 - terminated) * next_value  # e não (1 - (terminated or truncated))
+```
+
+Tratar o fim de uma janela como terminal ensina ao algoritmo que o que fica guardado no fim não vale nada, o que enviesa os valores dos últimos passos de cada episódio no sentido de esvaziar as baterias e deixar os VE por carregar. Os agentes SAC, MARLISA e Q-learning incluídos, o Stable Baselines3 e o RLlib já usam as duas indicações desta forma. `episode_end='terminated'` (no construtor ou como chave do schema) repõe as indicações do CityLearn 3.7.0 e anteriores, `terminated=True, truncated=False`; os resultados da simulação e os KPIs são os mesmos com as duas. `env.done` diz se o episódio acabou, e a propriedade `env.terminated` mantém esse significado, pelo que ciclos escritos como `while not env.terminated:` continuam a funcionar.
+
 ## Exemplo da interface entity
 
 ```python
@@ -110,6 +120,7 @@ Todas as comunidades têm de partilhar `seconds_per_time_step`, a duração efet
 | `random_episode_split` | bool | schema | Episódios em janelas aleatórias. | Usa `random_seed`. |
 | `episode_split_boundary` | str | `shared` | Como se ligam divisões consecutivas (não rolling). | `shared` partilha a linha de fronteira, pelo que todos os intervalos são simulados; `disjoint` repõe as divisões da 3.6.0. |
 | `ev_soc_carryover` | bool | `False` | Começa cada VE de um episódio que continua o anterior no tempo com o SOC que tinha no fim desse episódio. | Só o SOC dos VE é transportado. Desligado, os episódios são independentes mas uma sessão através de uma fronteira perde a carga; ligado, episódios consecutivos dependem do controlador anterior. Ver [Partidas](kpis_reference.md#partidas). |
+| `episode_end` | str | `truncated` | Como o `step()` indica o fim de um episódio. | `truncated` (limite de tempo do Gymnasium, a predefinição) ou `terminated` (3.7.0 e anteriores). Ver [Como acaba um episódio](#como-acaba-um-episódio). |
 | `seconds_per_time_step` | float | schema | Duração física de cada passo. | Exemplos: 15, 60, 300, 900, 3600. |
 | `time_step_ratio` | int/float | inferido | Razão entre o passo de controlo e o espaçamento do dataset. | Inferido a partir dos dados; um valor passado aqui tem de coincidir com ele. |
 | `time_step_ratio_mode` | str | `reject` | O que fazer quando o passo de controlo difere do passo do dataset. | `reject` gera um erro; `compress` mantém o comportamento da 3.6.0 (uma linha de dados por passo, energias escaladas). |
@@ -402,7 +413,7 @@ def run(name, battery_action):
         parameters={"battery_action": battery_action},
     )
     env.reset()
-    while not env.terminated:
+    while not env.done:
         actions = [[battery_action if n.startswith("electrical_storage") else 0.0 for n in env.action_names[0]]]
         env.step(actions)
     env.export_final_kpis(export_business_as_usual_timeseries=False)

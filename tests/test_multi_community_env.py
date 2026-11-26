@@ -295,9 +295,11 @@ def test_step_terminates_wrapper_when_any_child_terminates():
     try:
         env.reset(seed=0)
         _, _, terminated, truncated, info = env.step(_multi_zero_actions(env))
-        assert terminated
-        assert not truncated
-        assert info["terminated_by_community"] == {"community_a": True, "community_b": True}
+        # The episode ends at its time limit, so step() reports truncation (Gymnasium semantics).
+        assert not terminated
+        assert truncated
+        assert env.done and env.terminated
+        assert info["terminated_by_community"] == {"community_a": False, "community_b": False}
 
         with pytest.raises(RuntimeError, match="reset"):
             env.step(_multi_zero_actions(env))
@@ -576,8 +578,8 @@ def test_citylearn_env_single_community_regression_still_resets_and_steps():
         observations, _ = env.reset(seed=0)
         assert isinstance(observations, list)
         _, _, terminated, truncated, _ = env.step(_zero_actions(env))
-        assert terminated
-        assert not truncated
+        assert not terminated
+        assert truncated
     finally:
         env.close()
 

@@ -61,7 +61,8 @@ Versão em inglês: [../schema_full_reference.md](../schema_full_reference.md).
   "rolling_episode_split": false,
   "random_episode_split": false,
   "episode_split_boundary": "shared",
-  "ev_soc_carryover": false
+  "ev_soc_carryover": false,
+  "episode_end": "truncated"
 }
 ```
 
@@ -77,6 +78,7 @@ Versão em inglês: [../schema_full_reference.md](../schema_full_reference.md).
 | `random_episode_split` | `false` | `false` | `true`: sorteia o episódio em cada reset. |
 | `episode_split_boundary` | `"shared"` | `"shared"` | `"disjoint"`: as divisões da 3.6.0, que saltam um intervalo entre episódios. |
 | `ev_soc_carryover` | `false` | `false` | `true`: um episódio que continua o anterior no tempo começa cada VE com o SOC que tinha no fim desse episódio. |
+| `episode_end` | `"truncated"` | `"truncated"` | `"terminated"`: o último passo devolve `terminated=True`, como na 3.7.0 e anteriores. |
 
 ## Calendário e relógio do dataset
 

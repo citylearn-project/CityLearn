@@ -57,10 +57,10 @@ def _run(env):
 
     env.reset()
     rewards = []
-    terminated = False
+    terminated = truncated = False
 
-    while not terminated:
-        _, reward, terminated, _, _ = env.step(_discharge_actions(env))
+    while not (terminated or truncated):
+        _, reward, terminated, truncated, _ = env.step(_discharge_actions(env))
         rewards.append(reward)
 
     return np.array(rewards, dtype='float64')
@@ -187,11 +187,11 @@ def test_active_observation_stays_within_its_space_limits():
     schema['observations']['power_outage_unserved_energy'] = {'active': True, 'shared_in_central_agent': False}
     env = CityLearnEnv(schema, central_agent=False, simulation_start_time_step=0, simulation_end_time_step=STEPS - 1, random_seed=0)
     env.reset()
-    terminated = False
+    terminated = truncated = False
     seen = []
 
-    while not terminated:
-        _, _, terminated, _, _ = env.step(_discharge_actions(env))
+    while not (terminated or truncated):
+        _, _, terminated, truncated, _ = env.step(_discharge_actions(env))
 
         for building in env.buildings:
             low, high = building.estimate_observation_space_limits()

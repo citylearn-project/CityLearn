@@ -236,8 +236,7 @@ class Agent(Environment):
                 deterministic = deterministic or (deterministic_finish and episode >= episodes - 1)
                 observations, _ = self.env.reset()
                 self.episode_time_steps = self.episode_tracker.episode_time_steps
-                terminated = env.terminated
-                truncated = env.truncated
+                terminated, truncated = env._episode_end_flags()
                 time_step = 0
                 rewards_list = []
                 rewards_by_member = {}

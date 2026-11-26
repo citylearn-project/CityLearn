@@ -80,6 +80,10 @@ class EvaluationCondition(Enum):
     WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV = WITHOUT_STORAGE_BUT_WITH_PARTIAL_LOAD_AND_PV + _PARTIAL_LOAD_SUFFIX
     WITHOUT_STORAGE_AND_PARTIAL_LOAD_AND_PV = WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV + _PV_SUFFIX
 
+
+EPISODE_END_VALUES = frozenset({'truncated', 'terminated'})
+EPISODE_END_DEFAULT = 'truncated'
+
 class CityLearnEnv(Environment, Env):
     r"""CityLearn environment: a Gymnasium environment that simulates a community of buildings.
 
@@ -140,6 +144,14 @@ class CityLearnEnv(Environment, Env):
         the schedule SOC, and an arrival without one keeps the EV's simulated SOC, as in one run. The first episode uses the schedule SOC, as when the setting is off. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still
         start every episode from their initial state. Off, episodes are independent; on, an episode that continues the
         previous one depends on what the previous controller did. Can also be set with the schema key of the same name.
+    episode_end: str, default: 'truncated'
+        How `step()` reports the end of an episode. Every CityLearn episode ends because its window or split ends, a time
+        limit after which the buildings, batteries and EVs would carry on, so by default the last step returns
+        `terminated=False, truncated=True`, as the Gymnasium API defines it: learners keep bootstrapping from the
+        last observation instead of treating it as an absorbing state with no future value. `'terminated'` returns
+        `terminated=True, truncated=False`, as CityLearn 3.7.0 and earlier did. Simulation results and KPIs are the
+        same with both. The `done` property says whether the episode is over, whatever the reason; `terminated`, as a
+        property, keeps that meaning for existing loops. Can also be set with the schema key of the same name.
     seconds_per_time_step: float
         Number of seconds in 1 `time_step` and must be set to >= 1. It must equal the dataset step unless
         `time_step_ratio_mode='compress'`.
@@ -287,7 +299,7 @@ class CityLearnEnv(Environment, Env):
         'random_seed', 'offline', 'time_step_ratio', 'interface', 'topology_mode', 'start_date',
         'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version', 'physics_version', 'evaluation_window',
         'district_electrical_service',
-        'baseline_version', 'ev_soc_carryover',
+        'baseline_version', 'ev_soc_carryover', 'episode_end',
     )
 
     def __init__(self,
@@ -305,6 +317,7 @@ class CityLearnEnv(Environment, Env):
     ):
         episode_split_boundary = kwargs.pop('episode_split_boundary', None)
         ev_soc_carryover = kwargs.pop('ev_soc_carryover', None)
+        episode_end = kwargs.pop('episode_end', None)
         time_step_ratio_mode = kwargs.pop('time_step_ratio_mode', None)
         render_directory = kwargs.pop('render_directory', None)
         render_directory_name = kwargs.pop('render_directory_name', 'render_logs')
@@ -618,6 +631,7 @@ class CityLearnEnv(Environment, Env):
         )
         self.ev_soc_carryover = self.schema.get('ev_soc_carryover') if ev_soc_carryover is None else ev_soc_carryover
         self._ev_soc_carryover_context = None
+        self.episode_end = self.schema.get('episode_end') if episode_end is None else episode_end
         self.central_agent = central_agent
         self.shared_observations = shared_observations
 
@@ -812,6 +826,12 @@ class CityLearnEnv(Environment, Env):
         return self.__episode_split_boundary
 
     @property
+    def episode_end(self) -> str:
+        """How `step()` reports the end of an episode: `'truncated'` (default) or `'terminated'`."""
+
+        return self.__episode_end
+
+    @property
     def ev_soc_carryover(self) -> bool:
         """Whether an EV starts an episode that continues the previous one in time from its SOC at the end of
         that episode, instead of the schedule SOC."""
@@ -905,16 +925,33 @@ class CityLearnEnv(Environment, Env):
         return self._topology_service.member_lifecycle
 
     @property
-    def terminated(self) -> bool:
-        """Check if simulation has reached completion."""
+    def done(self) -> bool:
+        """Whether the episode is over: the last step of its window or split has been taken."""
 
         return self.time_step >= self.time_steps - 1
 
     @property
-    def truncated(self) -> bool:
-        """Check if episode truncates due to a time limit or a reason that is not defined as part of the task MDP."""
+    def terminated(self) -> bool:
+        """Whether the episode is over, the same as `done`.
 
-        return False
+        Kept with this meaning so that loops such as `while not env.terminated` keep working. The `terminated`
+        flag that `step()` returns follows `episode_end` instead: with the default `'truncated'` it is always
+        `False`, because a CityLearn episode only ends at a time limit. Learners should read the flags of `step()`.
+        """
+
+        return self.done
+
+    @property
+    def truncated(self) -> bool:
+        """Whether the episode ended at its time limit, as `step()` reports it under `episode_end='truncated'`."""
+
+        return self.done and self.episode_end == 'truncated'
+
+    def _episode_end_flags(self) -> Tuple[bool, bool]:
+        """The `(terminated, truncated)` pair that `step()` returns for the current time step."""
+
+        done = self.done
+        return done and self.episode_end == 'terminated', done and self.episode_end == 'truncated'
 
     @property
     def observation_space(self) -> Union[List[spaces.Box], spaces.Dict]:
@@ -1667,6 +1704,13 @@ class CityLearnEnv(Environment, Env):
     def episode_split_boundary(self, episode_split_boundary: str):
         self.__episode_split_boundary = EpisodeTracker.validate_episode_split_boundary(episode_split_boundary)
 
+    @episode_end.setter
+    def episode_end(self, episode_end: str):
+        value = EPISODE_END_DEFAULT if episode_end is None else episode_end
+        if not isinstance(value, str) or value.strip().lower() not in EPISODE_END_VALUES:
+            raise ValueError(f"episode_end must be one of {sorted(EPISODE_END_VALUES)}, got {episode_end!r}.")
+        self.__episode_end = value.strip().lower()
+
     @ev_soc_carryover.setter
     def ev_soc_carryover(self, ev_soc_carryover: bool):
         self.__ev_soc_carryover = parse_bool(ev_soc_carryover, default=False, path='ev_soc_carryover')
@@ -1782,6 +1826,7 @@ class CityLearnEnv(Environment, Env):
             'baseline_version': self.baseline_version,
             'episode_split_boundary': self.episode_split_boundary,
             'ev_soc_carryover': self.ev_soc_carryover,
+            'episode_end': self.episode_end,
             'time_step_ratio_mode': self.time_step_ratio_mode,
             'energy_accounting': self._provenance_service.get_metadata(),
             'temporal_reproducibility': axis_metadata(self),
