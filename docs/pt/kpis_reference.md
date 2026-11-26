@@ -212,7 +212,9 @@ Todos os ratios usam divisão segura:
   do distrito só é indefinido quando a própria referência do distrito está
   abaixo de 1% da de um membro, o que só acontece num total com sinal cujos
   membros se anulam. Num env com um só edifício, ou com uma referência nula em
-  todos os membros, aplica-se apenas a regra 0/0 acima. Os ratios do portfólio
+  todos os membros, aplica-se apenas a regra 0/0 acima. Totais control e de
+  referência iguais (dentro da tolerância de zero) mantêm o ratio 1.0, por mais
+  pequenos que sejam: o controlador não mudou nada. Os ratios do portfólio
   do `MultiCommunityEnv` dividem totais agregados e não usam esta regra.
 
 Os ratios mantêm-se lower-is-better quando o total de referência é negativo. Os
@@ -258,7 +260,7 @@ Sem mercado comunitário, só a importação é paga: a energia exportada não �
 Os rácios ao contrafactual e à execução BAU usam o rácio com sinal:
 
 ```text
-rácio = controlo / referência                         se referência ≥ 0
+rácio = controlo / referência                         se referência > 0
 rácio = 1 + (controlo − referência) / |referência|    se referência < 0
 ```
 

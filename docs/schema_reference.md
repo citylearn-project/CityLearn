@@ -721,7 +721,10 @@ attributes are overwritten.
 | `PV` | `nominal_power` and the `solar_generation` profile from PVWatts; forces `generation_mode: per_kw` | `epw_filepath` (required), `use_sample_target` (`false`), `zero_net_energy_proportion` (drawn in [0.7, 1.0]), `roof_area` (m², unlimited), `safety_factor` (1.0) |
 
 Battery and PV autosizing download sizing data unless it is cached (`offline=True` forbids the download); PV needs
-`pip install nrel-pysam`. Under physics version 1 PV autosizing assumes hourly data.
+`pip install nrel-pysam`. Under physics version 1 PV autosizing assumes hourly data. Under version 2 the
+window's demand is scaled to one year before it is compared with the PVWatts annual yield, so a one-week window
+sizes the array like a one-year window with the same average demand (a seasonal window still gives a seasonal
+size).
 
 ## Electrical service
 

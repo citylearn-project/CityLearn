@@ -33,7 +33,7 @@ restrições elétricas. Não é um cenário com todos os equipamentos desligado
 | `ev_charge_target` | Definição | Comportamento dos VE |
 |---|---|---|
 | `'full'` (predefinido) | `immediate-full-charge-v4` | Carrega até 100%, como o BAU do CityLearn 3.1–3.3. |
-| `'requested'` | `immediate-user-target-v3` | Carrega até ao SOC de partida pedido pelo utilizador. O último comando é limitado à energia em falta; se esse comando ficasse abaixo da potência mínima do carregador, o VE para ligeiramente abaixo do alvo em vez de o ultrapassar. A sua diferença face ao predefinido exclui a energia extra entregue acima do SOC pedido. |
+| `'requested'` | `immediate-user-target-v3` | Carrega até ao SOC de partida pedido pelo utilizador. O último comando é limitado à energia em falta; se esse comando ficasse abaixo da potência mínima do carregador, o último passo carrega à potência mínima e ultrapassa ligeiramente o alvo, como os baselines por regras, para que o VE não saia abaixo dele. A sua diferença face ao predefinido exclui a energia extra entregue acima do SOC pedido. |
 
 Tudo o resto é igual. Selecione o BAU usado como referência dos KPIs por
 `evaluate_v2()` com a definição do ambiente

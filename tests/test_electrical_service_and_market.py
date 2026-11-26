@@ -492,6 +492,40 @@ def test_electrical_service_headroom_observations_stay_inside_space_bounds(tmp_p
         env.close()
 
 
+def test_headroom_bounds_include_zero_base_power_when_outages_are_simulated(tmp_path: Path):
+    def _mutate(schema):
+        building = schema["buildings"]["Building_1"]
+        building["electrical_service"] = {
+            "mode": "single_phase",
+            "limits": {"total": {"import_kw": 6.0, "export_kw": 6.0}},
+            "observations": {"headroom": True, "headroom_export": True, "violation": True},
+        }
+        # A small control margin and no PV keep the base load above zero outside outages.
+        charger = building["chargers"]["charger_1_1"]["attributes"]
+        charger.update({"max_charging_power": 1.0, "nominal_power": 1.0, "max_discharging_power": 0.0})
+        building["electrical_storage"]["attributes"]["nominal_power"] = 1.0
+
+    schema_path = _clone_minute_schema(tmp_path, "electrical_service_outage_headroom_bounds", mutator=_mutate)
+    data = pd.read_csv(schema_path.parent / "Building_1.csv")
+    data["solar_generation"] = 0.0
+    data.to_csv(schema_path.parent / "Building_1.csv", index=False)
+
+    highs = {}
+    for outage in (False, True):
+        env = CityLearnEnv(str(schema_path), central_agent=True, episode_time_steps=4, random_seed=0,
+                           simulate_power_outage=outage)
+        try:
+            _, high = env.buildings[0].estimate_observation_space_limits(include_all=True, periodic_normalization=False)
+            highs[outage] = high["charging_building_headroom_kw"]
+        finally:
+            env.close()
+
+    # The smallest base load (3.2 kW) minus the 2 kW margin keeps the bound below the limit without outages;
+    # during an outage the base power is zero, so the headroom can reach the full 6 kW limit.
+    assert highs[False] < 6.0
+    assert highs[True] >= 6.0
+
+
 def test_community_market_settlement_matches_expected_values(tmp_path: Path):
     schema_path = _build_two_building_market_schema(tmp_path)
     env = CityLearnEnv(str(schema_path), central_agent=True, episode_time_steps=2, random_seed=0)
