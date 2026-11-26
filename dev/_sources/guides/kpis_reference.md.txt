@@ -179,6 +179,33 @@ Every ratio uses safe division:
   undefined when both totals are zero. Nothing was priced or emitted, as on a
   dataset with zero carbon intensity, so there is nothing to compare. The
   `*_building_mean_ratio` variants keep their 3.6.0 value.
+- **negligible reference:** a total ratio (`*_ratio_to_baseline_*_total_ratio`,
+  `*_ratio_to_business_as_usual_*_ratio` of an additive total: cost, emissions,
+  grid import, export and net exchange, solar generation and export, EV charge
+  and V2G export, battery charge, discharge and throughput, deferrable-appliance
+  cycles and energy) is undefined when its reference total is negligible but not
+  both totals are zero:
+
+  ```text
+  |reference_x| <= 0.01 * scale_x
+  scale_x = mean of |reference_x| over the building rows of the env
+  ```
+
+  `scale_x` is the size of that reference for a typical member of the
+  community, in the unit of the total. Below 1% of it, the ratio measures how
+  small the member's reference is rather than what the controller did: on
+  `citylearn_challenge_2022_phase_all_plus_evs`, a building whose BAU barely
+  cycles its battery had a throughput ratio to the BAU of about 2,400, and a building
+  whose baseline imports and exports almost cancel had a net-exchange ratio of
+  -720. In the runs measured for #403 (plus_evs, `pt_rec_4` and the three-phase
+  demo) every ratio above 100 had a reference below 0.5% of the scale, and
+  every reference above 1% gave a ratio below 75. The control and reference
+  totals and their delta stay in the table. The district row uses the same scale, so a district ratio is undefined only when
+  the district reference is itself below 1% of a member's, which can happen
+  only for a signed total whose members cancel. A one-building env, or a
+  reference that is zero for every member, has only the 0/0 rule above. The
+  `MultiCommunityEnv` portfolio ratios divide pooled totals and do not use this
+  rule.
 
 Ratios stay lower-is-better when the reference total is negative. Net exchange
 and cost totals can be negative, for a net exporter or after community-market
@@ -1693,6 +1720,7 @@ datasets with EV chargers (the EV charger row), which `baseline_version=1` resto
 | `*_ev_events_departure_met_count` (legacy `ev_departure_met_events_count`), `*_ev_performance_departure_success_ratio`, `*_ev_performance_departure_success_feasible_ratio`, `*_ev_events_departure_target_{feasible,infeasible}_count`, `*_ev_departure_audit_target_*` | A departure meets its target within 0.005 SOC (was 1e-6), so a car that the rule-based baselines stop 0.001 short of its target counts as served. | none |
 | Comfort rows (`*_comfort_resilience_*`, `*_thermal_service_audit_*` discomfort rows, legacy `discomfort_*` and `one_minus_thermal_resilience_proportion`) of a building without set-point columns | Undefined (was judged against a 0 °C cooling set point). | none |
 | `*_{cost,emissions}_ratio_to_{baseline,business_as_usual}_total_ratio` with both totals zero, and their portfolio values | Undefined (was 1). | none |
+| Total ratios to the baseline or the BAU whose reference total is below 1% of the mean \|reference\| of the members (#403) | Undefined (was the finite, arbitrarily large quotient). | none; the control and reference totals stay in the table |
 | `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Allocated from the district settlement. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostic) |
 | Portfolio EV departure rates and means, deferrable and escalator service levels, start delay and solar self-consumption (`MultiCommunityEnv`) | Pooled from their additive denominators. | none |
 | Portfolio community-market local shares, demand-response compliance and demand-response audit coverage ratios (`MultiCommunityEnv`, #285) | Pooled from local plus grid energy, valid requested energy, requested energy and active intervals. | none |
