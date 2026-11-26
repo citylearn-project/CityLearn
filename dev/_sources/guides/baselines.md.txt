@@ -30,7 +30,7 @@ It is not a scenario with all equipment switched off.
 | `ev_charge_target` | Definition | EV behaviour |
 |---|---|---|
 | `'full'` (default) | `immediate-full-charge-v4` | Charges to 100%, as the BAU of CityLearn 3.1–3.3. |
-| `'requested'` | `immediate-user-target-v3` | Charges up to the user's requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger's minimum power, the EV stops slightly below the target rather than overshooting it. Its difference from the default excludes the extra energy delivered above the requested SOC. |
+| `'requested'` | `immediate-user-target-v3` | Charges up to the user's requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger's minimum power, the last step charges at the minimum power and crosses the target slightly, as the rule-based baselines do, so the EV does not leave below it. Its difference from the default excludes the extra energy delivered above the requested SOC. |
 
 Everything else is the same. Select the BAU used as the KPI reference by
 `evaluate_v2()` with the environment setting

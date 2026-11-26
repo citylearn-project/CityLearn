@@ -477,7 +477,9 @@ every reference above 1% gave a ratio below 75. The control and reference
 totals and their delta stay in the table. The district row uses the same scale, so a district ratio is undefined only when
 the district reference is itself below 1% of a member’s, which can happen
 only for a signed total whose members cancel. A one-building env, or a
-reference that is zero for every member, has only the 0/0 rule above. The
+reference that is zero for every member, has only the 0/0 rule above. Equal
+control and reference totals (within the zero tolerance) keep the ratio 1.0,
+however small they are: the controller changed nothing. The
 <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> portfolio ratios divide pooled totals and do not use this
 rule.</p>
 </li>
@@ -516,7 +518,7 @@ price_t  = electricity price at step t
 </div>
 <p>Without a community market only imports are charged: exported energy earns nothing, so the totals are never negative. With a community market, the controlled run and the conventional counterfactual are both settled with the scenario’s market rules, and the totals can be negative. <code class="docutils literal notranslate"><span class="pre">control</span></code> uses the series of the controlled run, and <code class="docutils literal notranslate"><span class="pre">baseline</span></code> uses the conventional counterfactual series (by default without storage and, for dynamic building models, without partial-load control). <code class="docutils literal notranslate"><span class="pre">delta</span> <span class="pre">=</span> <span class="pre">control</span> <span class="pre">−</span> <span class="pre">baseline</span></code>.</p>
 <p>Ratios to the baseline and to the BAU use the signed ratio:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ratio = control / reference                       if reference ≥ 0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ratio = control / reference                       if reference &gt; 0
 ratio = 1 + (control − reference) / |reference|   if reference &lt; 0
 </pre></div>
 </div>

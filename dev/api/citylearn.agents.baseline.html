@@ -224,8 +224,8 @@ example <code class="docutils literal notranslate"><span class="pre">RBCCommunit
 to 100%, as the BAU of CityLearn 3.1–3.3 did. With
 <code class="docutils literal notranslate"><span class="pre">ev_charge_target='requested'</span></code> (<code class="docutils literal notranslate"><span class="pre">immediate-user-target-v3</span></code>) it stops at the
 user’s requested departure SOC: the last command is limited to the remaining
-energy gap, and when that command is below the charger minimum the EV stops
-slightly below the target instead of overshooting it. Appliances start at the first admissible
+energy gap, and when that command is below the charger minimum the last step
+charges at the minimum and crosses the target slightly. Appliances start at the first admissible
 step and the home battery uses observed current-step demand and PV when
 estimating local surplus or import.</p>
 <p>The HVAC follows <cite>hvac</cite>. With <code class="docutils literal notranslate"><span class="pre">'off'</span></code> the <code class="docutils literal notranslate"><span class="pre">heating_device</span></code>, <code class="docutils literal notranslate"><span class="pre">cooling_device</span></code> and

@@ -203,7 +203,9 @@ Every ratio uses safe division:
   totals and their delta stay in the table. The district row uses the same scale, so a district ratio is undefined only when
   the district reference is itself below 1% of a member's, which can happen
   only for a signed total whose members cancel. A one-building env, or a
-  reference that is zero for every member, has only the 0/0 rule above. The
+  reference that is zero for every member, has only the 0/0 rule above. Equal
+  control and reference totals (within the zero tolerance) keep the ratio 1.0,
+  however small they are: the controller changed nothing. The
   `MultiCommunityEnv` portfolio ratios divide pooled totals and do not use this
   rule.
 
@@ -249,7 +251,7 @@ Without a community market only imports are charged: exported energy earns nothi
 Ratios to the baseline and to the BAU use the signed ratio:
 
 ```text
-ratio = control / reference                       if reference ≥ 0
+ratio = control / reference                       if reference > 0
 ratio = 1 + (control − reference) / |reference|   if reference < 0
 ```
 

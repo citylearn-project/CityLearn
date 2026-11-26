@@ -2138,7 +2138,10 @@ attributes are overwritten.</p>
 </tbody>
 </table>
 <p>Battery and PV autosizing download sizing data unless it is cached (<code class="docutils literal notranslate"><span class="pre">offline=True</span></code> forbids the download); PV needs
-<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">nrel-pysam</span></code>. Under physics version 1 PV autosizing assumes hourly data.</p>
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">nrel-pysam</span></code>. Under physics version 1 PV autosizing assumes hourly data. Under version 2 the
+window’s demand is scaled to one year before it is compared with the PVWatts annual yield, so a one-week window
+sizes the array like a one-year window with the same average demand (a seasonal window still gives a seasonal
+size).</p>
 </section>
 </section>
 <section id="electrical-service">
