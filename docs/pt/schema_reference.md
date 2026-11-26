@@ -192,7 +192,6 @@ passos de controlo).
 | `random_episode_split` | bool | `false` | | Escolhe o episódio ao acaso em cada reset (com reposição), com semente em `random_seed` e no número do episódio. Sem ela, os episódios são usados por ordem e em ciclo. Aplica-se a episódios inteiros e a listas. | `random_episode_split` | original |
 | `episode_split_boundary` | string | `shared` | `shared`, `disjoint` | Para episódios inteiros sem `rolling`. `shared`: a última linha de um episódio é a primeira do seguinte, pelo que todos os intervalos são simulados (passo `N - 1`). `disjoint`: as divisões da 3.6.0 (passo `N`), que saltam o intervalo entre dois episódios. | `episode_split_boundary` | depois da 3.6.0 |
 | `ev_soc_carryover` | bool | `false` | | Começa cada VE de um episódio que continua o anterior no tempo (na última linha dele com `shared`, na linha seguinte com `disjoint`) com o SOC que tinha no fim desse episódio, em vez do SOC do calendário. As divisões sequenciais e as listas explícitas transportam o SOC; as aleatórias e as `rolling` nunca o fazem. Só o SOC dos VE é transportado. Consulte o [guia de migração](migration.md#soc-dos-ve-transportado-entre-divisões-de-episódios). | `ev_soc_carryover` | depois da 3.6.0 |
-| `episode_end` | string | `truncated` | `truncated`, `terminated` | Como o `step()` indica o fim de um episódio. `truncated`: o último passo devolve `terminated=False, truncated=True`, porque um episódio acaba num limite de tempo depois do qual os edifícios, as baterias e os VE continuariam, pelo que os algoritmos de aprendizagem continuam a estimar o valor a partir da última observação. `terminated`: `terminated=True, truncated=False`, como na 3.7.0 e anteriores. Os resultados da simulação e os KPIs são os mesmos. Ver [Correr simulações](running_simulations.md#como-acaba-um-episódio). | `episode_end` | depois da 3.7.0 |
 
 Regras:
 
@@ -357,7 +356,7 @@ fora desse hash.
 |---|---|---|
 | `root_directory` | `root_directory` | Não é usado para `community_market.tariff_files`. |
 | `buildings` | `buildings.<b>.include` | Nomes, índices ou objetos `Building`; substitui a seleção por `include`. |
-| `simulation_start_time_step`, `simulation_end_time_step`, `episode_time_steps`, `rolling_episode_split`, `random_episode_split`, `episode_split_boundary`, `ev_soc_carryover`, `episode_end`, `seconds_per_time_step`, `time_step_ratio_mode` | a mesma | |
+| `simulation_start_time_step`, `simulation_end_time_step`, `episode_time_steps`, `rolling_episode_split`, `random_episode_split`, `episode_split_boundary`, `ev_soc_carryover`, `seconds_per_time_step`, `time_step_ratio_mode` | a mesma | |
 | `central_agent`, `interface`, `topology_mode`, `random_seed`, `random_stream_version`, `physics_version`, `baseline_version` | a mesma | |
 | `reward_function`, `reward_function_kwargs` | `reward_function.type`, `reward_function.attributes` | Consulte [Função de recompensa](#função-de-recompensa). |
 | `shared_observations` | `observations.<name>.shared_in_central_agent` | Substitui a lista construída a partir do schema. |
