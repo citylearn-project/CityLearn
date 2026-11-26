@@ -543,6 +543,18 @@ misspelled `physics_version` argument gets a suggestion. Simulation results do
 not change ([#301](https://github.com/citylearn-project/CityLearn/issues/301),
 [#302](https://github.com/citylearn-project/CityLearn/issues/302)).
 
+### Portable schema hash
+
+`schema_sha256` in `exported_kpis.manifest.json` no longer depends on the
+dataset folder: it hashes the effective schema without `root_directory`, with
+absolute paths inside the dataset folder made relative to it. The same scenario
+in two checkouts or on two machines now has the same hash, and every hash
+recorded before this change differs from the new one for the same scenario. If a
+protocol pins a recorded `schema_sha256`, record it again with this release, or
+pin the new `schema_file_sha256`, the SHA-256 of the scenario file's bytes, next
+to `schema_file`, its path relative to the dataset folder. `data_files_sha256`
+and `compare_manifests()` do not change, and simulation results do not change.
+
 ### Consecutive episode splits share their boundary row
 
 An episode of N data rows executes N - 1 control steps: its last row is only

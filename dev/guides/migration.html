@@ -123,6 +123,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#the-rule-based-baselines-use-current-step-load-and-solar">The rule-based baselines use current-step load and solar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#numeric-and-configuration-hygiene">Numeric and configuration hygiene</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#recorded-settings">Recorded settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#portable-schema-hash">Portable schema hash</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#consecutive-episode-splits-share-their-boundary-row">Consecutive episode splits share their boundary row</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dynamic-topology-joining-members-storage-and-district-series">Dynamic topology: joining members, storage and district series</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#control-step-different-from-the-dataset-step">Control step different from the dataset step</a></li>
@@ -776,6 +777,18 @@ values, whether set in the schema or as a constructor argument, and a
 misspelled <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> argument gets a suggestion. Simulation results do
 not change (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/301">#301</a>,
 <a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/302">#302</a>).</p>
+</section>
+<section id="portable-schema-hash">
+<h3>Portable schema hash<a class="headerlink" href="#portable-schema-hash" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">schema_sha256</span></code> in <code class="docutils literal notranslate"><span class="pre">exported_kpis.manifest.json</span></code> no longer depends on the
+dataset folder: it hashes the effective schema without <code class="docutils literal notranslate"><span class="pre">root_directory</span></code>, with
+absolute paths inside the dataset folder made relative to it. The same scenario
+in two checkouts or on two machines now has the same hash, and every hash
+recorded before this change differs from the new one for the same scenario. If a
+protocol pins a recorded <code class="docutils literal notranslate"><span class="pre">schema_sha256</span></code>, record it again with this release, or
+pin the new <code class="docutils literal notranslate"><span class="pre">schema_file_sha256</span></code>, the SHA-256 of the scenario file’s bytes, next
+to <code class="docutils literal notranslate"><span class="pre">schema_file</span></code>, its path relative to the dataset folder. <code class="docutils literal notranslate"><span class="pre">data_files_sha256</span></code>
+and <code class="docutils literal notranslate"><span class="pre">compare_manifests()</span></code> do not change, and simulation results do not change.</p>
 </section>
 <section id="consecutive-episode-splits-share-their-boundary-row">
 <h3>Consecutive episode splits share their boundary row<a class="headerlink" href="#consecutive-episode-splits-share-their-boundary-row" title="Link to this heading"></a></h3>
