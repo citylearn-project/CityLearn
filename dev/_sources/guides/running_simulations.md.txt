@@ -39,6 +39,16 @@ while not (terminated or truncated):
 kpis_v2 = env.evaluate_v2()
 ```
 
+### How an episode ends
+
+A CityLearn episode always ends because its simulation window or episode split ends. That is a time limit: after it, the buildings, batteries and EVs would carry on, and the energy left in a battery still has value. So, as the Gymnasium API defines it, the last step returns `terminated=False, truncated=True`. A learner should stop bootstrapping only on `terminated`, and reset the environment on `terminated or truncated`:
+
+```text
+target = reward + gamma * (1 - terminated) * next_value  # not (1 - (terminated or truncated))
+```
+
+Treating the end of a window as terminal teaches the learner that whatever is stored at the end is worth nothing, which biases the values of the last steps of every episode towards draining the batteries and leaving EVs uncharged. The bundled SAC, MARLISA and Q-learning agents, Stable Baselines3 and RLlib already use the two flags this way. `episode_end='terminated'` (constructor or schema key) restores the flags of CityLearn 3.7.0 and earlier, `terminated=True, truncated=False`; simulation results and KPIs are the same with both. `env.done` says whether the episode is over, and the `env.terminated` property keeps that meaning, so loops written as `while not env.terminated:` keep working.
+
 ## Entity Interface Example
 
 ```python
@@ -108,6 +118,7 @@ All communities must share `seconds_per_time_step`, effective episode length, `i
 | `random_episode_split` | bool | schema | Random window episodes. | Uses `random_seed`. |
 | `episode_split_boundary` | str | `shared` | How consecutive (non-rolling) splits meet. | `shared` shares the boundary row so every interval is simulated; `disjoint` restores the 3.6.0 splits. |
 | `ev_soc_carryover` | bool | `False` | Start each EV of an episode that continues the previous one in time from its SOC at the end of that episode. | Only the EV SOC is carried. Off, episodes are independent but a session across a boundary loses its charge; on, consecutive episodes depend on the previous controller. See the [KPI reference](kpis_reference.md#departures). |
+| `episode_end` | str | `truncated` | How `step()` reports the end of an episode. | `truncated` (Gymnasium time limit, the default) or `terminated` (3.7.0 and earlier). See [How an episode ends](#how-an-episode-ends). |
 | `seconds_per_time_step` | float | schema | Physical duration of each step. | Examples: 15, 60, 300, 900, 3600. |
 | `time_step_ratio` | int/float | inferred | Ratio between control step and dataset spacing. | Inferred from the data; a value passed here must match it. |
 | `time_step_ratio_mode` | str | `reject` | What to do when the control step differs from the dataset step. | `reject` raises an error; `compress` keeps the 3.6.0 behaviour (one data row per step, energies scaled). |
@@ -398,7 +409,7 @@ def run(name, battery_action):
         parameters={"battery_action": battery_action},
     )
     env.reset()
-    while not env.terminated:
+    while not env.done:
         actions = [[battery_action if n.startswith("electrical_storage") else 0.0 for n in env.action_names[0]]]
         env.step(actions)
     env.export_final_kpis(export_business_as_usual_timeseries=False)

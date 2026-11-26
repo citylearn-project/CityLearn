@@ -214,6 +214,13 @@ connected across the boundary keeps its charge, at the new episode’s first ste
 the schedule SOC, and an arrival without one keeps the EV’s simulated SOC, as in one run. The first episode uses the schedule SOC, as when the setting is off. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still
 start every episode from their initial state. Off, episodes are independent; on, an episode that continues the
 previous one depends on what the previous controller did. Can also be set with the schema key of the same name.</p></li>
+<li><p><strong>episode_end</strong> (<em>str</em><em>, </em><em>default: 'truncated'</em>) – How <cite>step()</cite> reports the end of an episode. Every CityLearn episode ends because its window or split ends, a time
+limit after which the buildings, batteries and EVs would carry on, so by default the last step returns
+<cite>terminated=False, truncated=True</cite>, as the Gymnasium API defines it: learners keep bootstrapping from the
+last observation instead of treating it as an absorbing state with no future value. <cite>‘terminated’</cite> returns
+<cite>terminated=True, truncated=False</cite>, as CityLearn 3.7.0 and earlier did. Simulation results and KPIs are the
+same with both. The <cite>done</cite> property says whether the episode is over, whatever the reason; <cite>terminated</cite>, as a
+property, keeps that meaning for existing loops. Can also be set with the schema key of the same name.</p></li>
 <li><p><strong>seconds_per_time_step</strong> (<em>float</em>) – Number of seconds in 1 <cite>time_step</cite> and must be set to &gt;= 1. It must equal the dataset step unless
 <cite>time_step_ratio_mode=’compress’</cite>.</p></li>
 <li><p><strong>time_step_ratio</strong> (<em>int</em><em>, </em><em>optional</em>) – Ratio of the control step to the dataset step. It is inferred from the data; a value passed here must
@@ -429,6 +436,17 @@ and electricity pricing at the current time step.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.done">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.done" title="Link to this definition"></a></dt>
+<dd><p>the last step of its window or split has been taken.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether the episode is over</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.electric_vehicles">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">electric_vehicles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="citylearn.electric_vehicle.html#citylearn.electric_vehicle.ElectricVehicle" title="citylearn.electric_vehicle.ElectricVehicle"><span class="pre">ElectricVehicle</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.electric_vehicles" title="Link to this definition"></a></dt>
 <dd><p>Electric Vehicles in CityLearn environment.</p>
@@ -522,6 +540,17 @@ and electricity pricing at the current time step.</p>
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.episode">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">episode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.episode" title="Link to this definition"></a></dt>
 <dd><p>Current episode index.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.episode_end">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">episode_end</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.episode_end" title="Link to this definition"></a></dt>
+<dd><p><cite>‘truncated’</cite> (default) or <cite>‘terminated’</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>How <cite>step()</cite> reports the end of an episode</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -1105,7 +1134,10 @@ on the environment across <code class="docutils literal notranslate"><span class
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.terminated">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">terminated</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.terminated" title="Link to this definition"></a></dt>
-<dd><p>Check if simulation has reached completion.</p>
+<dd><p>Whether the episode is over, the same as <cite>done</cite>.</p>
+<p>Kept with this meaning so that loops such as <cite>while not env.terminated</cite> keep working. The <cite>terminated</cite>
+flag that <cite>step()</cite> returns follows <cite>episode_end</cite> instead: with the default <cite>‘truncated’</cite> it is always
+<cite>False</cite>, because a CityLearn episode only ends at a time limit. Learners should read the flags of <cite>step()</cite>.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1161,7 +1193,7 @@ the CityLearn 3.6.0 behaviour of reading one data row per control step and scali
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.truncated">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">truncated</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.truncated" title="Link to this definition"></a></dt>
-<dd><p>Check if episode truncates due to a time limit or a reason that is not defined as part of the task MDP.</p>
+<dd><p>Whether the episode ended at its time limit, as <cite>step()</cite> reports it under <cite>episode_end=’truncated’</cite>.</p>
 </dd></dl>
 
 <dl class="py method">

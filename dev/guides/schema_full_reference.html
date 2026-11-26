@@ -259,7 +259,8 @@ written out with <code class="docutils literal notranslate"><span class="pre">en
 <span class="w">  </span><span class="nt">"rolling_episode_split"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"random_episode_split"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"episode_split_boundary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shared"</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">"ev_soc_carryover"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">  </span><span class="nt">"ev_soc_carryover"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"episode_end"</span><span class="p">:</span><span class="w"> </span><span class="s2">"truncated"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -321,6 +322,11 @@ written out with <code class="docutils literal notranslate"><span class="pre">en
 <td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">true</span></code>: an episode that continues the previous one in time starts each EV from its SOC at the end of that episode.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">episode_end</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;truncated&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;truncated&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;terminated&quot;</span></code>: the last step returns <code class="docutils literal notranslate"><span class="pre">terminated=True</span></code>, as 3.7.0 and earlier did.</p></td>
 </tr>
 </tbody>
 </table>

@@ -759,6 +759,14 @@ dataset, set <code class="docutils literal notranslate"><span class="pre">&quot;
 <td><p><code class="docutils literal notranslate"><span class="pre">ev_soc_carryover</span></code></p></td>
 <td><p>after 3.6.0</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">episode_end</span></code></p></td>
+<td><p>string</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">truncated</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">truncated</span></code>, <code class="docutils literal notranslate"><span class="pre">terminated</span></code></p></td>
+<td><p>How <code class="docutils literal notranslate"><span class="pre">step()</span></code> reports the end of an episode. <code class="docutils literal notranslate"><span class="pre">truncated</span></code>: the last step returns <code class="docutils literal notranslate"><span class="pre">terminated=False,</span> <span class="pre">truncated=True</span></code>, because an episode ends at a time limit after which the buildings, batteries and EVs would carry on, so learners keep bootstrapping from the last observation. <code class="docutils literal notranslate"><span class="pre">terminated</span></code>: <code class="docutils literal notranslate"><span class="pre">terminated=True,</span> <span class="pre">truncated=False</span></code>, as 3.7.0 and earlier did. Simulation results and KPIs are the same. See <a class="reference internal" href="running_simulations.html#how-an-episode-ends"><span class="std std-ref">Running simulations</span></a>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">episode_end</span></code></p></td>
+<td><p>after 3.7.0</p></td>
+</tr>
 </tbody>
 </table>
 <p>Rules:</p>
@@ -1213,7 +1221,7 @@ reported as incompatible. Start the name of a comment or note key with <code cla
 <td><p><code class="docutils literal notranslate"><span class="pre">buildings.&lt;b&gt;.include</span></code></p></td>
 <td><p>Names, indices or <code class="docutils literal notranslate"><span class="pre">Building</span></code> objects; replaces the <code class="docutils literal notranslate"><span class="pre">include</span></code> selection.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">simulation_start_time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">simulation_end_time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">episode_time_steps</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_episode_split</span></code>, <code class="docutils literal notranslate"><span class="pre">random_episode_split</span></code>, <code class="docutils literal notranslate"><span class="pre">episode_split_boundary</span></code>, <code class="docutils literal notranslate"><span class="pre">ev_soc_carryover</span></code>, <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">simulation_start_time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">simulation_end_time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">episode_time_steps</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_episode_split</span></code>, <code class="docutils literal notranslate"><span class="pre">random_episode_split</span></code>, <code class="docutils literal notranslate"><span class="pre">episode_split_boundary</span></code>, <code class="docutils literal notranslate"><span class="pre">ev_soc_carryover</span></code>, <code class="docutils literal notranslate"><span class="pre">episode_end</span></code>, <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode</span></code></p></td>
 <td><p>same</p></td>
 <td><p></p></td>
 </tr>

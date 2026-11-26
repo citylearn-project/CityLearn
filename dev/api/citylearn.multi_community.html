@@ -207,6 +207,12 @@ reset/step calls and adds portfolio-level KPI rows from district totals.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="citylearn.multi_community.MultiCommunityEnv.done">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">done</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#citylearn.multi_community.MultiCommunityEnv.done" title="Link to this definition"></a></dt>
+<dd><p>Whether the episode is over in any child environment, whatever the reason.</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="citylearn.multi_community.MultiCommunityEnv.entity_specs">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">entity_specs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.multi_community.MultiCommunityEnv.entity_specs" title="Link to this definition"></a></dt>
 <dd><p>Entity interface specifications keyed by community id.</p>
@@ -299,7 +305,9 @@ family.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.multi_community.MultiCommunityEnv.terminated">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">terminated</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#citylearn.multi_community.MultiCommunityEnv.terminated" title="Link to this definition"></a></dt>
-<dd><p>Whether any child environment has terminated.</p>
+<dd><p>Whether the episode is over, the same as <cite>done</cite>.</p>
+<p>Kept with this meaning so that loops such as <cite>while not env.terminated</cite> keep working, as on
+<code class="xref py py-class docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>. The <cite>terminated</cite> flag that <cite>step()</cite> returns follows the children’s <cite>episode_end</cite>.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -317,7 +325,7 @@ family.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.multi_community.MultiCommunityEnv.truncated">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">truncated</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#citylearn.multi_community.MultiCommunityEnv.truncated" title="Link to this definition"></a></dt>
-<dd><p>Whether any child environment has truncated.</p>
+<dd><p>Whether any child environment ended its episode at its time limit, as <cite>step()</cite> reports it.</p>
 </dd></dl>
 
 <dl class="py property">

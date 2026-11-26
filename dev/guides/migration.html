@@ -102,6 +102,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-interface-and-timestep">Choose the interface and timestep</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-end-of-an-episode-is-reported-as-truncation">The end of an episode is reported as truncation</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-6-0-to-3-7-0">Upgrade from 3.6.0 to 3.7.0</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#dataset-cache-keyed-by-content">Dataset cache keyed by content</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ev-charging-in-the-default-baseline">EV charging in the default baseline</a></li>
@@ -255,6 +259,18 @@ local schema and files for data that are not in the public catalogue; a
 repository-relative path is not created by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>.</p>
 <p>The <a class="reference internal" href="releases.html"><span class="std std-doc">release history</span></a> retains version-specific changes and the
 development-line history.</p>
+</section>
+<section id="unreleased">
+<h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading"></a></h2>
+<section id="the-end-of-an-episode-is-reported-as-truncation">
+<h3>The end of an episode is reported as truncation<a class="headerlink" href="#the-end-of-an-episode-is-reported-as-truncation" title="Link to this heading"></a></h3>
+<p>The last step of an episode now returns <code class="docutils literal notranslate"><span class="pre">terminated=False,</span> <span class="pre">truncated=True</span></code>, because a CityLearn episode always ends at a time limit (the end of its window or split). Simulation results and KPIs do not change.</p>
+<ul class="simple">
+<li><p><strong>Your own learner.</strong> Stop bootstrapping only on <code class="docutils literal notranslate"><span class="pre">terminated</span></code> and reset on <code class="docutils literal notranslate"><span class="pre">terminated</span> <span class="pre">or</span> <span class="pre">truncated</span></code>: the target is <code class="docutils literal notranslate"><span class="pre">reward</span> <span class="pre">+</span> <span class="pre">gamma</span> <span class="pre">*</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">terminated)</span> <span class="pre">*</span> <span class="pre">next_value</span></code>. A learner that masks on <code class="docutils literal notranslate"><span class="pre">terminated</span> <span class="pre">or</span> <span class="pre">truncated</span></code> behaves as before.</p></li>
+<li><p><strong>Loops.</strong> <code class="docutils literal notranslate"><span class="pre">while</span> <span class="pre">not</span> <span class="pre">env.terminated:</span></code> keeps working, because the <code class="docutils literal notranslate"><span class="pre">env.terminated</span></code> property still means that the episode is over; <code class="docutils literal notranslate"><span class="pre">env.done</span></code> says the same. A loop that reads only the <code class="docutils literal notranslate"><span class="pre">terminated</span></code> flag returned by <code class="docutils literal notranslate"><span class="pre">step()</span></code>, such as <code class="docutils literal notranslate"><span class="pre">while</span> <span class="pre">not</span> <span class="pre">terminated:</span></code>, now calls <code class="docutils literal notranslate"><span class="pre">step()</span></code> once more and raises <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>; check <code class="docutils literal notranslate"><span class="pre">terminated</span> <span class="pre">or</span> <span class="pre">truncated</span></code> instead.</p></li>
+<li><p><strong>Reproducing 3.7.0 training.</strong> Pass <code class="docutils literal notranslate"><span class="pre">episode_end='terminated'</span></code> to <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>, or set it in the schema. Every community of a <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> must use the same value.</p></li>
+</ul>
+</section>
 </section>
 <section id="upgrade-from-3-6-0-to-3-7-0">
 <span id="upgrade-from-360-to-370"></span><h2>Upgrade from 3.6.0 to 3.7.0<a class="headerlink" href="#upgrade-from-3-6-0-to-3-7-0" title="Link to this heading"></a></h2>
