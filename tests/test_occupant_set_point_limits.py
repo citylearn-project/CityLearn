@@ -1,9 +1,10 @@
-"""Occupant set points stay within a plausible range under physics version 2 (CityLearn #352).
+"""Occupant set points stay within a plausible range (CityLearn #352).
 
 `LogisticRegressionOccupantInteractionBuilding.update_set_points` adds each occupant change to the
 current set point. Under arbitrary HVAC control the occupant keeps interacting, and the heating set
-point of the Quebec neighbourhood random-walked to about -1342 C over one episode. Physics version 2
-keeps occupant changes within `set_point_limits`; physics version 1 keeps the unbounded behaviour.
+point of the Quebec neighbourhood random-walked to about -1342 C over one episode. Occupant changes now
+stay within `set_point_limits`; physics version 1, which kept the unbounded behaviour of CityLearn 3.6.0,
+was removed in CityLearn 3.8.1 (#466).
 """
 
 from __future__ import annotations
@@ -33,11 +34,8 @@ def _schema(**building_options) -> dict:
     return schema
 
 
-def _env(physics_version: int, **building_options) -> CityLearnEnv:
-    return CityLearnEnv(
-        _schema(**building_options), central_agent=True, episode_time_steps=STEPS, random_seed=0,
-        physics_version=physics_version,
-    )
+def _env(**building_options) -> CityLearnEnv:
+    return CityLearnEnv(_schema(**building_options), central_agent=True, episode_time_steps=STEPS, random_seed=0)
 
 
 def _run_with_constant_occupant(env: CityLearnEnv, delta: float = DELTA) -> np.ndarray:
@@ -58,7 +56,7 @@ def _run_with_constant_occupant(env: CityLearnEnv, delta: float = DELTA) -> np.n
 
 
 def test_v2_occupant_heating_set_point_stops_at_the_lower_limit():
-    env = _env(2)
+    env = _env()
 
     try:
         set_points = _run_with_constant_occupant(env)
@@ -73,7 +71,7 @@ def test_v2_occupant_heating_set_point_stops_at_the_lower_limit():
 
 
 def test_v2_occupant_heating_set_point_stops_at_the_upper_limit():
-    env = _env(2, set_point_limits=[16.0, 24.0])
+    env = _env(set_point_limits=[16.0, 24.0])
 
     try:
         set_points = _run_with_constant_occupant(env, delta=1.5)
@@ -83,22 +81,8 @@ def test_v2_occupant_heating_set_point_stops_at_the_upper_limit():
         env.close()
 
 
-def test_v1_occupant_heating_set_point_is_unbounded_as_before():
-    env = _env(1)
-
-    try:
-        set_points = _run_with_constant_occupant(env)
-        lookback = env.buildings[0].dynamics.lookback
-        assert getattr(env.buildings[0], 'set_point_limits', None) is None
-        # Once the dynamics start, each step adds the change to the previous set point, as in CityLearn 3.6.0.
-        np.testing.assert_allclose(np.diff(set_points[lookback - 1:-1]), DELTA, atol=1.0e-5)
-        assert set_points.min() < 5.0
-    finally:
-        env.close()
-
-
 def test_v2_set_point_observation_bounds_are_the_limits():
-    env = _env(2)
+    env = _env()
 
     try:
         building = env.buildings[0]
@@ -120,7 +104,7 @@ def test_v2_set_point_observation_bounds_are_the_limits():
 
 
 def test_a_schedule_outside_the_limits_is_not_moved_into_them():
-    env = _env(2, set_point_limits=[22.0, 30.0])
+    env = _env(set_point_limits=[22.0, 30.0])
 
     try:
         # The schedule (18.5 to 21.6 C) is below the range: a decrease is stopped where it starts,
@@ -137,7 +121,7 @@ def test_a_schedule_outside_the_limits_is_not_moved_into_them():
 @pytest.mark.parametrize('value', [[30.0, 15.0], [15.0], 'warm', [15.0, float('inf')]])
 def test_invalid_set_point_limits_are_rejected(value):
     with pytest.raises(ValueError, match='set_point_limits'):
-        _env(2, set_point_limits=value)
+        _env(set_point_limits=value)
 
 
 def test_business_as_usual_set_point_observation_stays_in_the_space():
@@ -147,7 +131,7 @@ def test_business_as_usual_set_point_observation_stays_in_the_space():
     from citylearn.agents.baseline import BusinessAsUsualAgent
 
     schema = _schema()
-    env = CityLearnEnv(schema, interface='flat', central_agent=True, episode_time_steps=96, random_seed=0, physics_version=2)
+    env = CityLearnEnv(schema, interface='flat', central_agent=True, episode_time_steps=96, random_seed=0)
 
     try:
         observations, _ = env.reset()

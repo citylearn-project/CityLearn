@@ -9,8 +9,7 @@ from platformdirs import user_cache_dir
 import shutil
 import tempfile
 from urllib.parse import quote
-from typing import Any, Callable, Dict, Iterable, Mapping, List, Optional, Union
-import warnings
+from typing import Any, Dict, Iterable, Mapping, List, Optional, Union
 import numpy as np
 import pandas as pd
 import requests
@@ -50,18 +49,6 @@ def _parse_env_bool(name: str, default: bool = False) -> bool:
     return bool(parse_bool(value, default=default, path=name))
 
 
-class _DeprecatedClassAttribute:
-    """A class attribute that warns when read and computes its value from the class it is read from."""
-
-    def __init__(self, value: Callable[[type], Any], message: str):
-        self.value = value
-        self.message = message
-
-    def __get__(self, instance, owner):
-        warnings.warn(self.message, DeprecationWarning, stacklevel=2)
-
-        return self.value(owner)
-
 def get_settings():
     directory = os.path.join(os.path.join(os.path.dirname(__file__), 'misc'))
     filepath = os.path.join(directory, 'settings.yaml')
@@ -82,21 +69,6 @@ class DataSet:
     REPOSITORY_DATA_PATH = FileHandler.join_url('data')
     REPOSITORY_DATA_DATASETS_PATH = FileHandler.join_url(REPOSITORY_DATA_PATH, 'datasets')
     REPOSITORY_DATA_MISC_PATH = FileHandler.join_url(REPOSITORY_DATA_PATH, 'misc')
-    GITHUB_API_CONTENT_URL = _DeprecatedClassAttribute(
-        lambda cls: FileHandler.join_url(
-            'https://api.github.com/repos/',
-            os.getenv('CITYLEARN_DATASET_GITHUB_ACCOUNT', cls.GITHUB_ACCOUNT),
-            os.getenv('CITYLEARN_DATASET_REPOSITORY', cls.REPOSITORY_NAME),
-            'contents',
-        ),
-        'DataSet.GITHUB_API_CONTENT_URL is deprecated and unused: get_github_contents() builds the URL from the '
-        'github_account and repository of the DataSet instance.',
-    )
-    DEFAULT_CACHE_DIRECTORY = _DeprecatedClassAttribute(
-        lambda cls: os.path.join(user_cache_dir('citylearn'), os.getenv('CITYLEARN_DATASET_TAG', cls.REPOSITORY_TAG)),
-        'DataSet.DEFAULT_CACHE_DIRECTORY is deprecated and unused; it is not the folder datasets are cached in. '
-        'Use DataSet().cache_directory.',
-    )
     # Folder of `cache_directory` that holds copies of local dataset folders, one subfolder per content key.
     CONTENT_CACHE_DIRECTORY = 'datasets_by_content'
     BATTERY_CHOICES_FILENAME = 'battery_choices.yaml'
@@ -1437,8 +1409,7 @@ class ChargerSimulation(TimeSeriesData):
     soc_unit : str or Mapping[str, str]
         Unit of the SOC columns, ``'percent'`` or ``'fraction'``, for both columns or per column
         name. ``None`` (default) infers it once per column: percent if any valid value is above 1.
-        ``'per_value'`` is the value-by-value rule of physics version 1. The schema loader infers it
-        from the whole column of the file.
+        The schema loader infers it from the whole column of the file.
     """
 
     def __init__(
@@ -1467,7 +1438,7 @@ class ChargerSimulation(TimeSeriesData):
         default_time_value = -1
         default_soc_value = -0.1
 
-        # One unit per SOC column (#368), not per value. 'per_value' is the rule of physics version 1.
+        # One unit per SOC column (#368), not per value.
         soc_columns = {
             'electric_vehicle_required_soc_departure': electric_vehicle_required_soc_departure,
             'electric_vehicle_estimated_soc_arrival': electric_vehicle_estimated_soc_arrival,
@@ -1477,7 +1448,7 @@ class ChargerSimulation(TimeSeriesData):
 
         for column, values in soc_columns.items():
             unit = declared.get(column)
-            unit = unit if unit == 'per_value' else self._resolve_soc_unit(unit, path=f'soc_unit[{column!r}]')
+            unit = self._resolve_soc_unit(unit, path=f'soc_unit[{column!r}]')
             self._soc_units[column] = (
                 self._soc_series_unit(values, default_soc_value=default_soc_value) if unit is None else unit
             )
@@ -1710,9 +1681,7 @@ class ChargerSimulation(TimeSeriesData):
         """:py:meth:`normalize_soc_series` with an explicit `unit`.
 
         ``'percent'`` divides every value by 100 and ``'fraction'`` keeps it. ``None`` infers the
-        unit once for the whole series with :py:meth:`_soc_series_unit`. ``'per_value'`` is the rule
-        of physics version 1: a value in [0, 1] is a fraction and a value above 1 a percentage, value
-        by value, so 1 (1 %) in a percent file is read as 100 %.
+        unit once for the whole series with :py:meth:`_soc_series_unit`.
         """
 
         raw = np.array(values, dtype='float32')
@@ -1720,14 +1689,10 @@ class ChargerSimulation(TimeSeriesData):
         normalized = np.full(raw.shape, float(default_soc_value), dtype='float32')
         valid = (raw != default_soc_value) & (raw >= 0.0)
 
-        if unit == 'per_value':
-            fraction = valid & (raw <= 1.0)
-            percent = valid & (raw > 1.0)
-        else:
-            unit = cls._soc_series_unit(values, default_soc_value=default_soc_value) \
-                if unit is None else cls._resolve_soc_unit(unit, path='unit')
-            percent = valid if unit == 'percent' else np.zeros(raw.shape, dtype=bool)
-            fraction = valid & ~percent
+        unit = cls._soc_series_unit(values, default_soc_value=default_soc_value) \
+            if unit is None else cls._resolve_soc_unit(unit, path='unit')
+        percent = valid if unit == 'percent' else np.zeros(raw.shape, dtype=bool)
+        fraction = valid & ~percent
 
         normalized[fraction] = raw[fraction]
         normalized[percent] = raw[percent] / 100.0

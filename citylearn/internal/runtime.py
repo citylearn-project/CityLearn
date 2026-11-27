@@ -10,7 +10,6 @@ import math
 import numpy as np
 
 from citylearn.internal.histories import default_history
-from citylearn.internal.physics_version import physics_version_of
 from citylearn.internal.scalars import clip_action, numpy1_scalar
 
 from citylearn import random_streams
@@ -884,10 +883,7 @@ class CityLearnRuntimeService:
 
         active_actions = env._active_actions_cache
         parsed_actions = []
-        # Out-of-range actions are clipped to the action space, as entity tables are; physics version 1
-        # applies them as given, as CityLearn 3.6.0 did.
-        clip = physics_version_of(env) >= 2
-
+        # Out-of-range actions are clipped to the action space, as entity tables are.
         for i, building in enumerate(env.buildings):
             action_dict = {}
             electric_vehicle_actions = {}
@@ -897,8 +893,7 @@ class CityLearnRuntimeService:
             lows, highs = space.low.tolist(), space.high.tolist()
 
             for action_name, action, low, high in zip(active_actions[i], building_actions[i], lows, highs):
-                if clip:
-                    action = clip_action(action, low, high)
+                action = clip_action(action, low, high)
                 if 'electric_vehicle_storage' in action_name:
                     charger_id = action_name.replace('electric_vehicle_storage_', '')
                     electric_vehicle_actions[charger_id] = action
@@ -1260,14 +1255,6 @@ class CityLearnRuntimeService:
         """Simulate SOC changes for EVs that are not under charger control at t+1."""
 
         env = self.env
-        legacy_streams = env.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION
-        random_state = getattr(env, '_ev_drift_random_state', None)
-
-        if legacy_streams and random_state is None:
-            episode_index = int(getattr(getattr(env, 'episode_tracker', None), 'episode', 0))
-            random_state = np.random.RandomState(int(env.random_seed) + episode_index)
-            env._ev_drift_random_state = random_state
-
         t = env.time_step
         if t + 1 >= env.episode_tracker.episode_time_steps:
             return
@@ -1306,8 +1293,6 @@ class CityLearnRuntimeService:
                 soc = np.nan if soc_index is None else sim.electric_vehicle_estimated_soc_arrival[soc_index]
                 charger_event_by_ev_id.setdefault(next_id, ('connecting', soc))
 
-        legacy_drift = physics_version_of(env) < 2
-
         for ev in env.electric_vehicles:
             if continuing_evs is not None and ev not in continuing_evs:
                 continue
@@ -1324,31 +1309,26 @@ class CityLearnRuntimeService:
                 continue
 
             if t > 0:
-                # Physics version 1 drifts from the previous step and drops the standby loss already
-                # applied at t; later versions drift from the SOC after that loss, as suspended EVs do.
-                last_soc = ev.battery.soc[t - 1] if legacy_drift else ev.battery.soc[t]
+                # The drift starts from the SOC after this step's standby loss, as for suspended EVs (#236).
+                last_soc = ev.battery.soc[t]
                 drift_std = self._ev_unconnected_drift_std(env.seconds_per_time_step)
-                stream = random_state if legacy_streams else self.ev_drift_generator(ev.name, random_streams.EV_AWAY_SOC_DRIFT)
+                stream = self.ev_drift_generator(ev.name, random_streams.EV_AWAY_SOC_DRIFT)
                 variability = np.clip(stream.normal(1.0, drift_std), 0.6, 1.4)
                 # Exogenous away-from-home movement: driving can reduce SOC, offsite charging can raise it.
                 ev.battery.force_set_soc(float(np.clip(last_soc * variability, 0.0, 1.0)))
 
         if suspended_evs:
             # Use a separate stream so suspension does not shift mobility draws for participating EVs.
-            suspended_random = getattr(env, '_ev_suspended_drift_random_state', None)
-            if legacy_streams and suspended_random is None:
-                seed = np.random.SeedSequence([env._ev_drift_seed, 1]).generate_state(1)[0]
-                suspended_random = env._ev_suspended_drift_random_state = np.random.RandomState(seed)
             drift_std = self._ev_unconnected_drift_std(env.seconds_per_time_step)
             for ev in suspended_evs:
                 battery = ev.battery
                 soc_after_standby = float(battery.soc[t])
-                stream = suspended_random if legacy_streams else self.ev_drift_generator(ev.name, random_streams.EV_SUSPENDED_SOC_DRIFT)
+                stream = self.ev_drift_generator(ev.name, random_streams.EV_SUSPENDED_SOC_DRIFT)
                 variability = np.clip(stream.normal(1.0, drift_std), 0.6, 1.4)
                 battery.force_set_soc(float(np.clip(soc_after_standby * variability, 0.0, 1.0)))
 
     def ev_drift_generator(self, ev_name: str, purpose: str) -> np.random.Generator:
-        """Persistent stream of one EV's away-from-charger SOC drift in this episode (``random_stream_version='v2'``).
+        """Persistent stream of one EV's away-from-charger SOC drift in this episode.
 
         One stream per EV, so an EV's draws do not depend on which other EVs are away or members.
         """

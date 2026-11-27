@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Mapping, NamedTuple, Optional
 import numpy as np
 import pandas as pd
 
-from citylearn import random_streams
 from citylearn.base import EpisodeTracker
 from citylearn.building import Building
 from citylearn.data import (
@@ -25,7 +24,6 @@ from citylearn.energy_model import Battery, DeferrableAppliance, Escalator
 from citylearn.reward_function import MultiBuildingRewardFunction, RewardFunction
 from citylearn.utilities import parse_bool
 from citylearn.internal import grid_availability, loading_inputs, loading_components
-from citylearn.internal.physics_version import resolve_physics_version
 from citylearn.internal.baseline import BaselineEVChargingSource
 
 LOGGER = logging.getLogger(__name__)
@@ -533,7 +531,6 @@ class CityLearnLoadingService:
             episode_tracker=episode_tracker, **outage, **options,
         )
         building._declared_inactive_actions = set(inactive_actions)
-        # Before the devices are configured: autosizing depends on the physics version.
         building.physics_version = getattr(self.env, 'physics_version', schema.get('physics_version'))
         building.baseline_version = getattr(self.env, 'baseline_version', schema.get('baseline_version'))
         building._baseline_ev_charging_source = BaselineEVChargingSource(self.env)
@@ -737,10 +734,7 @@ class CityLearnLoadingService:
         # Each EV draws its unspecified battery parameters (efficiency, curves, capacity fade) from
         # its own seed, as `initial_soc` above does; a shared seed gave every EV identical values.
         battery_random_seed = attrs.get('random_seed')
-        if battery_random_seed is None and schema['random_stream_version'] == random_streams.LEGACY_RANDOM_STREAM_VERSION:
-            seed_source = f"{schema['random_seed']}:{electric_vehicle_name}:battery"
-            battery_random_seed = int(hashlib.md5(seed_source.encode('utf-8')).hexdigest()[:8], 16)
-        elif battery_random_seed is None:
+        if battery_random_seed is None:
             # The stream key below separates the EVs; the seed stays the environment seed.
             battery_random_seed = schema['random_seed']
 
@@ -778,9 +772,6 @@ class CityLearnLoadingService:
             battery_kwargs['nominal_power'] = attrs['nominal_power']
 
         battery = battery_constructor(**battery_kwargs)
-        # Physics version 1 limits battery discharge with the charging curve (#227).
-        battery.legacy_discharge_power_limit = resolve_physics_version(
-            getattr(self.env, 'physics_version', schema.get('physics_version'))) < 2
 
         electric_vehicle_type = 'citylearn.citylearn.ElectricVehicle' if electric_vehicle_schema.get('type', None) is None else electric_vehicle_schema['type']
         electric_vehicle_type_module = '.'.join(electric_vehicle_type.split('.')[0:-1])

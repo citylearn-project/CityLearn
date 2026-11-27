@@ -255,7 +255,7 @@ Demand-response `request_id` and baseline validity are exposed in `observations[
 | `soc`, `capacity_kwh`, `nominal_power_kw`, `electricity_consumption_kwh` | legacy | mixed | BESS state and settled consumption. |
 | `min_charge_power_kw`, `min_discharge_power_kw` | `entity_base` | kW | Technical minimum powers. |
 | `efficiency_ratio` | `entity_base` | ratio | Rated round-trip efficiency. |
-| `round_trip_efficiency_ratio` | `entity_base` | ratio | One-way efficiency at the last operation, the square root of the current round-trip efficiency. The name is kept for existing observation layouts. |
+| `one_way_efficiency_ratio` | `entity_base` | ratio | One-way efficiency at the last operation, the square root of the current round-trip efficiency. Named `round_trip_efficiency_ratio` before CityLearn 3.8.1. |
 | `phase_connection_L1/L2/L3` | `entity_base` | one-hot | Storage phase connection. |
 | `electrical_storage_soc_ratio` | `entity_core_electrical` | ratio | Canonical BESS SOC. |
 | `max_charge_power_kw`, `max_discharge_power_kw` | `entity_core_electrical` | kW | Current max powers. |
@@ -280,10 +280,10 @@ features derived from them (`can_charge`, `available_charge_power_kw`,
 `available_charge_action_normalized`, `available_charge_energy_kwh_step`,
 `charge_headroom_ratio`, `max_deliverable_energy_until_departure_kwh`,
 `departure_energy_margin_kwh`, `departure_feasibility_ratio` and the
-`flexible_charge_*` and `community_flexible_*` sums) follow. Under physics
-version 1 they are computed from the nominal capacity, as in CityLearn 3.6.0,
-and report a full faded battery as able to charge. Batteries without fade
-(`capacity_loss_coefficient` 0) give the same values in both versions.
+`flexible_charge_*` and `community_flexible_*` sums) follow. CityLearn 3.6.0
+computed them from the nominal capacity and reported a full faded battery as
+able to charge; batteries without fade (`capacity_loss_coefficient` 0) give the
+same values as in 3.6.0.
 
 ### `pv`
 

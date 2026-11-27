@@ -25,7 +25,6 @@ def _build_minute_outage_env(
     *,
     seconds_per_time_step: int = 900,
     steps: int = 8,
-    physics_version: int = 2,
     simulate_power_outage: bool = True,
     outage_steps_b1: tuple[int, ...] = (),
     outage_signals_b1: list[float] | None = None,
@@ -118,7 +117,6 @@ def _build_minute_outage_env(
         schema,
         central_agent=True,
         episode_time_steps=steps,
-        physics_version=physics_version,
         random_seed=0,
         offline=True,
         time_step_ratio_mode=None if seconds_per_time_step == 900 else 'compress',
@@ -183,15 +181,13 @@ def test_no_outages_returns_empty_events_and_null_ratios(tmp_path):
             env.close()
 
 
-@pytest.mark.parametrize('physics_version', [1, 2])
-def test_nonzero_finite_csv_outage_signals_match_simulator_v1_and_v2(tmp_path, physics_version):
+def test_nonzero_finite_csv_outage_signals_match_simulator(tmp_path):
     # Steps 1..3 have finite nonzero signals (-0.5, 0.5, 1.0); all other steps are 0.0.
-    # Both physics v1 and v2 treat steps 1..3 as outages with 1 kWh non-shiftable demand per step.
+    # Steps 1..3 are outages with 1 kWh non-shiftable demand per step.
     env = _build_minute_outage_env(
-        tmp_path / f'v{physics_version}',
+        tmp_path / 'v2',
         seconds_per_time_step=900,
         steps=6,
-        physics_version=physics_version,
         outage_signals_b1=[0.0, -0.5, 0.5, 1.0, 0.0, 0.0],
         loads_b1={
             'non_shiftable_load': 1.0,
@@ -500,12 +496,11 @@ def test_dynamic_topology_raises_not_implemented():
         env.close()
 
 
-@pytest.mark.parametrize('physics_version', [1, 2])
 @pytest.mark.parametrize('invalid_cell', ['', 'nan', 'inf', '-inf'])
-def test_nonfinite_csv_outage_signals_rejected_before_simulation_v1_and_v2(
-    tmp_path, physics_version, invalid_cell
+def test_nonfinite_csv_outage_signals_rejected_before_simulation(
+    tmp_path, invalid_cell
 ):
-    dataset = tmp_path / f'v{physics_version}_{invalid_cell or "blank"}'
+    dataset = tmp_path / f'v2_{invalid_cell or "blank"}'
     shutil.copytree(MINUTE_DATASET, dataset)
 
     frame = pd.read_csv(dataset / 'Building_1.csv').iloc[:8].copy()
@@ -531,18 +526,16 @@ def test_nonfinite_csv_outage_signals_rejected_before_simulation_v1_and_v2(
             schema,
             central_agent=True,
             episode_time_steps=6,
-            physics_version=physics_version,
             random_seed=0,
             offline=True,
         )
 
 
-@pytest.mark.parametrize('physics_version', [1, 2])
 @pytest.mark.parametrize('invalid_cell', ['', 'nan', 'inf', '-inf'])
 def test_nonfinite_csv_outage_signals_ignored_when_simulate_power_outage_disabled(
-    tmp_path, physics_version, invalid_cell
+    tmp_path, invalid_cell
 ):
-    dataset = tmp_path / f'disabled_v{physics_version}_{invalid_cell or "blank"}'
+    dataset = tmp_path / f'disabled_{invalid_cell or "blank"}'
     shutil.copytree(MINUTE_DATASET, dataset)
 
     frame = pd.read_csv(dataset / 'Building_1.csv').iloc[:8].copy()
@@ -567,7 +560,6 @@ def test_nonfinite_csv_outage_signals_ignored_when_simulate_power_outage_disable
         schema,
         central_agent=True,
         episode_time_steps=6,
-        physics_version=physics_version,
         random_seed=0,
         offline=True,
     )
@@ -582,16 +574,14 @@ def test_nonfinite_csv_outage_signals_ignored_when_simulate_power_outage_disable
         env.close()
 
 
-@pytest.mark.parametrize('physics_version', [1, 2])
 @pytest.mark.parametrize('nonfinite_value', [np.nan, np.inf, -np.inf])
 def test_in_memory_nonfinite_outage_signal_consistent_across_simulator_and_audit(
-    tmp_path, physics_version, nonfinite_value
+    tmp_path, nonfinite_value
 ):
     env = _build_minute_outage_env(
-        tmp_path / f'v{physics_version}_{nonfinite_value}',
+        tmp_path / f'v2_{nonfinite_value}',
         seconds_per_time_step=900,
         steps=4,
-        physics_version=physics_version,
         outage_steps_b1=(),
         loads_b1={'non_shiftable_load': 1.0},
         solar_b1=0.0,

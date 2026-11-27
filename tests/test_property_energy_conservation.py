@@ -58,7 +58,6 @@ def community_cases(draw):
         options=dict(
             seconds=draw(st.sampled_from([60, 300, 900, 1800, 3600])),
             version=draw(st.sampled_from([1, 2])),
-            physics_version=draw(st.sampled_from([1, 2])),
             tariff=draw(st.booleans()),
             phase_limits=draw(st.booleans()),
             outage=draw(st.lists(st.sampled_from([0, 1]), min_size=8, max_size=8)),
@@ -106,18 +105,16 @@ def test_random_community_episodes_conserve_energy_cash_and_carbon(case):
 @SETTINGS
 @given(
     seconds=st.sampled_from([60, 300, 900]),
-    physics_version=st.sampled_from([1, 2]),
     central_agent=st.booleans(),
     seed=st.integers(min_value=0, max_value=2**16),
 )
-def test_random_flat_actions_keep_the_physics_invariants(seconds, physics_version, central_agent, seed):
+def test_random_flat_actions_keep_the_physics_invariants(seconds, central_agent, seed):
     # The 15-minute EV demo on the flat interface, at its own and at shorter steps (compressed time).
     env = CityLearnEnv(
         str(MINUTE_EV_DEMO),
         central_agent=central_agent,
         seconds_per_time_step=seconds,
         time_step_ratio_mode="compress",
-        physics_version=physics_version,
         physics_invariant_checks=True,
         random_seed=seed,
         offline=True,

@@ -4,7 +4,6 @@ import math
 from typing import TYPE_CHECKING, Iterable
 
 from citylearn.energy_model import ElectricHeater, HeatPump
-from citylearn.internal.physics_version import physics_version_of
 from citylearn.internal.units import power_kw_to_energy_kwh
 
 if TYPE_CHECKING:
@@ -386,16 +385,14 @@ class CityLearnPhysicsInvariantService:
                 f"loads={local_loads:.6f} kWh, local_sources={local_sources:.6f} kWh."
             )
 
-        if physics_version_of(building) >= 2:
-            # Storage discharges only into the islanded load that PV leaves (#229); physics version 1
-            # can discharge more and books the surplus as PV curtailment.
-            storage_discharge = max(-storage_energy, 0.0) + max(-charger_energy, 0.0)
-            uncovered_load = max(local_loads - max(-solar_generation, 0.0), 0.0)
-            if not (storage_discharge <= uncovered_load + self.ENERGY_EPS):
-                raise PhysicsInvariantError(
-                    f"Outage storage discharge exceeds the load not covered by PV for '{building.name}' at t={t}: "
-                    f"discharge={storage_discharge:.6f} kWh, uncovered_load={uncovered_load:.6f} kWh."
-                )
+        # Storage discharges only into the islanded load that PV leaves (#229).
+        storage_discharge = max(-storage_energy, 0.0) + max(-charger_energy, 0.0)
+        uncovered_load = max(local_loads - max(-solar_generation, 0.0), 0.0)
+        if not (storage_discharge <= uncovered_load + self.ENERGY_EPS):
+            raise PhysicsInvariantError(
+                f"Outage storage discharge exceeds the load not covered by PV for '{building.name}' at t={t}: "
+                f"discharge={storage_discharge:.6f} kWh, uncovered_load={uncovered_load:.6f} kWh."
+            )
 
     def _assert_soc_bounds(self, building, t: int):
         for name in ("cooling_storage", "heating_storage", "dhw_storage", "electrical_storage"):

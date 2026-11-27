@@ -329,42 +329,6 @@ def test_initial_outage_load_is_clipped_instead_of_asserting(tmp_path: Path):
         env.close()
 
 
-def test_deferrable_start_is_blocked_when_cycle_crosses_future_outage_without_surplus(tmp_path: Path):
-    """Physics version 1 checks the realised future outage (#232); version 2 is covered in test_physics_version_service_deferrable."""
-    schema_path = _schema_with_deferrable_appliance(tmp_path, earliest=0, latest=0)
-    dataset_dir = schema_path.parent
-    building_csv = dataset_dir / "Building_1.csv"
-    df = pd.read_csv(building_csv)
-    df["power_outage"] = 0
-    df.loc[1, "power_outage"] = 1
-    df["solar_generation"] = 0.0
-    df["non_shiftable_load"] = 0.0
-    df["cooling_demand"] = 0.0
-    df["heating_demand"] = 0.0
-    df["dhw_demand"] = 0.0
-    df.to_csv(building_csv, index=False)
-
-    schema = json.loads(schema_path.read_text(encoding="utf-8"))
-    schema["buildings"]["Building_1"]["power_outage"] = {"simulate_power_outage": True}
-    schema_path.write_text(json.dumps(schema, indent=2), encoding="utf-8")
-
-    env = CityLearnEnv(str(schema_path), central_agent=True, episode_time_steps=4, random_seed=0, physics_version=1)
-
-    try:
-        env.reset(seed=0)
-        action_names = env.action_names[0]
-        actions = np.zeros(len(action_names), dtype="float32")
-        actions[action_names.index("deferrable_appliance_washer_1")] = 1.0
-
-        env.step([actions])
-
-        building = env.buildings[0]
-        assert building.deferrable_appliances_electricity_consumption[0] == pytest.approx(0.0)
-        assert building.deferrable_appliances_electricity_consumption[1] == pytest.approx(0.0)
-    finally:
-        env.close()
-
-
 def test_flat_deferrable_power_bounds_scale_to_subhour_steps(tmp_path: Path):
     schema_path = _schema_with_deferrable_appliance(tmp_path, earliest=0, latest=0, profile=[0.1])
     env = CityLearnEnv(

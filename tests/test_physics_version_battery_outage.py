@@ -4,8 +4,8 @@
 #229: during an outage the battery discharged more than the islanded load, and the surplus was booked as PV
 curtailment.
 
-Each test reproduces its issue under physics version 1, which keeps the behaviour of CityLearn 3.6.0, and checks
-the correction under version 2.
+Each test reproduces its issue and checks the correction. Physics version 1, the behaviour of CityLearn 3.6.0, was
+removed in CityLearn 3.8.1 (#466).
 """
 
 from __future__ import annotations
@@ -34,34 +34,31 @@ def _tracker(steps: int = 10) -> EpisodeTracker:
     return tracker
 
 
-def _battery(soc: float, legacy: bool, **kwargs) -> Battery:
+def _battery(soc: float, **kwargs) -> Battery:
     battery = Battery(capacity=10.0, nominal_power=5.0, initial_soc=soc, efficiency=1.0, loss_coefficient=0.0,
                       capacity_loss_coefficient=0.0, episode_tracker=_tracker(), seconds_per_time_step=3600,
                       random_seed=0, capacity_power_curve=TAPER, power_efficiency_curve=[[0, 1.0], [1, 1.0]],
                       **kwargs)
-    battery.legacy_discharge_power_limit = legacy
     battery.reset()
     return battery
 
 
 # --- #227 ---------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize('soc, legacy_kwh', [(1.0, -1.25), (0.9, -3.125), (0.5, -5.0)])
-def test_issue_227_discharge_is_not_limited_by_the_charging_taper(soc, legacy_kwh):
-    legacy = _battery(soc, legacy=True)
-    corrected = _battery(soc, legacy=False)
-    # Charging still follows the taper.
-    assert corrected.get_max_input_power() == pytest.approx(legacy.get_max_input_power())
+@pytest.mark.parametrize('soc, taper_kw', [(1.0, 1.25), (0.9, 3.125), (0.5, 5.0)])
+def test_issue_227_discharge_is_not_limited_by_the_charging_taper(soc, taper_kw):
+    battery = _battery(soc)
+    # Charging still follows the taper; 3.6.0 limited discharge by it too.
+    assert battery.get_max_input_power() == pytest.approx(taper_kw)
+    assert not hasattr(battery, 'legacy_discharge_power_limit')
 
-    legacy.charge(-5.0)
-    corrected.charge(-5.0)
+    battery.charge(-5.0)
 
-    assert float(legacy.energy_balance[0]) == pytest.approx(legacy_kwh)
-    assert float(corrected.energy_balance[0]) == pytest.approx(-5.0)
+    assert float(battery.energy_balance[0]) == pytest.approx(-5.0)
 
 
 def test_issue_227_discharge_power_curve_can_derate_at_low_soc():
-    battery = _battery(0.1, legacy=False, discharge_power_curve=[[0.0, 0.2], [0.2, 1.0], [1.0, 1.0]])
+    battery = _battery(0.1, discharge_power_curve=[[0.0, 0.2], [0.2, 1.0], [1.0, 1.0]])
 
     assert battery.get_max_output_power() == pytest.approx(5.0 * 0.6)
     assert battery.get_metadata()['discharge_power_curve'].tolist() == [[0.0, 0.2, 1.0], [0.2, 1.0, 1.0]]
@@ -70,35 +67,20 @@ def test_issue_227_discharge_power_curve_can_derate_at_low_soc():
 def test_issue_227_inventory_battery_keeps_its_declared_discharge_limit():
     kwargs = dict(max_charge_kw=4.0, max_discharge_kw=3.0, capacity=10.0, initial_soc=1.0, capacity_power_curve=TAPER,
                   episode_tracker=_tracker(), seconds_per_time_step=3600, random_seed=0)
-    legacy = InventoryBattery(**kwargs)
-    legacy.legacy_discharge_power_limit = True
-    legacy.reset()
-    corrected = InventoryBattery(**kwargs)
-    corrected.reset()
+    battery = InventoryBattery(**kwargs)
+    battery.reset()
 
-    assert legacy.get_max_output_power() == pytest.approx(4.0 * 0.25)
-    assert corrected.get_max_output_power() == pytest.approx(3.0)
-
-
-@pytest.mark.parametrize('physics_version', [1, 2])
-def test_issue_227_environment_sets_the_discharge_limit_from_the_physics_version(physics_version):
-    schema = json.loads((DATASETS / 'citylearn_challenge_2022_phase_all_plus_evs' / 'schema.json').read_text())
-    schema['root_directory'] = str(DATASETS / 'citylearn_challenge_2022_phase_all_plus_evs')
-    env = CityLearnEnv(schema, episode_time_steps=2, simulation_end_time_step=1, physics_version=physics_version)
-    batteries = [building.electrical_storage for building in env.buildings]
-    batteries += [ev.battery for ev in env.electric_vehicles]
-
-    assert batteries
-    assert all(battery.legacy_discharge_power_limit == (physics_version == 1) for battery in batteries)
+    # 3.6.0 gave 4.0 * 0.25, the charging taper at full charge.
+    assert battery.get_max_output_power() == pytest.approx(3.0)
 
 
 # --- #229 ---------------------------------------------------------------------------------------------
 
-def _outage_env(tmp_path: Path, physics_version: int) -> CityLearnEnv:
+def _outage_env(tmp_path: Path) -> CityLearnEnv:
     """`citylearn_challenge_2021` at 900 s with an outage window, as in the issue's repro (hourly rows, compressed)."""
 
     source = DATASETS / 'citylearn_challenge_2021'
-    dataset = tmp_path / f'outage_v{physics_version}'
+    dataset = tmp_path / 'outage'
     shutil.copytree(source, dataset)
     schema = json.loads((dataset / 'schema.json').read_text(encoding='utf-8'))
     schema['root_directory'] = str(dataset)
@@ -123,8 +105,7 @@ def _outage_env(tmp_path: Path, physics_version: int) -> CityLearnEnv:
     path.write_text(json.dumps(schema), encoding='utf-8')
     return CityLearnEnv(str(path), central_agent=True, seconds_per_time_step=900, simulation_start_time_step=start,
                         simulation_end_time_step=start + 47, episode_time_steps=48, random_seed=0,
-                        physics_version=physics_version, physics_invariant_checks=physics_version >= 2,
-                        time_step_ratio_mode='compress')
+                        physics_invariant_checks=True, time_step_ratio_mode='compress')
 
 
 def _run_outage(env: CityLearnEnv) -> list:
@@ -153,17 +134,10 @@ def _run_outage(env: CityLearnEnv) -> list:
     return rows
 
 
-def test_issue_229_physics_version_1_books_battery_surplus_as_pv_curtailment(tmp_path):
-    rows = _run_outage(_outage_env(tmp_path, physics_version=1))
-
-    assert rows
-    surplus = [row for row in rows if row['curtailment'] > row['pv'] + 1.0e-3]
-    assert surplus, 'the 3.6.0 repro no longer books battery surplus as PV curtailment'
-
-
 def test_issue_229_outage_discharge_serves_only_the_load_that_pv_leaves(tmp_path):
-    # `physics_invariant_checks` also asserts this at every step.
-    rows = _run_outage(_outage_env(tmp_path, physics_version=2))
+    # 3.6.0 discharged more and booked the surplus as PV curtailment. `physics_invariant_checks` also asserts this
+    # at every step.
+    rows = _run_outage(_outage_env(tmp_path))
 
     assert rows
     assert any(row['discharge'] > 0.0 for row in rows)

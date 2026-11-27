@@ -108,14 +108,12 @@ def test_rlc_accepts_documented_action_scaling_coefficient(sac_env):
     np.testing.assert_allclose(low, sac_env.action_space[0].low)
 
 
-def test_rlc_misspelled_action_scaling_coefficient_is_deprecated_alias(sac_env):
-    with pytest.warns(DeprecationWarning, match='action_scaling_coefficienct'):
-        agent = SAC(sac_env, action_scaling_coefficienct=0.8, hidden_dimension=[8, 8])
+def test_rlc_misspelled_action_scaling_coefficient_was_removed(sac_env):
+    # Agents ignore unknown keyword arguments, so the removed misspelling must fail instead of being dropped.
+    with pytest.raises(TypeError, match='`action_scaling_coefficienct` was removed in CityLearn 3.8.1'):
+        SAC(sac_env, action_scaling_coefficienct=0.8, hidden_dimension=[8, 8])
 
-    assert agent.action_scaling_coefficient == 0.8
-
-    with pytest.raises(TypeError, match='conflicting'):
-        SAC(sac_env, action_scaling_coefficient=1.0, action_scaling_coefficienct=0.8, hidden_dimension=[8, 8])
+    assert SAC(sac_env, action_scaling_coefficient=0.8, hidden_dimension=[8, 8]).action_scaling_coefficient == 0.8
 
 
 def test_rlc_action_scaling_coefficient_default_unchanged(sac_env):

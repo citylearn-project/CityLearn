@@ -49,7 +49,7 @@ class EpisodeTracker:
 
     @property
     def random_stream_episode(self) -> Union[int, None]:
-        """Episode key of the per-episode random streams (``random_stream_version='v2'``).
+        """Episode key of the per-episode random streams.
 
         The environment sets it at reset: the episode index, or 0 after a reset with an explicit
         seed, so that ``reset(seed=s)`` uses the streams of the first episode of an environment
@@ -263,8 +263,7 @@ class Environment:
     random_seed : int, optional
         Pseudorandom number generator seed for repeatable results.
     random_stream_version : str, optional
-        Derivation of the object's random streams, ``'v2'`` (default) or ``'v1'`` (CityLearn 3.6.0 and earlier).
-        See :py:mod:`citylearn.random_streams`.
+        Derivation of the object's random streams, ``'v2'``, the only version. See :py:mod:`citylearn.random_streams`.
     random_stream_key : Tuple[Any, ...], optional
         Identity of the object in its random streams, so objects that share a seed draw independent values.
     simulation_start_time_step: int, optional
@@ -329,17 +328,12 @@ class Environment:
         return self.__seconds_per_time_step
     
     @property
-    def numpy_random_state(self) -> Union[np.random.RandomState, np.random.Generator]:
+    def numpy_random_state(self) -> np.random.Generator:
         """Stream for randomly drawn parameters of this object.
 
-        With ``random_stream_version='v1'`` it is a new ``RandomState(random_seed)`` on every
-        access, as in CityLearn 3.6.0, so every draw is the first value of that seed. With ``'v2'``
-        it is one persistent generator per object, derived from `random_seed` and
-        :py:attr:`random_stream_key`, so successive draws are independent.
+        One persistent generator per object, derived from `random_seed` and :py:attr:`random_stream_key`,
+        so successive draws are independent.
         """
-
-        if self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
-            return np.random.RandomState(self.random_seed)
 
         return self.random_generator(random_streams.DEVICE_PARAMETERS)
 
@@ -372,7 +366,7 @@ class Environment:
             self.__dict__.pop('_random_generators', None)
 
     def random_generator(self, purpose: str, *parts: Any) -> np.random.Generator:
-        """Persistent generator for `purpose` and `parts` of this object (``random_stream_version='v2'``).
+        """Persistent generator for `purpose` and `parts` of this object.
 
         The generator is derived from :py:attr:`random_seed`, `purpose`, :py:attr:`random_stream_key`
         and `parts`, and is kept until the seed, version or key changes.

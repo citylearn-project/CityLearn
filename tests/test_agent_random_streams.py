@@ -2,10 +2,11 @@
 
 TabularQLearning and MARLISA used ``RandomState(random_seed + time_step)``, and the neighborhood generator seeded
 partial-load simulation ``i`` of building ``b`` with ``b + i``, so streams overlapped across seeds, time steps and
-buildings. With ``random_stream_version='v2'`` they come from ``SeedSequence``; ``'v1'`` keeps the 3.6.0 streams.
+buildings. With ``random_stream_version='v2'`` they come from ``SeedSequence``. Version ``'v1'``, the 3.6.0 streams,
+was removed in CityLearn 3.8.1 (#466).
 
 TabularQLearning also sampled its exploration actions from action spaces that nothing seeded; it now seeds them
-from the agent seed, as SAC does, under both versions.
+from the agent seed, as SAC does.
 """
 
 import copy
@@ -98,20 +99,11 @@ def _coordination_orders(agent, count=STEPS):
 
 # --- agents follow their environment -----------------------------------------------------------------------------
 
-@pytest.mark.parametrize('version', ['v1', 'v2'])
-def test_agents_follow_the_random_stream_version_of_their_environment(version):
-    assert _q_learning_agent(0, version).random_stream_version == version
+def test_agents_follow_the_random_stream_version_of_their_environment():
+    assert _q_learning_agent(0, 'v2').random_stream_version == 'v2'
 
 
 # --- TabularQLearning exploration --------------------------------------------------------------------------------
-
-def test_q_learning_v1_reproduces_the_additive_exploration_seed():
-    draws = {seed: _exploration_draws(_q_learning_agent(seed, 'v1')) for seed in (0, 1)}
-
-    np.testing.assert_array_equal(draws[0], [np.random.RandomState(t).random() for t in range(STEPS)])
-    # The overlap of #287: seed 0 at time step t + 1 repeats seed 1 at time step t.
-    np.testing.assert_array_equal(draws[0][1:], draws[1][:-1])
-
 
 def test_q_learning_v2_draws_from_one_generator_per_episode():
     agent = _q_learning_agent(0, 'v2')
@@ -132,6 +124,7 @@ def test_q_learning_v2_draws_from_one_generator_per_episode():
 
 
 def test_q_learning_v2_streams_of_neighbouring_seeds_do_not_overlap():
+    # 3.6.0 drew from RandomState(seed + time_step): seed 0 at time step t + 1 repeated seed 1 at time step t.
     draws = {seed: _exploration_draws(_q_learning_agent(seed, 'v2')) for seed in (0, 1)}
 
     assert not np.isin(draws[0], draws[1]).any()
@@ -158,9 +151,8 @@ def _deterministic_fallback_actions(agent, count=STEPS):
     return [agent.predict(observations, deterministic=True)[0][0] for _ in range(count)]
 
 
-@pytest.mark.parametrize('version', ['v1', 'v2'])
-def test_q_learning_runs_with_identically_seeded_envs_act_and_learn_identically(version):
-    agents = [_q_learning_agent(7, version) for _ in range(2)]
+def test_q_learning_runs_with_identically_seeded_envs_act_and_learn_identically():
+    agents = [_q_learning_agent(7, 'v2') for _ in range(2)]
 
     agents[0].learn(episodes=2)
     # Global generators are consumed between the runs; a seeded agent must not depend on them.
@@ -199,19 +191,6 @@ def test_q_learning_keeps_the_stream_of_an_action_space_the_caller_seeded():
 
 # --- MARLISA coordination order ----------------------------------------------------------------------------------
 
-def test_marlisa_v1_reproduces_the_additive_coordination_seed():
-    orders = {seed: _coordination_orders(_marlisa_agent(seed, 'v1')) for seed in (0, 1)}
-    expected = []
-
-    for t in range(STEPS):
-        order = list(range(5))
-        np.random.RandomState(t).shuffle(order)
-        expected.append(order)
-
-    assert orders[0] == expected
-    assert orders[0][1:] == orders[1][:-1]
-
-
 def test_marlisa_v2_shuffles_with_one_generator_per_episode():
     agent = _marlisa_agent(0, 'v2')
     generator = random_streams.generator(
@@ -230,19 +209,8 @@ def test_marlisa_v2_shuffles_with_one_generator_per_episode():
 
 # --- neighborhood partial-load simulations -----------------------------------------------------------------------
 
-def test_partial_load_simulation_seed_v1_is_building_plus_index():
-    seeds = {
-        (b, i): random_streams.partial_load_simulation_seed(7, b, i, 'v1') for b in (100, 101) for i in range(4)
-    }
-
-    assert seeds[(100, 0)] == 100
-    # The overlap of #287: simulation i + 1 of building b repeats simulation i of building b + 1.
-    assert all(seeds[(100, i + 1)] == seeds[(101, i)] for i in range(3))
-    # The neighborhood seed is ignored.
-    assert random_streams.partial_load_simulation_seed(8, 100, 1, 'v1') == seeds[(100, 1)]
-
-
 def test_partial_load_simulation_seed_v2_is_distinct_per_building_simulation_and_seed():
+    # 3.6.0 seeded simulation i of building b with b + i, so simulation i + 1 of b repeated simulation i of b + 1.
     seeds = {
         (s, b, i): random_streams.partial_load_simulation_seed(s, b, i)
         for s in (7, 8) for b in (100, 101, '102') for i in range(6)
@@ -259,7 +227,11 @@ def test_neighborhood_passes_its_stream_version_to_partial_load_seeds():
     neighborhood = pytest.importorskip('citylearn.end_use_load_profiles.neighborhood')
 
     assert neighborhood.Neighborhood(random_seed=3).random_stream_version == 'v2'
-    assert neighborhood.Neighborhood(random_seed=3, random_stream_version='v1').random_stream_version == 'v1'
+    assert neighborhood.Neighborhood(random_seed=3, random_stream_version=2).random_stream_version == 'v2'
 
     with pytest.raises(ValueError, match='random_stream_version'):
         neighborhood.Neighborhood(random_seed=3, random_stream_version='v3')
+    with pytest.raises(ValueError, match="Version 'v1' was removed"):
+        neighborhood.Neighborhood(random_seed=3, random_stream_version='v1')
+    with pytest.raises(ValueError, match="Version 'v1' was removed"):
+        random_streams.partial_load_simulation_seed(7, 100, 1, 'v1')

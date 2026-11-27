@@ -15,8 +15,8 @@ class PowerOutage:
     random_seed: int, optional
         Pseudorandom number generator seed for repeatable results.
     random_stream_version: str, optional
-        Derivation of the outage stream, ``'v2'`` (default) or ``'v1'`` (CityLearn 3.6.0 and earlier); see
-        :py:mod:`citylearn.random_streams`. A building that owns the model sets it to its own version at reset.
+        Derivation of the outage stream, ``'v2'``, the only version; see :py:mod:`citylearn.random_streams`.
+        A building that owns the model sets it to its own version at reset.
     """
 
     def __init__(self, random_seed: int = None, random_stream_version: Union[str, int] = None):
@@ -50,9 +50,8 @@ class PowerOutage:
     ) -> None:
         """Give the model a stable stream for this building and episode, shared by the controller and BAU.
 
-        With ``'v1'`` only an unseeded model uses it: a seeded model draws ``RandomState(random_seed)``
-        in every building and episode. With ``'v2'`` the stream is derived from the model's seed, or
-        the environment seed when the model has none, the building, the episode key and the window.
+        The stream is derived from the model's seed, or the environment seed when the model has none, the
+        building, the episode key and the window.
         """
 
         if random_stream_version is not None:
@@ -63,11 +62,8 @@ class PowerOutage:
         self._episode_root_seed = seed
         self._episode_stream_key = (building_name, random_stream_episode, int(start), int(end))
 
-    def _signal_random_state(self) -> Union[np.random.RandomState, np.random.Generator]:
+    def _signal_random_state(self) -> np.random.Generator:
         """Random stream for one call of :py:meth:`get_signals`."""
-
-        if self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
-            return np.random.RandomState(self.random_seed)
 
         explicit_seed = self.__random_seed
         key = getattr(self, '_episode_stream_key', None)
@@ -198,7 +194,6 @@ class ReliabilityMetricsPowerOutage(PowerOutage):
         """
 
         nprs = self._signal_random_state()
-        legacy = self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION
         days_per_year = 365.0
         seconds_per_day = 86400.0
         seconds_per_minute = 60.0
@@ -208,25 +203,6 @@ class ReliabilityMetricsPowerOutage(PowerOutage):
         daily_outage_probability = self.saifi/days_per_year
         start_time_steps = list(range(int(time_steps_per_day))) if self.start_time_steps is None else self.start_time_steps
         signals = np.zeros(time_steps, dtype=int)
-
-        if legacy:
-            # CityLearn 3.6.0: drops day 0 and the partial last day, and floors durations.
-            outage_days = nprs.binomial(n=1, p=daily_outage_probability, size=int(day_count))
-            outage_day_ixs = outage_days*np.arange(outage_days.shape[0])
-            outage_day_ixs = outage_day_ixs[outage_day_ixs != 0]
-            outage_day_count = outage_days[outage_days == 1].shape[0]
-            outage_start_time_steps = nprs.choice(start_time_steps, size=outage_day_count)
-            outage_durations = nprs.exponential(scale=self.caidi, size=outage_day_count) # [mins]
-            outage_duration_time_steps = outage_durations*time_steps_per_minute
-
-            for i, j , k in zip(outage_day_ixs, outage_start_time_steps, outage_duration_time_steps):
-                start_ix = i*time_steps_per_day + j
-                end_ix = start_ix + k
-                start_ix = int(start_ix)
-                end_ix = int(end_ix)
-                signals[start_ix:end_ix] = 1
-
-            return signals
 
         # Every day can have an outage, the partial last day included; an outage that starts past
         # the end of the series is dropped and one that runs past it is truncated.

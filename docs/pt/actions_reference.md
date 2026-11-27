@@ -39,9 +39,8 @@ As duas interfaces aplicam uma só regra a uma ação fora de `env.action_space`
 os vetores de ações flat, para os vetores flat enviados a um ambiente entity e
 para os payloads entity `tables` e `map`. Uma ação dentro dos limites é aplicada
 tal como foi enviada, bit a bit. As ações `NaN` e infinitas não são cortadas:
-`step()` rejeita-as com um `ValueError`. Com `physics_version=1` as ações flat
-são aplicadas tal como são enviadas, como no CityLearn 3.6.0, e só as tabelas e
-os mapas entity são cortados.
+`step()` rejeita-as com um `ValueError`. O CityLearn 3.6.0 aplicava as ações flat
+tal como eram enviadas e cortava só as tabelas e os mapas entity.
 
 Por exemplo, com `cooling_storage` limitado a `[-0.25, 0.25]`, uma ação de
 `0.75` carrega o depósito como `0.25`. Depois aplicam-se os limites do
@@ -139,7 +138,7 @@ A ordem simplificada das ações do edifício é:
 
 Quando `electrical_storage_action < 0`, a descarga do BESS tem prioridade sobre os outros consumos elétricos.
 
-Esta é a ordem da versão 1 da física. Na versão 2 (a predefinição), a atribuição do serviço elétrico reparte a margem
+Esta é a ordem do CityLearn 3.6.0. Agora, a atribuição do serviço elétrico reparte a margem
 depois das atualizações térmicas e da carga não deslocável, entre as potências que os equipamentos conseguem de facto
 receber, e durante um corte de energia a bateria e os VE descarregam depois da procura térmica e das descargas do
 armazenamento térmico, até à carga que a produção FV deixa.

@@ -39,8 +39,8 @@ clipped to the nearest bound before it reaches the device. This holds for flat
 action vectors, flat vectors sent to an entity environment, and entity `tables`
 and `map` payloads. An action inside the bounds is applied as sent, bit for bit.
 `NaN` and infinite actions are not clipped: `step()` rejects them with a
-`ValueError`. Under `physics_version=1` flat actions are applied as given, as in
-CityLearn 3.6.0, and only entity tables and maps are clipped.
+`ValueError`. CityLearn 3.6.0 applied flat actions as given and clipped only
+entity tables and maps.
 
 For example, with `cooling_storage` bounded by `[-0.25, 0.25]`, an action of
 `0.75` charges the tank as `0.25` does. The device limits (power, capacity, SOC)
@@ -137,7 +137,7 @@ The simplified building action order is:
 
 When `electrical_storage_action < 0`, BESS discharge is prioritized before other electrical consumption.
 
-This is the order of physics version 1. Under version 2 (the default), the electrical-service allocation shares the
+This is the order of CityLearn 3.6.0. Now the electrical-service allocation shares the
 headroom after the thermal and non-shiftable updates, among the powers the assets can actually take, and during an
 outage the battery and the EVs discharge after the thermal demand and the thermal storage discharges, up to the load
 that PV leaves.

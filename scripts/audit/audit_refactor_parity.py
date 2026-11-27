@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Check bounded fixed-command references before/after internal refactoring.
 
-Each physics version is compared with its own frozen reference (REFERENCES).
+The run is compared with the frozen reference of its physics version (REFERENCES). Version 2 is the
+only physics version; the version 1 reference was removed with version 1 in CityLearn 3.8.1.
 
 Requires the checkout's test fixtures/dependencies. No policy, training, annual
 campaign or BAU sidecar is run. References are never updated by verification.
@@ -22,14 +23,11 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 DEFINITION = "refactor-parity-v2-compounded-standby"
-# One frozen reference per physics version: version 1 is the physics of CityLearn 3.6.0, version 2 the default.
+# One frozen reference per physics version.
 REFERENCES = {
-    1: ROOT / "scripts/audit/snapshots/refactor_parity.json",
     2: ROOT / "scripts/audit/snapshots/refactor_parity_physics_v2.json",
 }
-DEFAULT_REFERENCE = REFERENCES[1]
-# Physics version 1 is the frozen CityLearn 3.6.0 reference, so it keeps the 3.6.0 KPI baseline too (#365).
-BASELINE_VERSIONS = {1: 1, 2: 2}
+DEFAULT_REFERENCE = REFERENCES[2]
 CASES = {
     "flat_900s": dict(seconds=900, interface="flat"),
     "entity_60s": dict(seconds=60, interface="entity"),
@@ -161,7 +159,7 @@ def _commands(env):
     return payload
 
 
-def run_case(name, directory, physics_version=1):
+def run_case(name, directory, physics_version=2):
     import pandas as pd
     from citylearn.citylearn import CityLearnEnv
     from citylearn.internal.balance_audit import IndependentBalanceAudit
@@ -197,11 +195,11 @@ def run_case(name, directory, physics_version=1):
               for p in sorted(directory.rglob("*.csv"))}
     fingerprint = hashlib.sha256(json.dumps(canonical(dict(schema=schema, inputs=inputs), directory),
                                             sort_keys=True, allow_nan=False).encode()).hexdigest()
-    # The physics version is an argument, not a schema key, so both versions share the input fingerprint.
+    # The physics version is an argument, not a schema key, so it does not change the input fingerprint.
     env = CityLearnEnv(schema, random_seed=7, offline=True, central_agent=True,
                        render_mode="none", render_directory=directory / "exports", render_session_name="parity",
                        physics_invariant_checks=True, export_kpis_on_episode_end=False,
-                       physics_version=physics_version, baseline_version=BASELINE_VERSIONS[physics_version])
+                       physics_version=physics_version)
     try:
         observation, _ = env.reset(seed=7)
         result = dict(input_fingerprint=fingerprint, configuration=config,
@@ -269,7 +267,7 @@ def run_case(name, directory, physics_version=1):
         env.close()
 
 
-def capture(directory, physics_version=1):
+def capture(directory, physics_version=2):
     cases, proofs = {}, {}
     for name in CASES:
         cases[name], proofs[name] = run_case(name, directory / name, physics_version)

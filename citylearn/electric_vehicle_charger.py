@@ -16,9 +16,6 @@ class Charger(Environment):
     #: Charging power in kW assumed when neither `max_charging_power` nor `nominal_power` is given.
     _DEFAULT_MAX_CHARGING_POWER = 50.0
 
-    #: Defaults of physics version 1 for omitted power limits: a 50 kW charger in both directions.
-    _LEGACY_DEFAULT_POWER = 50.0
-
     def __init__(
             self, episode_tracker: EpisodeTracker, charger_simulation: ChargerSimulation ,charger_id: str = None, efficiency: float = None, max_charging_power: float = None,
             min_charging_power: float = None, max_discharging_power: float = None,  min_discharging_power: float = None, charge_efficiency_curve: Dict[float, float] = None,
@@ -41,7 +38,7 @@ class Charger(Environment):
             Minimum charging power in kW.
         max_discharging_power : float, default 0
             Maximum discharging (V2G) power in kW. The default 0 means the charger cannot
-            discharge; set it to allow V2G. Physics version 1 loads an omitted value as 50 kW.
+            discharge; set it to allow V2G.
         min_discharging_power : float, default 0
             Minimum discharging power in kW.
         charge_efficiency_curve : List, none [[0, 0.83],[0.3, 0.83],[0.7, 0.9],[0.8, 0.9],[1, 0.85]]
@@ -284,7 +281,7 @@ class Charger(Environment):
     @max_discharging_power.setter
     def max_discharging_power(self, max_discharging_power: float):
             if max_discharging_power is None:
-                # V2G is off unless configured (#369); physics version 1 loads an omitted value as 50 kW.
+                # V2G is off unless configured (#369).
                 self.__max_discharging_power = 0.0
             else:
                 self.__max_discharging_power = max_discharging_power

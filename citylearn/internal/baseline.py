@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from citylearn import random_streams
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
@@ -42,7 +41,7 @@ def validate_business_as_usual_ev_charge_target(value) -> str:
 
 
 class BaselineEVChargingSource:
-    """Gives a building the EV charging that the version 2 KPI baseline adds back, from its environment.
+    """Gives a building the EV charging that the KPI baseline adds back, from its environment.
 
     Copying one building (a member cloned by a topology event) keeps the same environment; copying the whole
     environment points the copy's buildings at the copied environment.
@@ -65,8 +64,8 @@ class CityLearnBusinessAsUsualBaselineService:
     def __init__(self, env: "CityLearnEnv"):
         self.env = env
 
-    #: Cache of the BAU run with the ``'full'`` target when the env's own BAU uses another target. The version 2
-    #: KPI baseline takes its EV charging from that run.
+    #: Cache of the BAU run with the ``'full'`` target when the env's own BAU uses another target. The KPI
+    #: baseline takes its EV charging from that run.
     FULL_CHARGING_CACHE = '_business_as_usual_full_charging_cache'
 
     def run(self, force: bool = False, ev_charge_target: str = None) -> BusinessAsUsualBaselineResult:
@@ -119,11 +118,6 @@ class CityLearnBusinessAsUsualBaselineService:
         baseline_env._ev_soc_carryover_inherited = deepcopy(getattr(env, '_ev_soc_carryover_context', None))
         agent = BusinessAsUsualAgent(baseline_env, ev_charge_target=ev_charge_target, hvac=hvac)
         baseline_env.reset()
-
-        if env.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
-            # Pair the away-EV stochastic stream with the source episode, including repeated resets.
-            baseline_env._ev_drift_seed = env._ev_drift_seed
-            baseline_env._ev_drift_random_state = np.random.RandomState(env._ev_drift_seed)
         from citylearn import __version__
         from citylearn.internal.comparison import (
             configuration_differences, equipment, equipment_differences, inventory, reference_configuration,
@@ -192,7 +186,7 @@ class CityLearnBusinessAsUsualBaselineService:
         return result
 
     def ev_charging(self, building) -> np.ndarray:
-        """Charger consumption of `building` in the BAU with the ``'full'`` target, the version 2 baseline's EV charging.
+        """Charger consumption of `building` in the BAU with the ``'full'`` target, the KPI baseline's EV charging.
 
         In a sidecar that already charges to full it is the building's own charging; a sidecar with another
         target asks the env it was built for. Otherwise the ``'full'`` sidecar is run (or read from its cache) up
@@ -215,8 +209,7 @@ class CityLearnBusinessAsUsualBaselineService:
         except ValueError as error:
             message = str(error).rstrip('.')
             raise ValueError(
-                f'{message}. The version 2 KPI baseline takes the EV charging of buildings with chargers from this BAU '
-                'run; set baseline_version=1 to evaluate with the 3.6.0 baseline, which needs no BAU run.'
+                f'{message}. The KPI baseline takes the EV charging of buildings with chargers from this BAU run.'
             ) from error
 
         reference = result.env

@@ -11,6 +11,8 @@ from pathlib import Path
 
 import numpy as np
 
+from citylearn.internal.versions import parse_version
+
 DEFINITION_VERSION = "independent-flow-audit-v1"
 DESTINATIONS = (
     "load",
@@ -35,6 +37,12 @@ RESIDUAL_SOURCES = (
 
 class BalanceAuditError(AssertionError):
     pass
+
+
+def _no_ev_charging(building):
+    """Baseline EV charging of zero, for audits that check only control rows and must not run the BAU."""
+
+    return np.zeros(len(building.net_electricity_consumption), dtype='float64')
 
 
 def plus(target, values, factor=1.0):
@@ -525,7 +533,8 @@ class IndependentBalanceAudit:
         )
         export = (
             float(config.get("grid_export_price", 0.0))
-            if config.get("settlement_version") == 2
+            if parse_version(config.get("settlement_version"), (1, 2), "community_market.settlement_version",
+                             default=1) == 2
             else 0.0
         )
         return price, export, ratio * price, ratio * price
@@ -892,15 +901,26 @@ class IndependentBalanceAudit:
                     total(bag),
                 )
         if check_kpis:
-            # Only control rows are checked, and they do not depend on the baseline version. Version 1 needs no
-            # BAU run, so the audit also works on envs whose devices changed after loading.
+            # Only control rows are checked, and they do not depend on the baseline. The baseline is given no BAU
+            # EV charging, so no BAU run is needed and the audit also works on envs whose devices changed after
+            # loading.
             env = getattr(self.env, 'unwrapped', self.env)
-            version = env.baseline_version
-            env.baseline_version = 1
+            # Departed and not yet joined members too: the KPIs read their series.
+            pool = getattr(getattr(env, '_topology_service', None), 'member_pool', None) or {}
+            buildings = list({id(b): b for b in [
+                *(env.buildings or []), *pool.values(), *(getattr(env, '_all_buildings', None) or []),
+            ]}.values())
+            sources = [b.__dict__.get('_baseline_ev_charging_source') for b in buildings]
+            for b in buildings:
+                b._baseline_ev_charging_source = _no_ev_charging
             try:
                 frame = env.evaluate_v2(include_business_as_usual=False)
             finally:
-                env.baseline_version = version
+                for b, source in zip(buildings, sources):
+                    if source is None:
+                        b.__dict__.pop('_baseline_ev_charging_source', None)
+                    else:
+                        b._baseline_ev_charging_source = source
             values = {(r.name, r.cost_function): r.value for r in frame.itertuples()}
             for name, row in self.members.items():
                 for suffix, key in [

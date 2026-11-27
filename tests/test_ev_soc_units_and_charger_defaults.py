@@ -41,34 +41,25 @@ def _run_bau(schema, **kwargs):
 # #368 ------------------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize('physics_version, expected_unit', [(2, 'percent'), (1, 'per_value')])
-def test_one_percent_arrival_soc_is_not_read_as_full(ev_schema, physics_version, expected_unit):
+def test_one_percent_arrival_soc_is_not_read_as_full(ev_schema):
     """charger_12_1 gives an arrival SOC of 1 (1 %) at steps 4167-4169; the EV connects at 4170.
 
     The rows of this window hold no value above 1, so only a unit decided from the whole file reads
-    them as percent.
+    them as percent. CityLearn 3.6.0 read them value by value: the EV arrived full and was not charged.
     """
 
-    env = _run_bau(
-        copy.deepcopy(ev_schema), simulation_start_time_step=4160, simulation_end_time_step=4190,
-        physics_version=physics_version,
-    )
+    env = _run_bau(copy.deepcopy(ev_schema), simulation_start_time_step=4160, simulation_end_time_step=4190)
     charger = _charger(env, 'Building_12')
     raw = pd.read_csv(f"{env.schema['root_directory']}/charger_12_1.csv").iloc[4160:4191]
     assert raw['electric_vehicle_estimated_soc_arrival'].iloc[7:10].tolist() == [1.0, 1.0, 1.0]
     assert raw['electric_vehicle_estimated_soc_arrival'].max() <= 1.0
-    assert charger.charger_simulation._soc_units['electric_vehicle_estimated_soc_arrival'] == expected_unit
+    assert charger.charger_simulation._soc_units['electric_vehicle_estimated_soc_arrival'] == 'percent'
 
     ev = charger.past_connected_evs[10]
     charged = float(np.sum(charger.electricity_consumption[:30]))
 
-    if physics_version >= 2:
-        assert float(ev.battery.soc[10]) < 0.2
-        assert charged > 40.0
-    else:
-        # Physics version 1 keeps the 3.6.0 reading: the EV arrives full and is not charged.
-        assert float(ev.battery.soc[10]) == pytest.approx(1.0)
-        assert charged == pytest.approx(0.0)
+    assert float(ev.battery.soc[10]) < 0.2
+    assert charged > 40.0
 
     env.close()
 
@@ -132,16 +123,6 @@ def test_omitted_discharging_power_means_no_v2g(ev_schema):
     assert (charger.max_charging_power, charger.max_discharging_power) == (7.4, 0.0)
     assert float(np.min(charger.electricity_consumption[:env.time_step])) >= 0.0
     assert any('max_discharging_power=0 kW' in m and 'efficiency=1.0' in m for m in messages)
-    env.close()
-
-
-def test_physics_v1_keeps_the_50_kw_defaults(ev_schema):
-    env, charger, messages = _run_v2g(
-        _schema_with_charger_5_1(ev_schema, {'max_charging_power': 7.4}), physics_version=1,
-    )
-    assert (charger.max_charging_power, charger.max_discharging_power) == (7.4, 50.0)
-    assert float(np.min(charger.electricity_consumption[:env.time_step])) < -7.4
-    assert any('max_discharging_power=50 kW' in m for m in messages)
     env.close()
 
 
@@ -228,12 +209,12 @@ def test_charger_subclass_keyword_only_arguments_are_valid_attributes():
 
     attributes = {'gain': 2.0, 'max_charging_power': 7.4, 'max_discharging_power': 0.0, 'efficiency': 0.95}
     assert 'gain' in GainCharger._attribute_names()
-    assert charger_power_attributes(GainCharger, attributes, 'charger', 2) == attributes
+    assert charger_power_attributes(GainCharger, attributes, 'charger') == attributes
     charger = GainCharger(episode_tracker=EpisodeTracker(0, 1), charger_simulation=None, charger_id='c', **attributes)
     assert charger.gain == 2.0
 
     with pytest.raises(ValueError, match="'gian' \\(did you mean 'gain'\\?\\)"):
-        charger_power_attributes(GainCharger, {'gian': 2.0}, 'charger', 2)
+        charger_power_attributes(GainCharger, {'gian': 2.0}, 'charger')
 
 
 def test_efficiency_warning_only_when_efficiency_is_used():
@@ -245,12 +226,12 @@ def test_efficiency_warning_only_when_efficiency_is_used():
     with warnings.catch_warnings():
         warnings.simplefilter('error')
         charger_power_attributes(
-            Charger, {**limits, 'charge_efficiency_curve': curve, 'discharge_efficiency_curve': curve}, 'c', 2,
+            Charger, {**limits, 'charge_efficiency_curve': curve, 'discharge_efficiency_curve': curve}, 'c',
         )
         charger_power_attributes(
             Charger, {'max_charging_power': 7.4, 'max_discharging_power': 0.0, 'charge_efficiency_curve': curve},
-            'c', 2,
+            'c',
         )
 
     with pytest.warns(UserWarning, match='efficiency=1.0'):
-        charger_power_attributes(Charger, {**limits, 'charge_efficiency_curve': curve}, 'c', 2)
+        charger_power_attributes(Charger, {**limits, 'charge_efficiency_curve': curve}, 'c')

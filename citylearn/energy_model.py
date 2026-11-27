@@ -1,7 +1,6 @@
 from array import array
 import logging
 import math
-import warnings
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 import numpy as np
@@ -11,7 +10,6 @@ try:
     from PySAM import Pvwattsv8
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     Pvwattsv8 = None
-from citylearn import random_streams
 from citylearn.base import Environment, EpisodeTracker as EpisodeTracker
 from citylearn.data import (
     DataSet,
@@ -740,15 +738,11 @@ class PV(ElectricDevice):
         use_sample_target = False if use_sample_target is None else use_sample_target
 
         sizing_data = DataSet().get_pv_sizing_data() if sizing_data is None else sizing_data
-        random_seed = self.random_seed
         tries = 3
 
         for i in range(tries):
-            if self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
-                sample_random_state = random_seed + i
-            else:
-                # Every device of an environment holds the environment seed; draw from this PV's own stream.
-                sample_random_state = int(self.numpy_random_state.integers(2**32))
+            # Every device of an environment holds the environment seed; draw from this PV's own stream.
+            sample_random_state = int(self.numpy_random_state.integers(2**32))
 
             self._autosize_config = sizing_data.sample(1, random_state=sample_random_state).iloc[0].to_dict()
             if Pvwattsv8 is None:
@@ -946,23 +940,6 @@ class StorageDevice(Device):
 
         return self.efficiency**0.5
 
-    @property
-    def round_trip_efficiency(self) -> float:
-        """Deprecated alias of `one_way_efficiency`.
-
-        Despite its name, this property has always returned the one-way efficiency, the square root of
-        `efficiency`; the round-trip efficiency is `efficiency` itself. It is kept, with the same value,
-        for existing code and will be removed in a future release.
-        """
-
-        warnings.warn(
-            '`round_trip_efficiency` returns the one-way efficiency and is deprecated; use '
-            '`one_way_efficiency` for that value, or `efficiency` for the round-trip efficiency.',
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.one_way_efficiency
-
     @capacity.setter
     def capacity(self, capacity: float):
         capacity = 0.0 if capacity is None else capacity
@@ -1015,8 +992,6 @@ class StorageDevice(Device):
             'loss_coefficient': self.loss_coefficient,
             'initial_soc': self.initial_soc,
             'one_way_efficiency': self.one_way_efficiency,
-            # Legacy key with the same one-way value, kept for existing readers of the metadata.
-            'round_trip_efficiency': self.one_way_efficiency,
         }
 
     def charge(self, energy: float):
@@ -1114,7 +1089,7 @@ class StorageDevice(Device):
 
     def autosize(
         self, demand: Iterable[float], safety_factor: Union[float, Tuple[float, float]] = None,
-        duration: Union[float, Tuple[float, float]] = None, physics_version: int = None,
+        duration: Union[float, Tuple[float, float]] = None,
     ) -> float:
         r"""Autosize `capacity`.
 
@@ -1128,11 +1103,7 @@ class StorageDevice(Device):
         safety_factor : Union[float, Tuple[float, float]], default: (1.0, 2.0)
             The `capacity` is oversized by factor of `safety_factor`.
         duration : Union[float, Tuple[float, float]], default: 1.0
-            Hours of peak demand power the tank holds. Ignored by physics version 1.
-        physics_version : int, optional
-            Physics version, see :py:mod:`citylearn.internal.physics_version`. Version 1 sizes the
-            tank to the largest control-step demand in [kWh], which equals one hour of peak power
-            only for hourly steps. Defaults to the latest version.
+            Hours of peak demand power the tank holds.
 
         Returns
         -------
@@ -1143,14 +1114,8 @@ class StorageDevice(Device):
         -----
         `capacity` = max(demand power)*duration*safety_factor
         """
-        from citylearn.internal.physics_version import resolve_physics_version
-
         demand = np.asarray(demand) * float(self.time_step_ratio)
         safety_factor = self._get_property_value(safety_factor, (1.0, 2.0))
-
-        if resolve_physics_version(physics_version) < 2:
-            return as_float(np.nanmax(demand))*safety_factor
-
         duration = self._get_property_value(duration, 1.0)
         power = demand / seconds_to_hours(self.seconds_per_time_step)
         capacity = as_float(np.nanmax(power))*duration*safety_factor
@@ -1326,12 +1291,6 @@ class Battery(StorageDevice, ElectricDevice):
     `capacity_power_curve` and by the degraded capacity; discharging by `discharge_power_curve` and by the
     floor ``(1 - depth_of_discharge) * capacity``. If `initial_soc` is omitted, the battery starts at that floor.
 
-    Attributes
-    ----------
-    legacy_discharge_power_limit : bool
-        Limit discharge with `capacity_power_curve` instead of `discharge_power_curve`, as CityLearn 3.6.0 and
-        earlier did. The environment sets it for physics version 1.
-
     Other Parameters
     ----------------
     **kwargs : Any
@@ -1339,7 +1298,6 @@ class Battery(StorageDevice, ElectricDevice):
     """
     
     def __init__(self, capacity: float = None, nominal_power: float = None, capacity_loss_coefficient: Union[float, Tuple[float, float]] = None, power_efficiency_curve: List[List[float]] = None, capacity_power_curve: List[List[float]] = None, depth_of_discharge: Union[float, Tuple[float, float]] = None, time_step_ratio: float = None, discharge_power_curve: List[List[float]] = None, **kwargs: Any):
-        self.legacy_discharge_power_limit = False
         self.discharge_power_curve = discharge_power_curve
         self._efficiency_history = array('d')
         self._capacity_history = array('d')
@@ -1496,8 +1454,7 @@ class Battery(StorageDevice, ElectricDevice):
     def discharge_power_curve(self) -> np.ndarray:
         """Maximum discharge power of the battery as a fraction of `nominal_power`, as a function of its state of charge.
 
-        Defaults to a flat curve at `nominal_power`. `capacity_power_curve` limits charging only, unless
-        `legacy_discharge_power_limit` is set.
+        Defaults to a flat curve at `nominal_power`. `capacity_power_curve` limits charging only.
         """
 
         return self.__discharge_power_curve
@@ -1629,9 +1586,7 @@ class Battery(StorageDevice, ElectricDevice):
             'capacity_loss_coefficient': self.capacity_loss_coefficient,
             'power_efficiency_curve': self.power_efficiency_curve,
             'capacity_power_curve': self.capacity_power_curve,
-            'discharge_power_curve': (
-                self.capacity_power_curve if self.legacy_discharge_power_limit else self.discharge_power_curve
-            ),
+            'discharge_power_curve': self.discharge_power_curve,
         }
 
     def charge(self, energy: float):
@@ -1795,17 +1750,11 @@ class Battery(StorageDevice, ElectricDevice):
     def get_max_output_power(self, energy_init: float = None) -> float:
         r"""Get maximum output power while considering `discharge_power_curve` limitations.
 
-        With `legacy_discharge_power_limit` (physics version 1), discharge is limited by the charging
-        curve, `capacity_power_curve`, as in CityLearn 3.6.0 and earlier.
-
         Returns
         -------
         max_output_power : float
             Maximum amount of power that the storage unit can output [kW].
         """
-
-        if self.legacy_discharge_power_limit:
-            return self.get_max_input_power(energy_init=energy_init)
 
         energy_init = self.energy_init if energy_init is None else energy_init
         return self._curve_power_kw(self.discharge_power_curve, energy_init)

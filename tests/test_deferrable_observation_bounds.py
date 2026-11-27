@@ -133,19 +133,3 @@ def test_deferrable_energy_observations_stay_inside_the_space(interface):
 
         action_space = env.flat_action_space[0]
         observations, *_ = env.step([rng.uniform(action_space.low, action_space.high).tolist()])
-
-
-def test_physics_version_1_keeps_the_placeholder_bounds():
-    # CityLearn 3.6.0 behaviour, kept so that its runs and the frozen version 1 references reproduce.
-    env = _env(PT_REC_4, 0, 24, interface='flat', central_agent=False, physics_version=1)
-    checked = 0
-
-    for b in env.buildings:
-        low, high = b.estimate_observation_space_limits()
-
-        for key in high:
-            if key.startswith('deferrable_appliance_') and key.endswith('_kwh'):
-                assert (low[key], high[key]) == (-1.0, 1.0e6)
-                checked += 1
-
-    assert checked > 0

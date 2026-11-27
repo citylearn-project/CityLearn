@@ -5470,7 +5470,7 @@
               "min_charge_power_kw",
               "min_discharge_power_kw",
               "efficiency_ratio",
-              "round_trip_efficiency_ratio"
+              "one_way_efficiency_ratio"
             ],
             "rows": [
               {
@@ -5482,7 +5482,7 @@
                   "min_charge_power_kw": 0.0,
                   "min_discharge_power_kw": 0.0,
                   "nominal_power_kw": 5.0,
-                  "round_trip_efficiency_ratio": 0.8999999761581421,
+                  "one_way_efficiency_ratio": 0.8999999761581421,
                   "soc": 0.25
                 }
               },
@@ -5495,7 +5495,7 @@
                   "min_charge_power_kw": 0.0,
                   "min_discharge_power_kw": 0.0,
                   "nominal_power_kw": 5.0,
-                  "round_trip_efficiency_ratio": 0.8999999761581421,
+                  "one_way_efficiency_ratio": 0.8999999761581421,
                   "soc": 0.6000000238418579
                 }
               }
@@ -8073,7 +8073,7 @@
                     "legacy": true,
                     "unit": "kw"
                   },
-                  "round_trip_efficiency_ratio": {
+                  "one_way_efficiency_ratio": {
                     "bundle": "entity_base",
                     "legacy": false,
                     "unit": "ratio"
@@ -8092,7 +8092,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "ids": [
                   "Building_1/electrical_storage",
@@ -8857,7 +8857,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -8869,7 +8869,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5139164924621582
                     }
                   },
@@ -8882,7 +8882,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.3777777850627899
                     }
                   }
@@ -9524,7 +9524,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -9536,7 +9536,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.06433287262916565
                     }
                   },
@@ -9549,7 +9549,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.734000027179718
                     }
                   }
@@ -10193,7 +10193,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -10205,7 +10205,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.24708914756774902
                     }
                   },
@@ -10218,7 +10218,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5044378042221069
                     }
                   }
@@ -10860,7 +10860,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -10872,7 +10872,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.0
                     }
                   },
@@ -10885,7 +10885,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.8593934178352356
                     }
                   }
@@ -11525,7 +11525,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -11537,7 +11537,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.44999998807907104
                     }
                   },
@@ -11550,7 +11550,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.6285772919654846
                     }
                   }
@@ -12190,7 +12190,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -12202,7 +12202,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.0010555353946983814
                     }
                   },
@@ -12215,7 +12215,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.9822915196418762
                     }
                   }
@@ -12855,7 +12855,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -12867,7 +12867,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.4510449767112732
                     }
                   },
@@ -12880,7 +12880,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.7502464056015015
                     }
                   }
@@ -18436,7 +18436,7 @@
               "min_charge_power_kw",
               "min_discharge_power_kw",
               "efficiency_ratio",
-              "round_trip_efficiency_ratio"
+              "one_way_efficiency_ratio"
             ],
             "rows": [
               {
@@ -18448,7 +18448,7 @@
                   "min_charge_power_kw": 0.0,
                   "min_discharge_power_kw": 0.0,
                   "nominal_power_kw": 5.0,
-                  "round_trip_efficiency_ratio": 0.8999999761581421,
+                  "one_way_efficiency_ratio": 0.8999999761581421,
                   "soc": 0.25
                 }
               },
@@ -18461,7 +18461,7 @@
                   "min_charge_power_kw": 0.0,
                   "min_discharge_power_kw": 0.0,
                   "nominal_power_kw": 5.0,
-                  "round_trip_efficiency_ratio": 0.8999999761581421,
+                  "one_way_efficiency_ratio": 0.8999999761581421,
                   "soc": 0.6000000238418579
                 }
               }
@@ -21039,7 +21039,7 @@
                     "legacy": true,
                     "unit": "kw"
                   },
-                  "round_trip_efficiency_ratio": {
+                  "one_way_efficiency_ratio": {
                     "bundle": "entity_base",
                     "legacy": false,
                     "unit": "ratio"
@@ -21058,7 +21058,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "ids": [
                   "Building_1/electrical_storage",
@@ -21822,7 +21822,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -21834,7 +21834,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.2574999928474426
                     }
                   },
@@ -21847,7 +21847,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5962963104248047
                     }
                   }
@@ -22493,7 +22493,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -22505,7 +22505,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.2500494718551636
                     }
                   },
@@ -22518,7 +22518,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5961964130401611
                     }
                   }
@@ -23166,7 +23166,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -23178,7 +23178,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.25000759959220886
                     }
                   },
@@ -23191,7 +23191,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5960965752601624
                     }
                   }
@@ -23836,7 +23836,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -23848,7 +23848,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.24996572732925415
                     }
                   },
@@ -23861,7 +23861,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5959967374801636
                     }
                   }
@@ -24506,7 +24506,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -24518,7 +24518,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.24992385506629944
                     }
                   },
@@ -24531,7 +24531,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5958968997001648
                     }
                   }
@@ -25176,7 +25176,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -25188,7 +25188,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.24988199770450592
                     }
                   },
@@ -25201,7 +25201,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5957971215248108
                     }
                   }
@@ -25844,7 +25844,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -25856,7 +25856,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.2498401403427124
                     }
                   },
@@ -25869,7 +25869,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5919936299324036
                     }
                   }
@@ -31419,7 +31419,7 @@
               "min_charge_power_kw",
               "min_discharge_power_kw",
               "efficiency_ratio",
-              "round_trip_efficiency_ratio"
+              "one_way_efficiency_ratio"
             ],
             "rows": [
               {
@@ -31431,7 +31431,7 @@
                   "min_charge_power_kw": 0.0,
                   "min_discharge_power_kw": 0.0,
                   "nominal_power_kw": 5.0,
-                  "round_trip_efficiency_ratio": 0.8999999761581421,
+                  "one_way_efficiency_ratio": 0.8999999761581421,
                   "soc": 0.25
                 }
               },
@@ -31444,7 +31444,7 @@
                   "min_charge_power_kw": 0.0,
                   "min_discharge_power_kw": 0.0,
                   "nominal_power_kw": 5.0,
-                  "round_trip_efficiency_ratio": 0.8999999761581421,
+                  "one_way_efficiency_ratio": 0.8999999761581421,
                   "soc": 0.6000000238418579
                 }
               }
@@ -34022,7 +34022,7 @@
                     "legacy": true,
                     "unit": "kw"
                   },
-                  "round_trip_efficiency_ratio": {
+                  "one_way_efficiency_ratio": {
                     "bundle": "entity_base",
                     "legacy": false,
                     "unit": "ratio"
@@ -34041,7 +34041,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "ids": [
                   "Building_1/electrical_storage",
@@ -34802,7 +34802,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -34814,7 +34814,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.36250001192092896
                     }
                   },
@@ -34827,7 +34827,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5444444417953491
                     }
                   }
@@ -35471,7 +35471,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -35483,7 +35483,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.25047925114631653
                     }
                   },
@@ -35496,7 +35496,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5610781908035278
                     }
                   }
@@ -36140,7 +36140,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -36152,7 +36152,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.2822811007499695
                     }
                   },
@@ -36165,7 +36165,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5041146278381348
                     }
                   }
@@ -36805,7 +36805,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -36817,7 +36817,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.17046160995960236
                     }
                   },
@@ -36830,7 +36830,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5928495526313782
                     }
                   }
@@ -37472,7 +37472,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -37484,7 +37484,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.2780338525772095
                     }
                   },
@@ -37497,7 +37497,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5358062386512756
                     }
                   }
@@ -38137,7 +38137,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -38149,7 +38149,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.16622503101825714
                     }
                   },
@@ -38162,7 +38162,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.6244616508483887
                     }
                   }
@@ -38802,7 +38802,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -38814,7 +38814,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.2783079147338867
                     }
                   },
@@ -38827,7 +38827,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5673390030860901
                     }
                   }
@@ -44629,7 +44629,7 @@
               "min_charge_power_kw",
               "min_discharge_power_kw",
               "efficiency_ratio",
-              "round_trip_efficiency_ratio"
+              "one_way_efficiency_ratio"
             ],
             "rows": [
               {
@@ -44641,7 +44641,7 @@
                   "min_charge_power_kw": 0.0,
                   "min_discharge_power_kw": 0.0,
                   "nominal_power_kw": 5.0,
-                  "round_trip_efficiency_ratio": 0.8999999761581421,
+                  "one_way_efficiency_ratio": 0.8999999761581421,
                   "soc": 0.25
                 }
               }
@@ -47158,7 +47158,7 @@
                     "legacy": true,
                     "unit": "kw"
                   },
-                  "round_trip_efficiency_ratio": {
+                  "one_way_efficiency_ratio": {
                     "bundle": "entity_base",
                     "legacy": false,
                     "unit": "ratio"
@@ -47177,7 +47177,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "ids": [
                   "Building_1/electrical_storage"
@@ -48852,7 +48852,7 @@
                     "legacy": true,
                     "unit": "kw"
                   },
-                  "round_trip_efficiency_ratio": {
+                  "one_way_efficiency_ratio": {
                     "bundle": "entity_base",
                     "legacy": false,
                     "unit": "ratio"
@@ -48871,7 +48871,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "ids": [
                   "Building_1/electrical_storage",
@@ -50465,7 +50465,7 @@
                     "legacy": true,
                     "unit": "kw"
                   },
-                  "round_trip_efficiency_ratio": {
+                  "one_way_efficiency_ratio": {
                     "bundle": "entity_base",
                     "legacy": false,
                     "unit": "ratio"
@@ -50484,7 +50484,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "ids": [
                   "Building_1/electrical_storage"
@@ -52159,7 +52159,7 @@
                     "legacy": true,
                     "unit": "kw"
                   },
-                  "round_trip_efficiency_ratio": {
+                  "one_way_efficiency_ratio": {
                     "bundle": "entity_base",
                     "legacy": false,
                     "unit": "ratio"
@@ -52178,7 +52178,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "ids": [
                   "Building_1/electrical_storage",
@@ -53130,7 +53130,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -53142,7 +53142,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.36250001192092896
                     }
                   }
@@ -53846,7 +53846,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -53858,7 +53858,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.36159035563468933
                     }
                   },
@@ -53871,7 +53871,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.0
                     }
                   }
@@ -54587,7 +54587,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -54599,7 +54599,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.36068296432495117
                     }
                   },
@@ -54612,7 +54612,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5444444417953491
                     }
                   }
@@ -55236,7 +55236,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -55248,7 +55248,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.35977786779403687
                     }
                   }
@@ -55860,7 +55860,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -55872,7 +55872,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.4668750464916229
                     }
                   }
@@ -56509,7 +56509,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -56521,7 +56521,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.35459235310554504
                     }
                   },
@@ -56534,7 +56534,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.0
                     }
                   }
@@ -57183,7 +57183,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -57195,7 +57195,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.4662025272846222
                     }
                   },
@@ -57208,7 +57208,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5444444417953491
                     }
                   }
@@ -62755,7 +62755,7 @@
               "min_charge_power_kw",
               "min_discharge_power_kw",
               "efficiency_ratio",
-              "round_trip_efficiency_ratio"
+              "one_way_efficiency_ratio"
             ],
             "rows": [
               {
@@ -62767,7 +62767,7 @@
                   "min_charge_power_kw": 0.0,
                   "min_discharge_power_kw": 0.0,
                   "nominal_power_kw": 5.0,
-                  "round_trip_efficiency_ratio": 0.8999999761581421,
+                  "one_way_efficiency_ratio": 0.8999999761581421,
                   "soc": 0.25
                 }
               },
@@ -62780,7 +62780,7 @@
                   "min_charge_power_kw": 0.0,
                   "min_discharge_power_kw": 0.0,
                   "nominal_power_kw": 5.0,
-                  "round_trip_efficiency_ratio": 0.8999999761581421,
+                  "one_way_efficiency_ratio": 0.8999999761581421,
                   "soc": 0.6000000238418579
                 }
               }
@@ -65358,7 +65358,7 @@
                     "legacy": true,
                     "unit": "kw"
                   },
-                  "round_trip_efficiency_ratio": {
+                  "one_way_efficiency_ratio": {
                     "bundle": "entity_base",
                     "legacy": false,
                     "unit": "ratio"
@@ -65377,7 +65377,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "ids": [
                   "Building_1/electrical_storage",
@@ -66138,7 +66138,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -66150,7 +66150,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.2874999940395355
                     }
                   },
@@ -66163,7 +66163,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5814815163612366
                     }
                   }
@@ -66808,7 +66808,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -66820,7 +66820,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.25022226572036743
                     }
                   },
@@ -66833,7 +66833,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.580994725227356
                     }
                   }
@@ -67479,7 +67479,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -67491,7 +67491,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.2500127851963043
                     }
                   },
@@ -67504,7 +67504,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5805083513259888
                     }
                   }
@@ -68146,7 +68146,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -68158,7 +68158,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.24980348348617554
                     }
                   },
@@ -68171,7 +68171,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5800223350524902
                     }
                   }
@@ -68814,7 +68814,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -68826,7 +68826,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.24959436058998108
                     }
                   },
@@ -68839,7 +68839,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5610182285308838
                     }
                   }
@@ -69482,7 +69482,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -69494,7 +69494,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.2123483568429947
                     }
                   },
@@ -69507,7 +69507,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5605485439300537
                     }
                   }
@@ -70147,7 +70147,7 @@
                   "min_charge_power_kw",
                   "min_discharge_power_kw",
                   "efficiency_ratio",
-                  "round_trip_efficiency_ratio"
+                  "one_way_efficiency_ratio"
                 ],
                 "rows": [
                   {
@@ -70159,7 +70159,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.2496705800294876
                     }
                   },
@@ -70172,7 +70172,7 @@
                       "min_charge_power_kw": 0.0,
                       "min_discharge_power_kw": 0.0,
                       "nominal_power_kw": 5.0,
-                      "round_trip_efficiency_ratio": 0.8999999761581421,
+                      "one_way_efficiency_ratio": 0.8999999761581421,
                       "soc": 0.5415607690811157
                     }
                   }

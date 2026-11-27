@@ -89,7 +89,7 @@ def test_rbc_delivers_the_dataset_demand_by_default(controller, case):
 
 @pytest.mark.parametrize('controller', RBCS)
 def test_rbc_hvac_matches_the_bau_hvac(controller):
-    """Same HVAC rule as the BAU under the default baseline_version=2: the same heat each step."""
+    """Same HVAC rule as the BAU: the same heat each step."""
 
     dataset, _, start, heating = CASES['heating_device']
     rbc, _, _ = _run(controller, dataset, start)

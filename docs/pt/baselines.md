@@ -23,7 +23,7 @@ restrições elétricas. Não é um cenário com todos os equipamentos desligado
 | Ligação elétrica | O simulador aplica os limites de importação/exportação totais e por fase configurados; as restrições dos equipamentos e do simulador determinam a energia aplicada. |
 | Partilha local | As regras de liquidação do cenário valorizam a trajetória resultante. O BAU não otimiza a repartição nem o preço do mercado local. |
 | Resposta à procura | Funciona no cenário, mas não tem uma política que otimize um alvo de ativação, um pagamento ou uma penalização. |
-| AVAC (`heating_device`, `cooling_device`, `cooling_or_heating_device`) | Com `baseline_version=2` (predefinida): pede, em cada passo, a ação que fornece a procura de aquecimento ou de arrefecimento do próprio dataset (ver [AVAC e a versão da baseline](#avac-e-a-versão-da-baseline)). Com `baseline_version=1`: pede zero, como no CityLearn 3.6.0, pelo que nos edifícios com dinâmica de temperatura o BAU não aquece nem arrefece. |
+| AVAC (`heating_device`, `cooling_device`, `cooling_or_heating_device`) | Pede, em cada passo, a ação que fornece a procura de aquecimento ou de arrefecimento do próprio dataset (ver [AVAC e a versão da baseline](#avac-e-a-versão-da-baseline)). O CityLearn 3.6.0 pedia zero, pelo que nos edifícios com dinâmica de temperatura o seu BAU não aquecia nem arrefecia. |
 | Outras ações ativas | Pede zero, limitado aos limites da ação. Não é uma política dedicada de armazenamento térmico ou de escadas rolantes; o efeito de zero segue o contrato de ação de cada equipamento. |
 
 ### Escolher o alvo de carregamento do BAU
@@ -73,8 +73,7 @@ fica disponível. Os datasets incluídos com uma ação de AVAC ativa são
 `ca_alameda_county_neighborhood`, `baeda_3dem` e os datasets
 `citylearn_challenge_2023_*`.
 
-Com `baseline_version=2`, a predefinida, o BAU funciona com o AVAC como um
-edifício sem otimização. Em cada passo pede a ação que fornece a procura de
+O BAU funciona com o AVAC como um edifício sem otimização. Em cada passo pede a ação que fornece a procura de
 aquecimento ou de arrefecimento do próprio dataset, a `heating_demand` e a
 `cooling_demand` simuladas do ficheiro do edifício (as séries
 `*_demand_without_control` da simulação energética):
@@ -89,17 +88,16 @@ a maior das duas procuras define o sinal. O BAU não pré-aquece, não
 pré-arrefece, não segue preços nem usa o armazenamento térmico, que continua a
 receber zero.
 
-`baseline_version=1` reproduz o CityLearn 3.6.0: o BAU pede zero nessas ações,
-pelo que, terminado o aquecimento inicial do LSTM, os seus edifícios não são
-aquecidos nem arrefecidos. As temperaturas interiores afastam-se dos set points
-e todas as linhas `*_business_as_usual` comparam o controlador com casas sem
-aquecimento (ou sem arrefecimento)
-([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
+O CityLearn 3.6.0 pedia zero nessas ações, pelo que, terminado o aquecimento
+inicial do LSTM, os edifícios do seu BAU não eram aquecidos nem arrefecidos. As
+temperaturas interiores afastavam-se dos set points e todas as linhas
+`*_business_as_usual` comparavam o controlador com casas sem aquecimento (ou sem
+arrefecimento) ([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
+A `baseline_version` 1, que mantinha esse BAU, foi removida no CityLearn 3.8.1.
 
 | `baseline_version` | Baseline dos KPIs | AVAC do BAU | Definição do BAU |
 |---|---|---|---|
-| `1` | 3.6.0: sem carregamento de VE reposto | zero | `immediate-full-charge-v4` |
-| `2` (predefinida) | repõe o carregamento de VE do BAU `'full'` | fornece a procura de aquecimento e de arrefecimento do dataset | `immediate-full-charge-v4+hvac-dataset-demand-v1` nos datasets com ações de AVAC, `immediate-full-charge-v4` nos outros |
+| `2` | repõe o carregamento de VE do BAU `'full'` | fornece a procura de aquecimento e de arrefecimento do dataset | `immediate-full-charge-v4+hvac-dataset-demand-v1` nos datasets com ações de AVAC, `immediate-full-charge-v4` nos outros |
 
 (Com `business_as_usual_ev_charge_target='requested'`, a definição começa por
 `immediate-user-target-v3`.)
@@ -109,7 +107,8 @@ A regra do AVAC muda as linhas `*_business_as_usual` e os valores
 datasets com ações de AVAC. Nos datasets sem ações de AVAC, o BAU, a sua
 definição e identidade, e todos os KPIs são iguais, bit a bit, aos de antes da
 regra do AVAC. As comparações dão como
-incompatíveis execuções com versões da baseline diferentes.
+incompatíveis execuções com versões da baseline diferentes, como uma exportação
+de uma versão anterior feita com a versão 1.
 
 No Quebec (`quebec_neighborhood_without_demand_response_set_points`, passos
 0–335), o BAU predefinido passa a aquecer as casas:
@@ -125,19 +124,18 @@ No Quebec (`quebec_neighborhood_without_demand_response_set_points`, passos
 ```python
 env = CityLearnEnv('quebec_neighborhood_without_demand_response_set_points')
 agent = BusinessAsUsualAgent(env)  # hvac='dataset_demand', a partir do env
-
-legacy = CityLearnEnv('quebec_neighborhood_without_demand_response_set_points', baseline_version=1)
+off = BusinessAsUsualAgent(env, hvac='off')  # AVAC a zero
 ```
 
-`BusinessAsUsualAgent(env, hvac=...)` substitui a definição do ambiente para esse
+`BusinessAsUsualAgent(env, hvac=...)` substitui a predefinição para esse
 agente: `'off'` envia zero, `'dataset_demand'` fornece a procura do dataset. O
-BAU nativo do `evaluate_v2()` segue sempre a `baseline_version` do ambiente.
+BAU nativo do `evaluate_v2()` fornece sempre a procura do dataset nos datasets
+com ações de AVAC.
 
 **As referências baseadas em regras usam o AVAC da mesma forma.**
 `RBCBasicPolicy`, `RBCSmartPolicy` e `RBCCommunityPolicy` fornecem a procura de
-aquecimento e de arrefecimento do dataset com a mesma regra do BAU, qualquer que
-seja a `baseline_version` (ver [AVAC das referências baseadas em
-regras](#avac-das-referências-baseadas-em-regras)). Com a versão predefinida, os
+aquecimento e de arrefecimento do dataset com a mesma regra do BAU (ver [AVAC das
+referências baseadas em regras](#avac-das-referências-baseadas-em-regras)). Os
 seus rácios face ao BAU comparam, por isso, casas aquecidas e arrefecidas da
 mesma forma. O `ZeroActionAgent` continua a enviar zero, tal como qualquer
 controlador próprio que não comande o AVAC: os seus valores
@@ -258,9 +256,8 @@ de 17,2 °C em vez de −12,8 °C, e
 `district_comfort_resilience_discomfort_overall_ratio` passa de 0,183 para
 0,026. O Quebec não tem baterias nem VE, pelo que funcionam então exatamente como
 o BAU: custo de 4403,8 EUR e rácio de custo de 1,000. Com `hvac='off'` custam
-631,8 EUR, um rácio de 0,143. Com `baseline_version=1`, cujo BAU não aquece, o
-seu rácio de custo é de 6,970; para reproduzir o rácio anterior de 1,000 com essa
-versão, passe também `hvac='off'`.
+631,8 EUR, um rácio de 0,143. Face ao BAU do CityLearn 3.6.0, que não aquecia, o
+seu rácio de custo era de 6,970.
 
 ```python
 smart = RBCSmartPolicy(env)               # AVAC satisfaz a procura do dataset
@@ -413,9 +410,8 @@ aí a condição predefinida usa a procura de aquecimento e de arrefecimento de
 carga ideal do dataset, em vez do AVAC que o controlador operou. As linhas `baseline` creditam assim ao controlador o
 despacho do armazenamento, o carregamento dos VE e o V2G, face a carregar à
 chegada, e nos edifícios com dinâmica de temperatura também o controlo do AVAC.
-Com `baseline_version=1` nada é somado, como no CityLearn 3.6.0, pelo
-que nos datasets com VE a baseline é uma comunidade cujos carros nunca
-carregam.
+O CityLearn 3.6.0 não somava nada, pelo que nos datasets com VE a sua
+baseline era uma comunidade cujos carros nunca carregavam.
 
 Fora esse carregamento dos VE, trata-se de um cálculo contrafactual a partir
 das séries da própria execução, não de uma segunda execução de
@@ -424,8 +420,8 @@ do sidecar do BAU, que cada avaliação passa então a executar, também o
 `evaluate()` antigo e `evaluate_v2(include_business_as_usual=False)`, com o alvo
 `'full'` qualquer que seja `business_as_usual_ev_charge_target`. Tal como as
 linhas do BAU, não pode ser construído quando as entradas, os edifícios ou os
-equipamentos mudam depois do carregamento; avalie essas execuções com
-`baseline_version=1`. `EvaluationCondition` expõe também alternativas,
+equipamentos mudam depois do carregamento, e a avaliação lança então
+`ValueError`. `EvaluationCondition` expõe também alternativas,
 incluindo a remoção do FV. Escolha a mesma condição de avaliação ao comparar
 controladores. Durante um corte de energia simulado, o contrafactual, tal como a
 execução controlada, não troca energia com a rede: os seus valores de net, custo

@@ -14,8 +14,8 @@ Agent                                       Behaviour
                                             departure SOC (``ev_charge_target='requested'``);
                                             starts appliances at the first admissible step; the
                                             home battery stores PV surplus and serves local import.
-                                            With ``hvac='dataset_demand'`` (default under
-                                            ``baseline_version=2``) the HVAC delivers the dataset's
+                                            With ``hvac='dataset_demand'`` (default on datasets
+                                            with HVAC actions) the HVAC delivers the dataset's
                                             heating and cooling demand.
 :class:`RBCBasicPolicy`                     Current price and service urgency for EVs and
                                             appliances; battery self-consumption.
@@ -31,8 +31,8 @@ Agent                                       Behaviour
 
 The three RBCs also run the HVAC (``heating_device``, ``cooling_device``,
 ``cooling_or_heating_device``) at the dataset's heating and cooling demand, as the
-BAU does under the default ``baseline_version=2`` (``hvac='dataset_demand'``, the default; pass
-``hvac='off'`` for the zero HVAC of earlier releases). They do not optimise the HVAC.
+BAU does (``hvac='dataset_demand'``, the default; pass ``hvac='off'`` for zero HVAC actions).
+They do not optimise the HVAC.
 On datasets without HVAC actions this changes nothing.
 
 The policies are ported from the Soft-CPS Algorithms baselines and keep their
@@ -333,17 +333,16 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
     estimating local surplus or import.
 
     The HVAC follows `hvac`. With ``'off'`` the ``heating_device``, ``cooling_device`` and
-    ``cooling_or_heating_device`` actions are zero, as in CityLearn 3.6.0 and under ``baseline_version=1``,
-    so on datasets with HVAC actions the BAU buildings are neither heated nor cooled (#362). With
+    ``cooling_or_heating_device`` actions are zero, as in CityLearn 3.6.0, so on datasets with HVAC actions
+    the BAU buildings are neither heated nor cooled (#362). With
     ``'dataset_demand'`` each step the HVAC action is the fraction of the device's nominal power that
     delivers the dataset's own heating or cooling demand (``heating_demand_without_control`` and
     ``cooling_demand_without_control`` of the energy simulation, the as-simulated demand of the building
     file), clipped to the action bounds; the device limits (nominal power, outage supply) cap it as for any
     action. That is a thermostat that meets the
     load without optimisation. The demand is used only in the steps whose ``hvac_mode`` allows that service.
-    The default, ``None``, is ``'dataset_demand'`` when the environment's ``baseline_version`` is 2 (the
-    default) and it has HVAC actions, and ``'off'`` under version 1 or without HVAC actions, which keeps the
-    definition and identity of earlier releases there.
+    The default, ``None``, is ``'dataset_demand'`` when the environment has HVAC actions, and ``'off'``
+    without HVAC actions, which keeps the definition and identity of earlier releases there.
 
     Choose the BAU that ``evaluate_v2()`` uses with the environment's
     ``business_as_usual_ev_charge_target`` and ``baseline_version``.
@@ -385,27 +384,23 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
 
     @classmethod
     def hvac_mode_for(cls, env: Any) -> str:
-        """HVAC behaviour of the BAU under the environment's ``baseline_version``.
+        """Default HVAC behaviour of the BAU on `env`.
 
-        ``'dataset_demand'`` from version 2 on an environment with HVAC actions, ``'off'`` otherwise: where no
-        building has an HVAC action both run the same, and ``'off'`` keeps the BAU definition and identity of
-        earlier releases.
+        ``'dataset_demand'`` on an environment with HVAC actions, ``'off'`` otherwise: where no building has an
+        HVAC action both run the same, and ``'off'`` keeps the BAU definition and identity of earlier releases.
         """
-
-        from citylearn.internal.baseline_version import BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION, baseline_version_of
 
         env = getattr(env, 'unwrapped', env)
         has_hvac = any(name in cls._HVAC_ACTIONS for building in (getattr(env, 'buildings', None) or [])
                        for name in getattr(building, 'active_actions', []))
-        version = baseline_version_of(env)
-        return 'dataset_demand' if has_hvac and version >= BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION else 'off'
+        return 'dataset_demand' if has_hvac else 'off'
 
 
 class _RuleBasedPolicy(_RuleBaselineAgent):
     """Rule-based controller: the engine dispatches storage, EVs and appliances, the HVAC meets the dataset demand.
 
     With ``hvac='dataset_demand'`` (default) the HVAC actions deliver the dataset's own heating and cooling
-    demand at each step, as the BAU does under the default ``baseline_version=2``: a thermostat that meets the load,
+    demand at each step, as the BAU does: a thermostat that meets the load,
     without optimisation. ``hvac='off'`` sends zero, as these controllers did before. On datasets without
     HVAC actions both give the same results.
     """
@@ -477,9 +472,8 @@ class RBCCommunityPolicy(_RuleBasedPolicy):
 class ZeroActionAgent(Agent):
     """Agent that requests zero for every action dimension.
 
-    Up to CityLearn 3.6.0 this class was called ``ZeroActionBaselineAgent``. That name is a deprecated alias that
-    will be removed in a later release: in CityLearn, "baseline" names the KPI counterfactual, while this agent
-    requests zero actions.
+    Up to CityLearn 3.6.0 this class was called ``ZeroActionBaselineAgent``; that alias was removed in CityLearn
+    3.8.1. In CityLearn, "baseline" names the KPI counterfactual, while this agent requests zero actions.
 
     Under the entity interface it returns flat-like zero vectors in
     ``env.action_names`` order, which the entity interface accepts.
@@ -502,13 +496,3 @@ __all__ = [
     'RBCCommunityPolicy',
     'ZeroActionAgent',
 ]
-
-
-def __getattr__(name: str):
-    # Deprecated names of renamed classes resolve to the same class, also for unpickling and import paths.
-    if name == 'ZeroActionBaselineAgent':
-        from citylearn.agents._renamed import renamed
-
-        return renamed(__name__, 'ZeroActionBaselineAgent', 'ZeroActionAgent', ZeroActionAgent)
-
-    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')

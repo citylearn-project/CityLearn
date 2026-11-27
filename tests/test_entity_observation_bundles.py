@@ -286,7 +286,7 @@ def test_base_entity_features_add_static_asset_capabilities_without_core_bundle(
 
         storage_features = env.entity_specs["tables"]["storage"]["features"]
         storage_meta = env.entity_specs["tables"]["storage"]["feature_metadata"]
-        for feature in ["min_charge_power_kw", "min_discharge_power_kw", "efficiency_ratio", "round_trip_efficiency_ratio"]:
+        for feature in ["min_charge_power_kw", "min_discharge_power_kw", "efficiency_ratio", "one_way_efficiency_ratio"]:
             assert feature in storage_features
             assert storage_meta[feature]["bundle"] == "entity_base"
             assert storage_meta[feature]["legacy"] is False
@@ -657,24 +657,6 @@ def test_faded_ev_reports_the_energy_its_battery_accepts(tmp_path, soc):
         else:
             assert 0.0 < accepted < (1.0 - soc) * battery.capacity
             assert value("charger", "can_charge") == 1.0
-    finally:
-        env.close()
-
-
-def test_physics_version_1_keeps_the_nominal_energy_to_full_of_a_faded_ev(tmp_path):
-    schema_path = _minute_schema_with_bundles(tmp_path)
-    env = CityLearnEnv(str(schema_path), interface="entity", central_agent=True, random_seed=0, physics_version=1)
-    try:
-        env.reset(seed=0)
-        battery = env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery
-        battery._capacity_history.append(0.99 * battery.capacity)
-        battery.soc[0] = 0.995
-        payload = entity_service(env).observation_payload()
-
-        assert _payload_value(env, payload, "charger", "connected_ev_energy_to_full_kwh") == pytest.approx(
-            0.005 * battery.capacity, rel=1.0e-5
-        )
-        assert _payload_value(env, payload, "charger", "can_charge") == 1.0
     finally:
         env.close()
 

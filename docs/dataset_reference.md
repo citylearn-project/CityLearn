@@ -125,9 +125,8 @@ may be in ratio while the targets are in percent. A column whose values are all 
 read as ratio; declare `"soc_unit": "percent"` on the charger in the schema if such a file is in
 percent (the declared unit applies to all its SOC columns). A column read as percent that also
 holds values between 0 and 1 gives a warning, since one stray value above 1 in a ratio column would
-turn 0.3 into 0.3 %. Physics version 1
-keeps the rule of CityLearn 3.6.0, value by value: a value in [0, 1] is a ratio and a value above 1 a
-percentage, so 1 (1 %) in a percent file was read as 100 %, unless the charger declares `soc_unit`
+turn 0.3 into 0.3 %. CityLearn 3.6.0 decided the unit value by value: a value in [0, 1] was a ratio and
+a value above 1 a percentage, so 1 (1 %) in a percent file was read as 100 %
 ([#368](https://github.com/citylearn-project/CityLearn/issues/368)).
 
 ## Entity Observation Bundles in Packaged Datasets

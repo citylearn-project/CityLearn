@@ -57,9 +57,9 @@ def _actions(env, value):
     return payload
 
 
-def _run(events, storage_actions, baseline_version=2):
+def _run(events, storage_actions):
     env = CityLearnEnv(_schema(events), interface="entity", topology_mode="dynamic", episode_time_steps=12,
-                       random_seed=0, baseline_version=baseline_version)
+                       random_seed=0)
     env.reset(seed=0)
     building = next(b for b in env.buildings if b.name == "Building_12")
     replaced = building.electrical_storage
@@ -117,26 +117,3 @@ def test_baseline_without_storage_does_not_depend_on_the_replaced_battery_dispat
 
     for name in ("net_electricity_consumption_without_storage", "district_net_electricity_consumption_without_storage"):
         np.testing.assert_allclose(first[name], second[name], rtol=0.0, atol=1.0e-5, err_msg=name)
-
-
-@pytest.mark.parametrize("event", [REMOVE, REPLACE], ids=["remove", "replace"])
-def test_baseline_version_1_keeps_the_3_6_0_storage_series(event):
-    # baseline_version 1 reproduces CityLearn 3.6.0: the building's battery series reads only the current
-    # instance, so the replaced battery's history is lost and the baseline keeps its dispatch.
-    actions = [0.8, 0.8, 0.8, -0.6, -0.6, 0.4] + [0.5]*6
-    v1 = _run([event], actions, baseline_version=1)
-    v2 = _run([event], actions, baseline_version=2)
-    cut = EVENT_TIME_STEP
-
-    assert np.abs(v1["replaced"][:cut]).sum() > 1.0
-    np.testing.assert_array_equal(v1["electrical_storage_electricity_consumption"], v1["current"])
-    np.testing.assert_array_equal(v2["electrical_storage_electricity_consumption"][:cut], v2["replaced"][:cut])
-
-    # The controlled run is the same under both versions; only the series that keep the history differ.
-    np.testing.assert_array_equal(v1["net_electricity_consumption"], v2["net_electricity_consumption"])
-    np.testing.assert_array_equal(v1["replaced"], v2["replaced"])
-
-    # As in 3.6.0, the v1 baseline then depends on the replaced battery's dispatch.
-    other = _run([event], [-0.3, 0.2, 0.6, 0.6, -0.9, -0.2] + [-0.5]*6, baseline_version=1)
-    assert not np.allclose(v1["net_electricity_consumption_without_storage"][:cut],
-                           other["net_electricity_consumption_without_storage"][:cut], rtol=0.0, atol=1.0e-5)

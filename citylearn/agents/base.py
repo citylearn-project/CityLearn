@@ -2,21 +2,11 @@ import logging
 from typing import Any, List, Mapping
 from gymnasium import spaces
 import numpy as np
-from citylearn import random_streams
 from citylearn.base import Environment
 from citylearn.citylearn import CityLearnEnv
 
 LOGGER = logging.getLogger(__name__)
 
-
-def __getattr__(name: str):
-    # Deprecated names of renamed classes resolve to the same class, also for unpickling and import paths.
-    if name == 'BaselineAgent':
-        from citylearn.agents._renamed import renamed
-
-        return renamed(__name__, 'BaselineAgent', 'NoControlAgent', NoControlAgent)
-
-    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
 
 def get_env_attr(env, name: str):
     """Read an attribute from the outermost wrapper that defines it, else from the base environment.
@@ -89,12 +79,6 @@ class Agent(Environment):
             episode_tracker=self.env.unwrapped.episode_tracker,
             time_step_ratio=self.env.unwrapped.time_step_ratio
         )
-        # The agent's own random streams follow the derivation of its environment's streams. The default is not
-        # stored, so agents saved before the setting existed load with the same attributes as new ones.
-        random_stream_version = getattr(self.env.unwrapped, 'random_stream_version', None)
-
-        if random_stream_version != random_streams.DEFAULT_RANDOM_STREAM_VERSION:
-            self._set_random_stream(random_stream_version=random_stream_version)
         # Random actions follow `random_seed`; a space the caller has already seeded keeps its stream. The layout
         # generation is stored only once a dynamic topology changes it, so agents load as saved by older releases.
         self._seed_action_spaces()
@@ -385,7 +369,7 @@ class Agent(Environment):
                 space.seed(self._get_seed(*key))
 
     def episode_random_generator(self, purpose: str) -> np.random.Generator:
-        """Generator of `purpose` for the current episode (``random_stream_version='v2'``).
+        """Generator of `purpose` for the current episode.
 
         The generator is derived from :py:attr:`random_seed`, `purpose` and the episode key of the shared
         episode tracker, and persists for the rest of the episode, so draws within an episode come from one
@@ -418,9 +402,9 @@ class Agent(Environment):
 class NoControlAgent(Agent):
     r"""Passive no-control agent: every active control action is disabled.
 
-    Up to CityLearn 3.6.0 this class was called ``BaselineAgent``. That name is a deprecated alias that will be
-    removed in a later release: in CityLearn, "baseline" names the KPI counterfactual (the same buildings without
-    storage, with PV), while this agent controls nothing.
+    Up to CityLearn 3.6.0 this class was called ``BaselineAgent``; that alias was removed in CityLearn 3.8.1. In
+    CityLearn, "baseline" names the KPI counterfactual (the same buildings without storage, with PV), while this
+    agent controls nothing.
 
     This agent will provide results for when there is no storage for load shifting and no heat pump partial load. 
     The storage actions prescribed will be 0.0 and the heat pump will have no action, i.e. `None`, causing it to 

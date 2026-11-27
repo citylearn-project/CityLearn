@@ -112,13 +112,8 @@ def _departure_rewards(version):
     return [reward.calculate([_ev_observation(soc)])[0] for soc in DEPARTURE_SOCS]
 
 
-def test_ev_reward_version_1_is_unchanged_and_deprecated():
-    # Severe under-charging scores better than moderate under-charging in version 1.
-    with pytest.warns(DeprecationWarning, match='only to reproduce runs made with CityLearn 3.6.0'):
-        assert _departure_rewards(1) == pytest.approx([110.0, -20.0, 15.0, 15.0])
-
-
 def test_ev_reward_version_2_penalizes_deeper_departure_deficits_more():
+    # In the removed version 1, severe under-charging scored better than moderate: [110, -20, 15, 15].
     rewards = _departure_rewards(2)
 
     assert _departure_rewards(None) == rewards
@@ -128,9 +123,7 @@ def test_ev_reward_version_2_penalizes_deeper_departure_deficits_more():
 
 def test_ev_reward_version_2_adds_the_base_reward():
     no_charger = {'net_electricity_consumption': 50.0, 'charging_constraint_violation_kwh': 0.0}
-    # MARL base reward of a lone building importing 50 kWh: -0.01 * 50 ** 2 * 50.
-    with pytest.warns(DeprecationWarning):
-        assert Electric_Vehicles_Reward_Function({'central_agent': False}, version=1).calculate([no_charger]) == [0.0]
+    # MARL base reward of a lone building importing 50 kWh: -0.01 * 50 ** 2 * 50. The removed version 1 gave 0.
     assert Electric_Vehicles_Reward_Function({'central_agent': False}, version=2).calculate([no_charger]) == [-1250.0]
 
     base = -0.01
@@ -153,42 +146,45 @@ def _comfort_observation(hvac_mode, temperature, heating_demand=0.0, cooling_dem
     }
 
 
-@pytest.mark.parametrize('observation,version_1,version_2', [
+# The removed version 1 (CityLearn 3.6.0) gave 0.0, -1.5, -25.0, 0.0, -27.0 and 0.0 for these observations.
+@pytest.mark.parametrize('observation,version_2', [
     # Heating mode, 21.5 C within the band above the 20 C set point, heater off and on.
-    (_comfort_observation(2, 21.5), 0.0, -1.5),
-    (_comfort_observation(2, 21.5, heating_demand=5.0), -1.5, -1.5),
-    # Heating mode, overheated beyond the band with the heater off: the higher exponent applies in version 2.
-    (_comfort_observation(2, 25.0), -25.0, -125.0),
+    (_comfort_observation(2, 21.5), -1.5),
+    (_comfort_observation(2, 21.5, heating_demand=5.0), -1.5),
+    # Heating mode, overheated beyond the band with the heater off: the higher exponent applies.
+    (_comfort_observation(2, 25.0), -125.0),
     # Cooling mode, 23 C within the band below the 24 C set point, while a heating demand dominates.
-    (_comfort_observation(1, 23.0, heating_demand=5.0), 0.0, -1.0),
-    # Off and automatic modes keep the version 1 rule.
-    (_comfort_observation(0, 17.0), -27.0, -27.0),
-    (_comfort_observation(3, 22.0), 0.0, 0.0),
+    (_comfort_observation(1, 23.0, heating_demand=5.0), -1.0),
+    # Off and automatic modes choose the side by the demands.
+    (_comfort_observation(0, 17.0), -27.0),
+    (_comfort_observation(3, 22.0), 0.0),
 ])
-def test_comfort_reward_version_2_follows_the_hvac_mode(observation, version_1, version_2):
+def test_comfort_reward_version_2_follows_the_hvac_mode(observation, version_2):
     metadata = {'central_agent': False}
     kwargs = dict(lower_exponent=2.0, higher_exponent=3.0)
-
-    with pytest.warns(DeprecationWarning):
-        assert ComfortReward(metadata, version=1, **kwargs).calculate([observation]) == pytest.approx([version_1])
 
     assert ComfortReward(metadata, version=2, **kwargs).calculate([observation]) == pytest.approx([version_2])
     assert ComfortReward(metadata, **kwargs).calculate([observation]) == pytest.approx([version_2])
 
 
 def test_reward_versions_are_validated_and_recorded():
-    with pytest.raises(ValueError, match='version must be one of'):
+    with pytest.raises(ValueError, match='ComfortReward version must be 2, got 3'):
         ComfortReward(None, version=3)
 
-    with pytest.raises(ValueError, match='version must be one of'):
-        Electric_Vehicles_Reward_Function(None, version='2')
+    for value in (2.0, True):
+        with pytest.raises(ValueError, match='Electric_Vehicles_Reward_Function version must be 2'):
+            Electric_Vehicles_Reward_Function(None, version=value)
 
+    # The rule of every versioned setting (#469): an integer or a string of digits.
+    assert Electric_Vehicles_Reward_Function(None, version='2').version == 2
+    assert ComfortReward(None, version=np.int64(2)).version == 2
     assert SolarPenaltyAndComfortReward(None, version=2).version == 2
+    assert SolarPenaltyAndComfortReward(None).version == 2
 
-    # Rewards pickled by CityLearn 3.6.0 have no version attribute and keep version 1.
+    # Instances without a version attribute (pickled by CityLearn 3.6.0) report the only version.
     for reward in (ComfortReward(None, version=2), Electric_Vehicles_Reward_Function(None, version=2)):
         del reward.__dict__['version']
-        assert reward.version == 1
+        assert reward.version == 2
 
     # The bundled schema selects version 2, which is also the class default.
     env = CityLearnEnv(_schema(), episode_time_steps=4)
@@ -199,11 +195,19 @@ def test_reward_versions_are_validated_and_recorded():
     assert evidence['effective_public_parameters']['version'] == 2
     env.close()
 
-    with pytest.warns(DeprecationWarning, match='version 1 is deprecated'):
-        env = CityLearnEnv(_schema(), reward_function_kwargs={'version': 1}, episode_time_steps=4)
 
-    assert env.reward_function.version == 1
-    env.close()
+
+@pytest.mark.parametrize('reward', [ComfortReward, Electric_Vehicles_Reward_Function, SolarPenaltyAndComfortReward])
+@pytest.mark.parametrize('version', [1, '1'])
+def test_reward_version_1_was_removed(reward, version):
+    with pytest.raises(ValueError, match=r'version must be 2, got .*Version 1 was removed in CityLearn 3\.8\.1; '
+                                         r'CityLearn 3\.7 reproduces CityLearn 3\.6\.0'):
+        reward(None, version=version)
+
+
+def test_environment_rejects_reward_version_1():
+    with pytest.raises(ValueError, match='Version 1 was removed in CityLearn 3.8.1'):
+        CityLearnEnv(_schema(), reward_function_kwargs={'version': 1}, episode_time_steps=4)
 
 
 def test_bundled_schemas_select_reward_version_2():

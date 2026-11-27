@@ -310,12 +310,10 @@ def test_soc_unit_can_be_declared():
         _soc_simulation([0.8], [0.4], soc_unit="percentage")
 
 
-def test_per_value_soc_unit_keeps_the_physics_v1_rule():
-    simulation = _soc_simulation(
-        [0.8, 80.0, np.nan, -0.1, 150.0], [0.4, 40.0, np.nan, -0.1, 1.0], soc_unit="per_value",
-    )
-    np.testing.assert_allclose(simulation.electric_vehicle_required_soc_departure, [0.8, 0.8, -0.1, -0.1, 1.0], atol=1.0e-6)
-    np.testing.assert_allclose(simulation.electric_vehicle_estimated_soc_arrival, [0.4, 0.4, -0.1, -0.1, 1.0], atol=1.0e-6)
+def test_per_value_soc_unit_of_physics_v1_was_removed():
+    # The value-by-value rule of physics version 1 was removed in CityLearn 3.8.1 (#466).
+    with pytest.raises(ValueError, match="soc_unit"):
+        _soc_simulation([0.8, 80.0], [0.4, 40.0], soc_unit="per_value")
 
 
 def test_ev_battery_schema_attributes_are_loaded(tmp_path):
@@ -564,5 +562,3 @@ def test_current_soc_initializes_runtime_reconnection_inside_occupied_window():
 def test_negative_soc_sentinels_remain_missing_values():
     values = ChargerSimulation.normalize_soc_series([-1.0, -0.1, np.nan, 0.0, 1.0, 80.0, 150.0])
     assert values.tolist() == pytest.approx([-0.1, -0.1, -0.1, 0.0, 0.01, 0.8, 1.0])
-    values = ChargerSimulation._normalize_soc_series([-1.0, -0.1, np.nan, 0.0, 1.0, 80.0, 150.0], unit="per_value")
-    assert values.tolist() == pytest.approx([-0.1, -0.1, -0.1, 0.0, 1.0, 0.8, 1.0])

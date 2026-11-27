@@ -11,6 +11,8 @@ from typing import Any, Iterable, Mapping
 
 import numpy as np
 
+from citylearn.internal.versions import parse_version
+
 DEFAULT_LOCAL_PRICE_RATIO = 0.8
 SETTLEMENT_VERSIONS = (1, 2)
 KNOWN_KEYS = (
@@ -96,14 +98,10 @@ def parse_community_market(config: Any, building_names=None) -> dict:
             'a member cannot pay more for local energy than for grid energy.'
         )
 
-    version = config.get('settlement_version', 1)
-    # 2.0 selected version 2 before validation (the check was `== 2`), so integral floats are kept.
-    if isinstance(version, (bool, np.bool_)) or not isinstance(version, (Real, np.integer, np.floating)) \
-            or version not in SETTLEMENT_VERSIONS:
-        raise ValueError(
-            f'community_market.settlement_version must be 1 or 2, got {version!r}.'
-        )
-    version = int(version)
+    # The rule of every versioned setting (#469): an integer or a string of digits.
+    version = parse_version(
+        config.get('settlement_version'), SETTLEMENT_VERSIONS, 'community_market.settlement_version', default=1,
+    )
 
     export_price = _number(config.get('grid_export_price', 0.0), 'community_market.grid_export_price')
     if version != 2 and export_price != 0.0:

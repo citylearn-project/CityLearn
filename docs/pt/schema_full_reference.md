@@ -43,9 +43,9 @@ Versão em inglês: [../schema_full_reference.md](../schema_full_reference.md).
 |---|---|---|---|
 | `root_directory` | pasta do dataset, relativa ao ficheiro do schema | a pasta do schema | Todos os nomes de ficheiro abaixo são lidos a partir daqui. Um schema `dict` tem de a definir. O argumento `root_directory` sobrepõe-se a ela. |
 | `random_seed` | `2022` | uma semente aleatória nova em cada construção | Defina-a para execuções repetíveis: os parâmetros sorteados dos dispositivos, o SOC inicial e a deriva dos VE, o ruído e os episódios aleatórios dependem dela. |
-| `random_stream_version` | `"v2"` | `"v2"` | `"v1"` reproduz os sorteios do CityLearn 3.6.0. |
-| `physics_version` | `2` | `2` | `1` reproduz a física da 3.6.0; consulte [O que cada versão altera](schema_reference.md#o-que-cada-versão-altera). |
-| `baseline_version` | `2` | `2` | `1`: a baseline dos KPIs não volta a somar o carregamento dos VE, e o BAU envia zero às ações de AVAC, como na 3.6.0. Este dataset não tem ações de AVAC, pelo que o seu BAU é o mesmo nas duas versões. |
+| `random_stream_version` | `"v2"` | `"v2"` | A única versão; consulte [Versões](schema_reference.md#versões). |
+| `physics_version` | `2` | `2` | A única versão; consulte [O que cada versão altera](schema_reference.md#o-que-cada-versão-altera). |
+| `baseline_version` | `2` | `2` | A única versão: a baseline dos KPIs volta a somar o carregamento dos VE do BAU. Este dataset não tem ações de AVAC, pelo que o seu BAU não envia nenhuma ação de AVAC. |
 
 ## Organização do agente, janela temporal e episódios
 
@@ -514,7 +514,7 @@ procura, dimensione-os ou use `"autosize": true`.
 | `loss_coefficient` | `null` | sorteado em 0,001-0,009 por hora | |
 | `capacity_loss_coefficient` | `null` | sorteado em 1e-5-1e-4 | Degradação da capacidade por ciclo completo equivalente. |
 | `power_efficiency_curve`, `capacity_power_curve` | `null` | curvas sorteadas | Indique-as para que a bateria não dependa da semente. |
-| `discharge_power_curve` | `null` | `[[0, 1], [1, 1]]` | A versão 1 da física usa também `capacity_power_curve` na descarga. |
+| `discharge_power_curve` | `null` | `[[0, 1], [1, 1]]` | Limita só a descarga; `capacity_power_curve` limita o carregamento. |
 | `phase_connection` | `null` | `L1` (monofásico) | Fase sob o serviço elétrico. |
 | `autosize_attributes` | `duration` sorteada em 1,5-3,5 h, `parallel` `false`, `safety_factor` `1.0` | | Só usados com `"autosize": true`. |
 | `pv.attributes.nominal_power` | 12 kW | `0` | |
@@ -921,7 +921,6 @@ O `Building_4` mostra as mesmas secções escritas apenas com as chaves que não
 | Para | Altere |
 |---|---|
 | Treinar em episódios aleatórios de uma semana | `"episode_time_steps": 169`, `"random_episode_split": true` |
-| Reproduzir o CityLearn 3.6.0 | `"physics_version": 1`, `"baseline_version": 1`, `"random_stream_version": "v1"`, `"episode_split_boundary": "disjoint"` |
 | Controlar os dois edifícios com um só agente | `"central_agent": true` |
 | Usar tabelas entity | `"interface": "entity"` e os `observation_bundles` de que precisa |
 | Liquidar a energia localmente e pagar as exportações | `community_market`: `"enabled": true`, `"settlement_version": 2`, `"grid_export_price": 0.05` |

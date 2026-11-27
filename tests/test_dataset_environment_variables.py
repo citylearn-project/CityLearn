@@ -3,7 +3,6 @@
 from pathlib import Path
 
 import pytest
-from platformdirs import user_cache_dir
 
 from citylearn.citylearn import CityLearnEnv, UnknownSchemaError
 from citylearn.data import DataSet
@@ -57,11 +56,8 @@ def test_citylearn_env_offline_defaults_to_citylearn_offline(monkeypatch):
     assert env.offline is False
 
 
-def test_the_unused_constants_are_deprecated(monkeypatch):
-    with pytest.warns(DeprecationWarning, match='GITHUB_API_CONTENT_URL'):
-        assert DataSet.GITHUB_API_CONTENT_URL == 'https://api.github.com/repos/citylearn-project/CityLearn/contents'
-
-    monkeypatch.setenv('CITYLEARN_DATASET_TAG', 'v9')
-
-    with pytest.warns(DeprecationWarning, match='DEFAULT_CACHE_DIRECTORY'):
-        assert DataSet().DEFAULT_CACHE_DIRECTORY == str(Path(user_cache_dir('citylearn'))/'v9')
+def test_the_unused_constants_were_removed():
+    # Deprecated in 3.7.0 and removed in CityLearn 3.8.1 (#466).
+    for name in ('GITHUB_API_CONTENT_URL', 'DEFAULT_CACHE_DIRECTORY'):
+        assert not hasattr(DataSet, name)
+        assert not hasattr(DataSet(), name)

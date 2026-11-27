@@ -445,7 +445,7 @@ class SACRBC(SAC):
     def _learner_parameter_names(cls) -> Set[str]:
         """Keyword arguments declared by the learner's constructors, which are not forwarded to the RBC."""
 
-        names = {'action_scaling_coefficienct'}  # deprecated spelling accepted by RLC
+        names = set()
 
         for klass in cls.__mro__:
             if not (isinstance(klass, type) and issubclass(klass, Agent)) or '__init__' not in vars(klass):

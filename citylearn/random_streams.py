@@ -2,28 +2,21 @@
 
 CityLearn draws random values for unspecified device parameters, the state of charge of electric
 vehicles away from their charger, occupant set-point interactions and stochastic power outages.
-``random_stream_version`` selects how those streams are derived from ``random_seed``:
+``random_stream_version`` names how those streams are derived from ``random_seed``:
 
-``'v1'``
-    The derivation of CityLearn 3.6.0 and earlier, kept so that an existing seed reproduces
-    earlier results. Every device parameter is the first draw of a new ``RandomState``, so all
-    of them sit at the same quantile; the electric-vehicle drift seed is ``seed + episode``, so
-    seed ``s`` in episode 1 repeats seed ``s + 1`` in episode 0; every occupant draws
-    ``RandomState(seed + time_step)``, the same value in every building and episode; and
-    stochastic outages skip day 0 and the partial last day and floor their durations.
-``'v2'`` (default)
-    Each stream comes from :class:`numpy.random.SeedSequence` with the seed as entropy and the
-    purpose, entity and episode as its spawn key, so streams for different purposes, objects
-    and episodes are independent. Each object keeps one generator per stream.
+``'v2'``
+    The only version. Each stream comes from :class:`numpy.random.SeedSequence` with the seed as
+    entropy and the purpose, entity and episode as its spawn key, so streams for different purposes,
+    objects and episodes are independent. Each object keeps one generator per stream.
 
-Agents follow the version of their environment. With ``'v1'``, :class:`~citylearn.agents.q_learning.TabularQLearning`
-draws its exploration decision from ``RandomState(seed + time_step)`` and
-:class:`~citylearn.agents.marlisa.MARLISA` shuffles its coordination order with the same seed, so
-seed ``s`` at time step ``t + 1`` repeats seed ``s + 1`` at time step ``t``; with ``'v2'`` each agent
-keeps one generator per purpose and episode. :class:`~citylearn.end_use_load_profiles.neighborhood.Neighborhood`
-takes its own ``random_stream_version``: with ``'v1'`` partial-load simulation ``i`` of building
-``b`` is seeded with ``b + i``, which repeats simulation ``i - 1`` of building ``b + 1``; with ``'v2'``
-the seed is derived from the neighborhood seed, the building and the simulation index.
+Version ``'v1'``, the derivation of CityLearn 3.6.0, was removed in CityLearn 3.8.1 (#466); CityLearn
+3.7 reproduces it. The setting accepts ``'v2'``, ``2`` and ``"2"``, as parsed by
+:py:func:`citylearn.internal.versions.parse_version`.
+
+Agents follow the version of their environment: :class:`~citylearn.agents.q_learning.TabularQLearning`
+and :class:`~citylearn.agents.marlisa.MARLISA` keep one generator per purpose and episode.
+:class:`~citylearn.end_use_load_profiles.neighborhood.Neighborhood` derives the seed of each
+partial-load simulation from the neighborhood seed, the building and the simulation index.
 """
 
 import hashlib
@@ -32,9 +25,10 @@ from typing import Any, Hashable, Tuple, Union
 
 import numpy as np
 
-RANDOM_STREAM_VERSIONS: Tuple[str, ...] = ('v1', 'v2')
+from citylearn.internal.versions import parse_version
+
+RANDOM_STREAM_VERSIONS: Tuple[str, ...] = ('v2',)
 DEFAULT_RANDOM_STREAM_VERSION = 'v2'
-LEGACY_RANDOM_STREAM_VERSION = 'v1'
 
 # Stream purposes. A purpose is part of every spawn key, so two purposes never share a stream.
 DEVICE_PARAMETERS = 'device_parameters'
@@ -48,21 +42,16 @@ PARTIAL_LOAD_SIMULATION = 'partial_load_simulation'
 
 
 def parse_random_stream_version(value: Union[str, int, None], path: str = 'random_stream_version') -> str:
-    """Return the canonical random-stream version for `value`; None gives the default."""
+    """Return the canonical random-stream version for `value`, ``'v2'``; None gives the default.
 
-    if value is None:
-        return DEFAULT_RANDOM_STREAM_VERSION
+    Raises
+    ------
+    ValueError
+        If `value` is not ``'v2'``, ``2`` or ``"2"``. The error for ``'v1'`` says it was removed in
+        CityLearn 3.8.1.
+    """
 
-    if isinstance(value, bool):
-        raise ValueError(f'{path} must be one of {RANDOM_STREAM_VERSIONS}, got {value!r}.')
-
-    text = str(value).strip().lower()
-    text = text if text.startswith('v') else f'v{text}'
-
-    if text not in RANDOM_STREAM_VERSIONS:
-        raise ValueError(f'{path} must be one of {RANDOM_STREAM_VERSIONS}, got {value!r}.')
-
-    return text
+    return parse_version(value, (2,), path, removed=(1,), prefix='v')
 
 
 def _canonical(part: Any) -> Any:
@@ -130,12 +119,10 @@ def partial_load_simulation_seed(
 ) -> int:
     """Seed of partial-load simulation `simulation_index` of building `building_id` in a generated neighborhood.
 
-    With ``random_stream_version='v1'`` it is ``int(building_id) + simulation_index``, as in CityLearn 3.6.0,
-    which ignores `seed` and repeats simulation ``i - 1`` of building ``b + 1`` in simulation ``i`` of building
-    ``b``. With ``'v2'`` it is derived from `seed`, the building and the simulation index.
+    It is derived from `seed`, the building and the simulation index. `random_stream_version` is checked
+    with :py:func:`parse_random_stream_version`.
     """
 
-    if parse_random_stream_version(random_stream_version) == LEGACY_RANDOM_STREAM_VERSION:
-        return int(building_id) + int(simulation_index)
+    parse_random_stream_version(random_stream_version)
 
     return derived_seed(seed, PARTIAL_LOAD_SIMULATION, int(building_id), int(simulation_index))

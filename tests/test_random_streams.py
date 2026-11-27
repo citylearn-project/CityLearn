@@ -1,7 +1,7 @@
 """Regression tests for the versioned random streams (issue #248).
 
-Each sub-problem of #248 has a test that the 'v2' streams fix it and a test that 'v1' still
-reproduces CityLearn 3.6.0, so that an existing seed gives the results it gave before.
+Each sub-problem of #248 has a test that the 'v2' streams fix it. Version 'v1', the streams of
+CityLearn 3.6.0, was removed in CityLearn 3.8.1 (#466).
 """
 
 import numpy as np
@@ -13,9 +13,6 @@ from citylearn.data import DataSet
 from citylearn.energy_model import Battery, StorageTank
 from citylearn.power_outage import PowerOutage, ReliabilityMetricsPowerOutage
 from private_access import ev_drift_seed, runtime_service, topology_service
-
-# First uniform of RandomState(1234): every 'v1' parameter of a device seeded with 1234 sits here.
-LEGACY_QUANTILE_1234 = np.random.RandomState(1234).uniform()
 
 
 def _capacity_power_curve_quantiles(battery):
@@ -29,14 +26,20 @@ def _capacity_power_curve_quantiles(battery):
 
 # --- the setting -----------------------------------------------------------------------------
 
-@pytest.mark.parametrize('value, expected', [(None, 'v2'), ('v1', 'v1'), ('V2', 'v2'), (1, 'v1'), ('2', 'v2')])
-def test_random_stream_version_parsing(value, expected):
-    assert random_streams.parse_random_stream_version(value) == expected
+@pytest.mark.parametrize('value', [None, 'v2', 'V2', ' v2 ', 2, '2', np.int64(2)])
+def test_random_stream_version_parsing(value):
+    assert random_streams.parse_random_stream_version(value) == 'v2'
 
 
-@pytest.mark.parametrize('value', ['v3', 'legacy', True, 0])
+@pytest.mark.parametrize('value', ['v3', 'legacy', True, 0, 2.0, 'v2.0', 'vv2'])
 def test_random_stream_version_rejects_unknown_values(value):
-    with pytest.raises(ValueError, match='random_stream_version'):
+    with pytest.raises(ValueError, match="random_stream_version must be 'v2'"):
+        random_streams.parse_random_stream_version(value)
+
+
+@pytest.mark.parametrize('value', ['v1', 1, '1'])
+def test_random_stream_version_v1_was_removed(value):
+    with pytest.raises(ValueError, match="Version 'v1' was removed in CityLearn 3.8.1; CityLearn 3.7 reproduces"):
         random_streams.parse_random_stream_version(value)
 
 
@@ -53,13 +56,7 @@ def test_negative_seed_is_rejected():
 
 
 # --- 1. the same quantile for every random parameter -----------------------------------------
-
-def test_v1_draws_every_device_parameter_at_the_same_quantile():
-    battery = Battery(capacity=5.0, nominal_power=5.0, random_seed=1234, random_stream_version='v1')
-    np.testing.assert_allclose(_capacity_power_curve_quantiles(battery), LEGACY_QUANTILE_1234, rtol=0, atol=1e-12)
-    # A new RandomState on every access, as in 3.6.0.
-    assert battery.numpy_random_state is not battery.numpy_random_state
-
+# 3.6.0 drew every device parameter as the first value of a new RandomState(random_seed).
 
 def test_v2_device_parameters_are_successive_draws_of_one_persistent_stream():
     battery = Battery(capacity=5.0, nominal_power=5.0, random_seed=1234, random_stream_version='v2')
@@ -88,17 +85,6 @@ def test_v2_reseeding_restarts_the_stream():
     battery.random_seed = 3
     expected = random_streams.generator(3, random_streams.DEVICE_PARAMETERS).uniform()
     assert battery.numpy_random_state.uniform() == expected
-
-
-def test_v1_random_device_parameters_reproduce_3_6_0():
-    # Values produced by CityLearn 3.6.0 for Battery(capacity=5, nominal_power=5, random_seed=1234).
-    battery = Battery(capacity=5.0, nominal_power=5.0, random_seed=1234, random_stream_version='v1')
-    np.testing.assert_allclose(
-        battery.power_efficiency_curve,
-        [[0.0, 0.2691519450378892, 0.6691519450378892, 0.7691519450378892, 1.0],
-         [0.7867884166923086, 0.8325544944938242, 0.9005211625363228, 0.9153215560303114, 0.874814534668722]],
-        rtol=0, atol=1e-15,
-    )
 
 
 def _bundled_device_parameters(version, seed=0):
@@ -131,21 +117,24 @@ def test_schema_random_stream_version_is_read_and_recorded():
     schema = DataSet().get_schema('citylearn_challenge_2022_phase_all')
     for name in list(schema['buildings'])[1:]:
         schema['buildings'][name]['include'] = False
-    schema['random_stream_version'] = 'v1'
+    schema['random_stream_version'] = '2'
     env = CityLearnEnv(schema, central_agent=True, random_seed=0, episode_time_steps=4, simulation_end_time_step=7)
     try:
-        assert env.random_stream_version == 'v1'
-        assert env.buildings[0].electrical_storage.random_stream_version == 'v1'
+        assert env.random_stream_version == 'v2'
+        assert env.buildings[0].electrical_storage.random_stream_version == 'v2'
         env.reset()
-        assert env.get_metadata()['random_stream_version'] == 'v1'
-        assert env.get_metadata()['temporal_reproducibility']['random_stream_version'] == 'v1'
+        assert env.get_metadata()['random_stream_version'] == 'v2'
+        assert env.get_metadata()['temporal_reproducibility']['random_stream_version'] == 'v2'
     finally:
         env.close()
 
     with pytest.raises(ValueError, match='random_stream_version'):
         CityLearnEnv(schema, central_agent=True, random_stream_version='v9', episode_time_steps=4, simulation_end_time_step=7)
     with pytest.raises(TypeError, match="did you mean 'random_stream_version'"):
-        CityLearnEnv(schema, central_agent=True, random_streams_version='v1', episode_time_steps=4, simulation_end_time_step=7)
+        CityLearnEnv(schema, central_agent=True, random_streams_version='v2', episode_time_steps=4, simulation_end_time_step=7)
+    schema['random_stream_version'] = 'v1'
+    with pytest.raises(ValueError, match="Version 'v1' was removed in CityLearn 3.8.1"):
+        CityLearnEnv(schema, central_agent=True, episode_time_steps=4, simulation_end_time_step=7)
 
 
 # --- 2. additive seeds that overlap across episodes --------------------------------------------
@@ -172,16 +161,6 @@ def _run_zero(env, **reset):
     while not env.terminated:
         env.step([[0.0]*env.action_space[0].shape[0]])
     return np.array([ev.battery.soc for ev in env.electric_vehicles])
-
-
-def test_v1_ev_drift_seed_is_additive():
-    env = _ev_env('v1')
-    try:
-        env.reset()
-        env.reset()
-        assert ev_drift_seed(env) == 7 + 1
-    finally:
-        env.close()
 
 
 def test_v2_ev_drift_is_per_ev_and_episode_and_repeats_with_the_seed():
@@ -262,17 +241,6 @@ def _occupant_draws(version, seed=0, episodes=2):
     return np.array(draws)
 
 
-def test_v1_occupant_draws_reproduce_3_6_0():
-    draws = _occupant_draws('v1')
-    expected = np.array([np.random.RandomState(1 + t).uniform() for t in range(draws.shape[-1])], dtype='float32')
-    # The occupant draws only at steps where it is asked to interact; other steps record 0.
-    drawn = draws != 0
-    assert drawn.sum() > 10
-    for episode, mask in zip(draws, drawn):
-        for building, steps in zip(episode, mask):
-            np.testing.assert_array_equal(building.astype('float32')[steps], expected[steps])
-
-
 def test_v2_occupant_draws_differ_by_building_and_episode_and_repeat_with_the_seed():
     draws = _occupant_draws('v2')
     assert draws.shape[1] == 3
@@ -336,16 +304,8 @@ def test_v2_cloned_member_draws_its_own_streams():
 
 # --- 4. stochastic outages ---------------------------------------------------------------------
 
-def test_v1_outage_signals_reproduce_3_6_0():
-    # 3.6.0 drops day 0, the partial last day and floors durations.
-    model = ReliabilityMetricsPowerOutage(saifi=365.0, caidi=120.0, random_seed=3, random_stream_version='v1')
-    signals = model.get_signals(72, seconds_per_time_step=3600.0)
-    assert signals[:24].sum() == 0
-    assert model.get_signals(23, seconds_per_time_step=3600.0).sum() == 0
-    np.testing.assert_array_equal(signals.reshape(3, 24).sum(axis=1), [0, 4, 0])
-
-
 def test_v2_outages_include_day_zero_and_the_partial_last_day():
+    # 3.6.0 dropped day 0 and the partial last day.
     # Every day has an outage starting at hour 0; a 10-hour mean keeps every drawn duration above half a step.
     model = ReliabilityMetricsPowerOutage(saifi=365.0, caidi=600.0, random_seed=3, start_time_steps=[0])
     signals = model.get_signals(72, seconds_per_time_step=3600.0)
@@ -355,18 +315,14 @@ def test_v2_outages_include_day_zero_and_the_partial_last_day():
 
 def test_v2_outage_durations_are_rounded_not_floored():
     caidi = 90.0
-    durations = {'v1': [], 'v2': []}
-    for version in durations:
-        for seed in range(400):
-            model = ReliabilityMetricsPowerOutage(saifi=365.0, caidi=caidi, random_seed=seed, start_time_steps=[0],
-                                                  random_stream_version=version)
-            signals = model.get_signals(24*4, seconds_per_time_step=3600.0)
-            # One outage per day starting at hour 0: count its steps (exponential tail truncated at a day).
-            durations[version].extend(day.sum() for day in signals.reshape(4, 24)[:3])
-    mean_v1, mean_v2 = np.mean(durations['v1']), np.mean(durations['v2'])
-    # E[round(X)] for X ~ Exp(1.5 h) is 1.5 h; flooring loses about half a step.
-    assert abs(mean_v2 - caidi/60.0) < 0.15
-    assert mean_v2 - mean_v1 > 0.3
+    durations = []
+    for seed in range(400):
+        model = ReliabilityMetricsPowerOutage(saifi=365.0, caidi=caidi, random_seed=seed, start_time_steps=[0])
+        signals = model.get_signals(24*4, seconds_per_time_step=3600.0)
+        # One outage per day starting at hour 0: count its steps (exponential tail truncated at a day).
+        durations.extend(day.sum() for day in signals.reshape(4, 24)[:3])
+    # E[round(X)] for X ~ Exp(1.5 h) is 1.5 h; flooring, as in 3.6.0, loses about half a step.
+    assert abs(np.mean(durations) - caidi/60.0) < 0.15
 
 
 def test_v2_outage_streams_differ_by_building_and_episode_and_repeat():
@@ -382,28 +338,17 @@ def test_v2_outage_streams_differ_by_building_and_episode_and_repeat():
     np.testing.assert_array_equal(model.get_signals(240, seconds_per_time_step=3600.0), signals['B1', 0])
 
 
-def test_v1_seeded_outage_model_ignores_building_and_episode():
-    model = ReliabilityMetricsPowerOutage(saifi=200.0, caidi=300.0, random_seed=5)
-    model._set_episode_seed(11, 'B1', 0, 239, random_stream_version='v1', random_stream_episode=0)
-    first = model.get_signals(240, seconds_per_time_step=3600.0)
-    model._set_episode_seed(11, 'B2', 0, 239, random_stream_version='v1', random_stream_episode=1)
-    np.testing.assert_array_equal(model.get_signals(240, seconds_per_time_step=3600.0), first)
-
-
-def test_base_power_outage_model_follows_the_version():
-    v1 = PowerOutage(random_seed=4, random_stream_version='v1').get_signals(16)
-    np.testing.assert_array_equal(v1, np.random.RandomState(4).choice([0, 1], size=16))
+def test_base_power_outage_model_repeats_with_its_seed():
     v2 = PowerOutage(random_seed=4).get_signals(16)
     np.testing.assert_array_equal(v2, PowerOutage(random_seed=4).get_signals(16))
 
 
-def _outage_env(version, seed=2023):
+def _outage_env(seed=2023):
     schema = DataSet().get_schema('citylearn_challenge_2023_phase_2_local_evaluation')
     for building in schema['buildings'].values():
         model = building['power_outage']['stochastic_power_outage_model']['attributes']
         model['saifi'] = 120.0
-    return CityLearnEnv(schema, central_agent=True, random_seed=seed, random_stream_version=version,
-                        episode_time_steps=[(0, 167), (0, 167)])
+    return CityLearnEnv(schema, central_agent=True, random_seed=seed, episode_time_steps=[(0, 167), (0, 167)])
 
 
 def _outage_signals(env):
@@ -412,18 +357,14 @@ def _outage_signals(env):
     return np.array([b.reset_power_outage_signal() for b in env.buildings])
 
 
-def test_outages_in_an_env_follow_the_version():
-    v1, v2 = _outage_env('v1'), _outage_env('v2')
+def test_outages_in_an_env_differ_by_episode_and_building():
+    env = _outage_env()
     try:
-        v1_first, v1_second = _outage_signals(v1), _outage_signals(v1)
-        v2_first, v2_second = _outage_signals(v2), _outage_signals(v2)
-        # 3.6.0: the same window repeats the same outages in every episode.
-        np.testing.assert_array_equal(v1_first, v1_second)
-        assert not np.array_equal(v2_first, v2_second)
-        assert v2_first.shape == (3, 168) and v2_first.sum() > 0
-        assert not np.array_equal(v2_first[0], v2_first[1])
-        # 3.6.0: buildings sharing the schema's outage seed share their outages.
-        np.testing.assert_array_equal(v1_first[0], v1_first[1])
+        first, second = _outage_signals(env), _outage_signals(env)
+        # 3.6.0 repeated the same outages in every episode of the same window, and in every building sharing the
+        # schema's outage seed.
+        assert not np.array_equal(first, second)
+        assert first.shape == (3, 168) and first.sum() > 0
+        assert not np.array_equal(first[0], first[1])
     finally:
-        v1.close()
-        v2.close()
+        env.close()

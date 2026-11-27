@@ -34,7 +34,6 @@ def scenario(
     phase_limits=False,
     negative=False,
     unknown_carbon=False,
-    physics_version=None,
 ):
     """Two members with storage, PV, an EV charger, a washer, a community market and optional outages.
 
@@ -146,8 +145,6 @@ def scenario(
             schema["community_market"]["tariff_files"][name] = file
     if events is not None:
         schema.update(topology_mode="dynamic", topology_events=events)
-    if physics_version is not None:
-        schema["physics_version"] = physics_version
     return CityLearnEnv(schema, random_seed=19, offline=True)
 
 
