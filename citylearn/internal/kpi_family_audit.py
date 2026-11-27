@@ -30,9 +30,22 @@ def _reward_class(reward):
     return None if reward is None else type(reward).__module__ + "." + type(reward).__qualname__
 
 
+def _used_reward_parameters(reward):
+    """The shared reward parameters that `reward` actually uses."""
+
+    from citylearn.reward_function import Electric_Vehicles_Reward_Function, RewardFunction
+
+    used = {"version"}
+    if type(reward).calculate is RewardFunction.calculate:
+        used.add("exponent")
+    if isinstance(reward, Electric_Vehicles_Reward_Function):
+        used.add("charging_constraint_penalty_coefficient")
+    return used
+
+
 def _reward_parameters(reward, names):
     effective = {}
-    for name in sorted(set(names) | set(_REWARD_PARAMETERS)):
+    for name in sorted(set(names) | (set(_REWARD_PARAMETERS) & _used_reward_parameters(reward))):
         value = getattr(reward, name, None)
         if isinstance(value, (str, bool, int, float)):
             effective[name] = value

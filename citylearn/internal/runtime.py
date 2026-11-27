@@ -190,6 +190,8 @@ class CityLearnRuntimeService:
         timer_start = time.perf_counter() if debug_timing else 0.0
         actions = self.parse_actions(actions) if parsed_actions is None else parsed_actions
         self._require_finite_actions(actions)
+        # The parsed actions of this step, after any action wrapper: what the CLI evaluation records.
+        env._last_parsed_actions = actions
         capture_entity_execution = (
             bool(collect_info)
             and getattr(env, 'interface', 'flat') == 'entity'

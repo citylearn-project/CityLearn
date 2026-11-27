@@ -280,13 +280,13 @@ recompensas dos edifícios são somadas.
 
 | Classe | Atributos e predefinições | Recompensa |
 |---|---|---|
-| `citylearn.reward_function.RewardFunction` | `exponent` (1,0), `charging_constraint_penalty_coefficient` (1,0) | `-(max(consumo líquido, 0) ** exponent)` por edifício. |
+| `citylearn.reward_function.RewardFunction` | `exponent` (1,0); `charging_constraint_penalty_coefficient` é aceite, mas só o `Electric_Vehicles_Reward_Function` o usa | `-(max(consumo líquido, 0) ** exponent)` por edifício. |
 | `citylearn.reward_function.MARL` | nenhum | Penalização do consumo do edifício ligada ao consumo líquido do distrito. |
 | `citylearn.reward_function.IndependentSACReward` | nenhum | `min(-consumo líquido, 0)`. |
 | `citylearn.reward_function.SolarPenaltyReward` | nenhum | Penaliza a importação, mais quando o armazenamento não absorve a FV. |
 | `citylearn.reward_function.ComfortReward` | `band` (`null`: a coluna `comfort_band`), `lower_exponent` (2,0), `higher_exponent` (2,0), `version` (2) | Penaliza a distância para fora da banda de conforto. `version: 1` (obsoleta) segue o sinal da procura em vez do modo AVAC. |
 | `citylearn.reward_function.SolarPenaltyAndComfortReward` | `band`, `lower_exponent` (2,0), `higher_exponent` (2,0), `coefficients` (`[1.0, 1.0]`), `version` (2) | Soma ponderada das duas recompensas anteriores. |
-| `citylearn.reward_function.Electric_Vehicles_Reward_Function` | `weights` (objeto com as sete chaves `no_car_charging`, `battery_limits`, `soc_impossible`, `soc_under`, `close_soc`, `self_ev_consumption`, `extra_self_production`), `version` (2) | Recompensa com VE. Um objeto `weights` parcial substitui as predefinições, por isso indique as sete chaves. |
+| `citylearn.reward_function.Electric_Vehicles_Reward_Function` | `weights` (objeto com as sete chaves `no_car_charging`, `battery_limits`, `soc_impossible`, `soc_under`, `close_soc`, `self_ev_consumption`, `extra_self_production`), `version` (2), `charging_constraint_penalty_coefficient` (1,0, por kWh de violação dos limites de carregamento) | Recompensa com VE. Um objeto `weights` parcial substitui as predefinições, por isso indique as sete chaves. |
 | `citylearn.reward_function.OutageUnservedEnergyReward` | `coefficient` (1,0), `base_reward` (caminho de importação ou `{type, attributes}`, predefinição `RewardFunction`), outras chaves passadas à recompensa base | Recompensa base menos `coefficient` vezes a energia não servida durante falhas. |
 
 Consulte a [visão geral das funções de recompensa](https://www.citylearn.net/overview/reward_function.html) para as fórmulas.
@@ -1403,7 +1403,7 @@ são as mesmas.
 | `noise_std` diferente de zero num edifício sem `pricing` ou `carbon_intensity` | Aparecem preços ou emissões aleatórios. | Acrescente os ficheiros ou mantenha `noise_std` em 0. |
 | Passar `electric_vehicles=[...]` para escolher VE | Ignorado. | Use `electric_vehicles_def.<ev>.include`. |
 | Baterias de VE acima de 100 kWh com `connected_electric_vehicle_at_charger_battery_capacity` | A observação ultrapassa o limite do espaço. | Normalize pela capacidade, ou deixe-a inativa. |
-| `charging_constraint_penalty_coefficient` nos atributos de `Electric_Vehicles_Reward_Function` | `TypeError` na construção: esta recompensa só aceita `weights` e `version`. | Não o indique; o coeficiente mantém a predefinição de 1,0. |
+| Um atributo que uma recompensa incluída não usa, como um `exponant` mal escrito | `TypeError` na construção, com o nome válido mais próximo. As recompensas definidas fora de `citylearn.reward_function` continuam a receber chaves desconhecidas. | Corrija o nome, ou retire a chave. |
 | `request_purposes` escrito como lista | `AttributeError` ao carregar os pedidos. | Escreva um objeto, `{"<request_id>": "service"}`. |
 | `start_time_step` / `end_time_step` não inteiros ou negativos num ficheiro de pedidos de resposta à procura | As casas decimais são truncadas com `int()` (3,7 passa a 3), e os valores negativos são aceites. | Escreva índices de linhas de dados inteiros e não negativos. |
 | Nomes por dispositivo (`electric_vehicle_storage_<carregador>`, observações por carregador) em `inactive_actions` ou nos argumentos `active_/inactive_observations` | As topologias estática e dinâmica tratam-nos de forma diferente. A topologia estática ignora nomes por dispositivo expandidos em `inactive_actions`; a dinâmica respeita-os, mas recalcula as flags das observações de carregadores, aparelhos diferíveis e baterias a partir do schema, ignorando os argumentos `active_/inactive_observations` e as `inactive_observations` do edifício. | Ative ou desative as características dos dispositivos com os nomes do catálogo em `observations` e `actions`, e verifique `env.observation_names` e `env.action_names`. |

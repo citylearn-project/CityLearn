@@ -95,6 +95,9 @@ class Agent(Environment):
 
         if random_stream_version != random_streams.DEFAULT_RANDOM_STREAM_VERSION:
             self._set_random_stream(random_stream_version=random_stream_version)
+        # Random actions follow `random_seed`; a space the caller has already seeded keeps its stream. The layout
+        # generation is stored only once a dynamic topology changes it, so agents load as saved by older releases.
+        self._seed_action_spaces()
         self.reset()
 
     @property
@@ -328,8 +331,13 @@ class Agent(Environment):
 
         env = self.env.unwrapped
         if is_entity_interface(env) and getattr(env, 'topology_mode', 'static') == 'dynamic':
-            self.action_space = env.flat_action_space
+            action_space = env.flat_action_space
+            if any(new is not old for new, old in zip(action_space, self.action_space)) or len(action_space) != len(self.action_space):
+                # A new layout gets new spaces, seeded from a stream of their own so they do not repeat earlier draws.
+                self._action_space_generation = getattr(self, '_action_space_generation', 0) + 1
+            self.action_space = action_space
             self.action_names = env.action_names
+            self._seed_action_spaces()
 
     def __set_logger(self, logging_level: int = None):
         """Set logging level."""
@@ -353,7 +361,8 @@ class Agent(Environment):
     def _get_seed(self, *key: int) -> int:
         """Seed of one of the agent's random streams, derived from :attr:`random_seed` and `key`.
 
-        Keys in use: ``(0, i)`` for action space ``i`` (see :meth:`_seed_action_spaces`), ``(1, i)`` for the SAC
+        Keys in use: ``(0, i)`` for action space ``i`` (``(0, i, g)`` after the ``g``-th dynamic-topology layout
+        change, see :meth:`_seed_action_spaces`), ``(1, i)`` for the SAC
         replay buffer of action space ``i``, ``(2,)`` for the SAC policy noise and ``(3, i)`` for the MARLISA PCA of
         action space ``i``.
         """
@@ -368,9 +377,12 @@ class Agent(Environment):
         caller has seeded keep their stream.
         """
 
+        generation = int(getattr(self, '_action_space_generation', 0) or 0)
+
         for i, space in enumerate(self.action_space):
             if getattr(space, '_np_random', None) is None:
-                space.seed(self._get_seed(0, i))
+                key = (0, i) if generation == 0 else (0, i, generation)
+                space.seed(self._get_seed(*key))
 
     def episode_random_generator(self, purpose: str) -> np.random.Generator:
         """Generator of `purpose` for the current episode (``random_stream_version='v2'``).
