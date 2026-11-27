@@ -364,27 +364,23 @@ class NormalizedActionWrapper(ActionWrapper):
         
     @property
     def action_space(self) -> List[spaces.Box]:
-        """Returns action space for normalized actions."""
+        """Returns action space for normalized actions.
 
-        low_limit = []
-        high_limit = []
+        The same spaces are returned while the action sizes do not change, so seeding them lasts.
+        """
 
         if self.env.unwrapped.central_agent:
-
-            for b in self.env.unwrapped.buildings:
-                low_limit += [0.0]*b.action_space.low.size
-                high_limit += [1.0]*b.action_space.high.size
-            
-            action_space = [spaces.Box(low=np.array(low_limit), high=np.array(high_limit), dtype=np.float32)]
-
+            sizes = (sum(b.action_space.low.size for b in self.env.unwrapped.buildings),)
         else:
-            action_space = [spaces.Box(
-                low=np.array([0.0]*b.action_space.low.size), 
-                high=np.array([1.0]*b.action_space.high.size), 
-                dtype=np.float32) 
-            for b in self.env.unwrapped.buildings]
-        
-        return action_space
+            sizes = tuple(b.action_space.low.size for b in self.env.unwrapped.buildings)
+
+        cached = getattr(self, '_normalized_action_space_cache', None)
+        if cached is None or cached[0] != sizes:
+            action_space = [spaces.Box(low=np.zeros(n), high=np.ones(n), dtype=np.float32) for n in sizes]
+            cached = (sizes, action_space)
+            self._normalized_action_space_cache = cached
+
+        return cached[1]
 
     def action(self, actions: List[float]) -> List[List[float]]:
         """Returns denormalized actions."""
@@ -550,8 +546,15 @@ class DiscreteActionWrapper(ActionWrapper):
         CityLearn environment.
     bin_sizes: List[Mapping[str, int]], optional
         Then number of bins for each active action in each building.
-    default_bin_size: int, default = 10
+    default_bin_size: int, default = 11
         The default number of bins if `bin_sizes` is unspecified for any active building action.
+
+    Notes
+    -----
+    Bin `k` of an action with bounds `[low, high]` and `n` bins maps to `np.linspace(low, high, n)[k]`. When
+    `low < 0 < high`, the grid point closest to 0 is set to exactly 0, so a discrete agent can always leave a
+    battery, a thermal storage or a V2G charger idle; with the default 11 bins on [-1, 1] the grid is
+    -1, -0.8, ..., 0, ..., 0.8, 1.
     """
 
     def __init__(self, env: CityLearnEnv, bin_sizes: List[Mapping[str, int]] = None, default_bin_size: int = None):
@@ -560,7 +563,7 @@ class DiscreteActionWrapper(ActionWrapper):
         self.env: CityLearnEnv
         assert bin_sizes is None or len(bin_sizes) == len(self.env.unwrapped.buildings), 'length of bin_size must equal number of buildings.'
         self.bin_sizes = [{} for _ in self.env.unwrapped.buildings] if bin_sizes is None else bin_sizes
-        self.default_bin_size = 10 if default_bin_size is None else default_bin_size
+        self.default_bin_size = 11 if default_bin_size is None else default_bin_size
         self.bin_sizes = [
             {a: s.get(a, self.default_bin_size) for a in b.active_actions} 
             for b, s in zip(self.env.unwrapped.buildings, self.bin_sizes)
@@ -568,21 +571,33 @@ class DiscreteActionWrapper(ActionWrapper):
         
     @property
     def action_space(self) -> List[spaces.MultiDiscrete]:
-        """Returns action space for discretized actions."""
+        """Returns action space for discretized actions.
 
-        if self.env.unwrapped.central_agent:
-            bin_sizes = []
+        The same spaces are returned while the bins do not change, so seeding them lasts.
+        """
 
-            for b in self.bin_sizes:
-                for _, v in b.items():
-                    bin_sizes.append(v)
-            
-            action_space = [spaces.MultiDiscrete(bin_sizes)]
+        central = bool(self.env.unwrapped.central_agent)
+        key = (central, tuple(tuple(b.items()) for b in self.bin_sizes))
+        cached = getattr(self, '_discrete_action_space_cache', None)
 
-        else:
-            action_space = [spaces.MultiDiscrete(list(b.values())) for b in self.bin_sizes]
+        if cached is None or cached[0] != key:
+            if central:
+                action_space = [spaces.MultiDiscrete([v for b in self.bin_sizes for v in b.values()])]
+            else:
+                action_space = [spaces.MultiDiscrete(list(b.values())) for b in self.bin_sizes]
+            cached = (key, action_space)
+            self._discrete_action_space_cache = cached
 
-        return action_space
+        return cached[1]
+
+    @staticmethod
+    def action_grid(low: float, high: float, n: int) -> np.ndarray:
+        """Action values of the `n` bins of an action with bounds `[low, high]`, with 0 included when `low < 0 < high`."""
+
+        grid = np.linspace(low, high, n)
+        if low < 0.0 < high and n > 1:
+            grid[int(np.argmin(np.abs(grid)))] = 0.0
+        return grid
 
     def action(self, actions: List[float]) -> List[List[float]]:
         """Returns undiscretized actions."""
@@ -593,7 +608,7 @@ class DiscreteActionWrapper(ActionWrapper):
             transformed_actions_ = []
             
             for j, (ll, hl, b) in enumerate(zip(cs.low, cs.high, ds)):
-                a = np.linspace(ll, hl, b.n)[actions[i][j]]
+                a = self.action_grid(ll, hl, b.n)[actions[i][j]]
                 transformed_actions_.append(a)
             
             transformed_actions.append(transformed_actions_)
@@ -615,7 +630,7 @@ class DiscreteSpaceWrapper(Wrapper):
         Then number of bins for each active action in each building.
     default_observation_bin_size: int, default = 10
         The default number of bins if `bin_sizes` is unspecified for any active building observation.
-    default_action_bin_size: int, default = 10
+    default_action_bin_size: int, default = 11
         The default number of bins if `bin_sizes` is unspecified for any active building action.
     """
 
@@ -682,7 +697,7 @@ class TabularQLearningActionWrapper(ActionWrapper):
         CityLearn environment.
     bin_sizes: List[Mapping[str, int]], optional
         Then number of bins for each active action in each building.
-    default_bin_size: int, default = 10
+    default_bin_size: int, default = 11
         The default number of bins if `bin_sizes` is unspecified for any active building action.
     """
 
@@ -732,7 +747,7 @@ class TabularQLearningWrapper(Wrapper):
         Then number of bins for each active action in each building.
     default_observation_bin_size: int, default = 10
         The default number of bins if `bin_sizes` is unspecified for any active building observation.
-    default_action_bin_size: int, default = 10
+    default_action_bin_size: int, default = 11
         The default number of bins if `bin_sizes` is unspecified for any active building action.
     """
 

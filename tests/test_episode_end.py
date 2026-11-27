@@ -1,10 +1,8 @@
 """The end of an episode is a time limit, reported as truncation by default (#435)."""
 
-import json
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from citylearn.agents.base import Agent
@@ -35,7 +33,6 @@ def _run(env: CityLearnEnv):
 def test_default_episode_end_is_reported_as_truncation():
     env = _env()
     try:
-        assert env.episode_end == "truncated"
         flags = _run(env)
         assert flags[:-1] == [(False, False)] * (len(flags) - 1)
         assert flags[-1] == (False, True)
@@ -45,47 +42,6 @@ def test_default_episode_end_is_reported_as_truncation():
             env.step(_zero(env))
     finally:
         env.close()
-
-
-def test_terminated_episode_end_restores_the_3_7_0_flags():
-    env = _env(episode_end="terminated")
-    try:
-        flags = _run(env)
-        assert flags[-1] == (True, False)
-        assert env.done and env.terminated and not env.truncated
-    finally:
-        env.close()
-
-
-def test_episode_end_from_the_schema_and_invalid_values(tmp_path):
-    schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
-    schema["root_directory"] = str(SCHEMA.parent)
-    schema["episode_end"] = "TERMINATED"
-    env = CityLearnEnv(schema, central_agent=True, episode_time_steps=4, random_seed=0)
-    try:
-        assert env.episode_end == "terminated"
-        # The constructor argument wins over the schema key.
-        assert CityLearnEnv(schema, episode_end="truncated", episode_time_steps=4).episode_end == "truncated"
-    finally:
-        env.close()
-
-    for value in ("done", "", 1, True):
-        with pytest.raises(ValueError, match="episode_end"):
-            _env(episode_end=value)
-
-
-def test_episode_end_changes_no_simulation_result_and_is_recorded():
-    tables = {}
-    for episode_end in ("truncated", "terminated"):
-        env = _env(episode_end=episode_end)
-        try:
-            _run(env)
-            assert env.get_metadata()["episode_end"] == episode_end
-            tables[episode_end] = env.evaluate_v2(include_business_as_usual=False)[["cost_function", "level", "name", "value"]]
-        finally:
-            env.close()
-
-    pd.testing.assert_frame_equal(tables["truncated"], tables["terminated"])
 
 
 def test_step_many_reports_the_same_end_flags():
@@ -124,7 +80,7 @@ def _community(community_id, **env_kwargs):
     return {"community_id": community_id, "schema": str(SCHEMA), "env_kwargs": kwargs}
 
 
-def test_multi_community_follows_the_children_and_requires_one_episode_end():
+def test_multi_community_follows_the_children():
     env = MultiCommunityEnv(communities=[_community("a"), _community("b")])
     try:
         env.reset(seed=0)
@@ -138,6 +94,3 @@ def test_multi_community_follows_the_children_and_requires_one_episode_end():
         assert info["truncated_by_community"] == {"a": True, "b": True}
     finally:
         env.close()
-
-    with pytest.raises(ValueError, match="episode_end"):
-        MultiCommunityEnv(communities=[_community("a"), _community("b", episode_end="terminated")])

@@ -190,7 +190,6 @@ dataset, set `"simulation_start_time_step": 0` and `"simulation_end_time_step": 
 | `random_episode_split` | bool | `false` | | Pick the episode at random at every reset (with replacement), seeded by `random_seed` and the episode number. Without it, episodes are used in order and cycle. Applies to int and list episodes. | `random_episode_split` | original |
 | `episode_split_boundary` | string | `shared` | `shared`, `disjoint` | For non-rolling int episodes. `shared`: the last row of an episode is the first row of the next, so every interval is simulated (stride `N - 1`). `disjoint`: the 3.6.0 splits (stride `N`), which skip the interval between two episodes. | `episode_split_boundary` | after 3.6.0 |
 | `ev_soc_carryover` | bool | `false` | | Start each EV of an episode that continues the previous one in time (on its last row with `shared`, on the row after it with `disjoint`) from its SOC at the end of that episode, instead of the schedule SOC. Sequential splits and explicit lists carry; random and rolling splits never do. Only the EV SOC is carried. See the [migration guide](migration.md#ev-soc-carried-across-episode-splits). | `ev_soc_carryover` | after 3.6.0 |
-| `episode_end` | string | `truncated` | `truncated`, `terminated` | How `step()` reports the end of an episode. `truncated`: the last step returns `terminated=False, truncated=True`, because an episode ends at a time limit after which the buildings, batteries and EVs would carry on, so learners keep bootstrapping from the last observation. `terminated`: `terminated=True, truncated=False`, as 3.7.0 and earlier did. Simulation results and KPIs are the same. See [Running simulations](running_simulations.md#how-an-episode-ends). | `episode_end` | after 3.7.0 |
 
 Rules:
 
@@ -279,13 +278,13 @@ are summed.
 
 | Class | Attributes and defaults | Reward |
 |---|---|---|
-| `citylearn.reward_function.RewardFunction` | `exponent` (1.0), `charging_constraint_penalty_coefficient` (1.0) | `-(max(net consumption, 0) ** exponent)` per building. |
+| `citylearn.reward_function.RewardFunction` | `exponent` (1.0); `charging_constraint_penalty_coefficient` is accepted but only `Electric_Vehicles_Reward_Function` uses it | `-(max(net consumption, 0) ** exponent)` per building. |
 | `citylearn.reward_function.MARL` | none | Penalty on the building's consumption coupled to the district's net consumption. |
 | `citylearn.reward_function.IndependentSACReward` | none | `min(-net consumption, 0)`. |
 | `citylearn.reward_function.SolarPenaltyReward` | none | Penalises import, more when storage is not used to absorb PV. |
 | `citylearn.reward_function.ComfortReward` | `band` (`null`: the `comfort_band` column), `lower_exponent` (2.0), `higher_exponent` (2.0), `version` (2) | Penalises the distance outside the comfort band. `version: 1` (deprecated) follows the demand sign instead of the HVAC mode. |
 | `citylearn.reward_function.SolarPenaltyAndComfortReward` | `band`, `lower_exponent` (2.0), `higher_exponent` (2.0), `coefficients` (`[1.0, 1.0]`), `version` (2) | Weighted sum of the two rewards above. |
-| `citylearn.reward_function.Electric_Vehicles_Reward_Function` | `weights` (object with all seven keys `no_car_charging`, `battery_limits`, `soc_impossible`, `soc_under`, `close_soc`, `self_ev_consumption`, `extra_self_production`), `version` (2) | EV-aware reward. A partial `weights` object replaces the defaults, so give all seven keys. |
+| `citylearn.reward_function.Electric_Vehicles_Reward_Function` | `weights` (object with all seven keys `no_car_charging`, `battery_limits`, `soc_impossible`, `soc_under`, `close_soc`, `self_ev_consumption`, `extra_self_production`), `version` (2), `charging_constraint_penalty_coefficient` (1.0, per kWh of charging-limit violation) | EV-aware reward. A partial `weights` object replaces the defaults, so give all seven keys. |
 | `citylearn.reward_function.OutageUnservedEnergyReward` | `coefficient` (1.0), `base_reward` (import path or `{type, attributes}`, default `RewardFunction`), other keys passed to the base reward | Base reward minus `coefficient` times the unserved energy during outages. |
 
 See the [reward function overview](https://www.citylearn.net/overview/reward_function.html) for the formulas.
@@ -354,7 +353,7 @@ reported as incompatible. Start the name of a comment or note key with `_` to ke
 |---|---|---|
 | `root_directory` | `root_directory` | Not used for `community_market.tariff_files`. |
 | `buildings` | `buildings.<b>.include` | Names, indices or `Building` objects; replaces the `include` selection. |
-| `simulation_start_time_step`, `simulation_end_time_step`, `episode_time_steps`, `rolling_episode_split`, `random_episode_split`, `episode_split_boundary`, `ev_soc_carryover`, `episode_end`, `seconds_per_time_step`, `time_step_ratio_mode` | same | |
+| `simulation_start_time_step`, `simulation_end_time_step`, `episode_time_steps`, `rolling_episode_split`, `random_episode_split`, `episode_split_boundary`, `ev_soc_carryover`, `seconds_per_time_step`, `time_step_ratio_mode` | same | |
 | `central_agent`, `interface`, `topology_mode`, `random_seed`, `random_stream_version`, `physics_version`, `baseline_version` | same | |
 | `reward_function`, `reward_function_kwargs` | `reward_function.type`, `reward_function.attributes` | See [Reward function](#reward-function). |
 | `shared_observations` | `observations.<name>.shared_in_central_agent` | Replaces the list built from the schema. |
@@ -1396,7 +1395,7 @@ same.
 | Non-zero `noise_std` for a building without `pricing` or `carbon_intensity` | Random prices or emissions appear. | Add the files or keep `noise_std` at 0. |
 | Passing `electric_vehicles=[...]` to select EVs | Ignored. | Use `electric_vehicles_def.<ev>.include`. |
 | EV batteries above 100 kWh with `connected_electric_vehicle_at_charger_battery_capacity` | The observation exceeds its space bound. | Normalise by the capacity, or leave it inactive. |
-| `charging_constraint_penalty_coefficient` in the attributes of `Electric_Vehicles_Reward_Function` | `TypeError` at construction: this reward takes only `weights` and `version`. | Leave it out; the coefficient keeps its default of 1.0. |
+| An attribute that a built-in reward does not use, such as a misspelt `exponant` | `TypeError` at construction, with the closest valid name. Rewards defined outside `citylearn.reward_function` still receive unknown keys. | Fix the name, or remove the key. |
 | `request_purposes` written as a list | `AttributeError` when the requests are loaded. | Write an object, `{"<request_id>": "service"}`. |
 | Non-integer or negative `start_time_step` / `end_time_step` in a demand-response request file | Decimals are truncated with `int()` (3.7 becomes 3), and negative values are accepted. | Write whole, non-negative data-row indices. |
 | Per-device names (`electric_vehicle_storage_<charger>`, per-charger observations) in `inactive_actions` or the `active_/inactive_observations` arguments | Static and dynamic topology treat them differently. Static topology ignores expanded per-device names in `inactive_actions`; dynamic topology honours them, but recomputes the charger, deferrable-appliance and battery observation flags from the schema, ignoring the `active_/inactive_observations` arguments and the building's `inactive_observations`. | Turn device features on or off with the catalogue names in `observations` and `actions`, and check `env.observation_names` and `env.action_names`. |

@@ -39,7 +39,10 @@ class RLC(Agent):
     end_exploration_time_step : int, optional
         Time step to stop random or RBC-guided exploration. Defaults to the agent's ``episode_time_steps``.
     action_scaling_coefficient : float, default: 0.5
-        Action scaling coefficient.
+        Factor applied to every action: the policy outputs ``action_scaling_coefficient * [low, high]`` and random
+        exploration samples ``action_scaling_coefficient * action_space.sample()``. With the default 0.5, SAC and
+        MARLISA command at most half of each action's range, including HVAC and EV charging actions, where half the
+        power may not meet the heating load or a departure target. Set it to 1.0 to use the full range.
     reward_scaling : float, default: 5.0
         Reward scaling.
     update_per_time_step : int, default: 2
@@ -151,7 +154,7 @@ class RLC(Agent):
 
     @property
     def action_scaling_coefficient(self) -> float:
-        """Action scaling coefficient."""
+        """Factor applied to every action of the policy and of random exploration (see the class parameters)."""
 
         return self.__action_scaling_coefficient
 

@@ -60,8 +60,7 @@ Portuguese version: [pt/schema_full_reference.md](pt/schema_full_reference.md).
   "rolling_episode_split": false,
   "random_episode_split": false,
   "episode_split_boundary": "shared",
-  "ev_soc_carryover": false,
-  "episode_end": "truncated"
+  "ev_soc_carryover": false
 }
 ```
 
@@ -77,7 +76,6 @@ Portuguese version: [pt/schema_full_reference.md](pt/schema_full_reference.md).
 | `random_episode_split` | `false` | `false` | `true`: draw the episode at each reset. |
 | `episode_split_boundary` | `"shared"` | `"shared"` | `"disjoint"`: the 3.6.0 splits, which skip one interval between episodes. |
 | `ev_soc_carryover` | `false` | `false` | `true`: an episode that continues the previous one in time starts each EV from its SOC at the end of that episode. |
-| `episode_end` | `"truncated"` | `"truncated"` | `"terminated"`: the last step returns `terminated=True`, as 3.7.0 and earlier did. |
 
 ## Calendar and dataset clock
 
@@ -116,7 +114,7 @@ Portuguese version: [pt/schema_full_reference.md](pt/schema_full_reference.md).
 | Key | Here | Default | Notes and alternatives |
 |---|---|---|---|
 | `reward_function.type` | `RewardFunction` | required | Other classes: `ComfortReward`, `SolarPenaltyReward`, `SolarPenaltyAndComfortReward`, `Electric_Vehicles_Reward_Function`, `OutageUnservedEnergyReward`, `MARL`, `IndependentSACReward`; or an object keyed by building with `"default"`. |
-| `reward_function.attributes` | the two defaults of `RewardFunction` | `{}` | `exponent` raises the import to a power; `charging_constraint_penalty_coefficient` weights charging-limit violations. |
+| `reward_function.attributes` | the two defaults of `RewardFunction` | `{}` | `exponent` raises the import to a power; `charging_constraint_penalty_coefficient` is accepted here but only `Electric_Vehicles_Reward_Function` uses it, to weight charging-limit violations. |
 | `agent.type`, `agent.attributes` | `BusinessAsUsualAgent` | none | Used by `env.load_agent()` without arguments. The `citylearn simulate` command uses its `-a` option instead. |
 
 ## Observations

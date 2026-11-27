@@ -8,6 +8,28 @@ import logging
 import warnings
 
 LOGGER = logging.getLogger(__name__)
+
+def _unknown_reward_arguments(cls, kwargs: Mapping[str, Any]) -> str:
+    """Error message for keyword arguments a built-in reward does not use, with the closest valid name."""
+
+    import difflib
+    import inspect
+
+    valid = set()
+    for klass in cls.__mro__:
+        init = klass.__dict__.get('__init__')
+        if init is not None:
+            valid |= {
+                name for name, parameter in inspect.signature(init).parameters.items()
+                if name not in ('self', 'env_metadata', 'env') and parameter.kind is not parameter.VAR_KEYWORD
+            }
+    valid.add('charging_constraint_penalty_coefficient')
+    parts = []
+    for key in sorted(kwargs):
+        close = difflib.get_close_matches(key, sorted(valid), n=1)
+        parts.append(f"{key!r}" + (f" (did you mean {close[0]!r}?)" if close else ''))
+    return f"{cls.__name__} got unexpected keyword argument(s) {', '.join(parts)}; valid: {sorted(valid)}."
+
 class RewardFunction:
     r"""Base and default reward function class.
 
@@ -18,11 +40,15 @@ class RewardFunction:
     env_metadata: Mapping[str, Any]:
         General static information about the environment.
     **kwargs : dict
-        Other keyword arguments for custom reward calculation.
+        Other keyword arguments for custom reward calculation. The rewards of this module reject keys they do not
+        use with a `TypeError`, so a misspelt schema attribute is not ignored; subclasses defined elsewhere still
+        receive them.
     """
     
     def __init__(self, env_metadata: Mapping[str, Any], exponent: float = None, **kwargs):
         penalty_coefficient = kwargs.pop('charging_constraint_penalty_coefficient', None)
+        if kwargs and type(self).__module__ == __name__:
+            raise TypeError(_unknown_reward_arguments(type(self), kwargs))
         self.env_metadata = env_metadata
         self.exponent = exponent
         self.charging_constraint_penalty_coefficient = penalty_coefficient
@@ -291,6 +317,10 @@ class SolarPenaltyReward(RewardFunction):
     during net export to the grid. Whereas, when the energy storage systems are charged to capacity and there is net import from the 
     grid the penalty is maximized.
 
+    The reward has one term per storage type with a positive capacity (cooling, heating, DHW and electrical storage). A
+    building without storage therefore always gets 0, and a building with several storage types counts its grid import
+    once per storage type.
+
     Parameters
     ----------
     env_metadata: Mapping[str, Any]:
@@ -503,7 +533,7 @@ class SolarPenaltyAndComfortReward(RewardFunction):
     lower_exponent: float, default = 2.0
         Penalty exponent for when in cooling mode but temperature is above setpoint upper
         boundary or heating mode but temperature is below setpoint lower boundary.
-    higher_exponent: float, default = 3.0
+    higher_exponent: float, default = 2.0
         Penalty exponent for when in cooling mode but temperature is below setpoint lower
         boundary or heating mode but temperature is above setpoint upper boundary.
     coefficients: Tuple, default = (1.0, 1.0)
@@ -593,8 +623,12 @@ class Electric_Vehicles_Reward_Function(MARL):
     # trained with. New instances default to version 2.
     version: int = 1
 
-    def __init__(self, env_metadata: Mapping[str, Any], weights: Mapping[str, float] = None, version: int = None):
+    def __init__(
+        self, env_metadata: Mapping[str, Any], weights: Mapping[str, float] = None, version: int = None,
+        charging_constraint_penalty_coefficient: float = None,
+    ):
         super().__init__(env_metadata)
+        self.charging_constraint_penalty_coefficient = charging_constraint_penalty_coefficient
         self.version = self._parse_version(version, self.VERSIONS, type(self).__name__, default=2, deprecated=(1,))
 
         # Default tunable weights for EV-related reward components
@@ -803,16 +837,23 @@ class OutageUnservedEnergyReward(RewardFunction):
         self, env_metadata: Mapping[str, Any], coefficient: float = None,
         base_reward: Union[RewardFunction, str, Mapping[str, Any]] = None, **kwargs
     ):
-        self.base_reward = self._build_base_reward(base_reward, env_metadata)
+        self.base_reward = self._build_base_reward(base_reward, env_metadata, kwargs)
         self.coefficient = 1.0 if coefficient is None else float(coefficient)
-        super().__init__(env_metadata, **kwargs)
+        super().__init__(env_metadata)
 
     @staticmethod
-    def _build_base_reward(base_reward, env_metadata) -> RewardFunction:
+    def _build_base_reward(base_reward, env_metadata, extra: Mapping[str, Any] = None) -> RewardFunction:
+        # Keys other than `coefficient` and `base_reward` are attributes of the base reward.
+        extra = dict(extra or {})
         if base_reward is None:
-            return RewardFunction(env_metadata)
+            return RewardFunction(env_metadata, **extra)
 
         if isinstance(base_reward, RewardFunction):
+            if extra:
+                raise TypeError(
+                    f"OutageUnservedEnergyReward got {sorted(extra)} for a base reward that is already built; "
+                    "set them on that instance instead."
+                )
             return base_reward
 
         if isinstance(base_reward, str):
@@ -821,7 +862,7 @@ class OutageUnservedEnergyReward(RewardFunction):
         if isinstance(base_reward, Mapping) and isinstance(base_reward.get('type'), str):
             module_name, _, class_name = base_reward['type'].rpartition('.')
             constructor = getattr(importlib.import_module(module_name), class_name)
-            return constructor(env_metadata, **(base_reward.get('attributes') or {}))
+            return constructor(env_metadata, **{**(base_reward.get('attributes') or {}), **extra})
 
         raise TypeError(
             'base_reward must be a RewardFunction, an import path or a mapping with a "type" import path, '

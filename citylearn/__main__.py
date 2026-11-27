@@ -378,16 +378,17 @@ class Simulator:
         while not self.env.unwrapped.terminated:
             if isinstance(self.agent, CityLearnAgent):
                 actions = self.agent.predict(observations, deterministic=True)
-                actions_list.append(self.env.unwrapped._parse_actions(actions))
-            
+
             elif isinstance(self.agent, StableBaselines3Agent):
                 actions, _ = self.agent.predict(observations, deterministic=True)
-                actions_list.append(self.env.unwrapped._parse_actions([actions]))
 
             else:
                 raise Exception(f'Unknown agent type: {type(self.agent)}')
 
             observations, _, _, _, _ = self.env.step(actions)
+            # Record the actions the environment applied, after the action wrappers of `-w`, not the agent's raw
+            # output (bin indices or normalised values with a discrete or normalised action wrapper).
+            actions_list.append([dict(a) for a in self.env.unwrapped._last_parsed_actions])
 
         self.__evaluation_end_timestamp = datetime.datetime.now(datetime.timezone.utc)
         self.__actions_list = actions_list
@@ -407,7 +408,8 @@ class Simulator:
                 self.agent.learn(**kwargs)
 
             else:
-                kwargs = {**kwargs, 'total_timesteps': episodes*self.env.unwrapped.time_steps}
+                # An episode of `time_steps` rows has `time_steps - 1` control steps.
+                kwargs = {**kwargs, 'total_timesteps': episodes*(self.env.unwrapped.time_steps - 1)}
                 self.agent = self.agent.learn(**kwargs)
         finally:
             if hasattr(env, 'plan_final_episode_exports'):
