@@ -9,6 +9,7 @@ import math
 
 import numpy as np
 
+from citylearn.internal.actions import building_action_kwargs
 from citylearn.internal.histories import default_history
 from citylearn.internal.scalars import clip_action, numpy1_scalar
 
@@ -885,35 +886,10 @@ class CityLearnRuntimeService:
         parsed_actions = []
         # Out-of-range actions are clipped to the action space, as entity tables are.
         for i, building in enumerate(env.buildings):
-            action_dict = {}
-            electric_vehicle_actions = {}
-            deferrable_appliance_actions = {}
-            escalator_actions = {}
             space = building.action_space
             lows, highs = space.low.tolist(), space.high.tolist()
-
-            for action_name, action, low, high in zip(active_actions[i], building_actions[i], lows, highs):
-                action = clip_action(action, low, high)
-                if 'electric_vehicle_storage' in action_name:
-                    charger_id = action_name.replace('electric_vehicle_storage_', '')
-                    electric_vehicle_actions[charger_id] = action
-                elif action_name.startswith('deferrable_appliance_'):
-                    deferrable_appliance_actions[action_name] = action
-                elif action_name.startswith('escalator_'):
-                    escalator_actions[action_name] = action
-                else:
-                    action_dict[f'{action_name}_action'] = action
-
-            if electric_vehicle_actions:
-                action_dict['electric_vehicle_storage_actions'] = electric_vehicle_actions
-
-            if deferrable_appliance_actions:
-                action_dict['deferrable_appliance_actions'] = deferrable_appliance_actions
-
-            if escalator_actions:
-                action_dict['escalator_actions'] = escalator_actions
-
-            parsed_actions.append(action_dict)
+            values = [clip_action(action, low, high) for action, low, high in zip(building_actions[i], lows, highs)]
+            parsed_actions.append(building_action_kwargs(active_actions[i], values))
 
         return parsed_actions
 

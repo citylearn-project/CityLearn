@@ -13,7 +13,8 @@ Versão inglesa: [Publishing CityLearn](../publishing.md).
    compatibilidade, impacto nos dados, validação e instruções de migração.
 3. Atualizar os guias afetados e as [instruções de migração](migration.md).
 4. Executar os testes e auditores do [guia de desenvolvimento](developer_guide.md).
-   Construir também o site Sphinx e verificar ligações e exemplos.
+   Construir também o site Sphinx e verificar ligações e exemplos. Gravar de novo a
+   referência de desempenho com `python scripts/ci/perf_smoke.py --write-baseline`.
 5. Construir e verificar o wheel e o arquivo de código, incluindo uma instalação
    isolada fora do repositório e a verificação dos exports.
 

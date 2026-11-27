@@ -1,0 +1,64 @@
+name: End-use load profiles pipeline
+
+# citylearn.end_use_load_profiles needs the `end_use_load_profiles` extra (doe_xstock, openstudio, eppy, torch,
+# scikit-learn), which is not a test dependency, so the pull-request CI never runs the pipeline (#471). This job
+# installs the extra and runs the pipeline tests: the module imports and Neighborhood.test_citylearn_simulation on
+# a small LSTM dataset. It does not run EnergyPlus. It runs weekly and on manual dispatch, not on pull requests.
+on:
+  schedule:
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  end-use-load-profiles:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
+        with:
+          python-version: "3.10"
+
+      - name: Install CityLearn with the end_use_load_profiles extra
+        run: |
+          python -m pip install --upgrade pip
+          # The CPU build keeps the extra's torch dependency small.
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          if ! pip install -r requirements.txt pyarrow pytest pytest-timeout -e ".[end_use_load_profiles]"; then
+            message="pip could not install the end_use_load_profiles extra on ubuntu-24.04 with Python 3.10, so the pipeline was not tested. The pip output above names the package that failed."
+            echo "::error title=end_use_load_profiles extra not installed::${message}"
+            printf '## End-use load profiles pipeline\n\n**Not tested:** %s\n' "${message}" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          pip list
+
+      - name: Import the pipeline modules
+        run: |
+          if ! python -c "import citylearn.end_use_load_profiles.clustering, citylearn.end_use_load_profiles.simulate, citylearn.end_use_load_profiles.neighborhood"; then
+            message="The extra installed, but citylearn.end_use_load_profiles does not import. The traceback above shows the failing import."
+            echo "::error title=end_use_load_profiles import failed::${message}"
+            printf '## End-use load profiles pipeline\n\n**Failed:** %s\n' "${message}" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      - name: Run the pipeline tests
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m pytest -q -rs -p no:cacheprovider \
+            tests/test_end_use_load_profiles_pipeline.py \
+            tests/test_engineering_gaps.py \
+            tests/test_agent_random_streams.py::test_neighborhood_passes_its_stream_version_to_partial_load_seeds \
+            | tee "${{ runner.temp }}/pytest-eulp.log"
+          # These tests skip without the extra; here a skip means the pipeline was not tested.
+          if grep -E "^SKIPPED .*(test_end_use_load_profiles_pipeline|test_engineering_gaps|test_agent_random_streams)" "${{ runner.temp }}/pytest-eulp.log"; then
+            echo "::error title=End-use load profile tests skipped::The extra is installed but some pipeline tests skipped; see the reasons above."
+            exit 1
+          fi
+          printf '## End-use load profiles pipeline\n\nAll pipeline tests ran and passed.\n' >> "$GITHUB_STEP_SUMMARY"

@@ -78,20 +78,12 @@ jobs:
         run: python -m pytest -q --ignore=scripts/manual
 
       - name: Performance smoke check
+        # The thresholds are the script's defaults. The ratios to scripts/ci/perf_baseline.json go to the job summary.
         if: matrix.python-version == '3.10' && matrix.numpy == '2.x'
         run: |
           mkdir -p ${{ runner.temp }}/perf
           python scripts/ci/perf_smoke.py \
-            --episode-steps 600 \
-            --seconds 60 \
-            --none-max-ms 30 \
-            --end-max-ms 45 \
-            --entity-max-ms 50 \
-            --ratio-max 2.0 \
-            --entity-overhead-ratio-max 3.75 \
-            --baseline-file scripts/ci/perf_baseline.json \
-            --baseline-regression-ratio 4.5 \
-            --baseline-slack-ms 15.0 \
+            --require-baseline \
             --metrics-output ${{ runner.temp }}/perf/perf_smoke_report.json
 
       - name: Upload performance smoke report
@@ -110,6 +102,45 @@ jobs:
           python -I "$GITHUB_WORKSPACE/scripts/ci/installed_export_smoke.py" \
             --schema "$GITHUB_WORKSPACE/tests/data/minute_ev_demo/schema.json" \
             --output "${{ runner.temp }}/citylearn-installed-export"
+
+  test-windows:
+    # Windows-only path handling (test_windows_spellings_of_one_data_file_pair), the checkout attributes and a few
+    # core tests on one Python version (#471). The full suite runs on Linux in the test job.
+    needs: lint
+    runs-on: windows-2025
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyarrow pytest pytest-timeout -e .
+
+      - name: Run the Windows test subset
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m pytest -q -rs -p no:cacheprovider \
+            tests/test_portable_pairing_evidence.py \
+            tests/test_out_of_range_actions.py \
+            tests/test_dataset_loader_window_parquet.py \
+            tests/test_entity_interface_contract.py \
+            tests/test_robustness.py \
+            | tee "${{ runner.temp }}/pytest-windows.log"
+          # The Windows-only test skips on other platforms; here a skip would mean it never ran.
+          if grep -E "^SKIPPED .*test_portable_pairing_evidence" "${{ runner.temp }}/pytest-windows.log"; then
+            echo "::error title=Windows-only test skipped::test_portable_pairing_evidence.py skipped a test on Windows; see the reason above."
+            exit 1
+          fi
 
   notebooks:
     # The example notebooks published in the documentation, with their install cells skipped. They simulate

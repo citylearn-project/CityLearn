@@ -103,8 +103,15 @@ Runtime benchmark:
 CI performance smoke check:
 
 ```console
-.venv/bin/python scripts/ci/perf_smoke.py --episode-steps 600 --seconds 60 --baseline-file scripts/ci/perf_baseline.json
+.venv/bin/python scripts/ci/perf_smoke.py --require-baseline
 ```
+
+It times the 2022 `plus_evs` dataset (flat, flat with end rendering and entity, 60 s step on hourly data),
+`pt_rec_4` at its native step with `time_step_ratio_mode='reject'` and the physics invariant checks on, and the
+construction of the whole 15 s Parquet electrical-service dataset. The gates are loose; the thresholds are the
+script's defaults and `scripts/ci/perf_baseline.json` stores only measurements. CI writes the ratio of every
+metric to its baseline to the job summary. Re-record the baseline once per release with `--write-baseline`;
+`--cases` limits a run (or a re-recording) to some cases. Constructing the 15 s dataset needs about 6 GB of memory.
 
 Step/component profiling:
 

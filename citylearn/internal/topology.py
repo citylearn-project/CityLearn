@@ -922,42 +922,6 @@ class CityLearnTopologyService:
             if hasattr(appliance, 'skip_cycles_before'):
                 appliance.skip_cycles_before(global_time_step)
 
-    @staticmethod
-    def _zero_action_kwargs(building: Building) -> Mapping[str, Any]:
-        active_actions = set(list(getattr(building, 'active_actions', []) or []))
-        kwargs: Dict[str, Any] = {}
-
-        if 'cooling_or_heating_device' in active_actions:
-            kwargs['cooling_or_heating_device_action'] = 0.0
-        if 'cooling_device' in active_actions:
-            kwargs['cooling_device_action'] = 0.0
-        if 'heating_device' in active_actions:
-            kwargs['heating_device_action'] = 0.0
-        if 'cooling_storage' in active_actions:
-            kwargs['cooling_storage_action'] = 0.0
-        if 'heating_storage' in active_actions:
-            kwargs['heating_storage_action'] = 0.0
-        if 'dhw_storage' in active_actions:
-            kwargs['dhw_storage_action'] = 0.0
-        if 'electrical_storage' in active_actions:
-            kwargs['electrical_storage_action'] = 0.0
-
-        ev_actions: Dict[str, float] = {}
-        deferrable_actions: Dict[str, float] = {}
-        for action_name in active_actions:
-            if action_name.startswith('electric_vehicle_storage_'):
-                charger_id = action_name.replace('electric_vehicle_storage_', '')
-                ev_actions[charger_id] = 0.0
-            elif action_name.startswith('deferrable_appliance_'):
-                deferrable_actions[action_name] = 0.0
-
-        if ev_actions:
-            kwargs['electric_vehicle_storage_actions'] = ev_actions
-        if deferrable_actions:
-            kwargs['deferrable_appliance_actions'] = deferrable_actions
-
-        return kwargs
-
     def _remove_member(self, event: TopologyEvent, time_step: int) -> bool:
         target_member_id = event.target_member_id
         if target_member_id is None:
