@@ -298,7 +298,7 @@
 <span class="w">        </span><span class="sd">"""Whether the episode is over, the same as `done`.</span>
 
 <span class="sd">        Kept with this meaning so that loops such as `while not env.terminated` keep working, as on</span>
-<span class="sd">        :class:`CityLearnEnv`. The `terminated` flag that `step()` returns follows the children's `episode_end`.</span>
+<span class="sd">        :class:`CityLearnEnv`. Like theirs, the `terminated` flag that `step()` returns is always `False`.</span>
 <span class="sd">        """</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">done</span>
@@ -695,7 +695,6 @@
             <span class="s2">"baseline_version"</span><span class="p">,</span>
             <span class="s2">"business_as_usual_ev_charge_target"</span><span class="p">,</span>
             <span class="s2">"ev_soc_carryover"</span><span class="p">,</span>
-            <span class="s2">"episode_end"</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="n">community_id</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">setting</span><span class="p">)</span> <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>

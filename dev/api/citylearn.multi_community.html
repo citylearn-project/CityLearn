@@ -307,7 +307,7 @@ family.</p>
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">terminated</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#citylearn.multi_community.MultiCommunityEnv.terminated" title="Link to this definition"></a></dt>
 <dd><p>Whether the episode is over, the same as <cite>done</cite>.</p>
 <p>Kept with this meaning so that loops such as <cite>while not env.terminated</cite> keep working, as on
-<code class="xref py py-class docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>. The <cite>terminated</cite> flag that <cite>step()</cite> returns follows the children’s <cite>episode_end</cite>.</p>
+<code class="xref py py-class docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>. Like theirs, the <cite>terminated</cite> flag that <cite>step()</cite> returns is always <cite>False</cite>.</p>
 </dd></dl>
 
 <dl class="py property">

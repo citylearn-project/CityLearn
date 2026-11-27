@@ -233,9 +233,6 @@
 
 
 
-<span class="n">EPISODE_END_VALUES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s1">'truncated'</span><span class="p">,</span> <span class="s1">'terminated'</span><span class="p">})</span>
-<span class="n">EPISODE_END_DEFAULT</span> <span class="o">=</span> <span class="s1">'truncated'</span>
-
 <div class="viewcode-block" id="CityLearnEnv">
 <a class="viewcode-back" href="../../api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CityLearnEnv</span><span class="p">(</span><span class="n">Environment</span><span class="p">,</span> <span class="n">Env</span><span class="p">):</span>
@@ -298,14 +295,6 @@
 <span class="sd">        the schedule SOC, and an arrival without one keeps the EV's simulated SOC, as in one run. The first episode uses the schedule SOC, as when the setting is off. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still</span>
 <span class="sd">        start every episode from their initial state. Off, episodes are independent; on, an episode that continues the</span>
 <span class="sd">        previous one depends on what the previous controller did. Can also be set with the schema key of the same name.</span>
-<span class="sd">    episode_end: str, default: 'truncated'</span>
-<span class="sd">        How `step()` reports the end of an episode. Every CityLearn episode ends because its window or split ends, a time</span>
-<span class="sd">        limit after which the buildings, batteries and EVs would carry on, so by default the last step returns</span>
-<span class="sd">        `terminated=False, truncated=True`, as the Gymnasium API defines it: learners keep bootstrapping from the</span>
-<span class="sd">        last observation instead of treating it as an absorbing state with no future value. `'terminated'` returns</span>
-<span class="sd">        `terminated=True, truncated=False`, as CityLearn 3.7.0 and earlier did. Simulation results and KPIs are the</span>
-<span class="sd">        same with both. The `done` property says whether the episode is over, whatever the reason; `terminated`, as a</span>
-<span class="sd">        property, keeps that meaning for existing loops. Can also be set with the schema key of the same name.</span>
 <span class="sd">    seconds_per_time_step: float</span>
 <span class="sd">        Number of seconds in 1 `time_step` and must be set to &gt;= 1. It must equal the dataset step unless</span>
 <span class="sd">        `time_step_ratio_mode='compress'`.</span>
@@ -453,7 +442,7 @@
         <span class="s1">'random_seed'</span><span class="p">,</span> <span class="s1">'offline'</span><span class="p">,</span> <span class="s1">'time_step_ratio'</span><span class="p">,</span> <span class="s1">'interface'</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'start_date'</span><span class="p">,</span>
         <span class="s1">'episode_split_boundary'</span><span class="p">,</span> <span class="s1">'time_step_ratio_mode'</span><span class="p">,</span> <span class="s1">'random_stream_version'</span><span class="p">,</span> <span class="s1">'physics_version'</span><span class="p">,</span> <span class="s1">'evaluation_window'</span><span class="p">,</span>
         <span class="s1">'district_electrical_service'</span><span class="p">,</span>
-        <span class="s1">'baseline_version'</span><span class="p">,</span> <span class="s1">'ev_soc_carryover'</span><span class="p">,</span> <span class="s1">'episode_end'</span><span class="p">,</span>
+        <span class="s1">'baseline_version'</span><span class="p">,</span> <span class="s1">'ev_soc_carryover'</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -471,7 +460,6 @@
     <span class="p">):</span>
         <span class="n">episode_split_boundary</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'episode_split_boundary'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">ev_soc_carryover</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'ev_soc_carryover'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">episode_end</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'episode_end'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">time_step_ratio_mode</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'time_step_ratio_mode'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">render_directory</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'render_directory'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">render_directory_name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'render_directory_name'</span><span class="p">,</span> <span class="s1">'render_logs'</span><span class="p">)</span>
@@ -785,7 +773,6 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ev_soc_carryover</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'ev_soc_carryover'</span><span class="p">)</span> <span class="k">if</span> <span class="n">ev_soc_carryover</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ev_soc_carryover</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ev_soc_carryover_context</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">episode_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'episode_end'</span><span class="p">)</span> <span class="k">if</span> <span class="n">episode_end</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">episode_end</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span> <span class="o">=</span> <span class="n">central_agent</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shared_observations</span> <span class="o">=</span> <span class="n">shared_observations</span>
 
@@ -980,12 +967,6 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__episode_split_boundary</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">episode_end</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""How `step()` reports the end of an episode: `'truncated'` (default) or `'terminated'`."""</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__episode_end</span>
-
-    <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ev_soc_carryover</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Whether an EV starts an episode that continues the previous one in time from its SOC at the end of</span>
 <span class="sd">        that episode, instead of the schedule SOC."""</span>
@@ -1086,26 +1067,25 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">terminated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Whether the episode is over, the same as `done`.</span>
+<span class="w">        </span><span class="sd">"""Whether the episode is over, the same as `done`, so that loops such as `while not env.terminated` work.</span>
 
-<span class="sd">        Kept with this meaning so that loops such as `while not env.terminated` keep working. The `terminated`</span>
-<span class="sd">        flag that `step()` returns follows `episode_end` instead: with the default `'truncated'` it is always</span>
-<span class="sd">        `False`, because a CityLearn episode only ends at a time limit. Learners should read the flags of `step()`.</span>
+<span class="sd">        The `terminated` flag that `step()` returns is always `False`: a CityLearn episode only ends at a time</span>
+<span class="sd">        limit, the end of its window or split, which `step()` reports as `truncated=True`. Learners should read</span>
+<span class="sd">        the flags of `step()`.</span>
 <span class="sd">        """</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">done</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">truncated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Whether the episode ended at its time limit, as `step()` reports it under `episode_end='truncated'`."""</span>
+<span class="w">        </span><span class="sd">"""Whether the episode ended at its time limit, as `step()` reports it."""</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">done</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_end</span> <span class="o">==</span> <span class="s1">'truncated'</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">done</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_episode_end_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""The `(terminated, truncated)` pair that `step()` returns for the current time step."""</span>
+<span class="w">        </span><span class="sd">"""The `(terminated, truncated)` pair that `step()` returns: the episode only ends at its time limit."""</span>
 
-        <span class="n">done</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">done</span>
-        <span class="k">return</span> <span class="n">done</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_end</span> <span class="o">==</span> <span class="s1">'terminated'</span><span class="p">,</span> <span class="n">done</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_end</span> <span class="o">==</span> <span class="s1">'truncated'</span>
+        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">done</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">],</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">]:</span>
@@ -1858,13 +1838,6 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">episode_split_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_split_boundary</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__episode_split_boundary</span> <span class="o">=</span> <span class="n">EpisodeTracker</span><span class="o">.</span><span class="n">validate_episode_split_boundary</span><span class="p">(</span><span class="n">episode_split_boundary</span><span class="p">)</span>
 
-    <span class="nd">@episode_end</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">episode_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_end</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="n">EPISODE_END_DEFAULT</span> <span class="k">if</span> <span class="n">episode_end</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">episode_end</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">EPISODE_END_VALUES</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"episode_end must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">EPISODE_END_VALUES</span><span class="p">)</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">episode_end</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__episode_end</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-
     <span class="nd">@ev_soc_carryover</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ev_soc_carryover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev_soc_carryover</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__ev_soc_carryover</span> <span class="o">=</span> <span class="n">parse_bool</span><span class="p">(</span><span class="n">ev_soc_carryover</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">'ev_soc_carryover'</span><span class="p">)</span>
@@ -1994,7 +1967,6 @@
             <span class="s1">'baseline_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_version</span><span class="p">,</span>
             <span class="s1">'episode_split_boundary'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_split_boundary</span><span class="p">,</span>
             <span class="s1">'ev_soc_carryover'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_soc_carryover</span><span class="p">,</span>
-            <span class="s1">'episode_end'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_end</span><span class="p">,</span>
             <span class="s1">'time_step_ratio_mode'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio_mode</span><span class="p">,</span>
             <span class="s1">'energy_accounting'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">(),</span>
             <span class="s1">'temporal_reproducibility'</span><span class="p">:</span> <span class="n">axis_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>

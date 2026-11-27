@@ -188,7 +188,6 @@ dataset, set `"simulation_start_time_step": 0` and `"simulation_end_time_step": 
 | `random_episode_split` | bool | `false` | | Pick the episode at random at every reset (with replacement), seeded by `random_seed` and the episode number. Without it, episodes are used in order and cycle. Applies to int and list episodes. | `random_episode_split` | original |
 | `episode_split_boundary` | string | `shared` | `shared`, `disjoint` | For non-rolling int episodes. `shared`: the last row of an episode is the first row of the next, so every interval is simulated (stride `N - 1`). `disjoint`: the 3.6.0 splits (stride `N`), which skip the interval between two episodes. | `episode_split_boundary` | after 3.6.0 |
 | `ev_soc_carryover` | bool | `false` | | Start each EV of an episode that continues the previous one in time (on its last row with `shared`, on the row after it with `disjoint`) from its SOC at the end of that episode, instead of the schedule SOC. Sequential splits and explicit lists carry; random and rolling splits never do. Only the EV SOC is carried. See the [migration guide](migration.md#ev-soc-carried-across-episode-splits). | `ev_soc_carryover` | after 3.6.0 |
-| `episode_end` | string | `truncated` | `truncated`, `terminated` | How `step()` reports the end of an episode. `truncated`: the last step returns `terminated=False, truncated=True`, because an episode ends at a time limit after which the buildings, batteries and EVs would carry on, so learners keep bootstrapping from the last observation. `terminated`: `terminated=True, truncated=False`, as 3.7.0 and earlier did. Simulation results and KPIs are the same. See [Running simulations](running_simulations.md#how-an-episode-ends). | `episode_end` | after 3.7.0 |
 
 Rules:
 
@@ -352,7 +351,7 @@ reported as incompatible. Start the name of a comment or note key with `_` to ke
 |---|---|---|
 | `root_directory` | `root_directory` | Not used for `community_market.tariff_files`. |
 | `buildings` | `buildings.<b>.include` | Names, indices or `Building` objects; replaces the `include` selection. |
-| `simulation_start_time_step`, `simulation_end_time_step`, `episode_time_steps`, `rolling_episode_split`, `random_episode_split`, `episode_split_boundary`, `ev_soc_carryover`, `episode_end`, `seconds_per_time_step`, `time_step_ratio_mode` | same | |
+| `simulation_start_time_step`, `simulation_end_time_step`, `episode_time_steps`, `rolling_episode_split`, `random_episode_split`, `episode_split_boundary`, `ev_soc_carryover`, `seconds_per_time_step`, `time_step_ratio_mode` | same | |
 | `central_agent`, `interface`, `topology_mode`, `random_seed`, `random_stream_version`, `physics_version`, `baseline_version` | same | |
 | `reward_function`, `reward_function_kwargs` | `reward_function.type`, `reward_function.attributes` | See [Reward function](#reward-function). |
 | `shared_observations` | `observations.<name>.shared_in_central_agent` | Replaces the list built from the schema. |
