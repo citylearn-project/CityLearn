@@ -524,7 +524,9 @@ def test_export_final_kpis_writes_child_subfolders_and_global_csv(tmp_path: Path
         assert (root / "exported_kpis_multi_community.csv").is_file()
         assert (root / "community_a" / "exported_kpis.csv").is_file()
         long = pd.read_csv(root / "exported_kpis_multi_community.csv")
-        assert list(long.columns) == ["cost_function", "value", "name", "level", "unit", "description", "community_id"]
+        assert list(long.columns) == [
+            "cost_function", "value", "name", "level", "unit", "description", "status", "replacement", "community_id",
+        ]
         child_dir = root / "community_a"
         wide = pd.read_csv(child_dir / "exported_kpis.csv")
         assert set(wide.columns) == {"KPI", "Building_1", "District"}
@@ -533,7 +535,9 @@ def test_export_final_kpis_writes_child_subfolders_and_global_csv(tmp_path: Path
         assert set(definitions) == set(wide["KPI"])
         for name, metadata in definitions.items():
             rows = long[(long["community_id"] == "community_a") & (long["cost_function"] == name)]
-            assert rows[["unit", "description"]].to_dict("records") == [metadata] * len(rows)
+            rows = rows[["unit", "description", "status", "replacement"]].astype(object)
+            rows = rows.where(rows.notna(), None)
+            assert rows.to_dict("records") == [metadata] * len(rows)
         assert (root / "community_b" / "exported_kpis.csv").is_file()
     finally:
         env.close()
@@ -736,5 +740,281 @@ def test_mixed_portfolio_changes_only_portfolio_market_rows(monkeypatch):
         assert not changed.empty
         assert changed.str.startswith("portfolio_").all()
         assert changed.str.contains("_community_market_").all()
+    finally:
+        env.close()
+
+
+def test_communities_with_the_same_seed_and_names_draw_independent_streams():
+    # Both communities load the same dataset (same building and EV names) with the same seed (#462).
+    env = MultiCommunityEnv(communities=[_community("community_a"), _community("community_b")])
+
+    try:
+        env.reset(seed=0)
+        a, b = env.envs["community_a"], env.envs["community_b"]
+        assert a.random_stream_namespace == "community_a" and b.random_stream_namespace == "community_b"
+        # The episode split still follows the shared seed, so the windows stay synchronised.
+        assert a.episode_tracker.episode_start_time_step == b.episode_tracker.episode_start_time_step
+
+        def draws(child):
+            building = child.buildings[0]
+            return (
+                building.random_generator("test").random(4).tolist(),
+                building.electrical_storage.random_generator("test").random(4).tolist(),
+                child._runtime_service.ev_drift_generator("Electric_Vehicle_1", "test").random(4).tolist(),
+                child._ev_drift_seed,
+            )
+
+        for left, right in zip(draws(a), draws(b)):
+            assert left != right
+        assert a.get_metadata()["random_stream_namespace"] == "community_a"
+    finally:
+        env.close()
+
+
+def test_a_single_environment_keeps_its_stream_keys():
+    env = CityLearnEnv(str(MINUTE_SCHEMA), central_agent=True, episode_time_steps=2, render_mode="none", random_seed=0)
+    named = CityLearnEnv(
+        str(MINUTE_SCHEMA), central_agent=True, episode_time_steps=2, render_mode="none", random_seed=0,
+        random_stream_namespace="community_a",
+    )
+
+    try:
+        assert env.random_stream_namespace is None
+        assert env.buildings[0].random_stream_key == ("building", "Building_1")
+        assert named.buildings[0].random_stream_key == ("building", "Building_1", "namespace", "community_a")
+        # The BAU reference is rebuilt with the namespace, so it simulates the same drawn devices.
+        named.reset(seed=0)
+        sidecar = named._business_as_usual_baseline_service._new_sidecar_env()
+        try:
+            assert sidecar.random_stream_namespace == "community_a"
+        finally:
+            sidecar.close()
+    finally:
+        env.close()
+        named.close()
+
+    with pytest.raises(ValueError, match="random_stream_namespace"):
+        CityLearnEnv(str(MINUTE_SCHEMA), render_mode="none", random_stream_namespace="  ")
+
+
+def _district_frame(values: Mapping[str, float], capacity: float = 0.0) -> pd.DataFrame:
+    from citylearn.internal.kpi import BATTERY_NOMINAL_CAPACITY_ATTR
+
+    frame = pd.DataFrame([
+        {"cost_function": name, "value": value, "name": "District", "level": "district", "unit": "ratio",
+         "description": "District definition."}
+        for name, value in values.items()
+    ])
+    frame.attrs[BATTERY_NOMINAL_CAPACITY_ATTR] = {"control": capacity, "business_as_usual": capacity}
+    return frame
+
+
+@pytest.mark.parametrize("weight_b", [1.0, 0.0])
+def test_portfolio_audit_ratios_are_pooled_from_their_counts(weight_b):
+    # Two departures, none met, against 200 departures, all met: the pooled rate is 200 / 202 (#428).
+    small = {
+        "district_ev_departure_audit_departures_count": 2.0,
+        "district_ev_departure_audit_service_observed_count": 2.0,
+        "district_ev_departure_audit_target_service_met_count": 0.0,
+        "district_ev_departure_audit_target_service_observed_ratio": 0.0,
+        "district_thermal_service_audit_evaluated_occupied_intervals_count": 10.0,
+        "district_thermal_service_audit_discomfort_intervals_count": 10.0,
+        "district_thermal_service_audit_discomfort_ratio": 1.0,
+        "district_deferrable_appliance_audit_offered_count": 1.0,
+        "district_deferrable_appliance_audit_completed_count": 0.0,
+        "district_deferrable_appliance_audit_observed_completion_ratio": 0.0,
+        "district_equity_audit_population_members_count": 4.0,
+        "district_equity_audit_coverage_ratio": 0.5,
+        "district_equity_audit_eligible_members_count": 2.0,
+        "district_equity_audit_losers_percent": 100.0,
+        "district_equity_audit_positive_benefit_gini_ratio": 0.2,
+        "district_energy_provenance_pv_generated_kwh": 10.0,
+        "district_energy_provenance_pv_useful_building_ratio": 0.1,
+        "district_energy_provenance_pv_generated_business_as_usual_kwh": 10.0,
+        "district_energy_provenance_pv_useful_building_business_as_usual_ratio": 0.1,
+        "district_energy_provenance_pv_useful_building_delta_to_business_as_usual_ratio": 0.0,
+        "district_battery_health_capacity_fade_ratio": 0.1,
+        "district_battery_health_capacity_fade_business_as_usual_ratio": 0.05,
+        "district_battery_ratio_to_business_as_usual_capacity_fade_ratio": 2.0,
+        "district_energy_provenance_storage_max_residual_kwh": 1.0e-6,
+        "district_energy_provenance_storage_max_residual_business_as_usual_kwh": 1.0e-9,
+        "district_energy_provenance_storage_max_residual_delta_to_business_as_usual_kwh": 1.0e-6 - 1.0e-9,
+    }
+    large = {
+        "district_ev_departure_audit_departures_count": 200.0,
+        "district_ev_departure_audit_service_observed_count": 200.0,
+        "district_ev_departure_audit_target_service_met_count": 200.0,
+        "district_ev_departure_audit_target_service_observed_ratio": 1.0,
+        "district_thermal_service_audit_evaluated_occupied_intervals_count": 90.0,
+        "district_thermal_service_audit_discomfort_intervals_count": 0.0,
+        "district_thermal_service_audit_discomfort_ratio": 0.0,
+        "district_deferrable_appliance_audit_offered_count": 99.0,
+        "district_deferrable_appliance_audit_completed_count": 99.0,
+        "district_deferrable_appliance_audit_observed_completion_ratio": 1.0,
+        "district_equity_audit_population_members_count": 16.0,
+        "district_equity_audit_coverage_ratio": 1.0,
+        "district_equity_audit_eligible_members_count": 16.0,
+        "district_equity_audit_losers_percent": 0.0,
+        "district_equity_audit_positive_benefit_gini_ratio": 0.4,
+        "district_energy_provenance_pv_generated_kwh": 90.0,
+        "district_energy_provenance_pv_useful_building_ratio": 0.9,
+        "district_energy_provenance_pv_generated_business_as_usual_kwh": 30.0,
+        "district_energy_provenance_pv_useful_building_business_as_usual_ratio": 0.5,
+        "district_energy_provenance_pv_useful_building_delta_to_business_as_usual_ratio": 0.4,
+        "district_battery_health_capacity_fade_ratio": 0.2,
+        "district_battery_health_capacity_fade_business_as_usual_ratio": 0.2,
+        "district_battery_ratio_to_business_as_usual_capacity_fade_ratio": 1.0,
+        "district_energy_provenance_storage_max_residual_kwh": 3.0e-6,
+        "district_energy_provenance_storage_max_residual_business_as_usual_kwh": 2.0e-6,
+        "district_energy_provenance_storage_max_residual_delta_to_business_as_usual_kwh": 1.0e-6,
+    }
+    env = MultiCommunityEnv(communities=[
+        {**_community("community_a"), "weight": 1.0},
+        {**_community("community_b"), "weight": weight_b},
+    ])
+    try:
+        kpis = env._combine_community_kpis({
+            "community_a": _district_frame(small, capacity=10.0),
+            "community_b": _district_frame(large, capacity=30.0),
+        })
+    finally:
+        env.close()
+
+    def portfolio(name):
+        return _kpi_value(kpis, f"portfolio_{name}", community_id=env.PORTFOLIO_COMMUNITY_ID, level="portfolio")
+
+    assert portfolio("ev_departure_audit_target_service_observed_ratio") == pytest.approx(200.0 / 202.0)
+    assert portfolio("thermal_service_audit_discomfort_ratio") == pytest.approx(10.0 / 100.0)
+    assert portfolio("deferrable_appliance_audit_observed_completion_ratio") == pytest.approx(99.0 / 100.0)
+    assert portfolio("equity_audit_coverage_ratio") == pytest.approx(18.0 / 20.0)
+    assert portfolio("equity_audit_losers_percent") == pytest.approx(100.0 * 2.0 / 18.0)
+    pv_control, pv_bau = (1.0 + 81.0) / 100.0, (1.0 + 15.0) / 40.0
+    assert portfolio("energy_provenance_pv_useful_building_ratio") == pytest.approx(pv_control)
+    assert portfolio("energy_provenance_pv_useful_building_business_as_usual_ratio") == pytest.approx(pv_bau)
+    assert portfolio("energy_provenance_pv_useful_building_delta_to_business_as_usual_ratio") == pytest.approx(
+        pv_control - pv_bau
+    )
+    assert portfolio("battery_health_capacity_fade_ratio") == pytest.approx((1.0 + 6.0) / 40.0)
+    assert portfolio("battery_health_capacity_fade_business_as_usual_ratio") == pytest.approx((0.5 + 6.0) / 40.0)
+    assert portfolio("battery_ratio_to_business_as_usual_capacity_fade_ratio") == pytest.approx(7.0 / 6.5)
+    assert portfolio("energy_provenance_storage_max_residual_kwh") == pytest.approx(3.0e-6)
+    assert portfolio("energy_provenance_storage_max_residual_delta_to_business_as_usual_kwh") == pytest.approx(1.0e-6)
+    # Distributional ratios have no additive denominator and stay means weighted by the community weight.
+    assert portfolio("equity_audit_positive_benefit_gini_ratio") == pytest.approx(
+        (0.2 + weight_b * 0.4) / (1.0 + weight_b)
+    )
+    rows = kpis[kpis["level"] == "portfolio"].set_index("cost_function")
+    description = rows.loc["portfolio_ev_departure_audit_target_service_observed_ratio", "description"]
+    assert description.startswith("Portfolio: pooled over the communities")
+    assert "`portfolio_ev_departure_audit_service_observed_count`" in description
+    assert description.endswith("Each community: District definition.")
+    assert kpis.attrs["portfolio_aggregation"]["portfolio_equity_audit_positive_benefit_gini_ratio"] == {
+        "rule": "weighted_mean", "over": [],
+    }
+
+
+def _exported_portfolio(tmp_path: Path, session: str, *, identity=True, **export_kwargs):
+    env = MultiCommunityEnv(
+        communities=[_community("community_a", episode_time_steps=2), _community("community_b", episode_time_steps=2)],
+        render_directory=tmp_path / "renders",
+        render_session_name=session,
+    )
+    try:
+        if identity:
+            env.set_experiment_identity(implementation="tests.Zero", version="1", parameters={})
+        env.reset(seed=0)
+        while not env.terminated:
+            env.step(_multi_zero_actions(env))
+        manifest = env.export_final_kpis(export_business_as_usual_timeseries=False, **export_kwargs)
+        return Path(env.new_folder_path), manifest
+    finally:
+        env.close()
+
+
+def test_portfolio_export_writes_a_manifest_that_compare_exports_pairs(tmp_path: Path):
+    from citylearn.internal.comparison import compare_exports
+
+    left, manifest = _exported_portfolio(tmp_path, "left", kpi_round_decimals=6)
+    right, _ = _exported_portfolio(tmp_path, "right", kpi_round_decimals=6)
+    saved = json.loads((left / "exported_kpis_multi_community.manifest.json").read_text(encoding="utf-8"))
+    assert saved["kind"] == "multi_community"
+    assert saved["community_ids"] == ["community_a", "community_b"]
+    assert saved["weights"] == {"community_a": 1.0, "community_b": 1.0}
+    assert saved["kpi_export"]["kpi_round_decimals"] == 6
+    assert saved["kpi_export"]["include_battery_health_audit"] is False
+    assert saved["communities"]["community_a"]["manifest"] == "community_a/exported_kpis.manifest.json"
+    assert saved["communities"]["community_a"]["random_stream_namespace"] == "community_a"
+    assert saved["portfolio_aggregation"]["portfolio_energy_grid_total_import_control_kwh"]["rule"] == "sum"
+    assert saved["kpi_definitions"]["portfolio_energy_grid_total_import_control_kwh"]["description"].startswith(
+        "Portfolio: sum of the community values."
+    )
+    assert saved["controller_identity"]["implementation"] == "tests.Zero"
+
+    report = compare_exports(left / "exported_kpis_multi_community.csv", right / "exported_kpis_multi_community.csv")
+    assert report["status"] == "paired", (report["mismatches"], report["missing_evidence"])
+    assert any(row["name"] == "__portfolio__:Portfolio" for row in report["outcome_summary"])
+
+
+def test_portfolio_comparison_names_the_community_that_lacks_evidence(tmp_path: Path):
+    from citylearn.internal.comparison import compare_exports
+
+    left, _ = _exported_portfolio(tmp_path, "left")
+    right, _ = _exported_portfolio(tmp_path, "right", identity=False)
+    report = compare_exports(left / "exported_kpis_multi_community.csv", right / "exported_kpis_multi_community.csv")
+    assert report["status"] == "unknown"
+    assert {"community_a:controller_identity", "community_b:controller_identity"} <= set(report["missing_evidence"])
+
+
+def test_kpi_exports_can_include_the_battery_health_audit(tmp_path: Path):
+    root, manifest = _exported_portfolio(tmp_path, "health", include_battery_health_audit=True)
+    portfolio = pd.read_csv(root / "exported_kpis_multi_community.csv")
+    assert portfolio["cost_function"].str.contains("ev_battery_health").any()
+    community = pd.read_csv(root / "community_a" / "exported_kpis.csv")
+    assert community["KPI"].str.contains("ev_battery_health").any()
+    child = json.loads((root / "community_a" / "exported_kpis.manifest.json").read_text(encoding="utf-8"))
+    assert child["kpi_export"] == {
+        "include_business_as_usual": True, "include_battery_health_audit": True, "kpi_round_decimals": None,
+    }
+    assert manifest["kpi_export"]["include_battery_health_audit"] is True
+
+
+def test_portfolio_export_follows_the_parquet_render_format(tmp_path: Path):
+    env = MultiCommunityEnv(
+        communities=[
+            _community("community_a", episode_time_steps=2, render_file_format="parquet"),
+            _community("community_b", episode_time_steps=2, render_file_format="parquet"),
+        ],
+        render_directory=tmp_path / "renders",
+        render_session_name="parquet",
+    )
+    try:
+        env.reset(seed=0)
+        env.step(_multi_zero_actions(env))
+        env.export_final_kpis(include_business_as_usual=False, export_business_as_usual_timeseries=False)
+        root = Path(env.new_folder_path)
+    finally:
+        env.close()
+    assert (root / "exported_kpis_multi_community.parquet").is_file()
+    assert not (root / "exported_kpis_multi_community.csv").exists()
+    manifest = json.loads((root / "exported_kpis_multi_community.manifest.json").read_text(encoding="utf-8"))
+    assert manifest["kpi_export"]["file_format"] == "parquet"
+    assert manifest["communities"]["community_a"]["manifest"] == "community_a/exported_kpis.manifest.json"
+
+
+def test_portfolio_scorecard_lists_the_default_kpis_of_every_level():
+    env = MultiCommunityEnv(communities=[_community("community_a"), _community("community_b")])
+    try:
+        env.reset(seed=0)
+        env.step(_multi_zero_actions(env))
+        kpis = env.evaluate_v2(include_business_as_usual=False)
+        card = env.scorecard(kpis, level="portfolio")
+        assert len(card) > 0 and set(card["level"]) == {"portfolio"}
+        default = list(CityLearnEnv.SCORECARD_DEFAULT_KPIS)
+        order = [default.index(name.replace("portfolio_", "district_", 1)) for name in card["cost_function"]]
+        assert order == sorted(order)
+        district = env.scorecard(kpis, level="district")
+        assert list(district["community_id"].unique()) == ["community_a", "community_b"]
+        with pytest.raises(ValueError, match="level"):
+            env.scorecard(kpis, level="community")
     finally:
         env.close()

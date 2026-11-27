@@ -9,6 +9,11 @@ vehicles away from their charger, occupant set-point interactions and stochastic
     entropy and the purpose, entity and episode as its spawn key, so streams for different purposes,
     objects and episodes are independent. Each object keeps one generator per stream.
 
+An environment built with a ``random_stream_namespace`` adds ``('namespace', <namespace>)`` to the key of
+every stream it derives from its seed, so two environments with the same seed and the same building and
+EV names still draw independently. :class:`~citylearn.multi_community.MultiCommunityEnv` gives each
+community its ``community_id`` as namespace. Without a namespace the keys are unchanged.
+
 Version ``'v1'``, the derivation of CityLearn 3.6.0, was removed in CityLearn 3.8.1 (#466); CityLearn
 3.7 reproduces it. The setting accepts ``'v2'``, ``2`` and ``"2"``, as parsed by
 :py:func:`citylearn.internal.versions.parse_version`.
@@ -81,6 +86,30 @@ def spawn_key(purpose: str, *parts: Hashable) -> Tuple[int, ...]:
     digest = hashlib.sha256(payload).digest()
 
     return tuple(int.from_bytes(digest[i:i + 4], 'big') for i in range(0, 32, 4))
+
+
+def namespace_parts(namespace: Union[str, None]) -> Tuple[str, ...]:
+    """Key parts that separate the streams of `namespace`: empty without one."""
+
+    return () if namespace is None else ('namespace', str(namespace))
+
+
+def namespaced_key(key: Tuple[Any, ...], namespace: Union[str, None]) -> Tuple[Any, ...]:
+    """`key` followed by the parts of `namespace`, or `key` itself without one."""
+
+    return (*tuple(key), *namespace_parts(namespace))
+
+
+def parse_random_stream_namespace(value: Any, path: str = 'random_stream_namespace') -> Union[str, None]:
+    """Return `value` as a namespace: None, or a non-empty string without surrounding spaces."""
+
+    if value is None:
+        return None
+
+    if not isinstance(value, str) or value.strip() == '':
+        raise ValueError(f'{path} must be None or a non-empty string, got {value!r}.')
+
+    return value.strip()
 
 
 def seed_sequence(seed: int, purpose: str, *parts: Hashable) -> np.random.SeedSequence:

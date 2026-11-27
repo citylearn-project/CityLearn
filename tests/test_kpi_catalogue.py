@@ -142,3 +142,55 @@ def test_manifest_definitions_omit_unknown_extensions():
     assert list(definitions) == [name]
     assert definitions[name]["unit"] == "kWh"
     assert definitions[name]["description"]
+
+
+def test_legacy_and_deprecated_rows_name_their_canonical_row():
+    from citylearn.internal.kpi_catalogue import kpi_status, statuses, load
+
+    status = statuses(load())
+    for name, (value, replacement) in status.items():
+        if value in ("legacy", "deprecated"):
+            assert status[replacement] == ("canonical", None), name
+    assert kpi_status("district_equity_distribution_gini_benefit_ratio") == (
+        "deprecated", "district_equity_audit_positive_benefit_gini_ratio",
+    )
+    # Flexible appliances point to the audit (#433); their BAU comparison has no audit counterpart.
+    assert kpi_status("building_deferrable_appliance_service_service_level_ratio") == (
+        "legacy", "building_deferrable_appliance_audit_resolved_completion_ratio",
+    )
+    assert kpi_status("district_deferrable_appliance_service_service_level_business_as_usual_ratio") == (
+        "current", None,
+    )
+    # The market alias is deprecated at district level only, where import_share exists.
+    assert kpi_status("district_solar_self_consumption_community_market_local_share_of_demand_ratio")[0] == "deprecated"
+    assert kpi_status("building_solar_self_consumption_community_market_local_share_of_demand_ratio")[0] == "current"
+    assert kpi_status("portfolio_ev_performance_departure_success_feasible_ratio") == (
+        "legacy", "portfolio_ev_departure_audit_target_service_feasible_ratio",
+    )
+
+
+def test_evaluate_v2_and_export_manifest_carry_the_status(tmp_path):
+    import json
+
+    schema = ROOT / "tests" / "data" / "minute_ev_demo" / "schema.json"
+    env = CityLearnEnv(str(schema), central_agent=True, episode_time_steps=2, render_mode="none", random_seed=0,
+                       render_directory=tmp_path, render_session_name="status")
+    try:
+        env.reset(seed=0)
+        env.step([np.zeros(space.shape, dtype="float32") for space in env.action_space])
+        kpis = env.evaluate_v2(include_business_as_usual=False)
+        assert list(kpis.columns[:8]) == [
+            "cost_function", "value", "name", "level", "unit", "description", "status", "replacement",
+        ]
+        rows = kpis.set_index(["name", "cost_function"])
+        row = rows.loc[("District", "district_equity_distribution_gini_benefit_ratio")]
+        assert (row["status"], row["replacement"]) == ("deprecated", "district_equity_audit_positive_benefit_gini_ratio")
+        assert rows.loc[("District", "district_equity_audit_positive_benefit_gini_ratio"), "status"] == "canonical"
+        assert set(kpis["status"]) <= {"current", "canonical", "legacy", "deprecated"}
+        env.export_final_kpis(include_business_as_usual=False, export_business_as_usual_timeseries=False)
+        manifest = json.loads((Path(env.new_folder_path) / "exported_kpis.manifest.json").read_text(encoding="utf-8"))
+        definition = manifest["kpi_definitions"]["district_deferrable_appliance_service_completed_cycles_count"]
+        assert definition["status"] == "legacy"
+        assert definition["replacement"] == "district_deferrable_appliance_audit_completed_count"
+    finally:
+        env.close()

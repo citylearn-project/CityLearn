@@ -183,6 +183,11 @@ class CityLearnEnv(Environment, Env):
         episode with :class:`numpy.random.SeedSequence`. Version ``'v1'`` was removed in CityLearn 3.8.1.
         Overrides ``random_stream_version`` in the schema. Agents built on the environment use the same
         streams. See :py:mod:`citylearn.random_streams`.
+    random_stream_namespace: str, optional
+        Keyword argument, constructor only. Adds the namespace to the key of every random stream derived from
+        `random_seed`, so two environments with the same seed and the same building and EV names draw
+        independent values. :class:`~citylearn.multi_community.MultiCommunityEnv` sets it to each community's
+        ``community_id``. Defaults to none, which leaves the streams unchanged. It does not change the episode split.
     offline: bool, optional
         If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
         error when required files are not available locally. Defaults to the ``CITYLEARN_OFFLINE`` environment
@@ -196,8 +201,9 @@ class CityLearnEnv(Environment, Env):
         applies the schema's ``topology_events`` (members and assets joining or leaving) and requires
         ``interface='entity'``. Overrides the schema key.
     start_date: Union[str, datetime.date], optional
-        Date of the first time step in rendered and exported timestamps, e.g. ``'2024-01-01'``. Defaults to the
-        schema's ``start_date``, else 2024-01-01. It does not change the simulation.
+        Date of global row 0 in rendered and exported timestamps, e.g. ``'2024-01-01'``; the time of day comes
+        from the dataset's ``hour``, ``minutes`` and ``seconds`` columns. Defaults to the schema's ``start_date``,
+        else to the date that the ``month`` and ``day_type`` columns give. It does not change the simulation.
 
     Other Parameters
     ----------------
@@ -288,7 +294,7 @@ class CityLearnEnv(Environment, Env):
         'random_seed', 'offline', 'time_step_ratio', 'interface', 'topology_mode', 'start_date',
         'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version', 'physics_version', 'evaluation_window',
         'district_electrical_service',
-        'baseline_version', 'ev_soc_carryover',
+        'baseline_version', 'ev_soc_carryover', 'random_stream_namespace',
     )
 
     def __init__(self,
@@ -327,6 +333,7 @@ class CityLearnEnv(Environment, Env):
         ev_departure_service_tolerance = kwargs.pop('ev_departure_service_tolerance', None)
         business_as_usual_ev_charge_target = kwargs.pop('business_as_usual_ev_charge_target', None)
         random_stream_version = kwargs.pop('random_stream_version', None)
+        random_stream_namespace = random_streams.parse_random_stream_namespace(kwargs.pop('random_stream_namespace', None))
         district_electrical_service = kwargs.pop('district_electrical_service', None)
         evaluation_window = kwargs.pop('evaluation_window', None)
         kw_render_mode = kwargs.pop('render_mode', None)
@@ -463,7 +470,13 @@ class CityLearnEnv(Environment, Env):
         self._observations_cache: List[List[float]] = None
         self._observations_cache_time_step: int = -1
         self._render_origin_overridden = start_date is not None
-        self._render_start_date = self._parse_render_start_date(start_date if start_date is not None else schema_start_date)
+        given_start_date = start_date if start_date is not None else schema_start_date
+        # None when neither the argument nor the schema gives one: the date then comes from the calendar columns.
+        self._render_start_date_given = (
+            None if given_start_date is None else self._parse_render_start_date(given_start_date)
+        )
+        self._export_origin = None
+        self._render_start_date = self._parse_render_start_date(given_start_date)
         self.previous_month = None
         self.current_day = self._render_start_date.day
         self.year = self._render_start_date.year
@@ -474,6 +487,8 @@ class CityLearnEnv(Environment, Env):
         self._net_electricity_consumption_cost_history = None
         self._net_electricity_consumption_emission_history = None
         self.buildings = []
+        # Read by the loader, which adds it to the stream key of every building, device and EV battery.
+        self.random_stream_namespace = random_stream_namespace
         # Set before the seed and the buildings, which draw from streams of this version.
         self._set_random_stream(random_streams.parse_random_stream_version(
             self.schema.get('random_stream_version', None) if random_stream_version is None else random_stream_version,
@@ -696,9 +711,17 @@ class CityLearnEnv(Environment, Env):
 
     @property
     def render_start_date(self) -> datetime.date:
-        """Date used as the origin for rendered timestamps."""
+        """Date of global row 0 in rendered and exported timestamps.
 
-        return self._render_start_date
+        The `start_date` argument or schema key; without one, the date that the dataset's `month` and
+        `day_type` columns give (see the export clock in the running-simulations guide). With a calendar
+        file and no `start_date` argument, exported timestamps come from the calendar instead.
+        """
+
+        if getattr(self, '_render_start_date_given', None) is not None or not self.buildings:
+            return self._render_start_date
+
+        return self._episode_exporter.export_origin().date()
 
     @property
     def schema(self) -> Mapping[str, Any]:
@@ -1800,6 +1823,7 @@ class CityLearnEnv(Environment, Env):
             'reward_evidence': reward_metadata(self),
             **super().get_metadata(),
             'random_stream_version': self.random_stream_version,
+            'random_stream_namespace': self.random_stream_namespace,
             'interface': self.interface,
             'topology_mode': self.topology_mode,
             'topology_version': self.topology_version,
@@ -1994,6 +2018,10 @@ class CityLearnEnv(Environment, Env):
             * ``name`` (str): the building name for building rows, ``'District'`` for district rows.
             * ``level`` (str): ``'building'`` or ``'district'``.
             * ``unit`` (str) and ``description`` (str): the unit and English description from the KPI catalogue.
+            * ``status`` (str): ``'canonical'`` for the row to report for its question, ``'legacy'`` for an older
+              definition kept for comparison with earlier results, ``'deprecated'`` for an alias that returns the
+              value of its canonical row, ``'current'`` otherwise.
+            * ``replacement`` (str): for ``'legacy'`` and ``'deprecated'`` rows, the name of the canonical row.
 
             Which KPIs appear depends on the scenario's assets and services. :py:meth:`scorecard` selects the
             default subset. The KPI catalogue lists every name and the KPI reference guide defines every family.
@@ -2097,8 +2125,14 @@ class CityLearnEnv(Environment, Env):
         include_business_as_usual: bool = True,
         export_business_as_usual_timeseries: bool = True,
         kpi_round_decimals: int = None,
+        include_battery_health_audit: bool = False,
     ):
-        """Export episode KPIs to csv."""
+        """Export episode KPIs to csv (or parquet with `render_file_format='parquet'`) and their manifest.
+
+        `include_battery_health_audit` adds the opt-in EV battery-health rows of :py:meth:`evaluate_v2`. The
+        manifest (``exported_kpis.manifest.json``) records it with `include_business_as_usual` and
+        `kpi_round_decimals` under ``kpi_export``. Returns the manifest.
+        """
 
         return self._episode_exporter.export_final_kpis(
             model=model,
@@ -2106,6 +2140,7 @@ class CityLearnEnv(Environment, Env):
             include_business_as_usual=include_business_as_usual,
             export_business_as_usual_timeseries=export_business_as_usual_timeseries,
             kpi_round_decimals=kpi_round_decimals,
+            include_battery_health_audit=include_battery_health_audit,
         )
 
     def plan_final_episode_exports(self, episodes: int = None):
@@ -2313,6 +2348,7 @@ class CityLearnEnv(Environment, Env):
         # this identifies the episode's streams in metadata and comparisons.
         self._ev_drift_seed = random_streams.stream_id(
             self.random_seed, random_streams.EV_AWAY_SOC_DRIFT, self.episode_tracker.random_stream_episode,
+            *random_streams.namespace_parts(self.random_stream_namespace),
         )
         self._render_buffer.clear()
         self._refresh_action_cache()

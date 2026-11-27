@@ -109,6 +109,10 @@ demoraram de 6 a 127 minutos, do REC-4 ao REC-100, no CityLearn 3.3.0. Uma janel
 - **Calendário:** 70 176 instantes de início de intervalo, de 1 de janeiro de 2023 às
   00:00 UTC a 31 de dezembro de 2024 às 23:45 UTC. Os dias civis de Lisboa têm 92 ou
   100 intervalos nas mudanças de hora.
+  As colunas `month`, `hour` e `minutes` estão em hora civil de Lisboa, tal como os
+  instantes exportados, que levam o seu desvio UTC (`2023-06-27T03:00:00+01:00`). A
+  coluna `day_type` codifica fins de semana e feriados como 1 e segunda a sexta-feira
+  como 2 a 6, e não 1 segunda-feira a 7 domingo.
 - **Unidades:** consumo, FV e perfis de programas em kWh por intervalo (multiplicar por
   quatro para kW médio); capacidade das baterias em kWh; limites de potência em kW;
   preços em EUR/kWh; intensidade carbónica em kg CO2e/kWh; SOC como fração.

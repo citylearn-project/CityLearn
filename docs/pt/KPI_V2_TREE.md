@@ -12,6 +12,11 @@ partir das linhas de distrito (ver [Níveis](kpis_reference.md#níveis)). Nas ta
 representa cada alternativa e `{,_x}` uma parte opcional; os nomes completos seguem cada tabela.
 As linhas presentes dependem dos equipamentos e serviços do cenário.
 
+As linhas marcadas **Legada** mantêm uma definição anterior para que resultados antigos continuem
+comparáveis, e as marcadas **Obsoleta** devolvem o mesmo valor que outra linha; ambas indicam a linha
+canónica a reportar. `evaluate_v2()` dá a cada linha o seu `status` (`current`, `canonical`, `legacy`
+ou `deprecated`) e `replacement`, e os manifestos das exportações registam-nos em `kpi_definitions`.
+
 | Família | Nomes |
 |---|---:|
 | [Custo](#custo) | 24 |
@@ -379,7 +384,8 @@ Equações e regras: [Mercado comunitário](kpis_reference.md#mercado-comunitár
 | `cost_community_market_savings_{total,daily_average}_eur` | building, district | EUR | Custo contrafactual menos custo liquidado; positivo quando a troca local baixou o custo. |
 | `cost_community_market_operator_balance_total_eur` | district | EUR | Dinheiro que o mercado retém (positivo) ou paga (negativo): pagamentos locais dos importadores menos receitas locais dos exportadores. É zero quando todos os membros têm o mesmo preço local em cada passo. |
 | `solar_self_consumption_community_market_import_share_ratio` | district | ratio | Quota local da procura canónica: `importação local / (importação local + importação da rede depois da troca local)`, a parte da importação bruta dos membros coberta pela troca local. Só é emitida com o mercado ativo e `community_market.kpis.community_self_consumption_enabled` verdadeiro. |
-| `solar_self_consumption_community_market_local_share_of_demand_ratio` | building, district | ratio | Alias obsoleto, mantido por compatibilidade: a mesma fórmula de `import_share` (emitido em todas as simulações, indefinido só quando o denominador é 0). Ao nível do edifício é a única quota da procura. |
+| `solar_self_consumption_community_market_local_share_of_demand_ratio` | building | ratio | Importação local sobre importação local mais importação da rede depois da troca local (emitido em todas as simulações, indefinido só quando o denominador é 0); a única quota da procura ao nível do edifício. |
+| `solar_self_consumption_community_market_local_share_of_demand_ratio` | district | ratio | **Obsoleta**, alias de `solar_self_consumption_community_market_import_share_ratio`. Alias obsoleto, mantido por compatibilidade: a mesma fórmula de `import_share` (emitido em todas as simulações, indefinido só quando o denominador é 0). |
 | `solar_self_consumption_community_market_local_share_of_export_ratio` | building, district | ratio | `exportação local / (exportação local + exportação para a rede depois da troca local)`: a parte da exportação bruta dos membros vendida a outros membros. |
 
 <details>
@@ -541,10 +547,10 @@ Equações e regras: [Veículos elétricos](kpis_reference.md#veículos-elétric
 | Nomes | Níveis | Unidade | Significado |
 |---|---|---|---|
 | `ev_events_departure_count` | building, district | count | Partidas com VE e bateria ligados, SOC alvo válido e SOC finito à partida; é o denominador das taxas e médias `ev_performance`. |
-| `ev_events_departure_{met,min_acceptable,within_tolerance}_count` | building, district | count | Partidas contadas cujo SOC cumpriu o alvo, o SOC mínimo aceitável (alvo menos a tolerância de serviço) ou a banda simétrica de tolerância em torno do alvo. |
-| `ev_events_departure_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count` | building, district | count | Partidas contadas cujo limiar era ou não alcançável carregando à potência máxima durante a ligação; regra antiga, em que dados em falta contam como viáveis, pelo que viáveis + inviáveis igualam o número de partidas. |
-| `ev_performance_departure_{success,min_acceptable,within_tolerance}_ratio` | building, district | ratio | Fração das partidas contadas que cumpriram o alvo, o SOC mínimo aceitável ou a banda de tolerância; indefinida sem partidas. |
-| `ev_performance_departure_{success,min_acceptable,within_tolerance}_feasible_ratio` | building, district | ratio | A mesma fração sobre as partidas viáveis para esse limiar segundo a regra antiga; indefinida quando nenhuma é viável. |
+| `ev_events_departure_{met,min_acceptable,within_tolerance}_count` | building, district | count | **Legada**; linha canónica: `ev_departure_audit_{target,min_acceptable,within_tolerance}_service_met_count`. Partidas contadas cujo SOC cumpriu o alvo, o SOC mínimo aceitável (alvo menos a tolerância de serviço) ou a banda simétrica de tolerância em torno do alvo. |
+| `ev_events_departure_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count` | building, district | count | **Legada**; linha canónica: `ev_departure_audit_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count`. Partidas contadas cujo limiar era ou não alcançável carregando à potência máxima durante a ligação; regra antiga, em que dados em falta contam como viáveis, pelo que viáveis + inviáveis igualam o número de partidas. |
+| `ev_performance_departure_{success,min_acceptable,within_tolerance}_ratio` | building, district | ratio | **Legada**; linha canónica: `ev_departure_audit_{target,min_acceptable,within_tolerance}_service_observed_ratio`. Fração das partidas contadas que cumpriram o alvo, o SOC mínimo aceitável ou a banda de tolerância; indefinida sem partidas. |
+| `ev_performance_departure_{success,min_acceptable,within_tolerance}_feasible_ratio` | building, district | ratio | **Legada**; linha canónica: `ev_departure_audit_{target,min_acceptable,within_tolerance}_service_feasible_ratio`. A mesma fração sobre as partidas viáveis para esse limiar segundo a regra antiga; indefinida quando nenhuma é viável. |
 | `ev_performance_departure_{soc_deficit,shortfall_beyond_tolerance,soc_surplus,soc_absolute_error}_mean_ratio` | building, district | ratio | Média sobre as partidas contadas, em fração de SOC, de max(alvo − SOC, 0), max(alvo − tolerância − SOC, 0), max(SOC − alvo, 0) ou \|SOC − alvo\|; indefinida sem partidas. |
 | `ev_performance_departure_tolerance_ratio` | building, district | ratio | Eco da configuração: o parâmetro `ev_departure_service_tolerance` (por omissão 0,05), não uma medição. |
 | `ev_total_charge{,_business_as_usual,_delta_to_business_as_usual}_kwh` | building, district | kWh | Energia AC bruta absorvida pelos carregadores para carregar os VE, incluindo as perdas do carregador; `_business_as_usual` e `_delta_to_business_as_usual` conforme as regras comuns. |
@@ -795,17 +801,22 @@ district_ev_departure_audit_within_tolerance_unknown_unsupported_battery_model_c
 
 ## Equipamentos flexíveis
 
-Serviço dos ciclos dos equipamentos flexíveis (diferíveis) a partir dos estados dos ciclos e das energias nominais dos ciclos. Todos os membros emitem estas linhas; sem equipamentos, as contagens e energias são 0 e as taxas ficam indefinidas.
+Serviço dos ciclos dos equipamentos flexíveis (diferíveis) a partir dos estados dos ciclos e das energias nominais dos ciclos. Todos os membros emitem estas linhas; sem equipamentos, as contagens e energias são 0 e as taxas ficam indefinidas. As contagens, o nível de serviço e as energias do controlo são linhas legadas; a auditoria dos equipamentos flexíveis (`deferrable_appliance_audit_*`) é a canónica. Estas linhas guardam a única comparação com o BAU.
 
 Equações e regras: [Equipamentos flexíveis](kpis_reference.md#equipamentos-flexíveis).
 
 | Nomes | Níveis | Unidade | Significado |
 |---|---|---|---|
-| `deferrable_appliance_service_completed_cycles{,_business_as_usual,_delta_to_business_as_usual}_count` | building, district | count | Ciclos que executaram o perfil completo; `_business_as_usual` e `_delta_to_business_as_usual` conforme as regras comuns. |
-| `deferrable_appliance_service_missed_cycles{,_business_as_usual,_delta_to_business_as_usual}_count` | building, district | count | Ciclos não iniciados até ao último passo de arranque, mais os ciclos em curso interrompidos por um corte de energia; variantes BAU conforme as regras comuns. |
-| `deferrable_appliance_service_service_level{,_business_as_usual,_delta_to_business_as_usual}_ratio` | building, district | ratio | concluídos / (concluídos + falhados), indefinido quando ambos são 0; o delta fica indefinido quando um dos lados o está. |
-| `deferrable_appliance_service_served_energy_total{,_business_as_usual,_delta_to_business_as_usual}_kwh` | building, district | kWh | Energia nominal dos ciclos concluídos, a partir dos perfis pedidos, não medida; variantes BAU conforme as regras comuns. |
-| `deferrable_appliance_service_unserved_energy_total{,_business_as_usual,_delta_to_business_as_usual}_kwh` | building, district | kWh | Energia nominal completa dos ciclos falhados, incluindo a parte consumida antes de uma interrupção; variantes BAU conforme as regras comuns. |
+| `deferrable_appliance_service_completed_cycles_count` | building, district | count | **Legada**; linha canónica: `deferrable_appliance_audit_completed_count`. Ciclos que executaram o perfil completo. Linha legada; a contagem auditada é `deferrable_appliance_audit_completed_count`. |
+| `deferrable_appliance_service_completed_cycles{_business_as_usual,_delta_to_business_as_usual}_count` | building, district | count | Ciclos que executaram o perfil completo; `_business_as_usual` e `_delta_to_business_as_usual` conforme as regras comuns. |
+| `deferrable_appliance_service_missed_cycles_count` | building, district | count | **Legada**; linha canónica: `deferrable_appliance_audit_missed_count`. Ciclos não iniciados até ao último passo de arranque, mais os ciclos em curso interrompidos por um corte de energia. Linha legada; a contagem auditada é `deferrable_appliance_audit_missed_count`. |
+| `deferrable_appliance_service_missed_cycles{_business_as_usual,_delta_to_business_as_usual}_count` | building, district | count | Ciclos não iniciados até ao último passo de arranque, mais os ciclos em curso interrompidos por um corte de energia; variantes BAU conforme as regras comuns. |
+| `deferrable_appliance_service_service_level_ratio` | building, district | ratio | **Legada**; linha canónica: `deferrable_appliance_audit_resolved_completion_ratio`. concluídos / (concluídos + falhados), indefinido quando ambos são 0. Linha legada; a taxa auditada é `deferrable_appliance_audit_resolved_completion_ratio`, que conta também os ciclos cancelados. |
+| `deferrable_appliance_service_service_level{_business_as_usual,_delta_to_business_as_usual}_ratio` | building, district | ratio | concluídos / (concluídos + falhados), indefinido quando ambos são 0; o delta fica indefinido quando um dos lados o está. |
+| `deferrable_appliance_service_served_energy_total_kwh` | building, district | kWh | **Legada**; linha canónica: `deferrable_appliance_audit_served_energy_kwh`. Energia nominal dos ciclos concluídos, a partir dos perfis pedidos, não medida. Linha legada; a energia auditada, medida, é `deferrable_appliance_audit_served_energy_kwh`. |
+| `deferrable_appliance_service_served_energy_total{_business_as_usual,_delta_to_business_as_usual}_kwh` | building, district | kWh | Energia nominal dos ciclos concluídos, a partir dos perfis pedidos, não medida; variantes BAU conforme as regras comuns. |
+| `deferrable_appliance_service_unserved_energy_total_kwh` | building, district | kWh | **Legada**; linha canónica: `deferrable_appliance_audit_final_unserved_energy_kwh`. Energia nominal completa dos ciclos falhados, incluindo a parte consumida antes de uma interrupção. Linha legada; a energia auditada é `deferrable_appliance_audit_final_unserved_energy_kwh`. |
+| `deferrable_appliance_service_unserved_energy_total{_business_as_usual,_delta_to_business_as_usual}_kwh` | building, district | kWh | Energia nominal completa dos ciclos falhados, incluindo a parte consumida antes de uma interrupção; variantes BAU conforme as regras comuns. |
 | `deferrable_appliance_service_average_start_delay{,_business_as_usual,_delta_to_business_as_usual}_hours` | building, district | hours | Média, sobre os ciclos concluídos, de (arranque − arranque mais cedo) em horas; indefinida quando nenhum ciclo foi concluído. |
 | `deferrable_appliance_ratio_to_business_as_usual_{completed_cycles,missed_cycles,service_level,served_energy_total,unserved_energy_total,average_start_delay}_ratio` | building, district | ratio | Valor do controlo sobre o do BAU; indefinido quando os seus próprios dois totais são zero, mesmo que houvesse ciclos devidos (#305), e quando o valor BAU é zero ou um dos valores é indefinido. |
 
@@ -1006,10 +1017,11 @@ Equações e regras: [Conforto e resiliência](kpis_reference.md#conforto-e-resi
 
 | Nomes | Níveis | Unidade | Significado |
 |---|---|---|---|
-| `comfort_resilience_discomfort_{overall,cold,hot}_ratio` | building, district | ratio | Fração dos passos ocupados avaliados demasiado frios (T < T_heat − banda), demasiado quentes (T > T_cool + banda) ou qualquer dos dois (`overall`); indefinida sem passos ocupados avaliados. O valor do distrito é a média dos edifícios; para comparar controladores use `thermal_service_audit_discomfort_ratio`. |
+| `comfort_resilience_discomfort_overall_ratio` | building, district | ratio | **Legada**; linha canónica: `thermal_service_audit_discomfort_ratio`. Fração dos passos ocupados avaliados demasiado frios (T < T_heat − banda) ou demasiado quentes (T > T_cool + banda); indefinida sem passos ocupados avaliados. O valor do distrito é a média dos edifícios; para comparar controladores use `thermal_service_audit_discomfort_ratio`. |
+| `comfort_resilience_discomfort_{cold,hot}_ratio` | building, district | ratio | Fração dos passos ocupados avaliados demasiado frios (T < T_heat − banda) ou demasiado quentes (T > T_cool + banda); indefinida sem passos ocupados avaliados. O valor do distrito é a média dos edifícios. |
 | `comfort_resilience_discomfort_{cold,hot}_delta_{min,max,average}_c` | building, district | degC | Distância mínima, máxima e média ao ponto de consigna nos passos demasiado frios (T_heat − T) ou demasiado quentes (T − T_cool); sempre positiva e maior do que a banda, indefinida sem tais passos. O valor do distrito é a média dos edifícios, não um mínimo ou máximo do distrito. |
-| `comfort_resilience_resilience_one_minus_thermal_ratio` | building, district | ratio | Razão de desconforto global restrita aos passos ocupados durante um corte de energia; indefinida sem passos ocupados em corte avaliados. Igual, por edifício, a `thermal_service_audit_outage_discomfort_ratio`, mas média simples no distrito. |
-| `comfort_resilience_resilience_unserved_energy_{outage,annual}_normalized_ratio` | building, district | ratio | Energia de serviço não servida (arrefecimento, aquecimento, AQS e carga não deslocável) sobre a energia de serviço esperada, nos passos com corte (`outage`) ou em todos os passos (`annual`). Vale 0, e não indefinido, quando a energia esperada é nula; a variante de corte é 0 em corridas sem cortes. |
+| `comfort_resilience_resilience_one_minus_thermal_ratio` | building, district | ratio | **Legada**; linha canónica: `thermal_service_audit_outage_discomfort_ratio`. Razão de desconforto global restrita aos passos ocupados durante um corte de energia; indefinida sem passos ocupados em corte avaliados. Igual, por edifício, a `thermal_service_audit_outage_discomfort_ratio`, mas média simples no distrito. |
+| `comfort_resilience_resilience_unserved_energy_{outage,annual}_normalized_ratio` | building, district | ratio | **Legada**; linha canónica: `thermal_service_audit_{outage_unserved_service,unserved_service}_ratio`. Energia de serviço não servida (arrefecimento, aquecimento, AQS e carga não deslocável) sobre a energia de serviço esperada, nos passos com corte (`outage`) ou em todos os passos (`annual`). Vale 0, e não indefinido, quando a energia esperada é nula; a variante de corte é 0 em corridas sem cortes. |
 
 <details>
 <summary>Todos os 24 nomes</summary>
@@ -1145,9 +1157,9 @@ Equações e regras: [Equidade](kpis_reference.md#equidade).
 | Nomes | Níveis | Unidade | Significado |
 |---|---|---|---|
 | `equity_benefit_relative_percent` | building | percent | 100 · (B − C) / B, sendo C e B os custos totais do edifício, sem truncagem, com controlo e na condição de referência convencional (não o BAU), liquidados pelo mercado comunitário quando este está ativo; positivo é poupança, indefinido quando B ≤ 0. Só ao nível do edifício. |
-| `equity_distribution_gini_benefit_ratio` | district | ratio | Coeficiente de Gini dos benefícios dos edifícios truncados em 0; indefinido sem benefícios definidos ou com todos os benefícios truncados nulos. Mesmo valor que o canónico `equity_audit_positive_benefit_gini_ratio`. |
-| `equity_distribution_top20_benefit_ratio` | district | ratio | Fração do benefício truncado total detida pelos ceil(20 %) edifícios com maior benefício (pelo menos um); mesma regra de indefinição que o Gini. |
-| `equity_distribution_losers_percent` | district | percent | Percentagem dos edifícios com benefício definido cujo benefício é negativo (custo acima da referência). |
+| `equity_distribution_gini_benefit_ratio` | district | ratio | **Obsoleta**, alias de `equity_audit_positive_benefit_gini_ratio`. Coeficiente de Gini dos benefícios dos edifícios truncados em 0; indefinido sem benefícios definidos ou com todos os benefícios truncados nulos. Mesmo valor que o canónico `equity_audit_positive_benefit_gini_ratio`. |
+| `equity_distribution_top20_benefit_ratio` | district | ratio | **Obsoleta**, alias de `equity_audit_positive_benefit_top20_ratio`. Fração do benefício truncado total detida pelos ceil(20 %) edifícios com maior benefício (pelo menos um); mesma regra de indefinição que o Gini. |
+| `equity_distribution_losers_percent` | district | percent | **Obsoleta**, alias de `equity_audit_losers_percent`. Percentagem dos edifícios com benefício definido cujo benefício é negativo (custo acima da referência). |
 | `equity_distribution_bpr_asset_poor_over_rich_ratio` | district | ratio | Benefício truncado médio dos edifícios `asset_poor` sobre o dos edifícios `asset_rich`; indefinido salvo se todos os edifícios tiverem `equity_group` com uma destas duas etiquetas, ambos os grupos tiverem benefício definido e a média `asset_rich` for positiva. |
 
 <details>

@@ -1,5 +1,5 @@
 month,hour,day_type,daylight_savings_status,indoor_dry_bulb_temperature,average_unmet_cooling_setpoint_difference,indoor_relative_humidity,non_shiftable_load,dhw_demand,cooling_demand,heating_demand,solar_generation
-8,0,1,0,,,,2.2758,0.0,0.0,0.0,0.0
+7,24,7,0,,,,2.2758,0.0,0.0,0.0,0.0
 8,1,1,0,,,,0.85116667,0.0,0.0,0.0,0.0
 8,2,1,0,,,,0.8346,0.0,0.0,0.0,0.0
 8,3,1,0,,,,0.83816665,0.0,0.0,0.0,0.0
