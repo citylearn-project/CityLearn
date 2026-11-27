@@ -20,8 +20,6 @@ REPEATED_PERIODS = {
     "quebec_neighborhood_with_demand_response_set_points": 90,
     "quebec_neighborhood_without_demand_response_set_points": 90,
 }
-# The Portugal datasets code day_type 1 for weekends and holidays and 2-6 for Monday to Friday.
-OWN_DAY_TYPE = {"pt_rec_4", "pt_rec_15", "pt_rec_30", "pt_rec_100"}
 
 
 def _calendar(name):
@@ -57,7 +55,7 @@ def test_export_clock_of_every_bundled_dataset_agrees_with_its_calendar_columns(
         assert stamp.hour == (int(row["hour"]) - 1) % 24, (index, stamp)  # hour 1 is 00:00
         if "minutes" in frame:
             assert stamp.minute == row["minutes"], (index, stamp)
-        if name not in OWN_DAY_TYPE and 1 <= row["day_type"] <= 7:
+        if 1 <= row["day_type"] <= 7:
             assert stamp.isoweekday() == row["day_type"], (index, stamp)
 
 
