@@ -55,6 +55,13 @@ de serviços em cada um, identifique as suas tabelas de KPIs e cruze
 cenários estocásticos emparelhados. Mantenha os valores em falta ou não
 aplicáveis em falta, e não como zero.
 
+Para um portefólio `MultiCommunityEnv`, `mc.scorecard(level="portfolio")` devolve
+as mesmas linhas por omissão agregadas sobre as comunidades (`portfolio_*`), e
+`mc.scorecard()` acrescenta as linhas de cada comunidade. Para deixar de fora as
+linhas legadas e obsoletas quando constrói a sua própria seleção, mantenha as
+linhas cujo `status` é `current` ou `canonical`; uma linha legada indica a sua
+linha canónica em `replacement`.
+
 ## Duas referências diferentes
 
 O guia de [Baselines](baselines.md) explica a política BAU nativa, os seus

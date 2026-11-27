@@ -284,6 +284,7 @@ class CityLearnBusinessAsUsualBaselineService:
             central_agent=True,
             random_seed=getattr(env, '_initialization_seed', env.random_seed),
             random_stream_version=env.random_stream_version,
+            random_stream_namespace=getattr(env, 'random_stream_namespace', None),
             offline=getattr(env, 'offline', False),
             time_step_ratio=getattr(env, 'time_step_ratio', None),
             time_step_ratio_mode=getattr(env, 'time_step_ratio_mode', None),

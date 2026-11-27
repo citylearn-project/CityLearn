@@ -1,6 +1,10 @@
 # Source of the KPI catalogue (docs/KPI_V2_TREE.md and docs/pt/KPI_V2_TREE.md).
 # Every name evaluate_v2() emits must match exactly one entry; tests/test_kpi_catalogue.py checks this.
 # After editing, run: python scripts/docs/kpi_catalogue.py
+# `status: legacy` marks an older definition that a canonical row now answers (kept so earlier results stay
+# comparable); `status: deprecated` marks an alias that returns the same value as its canonical row. Both name that
+# row in `replacement`, a pattern that expands to one name per name of the entry, or to a single name. Rows named as
+# a replacement get the status `canonical`; every other row is `current`.
 - id: cost
   title:
     en: Cost
@@ -390,12 +394,21 @@
   - names: solar_self_consumption_community_market_local_share_of_demand_ratio
     levels:
     - building
+    unit: ratio
+    en: 'Local import over local import plus grid import after local trading (emitted in every run, undefined
+      only when the denominator is 0); the only share of demand at building level.'
+    pt: 'Importação local sobre importação local mais importação da rede depois da troca local (emitido em todas
+      as simulações, indefinido só quando o denominador é 0); a única quota da procura ao nível do edifício.'
+  - names: solar_self_consumption_community_market_local_share_of_demand_ratio
+    levels:
     - district
     unit: ratio
+    status: deprecated
+    replacement: solar_self_consumption_community_market_import_share_ratio
     en: 'Deprecated alias, kept for compatibility: same formula as `import_share` (emitted in every run, undefined
-      only when the denominator is 0). At building level it is the only share of demand.'
+      only when the denominator is 0).'
     pt: 'Alias obsoleto, mantido por compatibilidade: a mesma fórmula de `import_share` (emitido em todas as simulações,
-      indefinido só quando o denominador é 0). Ao nível do edifício é a única quota da procura.'
+      indefinido só quando o denominador é 0).'
   - names: solar_self_consumption_community_market_local_share_of_export_ratio
     levels:
     - building
@@ -536,6 +549,8 @@
     - building
     - district
     unit: count
+    status: legacy
+    replacement: ev_departure_audit_{target,min_acceptable,within_tolerance}_service_met_count
     en: Counted departures whose SOC met the target, the minimum acceptable SOC (target minus the service tolerance)
       or the symmetric tolerance band around the target.
     pt: Partidas contadas cujo SOC cumpriu o alvo, o SOC mínimo aceitável (alvo menos a tolerância de serviço) ou
@@ -545,6 +560,8 @@
     - building
     - district
     unit: count
+    status: legacy
+    replacement: ev_departure_audit_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count
     en: Counted departures whose threshold was or was not reachable by charging at maximum power during the connection;
       legacy rule, in which missing data counts as feasible, so feasible + infeasible equals the departure count.
     pt: Partidas contadas cujo limiar era ou não alcançável carregando à potência máxima durante a ligação; regra
@@ -554,6 +571,8 @@
     - building
     - district
     unit: ratio
+    status: legacy
+    replacement: ev_departure_audit_{target,min_acceptable,within_tolerance}_service_observed_ratio
     en: Share of counted departures that met the target, the minimum acceptable SOC or the tolerance band; undefined
       without departures.
     pt: Fração das partidas contadas que cumpriram o alvo, o SOC mínimo aceitável ou a banda de tolerância; indefinida
@@ -563,6 +582,8 @@
     - building
     - district
     unit: ratio
+    status: legacy
+    replacement: ev_departure_audit_{target,min_acceptable,within_tolerance}_service_feasible_ratio
     en: The same share over the departures feasible for that threshold under the legacy rule; undefined when none
       is feasible.
     pt: A mesma fração sobre as partidas viáveis para esse limiar segundo a regra antiga; indefinida quando nenhuma
@@ -784,12 +805,27 @@
     pt: Equipamentos flexíveis
   intro:
     en: Cycle service of deferrable (flexible) appliances from their cycle states and nominal cycle energies. Every
-      member emits these rows; without appliances, counts and energies are 0 and rates are undefined.
+      member emits these rows; without appliances, counts and energies are 0 and rates are undefined. The control
+      counts, service level and energies are legacy rows; the flexible-appliance audit (`deferrable_appliance_audit_*`)
+      is canonical. These rows keep the only comparison with the BAU.
     pt: Serviço dos ciclos dos equipamentos flexíveis (diferíveis) a partir dos estados dos ciclos e das energias
       nominais dos ciclos. Todos os membros emitem estas linhas; sem equipamentos, as contagens e energias são 0
-      e as taxas ficam indefinidas.
+      e as taxas ficam indefinidas. As contagens, o nível de serviço e as energias do controlo são linhas legadas;
+      a auditoria dos equipamentos flexíveis (`deferrable_appliance_audit_*`) é a canónica. Estas linhas guardam a
+      única comparação com o BAU.
   kpis:
-  - names: deferrable_appliance_service_completed_cycles{,_business_as_usual,_delta_to_business_as_usual}_count
+  - names: deferrable_appliance_service_completed_cycles_count
+    levels:
+    - building
+    - district
+    unit: count
+    status: legacy
+    replacement: deferrable_appliance_audit_completed_count
+    en: Cycles that ran their full profile. Legacy; the audited count is
+      `deferrable_appliance_audit_completed_count`.
+    pt: Ciclos que executaram o perfil completo. Linha legada; a contagem auditada é
+      `deferrable_appliance_audit_completed_count`.
+  - names: deferrable_appliance_service_completed_cycles{_business_as_usual,_delta_to_business_as_usual}_count
     levels:
     - building
     - district
@@ -798,7 +834,18 @@
       rules.
     pt: Ciclos que executaram o perfil completo; `_business_as_usual` e `_delta_to_business_as_usual` conforme as
       regras comuns.
-  - names: deferrable_appliance_service_missed_cycles{,_business_as_usual,_delta_to_business_as_usual}_count
+  - names: deferrable_appliance_service_missed_cycles_count
+    levels:
+    - building
+    - district
+    unit: count
+    status: legacy
+    replacement: deferrable_appliance_audit_missed_count
+    en: Cycles not started by their latest start step, plus running cycles interrupted by a power outage. Legacy;
+      the audited count is `deferrable_appliance_audit_missed_count`.
+    pt: Ciclos não iniciados até ao último passo de arranque, mais os ciclos em curso interrompidos por um corte
+      de energia. Linha legada; a contagem auditada é `deferrable_appliance_audit_missed_count`.
+  - names: deferrable_appliance_service_missed_cycles{_business_as_usual,_delta_to_business_as_usual}_count
     levels:
     - building
     - district
@@ -807,7 +854,18 @@
       as in the shared rules.
     pt: Ciclos não iniciados até ao último passo de arranque, mais os ciclos em curso interrompidos por um corte
       de energia; variantes BAU conforme as regras comuns.
-  - names: deferrable_appliance_service_service_level{,_business_as_usual,_delta_to_business_as_usual}_ratio
+  - names: deferrable_appliance_service_service_level_ratio
+    levels:
+    - building
+    - district
+    unit: ratio
+    status: legacy
+    replacement: deferrable_appliance_audit_resolved_completion_ratio
+    en: completed / (completed + missed), undefined when both are 0. Legacy; the audited rate is
+      `deferrable_appliance_audit_resolved_completion_ratio`, which also counts cancelled cycles.
+    pt: concluídos / (concluídos + falhados), indefinido quando ambos são 0. Linha legada; a taxa auditada é
+      `deferrable_appliance_audit_resolved_completion_ratio`, que conta também os ciclos cancelados.
+  - names: deferrable_appliance_service_service_level{_business_as_usual,_delta_to_business_as_usual}_ratio
     levels:
     - building
     - district
@@ -815,7 +873,18 @@
     en: completed / (completed + missed), undefined when both are 0; the delta is undefined when either side is.
     pt: concluídos / (concluídos + falhados), indefinido quando ambos são 0; o delta fica indefinido quando um dos
       lados o está.
-  - names: deferrable_appliance_service_served_energy_total{,_business_as_usual,_delta_to_business_as_usual}_kwh
+  - names: deferrable_appliance_service_served_energy_total_kwh
+    levels:
+    - building
+    - district
+    unit: kWh
+    status: legacy
+    replacement: deferrable_appliance_audit_served_energy_kwh
+    en: Nominal energy of the completed cycles, from their requested profiles, not metered. Legacy; the audited,
+      metered energy is `deferrable_appliance_audit_served_energy_kwh`.
+    pt: Energia nominal dos ciclos concluídos, a partir dos perfis pedidos, não medida. Linha legada; a energia
+      auditada, medida, é `deferrable_appliance_audit_served_energy_kwh`.
+  - names: deferrable_appliance_service_served_energy_total{_business_as_usual,_delta_to_business_as_usual}_kwh
     levels:
     - building
     - district
@@ -824,7 +893,18 @@
       shared rules.
     pt: Energia nominal dos ciclos concluídos, a partir dos perfis pedidos, não medida; variantes BAU conforme as
       regras comuns.
-  - names: deferrable_appliance_service_unserved_energy_total{,_business_as_usual,_delta_to_business_as_usual}_kwh
+  - names: deferrable_appliance_service_unserved_energy_total_kwh
+    levels:
+    - building
+    - district
+    unit: kWh
+    status: legacy
+    replacement: deferrable_appliance_audit_final_unserved_energy_kwh
+    en: Full nominal energy of the missed cycles, including any part consumed before an interruption. Legacy; the
+      audited energy is `deferrable_appliance_audit_final_unserved_energy_kwh`.
+    pt: Energia nominal completa dos ciclos falhados, incluindo a parte consumida antes de uma interrupção. Linha
+      legada; a energia auditada é `deferrable_appliance_audit_final_unserved_energy_kwh`.
+  - names: deferrable_appliance_service_unserved_energy_total{_business_as_usual,_delta_to_business_as_usual}_kwh
     levels:
     - building
     - district
@@ -1021,17 +1101,28 @@
     pt: Linhas legadas de conforto térmico e de resiliência a cortes de energia de cada edifício, sempre emitidas;
       o valor do distrito é a média simples dos edifícios, e o KPI de desconforto canónico é `district_thermal_service_audit_discomfort_ratio`.
   kpis:
-  - names: comfort_resilience_discomfort_{overall,cold,hot}_ratio
+  - names: comfort_resilience_discomfort_overall_ratio
     levels:
     - building
     - district
     unit: ratio
-    en: Share of evaluated occupied steps that are too cold (T < T_heat − band), too hot (T > T_cool + band) or
-      either (`overall`); undefined when no occupied step is evaluated. The district value is the mean of the building
-      values; for controller comparison use `thermal_service_audit_discomfort_ratio`.
-    pt: Fração dos passos ocupados avaliados demasiado frios (T < T_heat − banda), demasiado quentes (T > T_cool
-      + banda) ou qualquer dos dois (`overall`); indefinida sem passos ocupados avaliados. O valor do distrito é
-      a média dos edifícios; para comparar controladores use `thermal_service_audit_discomfort_ratio`.
+    status: legacy
+    replacement: thermal_service_audit_discomfort_ratio
+    en: Share of evaluated occupied steps that are too cold (T < T_heat − band) or too hot (T > T_cool + band);
+      undefined when no occupied step is evaluated. The district value is the mean of the building values; for
+      controller comparison use `thermal_service_audit_discomfort_ratio`.
+    pt: Fração dos passos ocupados avaliados demasiado frios (T < T_heat − banda) ou demasiado quentes (T > T_cool
+      + banda); indefinida sem passos ocupados avaliados. O valor do distrito é a média dos edifícios; para comparar
+      controladores use `thermal_service_audit_discomfort_ratio`.
+  - names: comfort_resilience_discomfort_{cold,hot}_ratio
+    levels:
+    - building
+    - district
+    unit: ratio
+    en: Share of evaluated occupied steps that are too cold (T < T_heat − band) or too hot (T > T_cool + band);
+      undefined when no occupied step is evaluated. The district value is the mean of the building values.
+    pt: Fração dos passos ocupados avaliados demasiado frios (T < T_heat − banda) ou demasiado quentes (T > T_cool
+      + banda); indefinida sem passos ocupados avaliados. O valor do distrito é a média dos edifícios.
   - names: comfort_resilience_discomfort_{cold,hot}_delta_{min,max,average}_c
     levels:
     - building
@@ -1048,6 +1139,8 @@
     - building
     - district
     unit: ratio
+    status: legacy
+    replacement: thermal_service_audit_outage_discomfort_ratio
     en: Overall discomfort ratio restricted to occupied steps during a power outage; undefined when no occupied
       outage step is evaluated. Same value per building as `thermal_service_audit_outage_discomfort_ratio`, but
       a plain mean at district level.
@@ -1059,6 +1152,8 @@
     - building
     - district
     unit: ratio
+    status: legacy
+    replacement: thermal_service_audit_{outage_unserved_service,unserved_service}_ratio
     en: Unserved service energy (cooling, heating, DHW and non-shiftable load) over expected service energy, over
       outage steps (`outage`) or all steps (`annual`). Reads 0, not undefined, when the expected energy is zero,
       so the outage variant is 0 in runs without outages.
@@ -1207,6 +1302,8 @@
     levels:
     - district
     unit: ratio
+    status: deprecated
+    replacement: equity_audit_positive_benefit_gini_ratio
     en: Gini coefficient of the building benefits clipped at 0; undefined when no building has a defined benefit
       or all clipped benefits are 0. Same value as the canonical `equity_audit_positive_benefit_gini_ratio`.
     pt: Coeficiente de Gini dos benefícios dos edifícios truncados em 0; indefinido sem benefícios definidos ou
@@ -1215,6 +1312,8 @@
     levels:
     - district
     unit: ratio
+    status: deprecated
+    replacement: equity_audit_positive_benefit_top20_ratio
     en: Share of the summed clipped benefit held by the ceil(20 %) of buildings with the largest benefit (at least
       one); same undefined rule as the Gini.
     pt: Fração do benefício truncado total detida pelos ceil(20 %) edifícios com maior benefício (pelo menos um);
@@ -1223,6 +1322,8 @@
     levels:
     - district
     unit: percent
+    status: deprecated
+    replacement: equity_audit_losers_percent
     en: Percentage of buildings with a defined benefit whose benefit is negative (cost above the baseline).
     pt: Percentagem dos edifícios com benefício definido cujo benefício é negativo (custo acima da referência).
   - names: equity_distribution_bpr_asset_poor_over_rich_ratio

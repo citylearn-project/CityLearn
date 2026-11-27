@@ -70,8 +70,8 @@ Para 15 segundos:
 | Coluna | Obrigatória | Unidade | Significado |
 |---|---:|---:|---|
 | `month` | sim | 1-12 | Mês. |
-| `hour` | sim | 1-24 | Hora. |
-| `day_type` | sim | 1-8 | Dia da semana ou dia especial. |
+| `hour` | sim | 1-24 | Hora; a hora 1 começa às 00:00 e a hora 24 às 23:00. Os instantes exportados, a janela de avaliação e as observações de calendário leem-na assim ([Instantes exportados](running_simulations.md#instantes-exportados)). |
+| `day_type` | sim | 1-8 | Dia da semana, 1 segunda-feira a 7 domingo, ou 8 para um dia especial. |
 | `minutes` | recomendada abaixo da hora | 0-59 | Minuto. |
 | `seconds` | recomendada abaixo do minuto | 0-59 | Segundo. |
 | `indoor_dry_bulb_temperature` | sim | C | Temperatura interior. |

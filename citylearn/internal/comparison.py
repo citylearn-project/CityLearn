@@ -204,6 +204,7 @@ def context(env, data_files):
                 completed_intervals=env._provenance_service.steps,
                 seconds_per_time_step=env.seconds_per_time_step, time_step_ratio=env.time_step_ratio,
                 random_seed=env.random_seed, ev_drift_seed=getattr(env, '_ev_drift_seed', None),
+                random_stream_namespace=getattr(env, 'random_stream_namespace', None),
                 initial_inventory=getattr(env, '_comparison_initial_inventory', None),
                 service_tolerances=dict(ev_within=env.ev_departure_within_tolerance,
                                         ev_service=env.ev_departure_service_tolerance),
@@ -265,9 +266,63 @@ def _monitor_status(left, right):
     return 'one_sided'
 
 
+# The manifest entries that compare_manifests() reads; a portfolio manifest keeps them for each community.
+MANIFEST_EVIDENCE_KEYS = (
+    'comparison_context', 'evaluation_window', 'district_electrical_service', 'controller_identity',
+    'input_file_changes', 'unresolved_file_references', 'data_files_sha256', 'final_inventory',
+    'business_as_usual_reference', 'energy_accounting', 'deferrable_service_audit', 'kpi_export',
+)
+MULTI_COMMUNITY_KIND = 'multi_community'
+
+
+def manifest_evidence(manifest):
+    """The part of an export manifest that :func:`compare_manifests` reads."""
+    return {key: deepcopy(manifest.get(key)) for key in MANIFEST_EVIDENCE_KEYS if key in manifest}
+
+
+def _compare_portfolio_manifests(left, right, mode):
+    """Compare two `MultiCommunityEnv` export manifests community by community.
+
+    The portfolios pair when they have the same communities, weights and portfolio rules and every community
+    pairs with its namesake. A community's mismatches and missing evidence are listed as
+    ``<community_id>:<item>``.
+    """
+    kinds = [manifest.get('kind') for manifest in (left, right)]
+    mismatches, missing, declared, communities = [], [], [], {}
+    if kinds[0] != kinds[1]:
+        mismatches.append('export_kind')
+    else:
+        for key in ('community_ids', 'weights', 'portfolio_aggregation'):
+            if left.get(key) is None or right.get(key) is None:
+                missing.append(key)
+            elif left[key] != right[key]:
+                mismatches.append(key)
+        a, b = (manifest.get('communities') or {} for manifest in (left, right))
+        for community_id in sorted(set(a) & set(b)):
+            report = compare_manifests((a[community_id] or {}).get('comparison_evidence') or {},
+                                       (b[community_id] or {}).get('comparison_evidence') or {}, mode=mode)
+            communities[community_id] = report
+            mismatches.extend(f'{community_id}:{item}' for item in report['mismatches'])
+            missing.extend(f'{community_id}:{item}' for item in report['missing_evidence'])
+            declared.extend(f'{community_id}:{item}' for item in report['declared_differences'])
+    status = 'incompatible' if mismatches else ('unknown' if missing else 'paired')
+    first = next(iter(communities.values()), {})
+    default = dict(status='disabled', comparable=False, left=None, right=None)
+    return dict(definition_version=DEFINITION_VERSION, mode=mode, status=status, kind=MULTI_COMMUNITY_KIND,
+                permitted_claim=('controller_difference' if mode == 'controller' else 'sharing_difference')
+                if status == 'paired' else None,
+                mismatches=sorted(set(mismatches)), missing_evidence=sorted(set(missing)),
+                declared_differences=declared, communities=communities,
+                evaluation_window=first.get('evaluation_window', default),
+                district_electrical_service=first.get('district_electrical_service', default),
+                left_controller=left.get('controller_identity'), right_controller=right.get('controller_identity'))
+
+
 def compare_manifests(left, right, mode='controller'):
     if mode not in ('controller', 'sharing'):
         raise ValueError('Comparison mode must be controller or sharing')
+    if MULTI_COMMUNITY_KIND in (left.get('kind'), right.get('kind')):
+        return _compare_portfolio_manifests(left, right, mode)
     a, b = left.get('comparison_context'), right.get('comparison_context')
     missing, mismatches, declared = [], [], []
     default_window = {'enabled': False, 'start': None, 'end': None, 'timezone': None}
@@ -315,6 +370,10 @@ def compare_manifests(left, right, mode='controller'):
         # Exports from before the setting existed ran without it.
         if bool(a.get('ev_soc_carryover', False)) != bool(b.get('ev_soc_carryover', False)):
             mismatches.append('ev_soc_carryover')
+        # Two stream namespaces draw different random values from the same seed; exports from before
+        # the option existed had none.
+        if a.get('random_stream_namespace') != b.get('random_stream_namespace'):
+            mismatches.append('random_stream_namespace')
     for manifest in (left, right):
         identity = manifest.get('controller_identity') or {}
         if not identity.get('implementation') or not identity.get('version') or identity.get('parameters') is None or not identity.get('observation_access'):
@@ -337,6 +396,10 @@ def compare_manifests(left, right, mode='controller'):
             missing.append(key)
         elif left[key] != right[key]:
             mismatches.append(key)
+    # Rounding changes the exported values; exports from before kpi_export was recorded are not checked.
+    exports = [manifest.get('kpi_export') for manifest in (left, right)]
+    if all(exports) and exports[0].get('kpi_round_decimals') != exports[1].get('kpi_round_decimals'):
+        mismatches.append('kpi_round_decimals')
     status = 'incompatible' if mismatches else ('unknown' if missing else 'paired')
     return dict(definition_version=DEFINITION_VERSION, mode=mode, status=status,
                 permitted_claim=('controller_difference' if mode == 'controller' else 'sharing_difference') if status == 'paired' else None,
@@ -382,7 +445,7 @@ def compare_exports(left_path, right_path, mode='controller'):
     report['kpis'] = rows
     report['unpaired_window_kpis'] = sorted(unpaired_window_kpis)
     report['unpaired_feeder_kpis'] = sorted(unpaired_feeder_kpis)
-    report['outcome_summary'] = [r for r in rows if r['name'].rsplit(':', 1)[-1]=='District' and any(
+    report['outcome_summary'] = [r for r in rows if r['name'].rsplit(':', 1)[-1] in ('District', 'Portfolio') and any(
         text in r['kpi'] for text in ('cost_total_control', 'departure_audit_', 'deferrable_appliance_audit_',
                                      'provenance_pv_useful_', 'provenance_external_purchase_emissions'))]
     report['observed_differences'] = [r['kpi'] for r in report['outcome_summary']

@@ -1,6 +1,7 @@
 """Rendering/export behaviour tests (pytest version)."""
 
 import csv
+import datetime
 import json
 from pathlib import Path
 import shutil
@@ -494,10 +495,11 @@ def test_default_start_date_used_for_render_timestamp():
         date_part, time_part = timestamp.split('T')
         year_str, month_str, day_str = date_part.split('-')
 
-        assert int(year_str) == env.render_start_date.year == 2024
-        assert int(day_str) == env.render_start_date.day
-        assert int(month_str) == env.render_start_date.month
-        assert time_part == "00:00:00"
+        # Without start_date the date comes from the calendar columns: row 0 is month 7, hour 24 (23:00),
+        # day_type 7 (Sunday) before the first row of August, so 31 July 2022 (#460).
+        assert (int(year_str), int(month_str), int(day_str)) == (2022, 7, 31)
+        assert env.render_start_date == datetime.date(2022, 7, 31)
+        assert time_part == "23:00:00"
     finally:
         env.close()
 
@@ -536,8 +538,9 @@ def test_render_timestamp_advances_with_seconds_per_time_step():
         t0 = env._get_iso_timestamp()
         env.step([np.zeros(env.action_space[0].shape[0], dtype="float32")])
         t1 = env._get_iso_timestamp()
-        assert t0.endswith("00:00:00")
-        assert t1.endswith("00:01:00")
+        # The time of day of row 0 comes from its hour column: 23:00.
+        assert t0.endswith("23:00:00")
+        assert t1.endswith("23:01:00")
     finally:
         env.close()
 

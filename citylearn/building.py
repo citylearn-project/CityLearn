@@ -33,6 +33,7 @@ from citylearn.internal.service_energy import (
 from citylearn.occupant import LogisticRegressionOccupant, Occupant
 from citylearn.power_outage import PowerOutage
 from citylearn.preprocessing import Normalize as Normalize, PeriodicNormalization
+from citylearn import random_streams
 from citylearn.utilities import parse_bool
 
 LOGGER = logging.getLogger(__name__)
@@ -3382,8 +3383,11 @@ class Building(Environment):
                 tracker = self.episode_tracker
                 if isinstance(model, PowerOutage):
                     seed = tracker.episode_random_seed
+                    namespace = getattr(self, 'random_stream_namespace', None)
                     model._set_episode_seed(
-                        self.random_seed if seed is None else seed, self.name,
+                        self.random_seed if seed is None else seed,
+                        # The environment's stream namespace keeps the outages of two communities apart.
+                        self.name if namespace is None else [self.name, *random_streams.namespace_parts(namespace)],
                         tracker.episode_start_time_step, tracker.episode_end_time_step,
                         random_stream_version=self.random_stream_version,
                         random_stream_episode=tracker.random_stream_episode,

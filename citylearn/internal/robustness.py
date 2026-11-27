@@ -1390,7 +1390,9 @@ class CityLearnRobustnessService:
     def _noise(self, event: RobustnessEvent, target_key: str, step: int, std: float) -> float:
         if std == 0.0:
             return 0.0
-        payload = f"{self.random_seed}:{event.event_id}:{step}:{target_key}".encode("utf-8")
+        payload = f"{self.random_seed}:{event.event_id}:{step}:{target_key}"
+        namespace = getattr(self.env, "random_stream_namespace", None)
+        payload = (payload if namespace is None else f"{payload}:{namespace}").encode("utf-8")
         seed = int.from_bytes(hashlib.sha256(payload).digest()[:4], "little")
         return float(np.random.RandomState(seed).normal(0.0, std))
 

@@ -137,7 +137,7 @@ Todas as comunidades têm de partilhar `seconds_per_time_step`, a duração efet
 | `offline` | bool | `False` | Desativa os recursos de rede alternativos. | Requer datasets locais. |
 | `interface` | `flat`/`entity` | schema/flat | Contrato de observações/ações. | Entity devolve tabelas e arestas. |
 | `topology_mode` | `static`/`dynamic` | schema/static | Ativa os eventos de topologia dinâmica. | Dynamic requer `interface="entity"`. |
-| `start_date` | data/string | schema/2024-01-01 | Data base dos timestamps de render/exportação. | Não altera a física. |
+| `start_date` | data/string | schema, senão de `month` e `day_type` | Data da linha global 0 nos timestamps de render/exportação; a hora do dia vem da coluna `hour` (ver [Instantes exportados](#instantes-exportados)). | Não altera a física. |
 | `render_mode` | `none`/`during`/`end` | `none` | Política de exportação CSV. | `end` é preferível para o desempenho. |
 | `render_session_name` | string | schema/None | Subpasta da sessão de exportação. | Tem de ser relativa. |
 | `export_kpis_on_episode_end` | bool | flag de render | Exporta os KPIs no fim do episódio. | Pode ser ativado sem render completo. |
@@ -153,6 +153,7 @@ Todas as comunidades têm de partilhar `seconds_per_time_step`, a duração efet
 | `check_observation_limits` | bool | schema/False | Valida as observações face aos limites estimados. |
 | `physics_invariant_checks` | bool | schema/False | Executa verificações de invariantes físicos durante a execução. |
 | `metrics_log_interval` | int | schema/0 | Cadência dos registos de métricas de execução. |
+| `random_stream_namespace` | string | None | Acrescentado à chave de todos os fluxos aleatórios; `MultiCommunityEnv` define-o como o `community_id`. |
 
 ## Payloads de observações para a recompensa
 
@@ -359,6 +360,39 @@ As séries temporais normais do episódio são controladas por `render_mode`/`re
 
 Para escolhas exatas no episódio final, mantenha `export_kpis_on_episode_end=False` e chame `export_final_kpis()` depois de o episódio terminar.
 
+### Instantes exportados
+
+Todas as séries temporais exportadas têm uma coluna `timestamp`. Com um ficheiro de calendário
+(`time_axis.calendar_file`), é o instante do calendário convertido para `timezone`, salvo se `start_date` for
+passado a `CityLearnEnv`. Caso contrário, é construído a partir das colunas de calendário dos dados, lidas como as
+leem a janela de avaliação e as observações de calendário:
+
+- A hora do dia da linha global 0 é `hour − 1` horas (a hora 1 começa às 00:00), mais `minutes` e `seconds`.
+- A sua data é `start_date` (argumento ou chave do schema). Sem ela, a data vem das colunas `month` e `day_type`:
+  se o mês muda nos primeiros 32 dias, a primeira linha do novo mês está no seu primeiro dia; caso contrário, a
+  primeira linha está no primeiro dia do seu mês; o ano é o mais recente até 2024 em que essa data cai no dia da
+  semana de `day_type` (1 segunda-feira a 7 domingo) e em que as mudanças de mês dos primeiros 400 dias caem no
+  primeiro dia do mês.
+- Cada linha seguinte está um `seconds_per_time_step` depois. Com `timezone`, os passos são tempo decorrido e os
+  instantes são escritos nessa zona com o seu desvio UTC (`2023-06-27T03:00:00+01:00`), pelo que seguem as
+  mudanças da hora de verão. Sem ela, não têm desvio.
+
+Os datasets incluídos começam em:
+
+| Datasets | Primeiro instante | Notas |
+|---|---|---|
+| `citylearn_challenge_2022_*`, `citylearn_three_phase_*` | `2022-07-31T23:00:00` | A linha 0 é às 23:00 de um domingo de julho (`month=7`, `hour=24`, `day_type=7`). |
+| `citylearn_challenge_2020_climate_zone_*`, `ca_alameda_county_neighborhood`, `tx_travis_county_neighborhood`, `vt_chittenden_county_neighborhood` | `2018-01-01T00:00:00` | Um ano de 365 dias que começa numa segunda-feira. |
+| `citylearn_challenge_2021` | `2015-01-01T00:00:00` | Os seus quatro anos não têm 29 de fevereiro, pelo que a partir de março de 2016 as datas vão um dia à frente de `month` e `day_type`. |
+| `citylearn_challenge_2023_phase_1`, `citylearn_challenge_2023_phase_2_local_evaluation` | `2018-06-01T00:00:00` | |
+| `citylearn_challenge_2023_phase_2_online_evaluation_*`, `citylearn_challenge_2023_phase_3_*` | `2021-06-01T00:00:00` | |
+| `baeda_3dem` | `2020-06-01T00:00:00` | |
+| `quebec_neighborhood_*` | `2018-01-01T00:00:00` | Os dados repetem três vezes um mesmo período de janeiro a março; só o primeiro período coincide com `month` e `day_type`. |
+| `pt_rec_*` | `2023-01-01T00:00:00+00:00` | Hora civil de Lisboa com o seu desvio. O seu `day_type` codifica fins de semana e feriados como 1 e segunda a sexta-feira como 2 a 6. |
+
+Para ler a hora local do dia, guarde os primeiros 19 caracteres, que são iguais com e sem desvio:
+`pd.to_datetime(frame["timestamp"].str[:19])`.
+
 ### Comparar duas execuções exportadas
 
 `export_final_kpis()` escreve `exported_kpis.manifest.json` ao lado do ficheiro de KPIs. `compare_exports(left, right)`
@@ -389,8 +423,9 @@ pelo que basta chamá-la uma vez depois de criar o ambiente; tem de estar defini
 correr, incluindo a exportação automática no fim do episódio quando `export_kpis_on_episode_end=True`. As
 referências baseadas em regras declaram a sua própria identidade através de `agent.comparison_identity()`:
 passe o agente a `env.export_final_kpis(model=agent)` e ela fica registada, com
-`observation_access='entity_observations'`. Com `MultiCommunityEnv`, chame-a em cada comunidade de `mc.envs`,
-cujas exportações próprias contêm os manifestos. `compare_exports(left, right, mode='sharing')` compara o mesmo
+`observation_access='entity_observations'`. Com `MultiCommunityEnv`, chame `mc.set_experiment_identity(...)`,
+que a define em todas as comunidades; `compare_exports()` emparelha então duas exportações de portefólio comunidade
+a comunidade ([exportação multicomunidade](multi_community_reference.md#exportação)). `compare_exports(left, right, mode='sharing')` compara o mesmo
 controlador com a partilha ativa e desativa, e exige também que as duas identidades sejam iguais.
 
 Este exemplo corre um controlador simples com dois valores de parâmetro, exporta as duas execuções e compara-as:

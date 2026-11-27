@@ -8,7 +8,6 @@
   "rolling_episode_split": false,
   "random_episode_split": false,
   "seconds_per_time_step": 3600,
-  "start_date": "2024-08-01",
   "observations": {
     "month": {
       "active": true,

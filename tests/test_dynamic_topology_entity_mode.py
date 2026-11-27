@@ -1006,7 +1006,8 @@ def test_end_mode_exports_respect_dynamic_asset_activity_windows(tmp_path):
         assert removed_battery_file.is_file()
         assert added_battery_file.is_file()
 
-        start_dt = datetime.datetime.combine(env.render_start_date, datetime.time())
+        # Exported times start at the time of day of the first row (#460).
+        start_dt = env._episode_exporter.export_origin()
         start_dt += datetime.timedelta(seconds=int(env.episode_tracker.episode_start_time_step) * env.seconds_per_time_step)
 
         def _step_timestamp(step: int) -> str:

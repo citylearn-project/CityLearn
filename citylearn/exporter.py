@@ -164,13 +164,15 @@ class EpisodeExporter:
         include_business_as_usual: bool = True,
         export_business_as_usual_timeseries: bool = True,
         kpi_round_decimals: Optional[int] = None,
+        include_battery_health_audit: bool = False,
         *,
         evaluated_kpis: Optional[pd.DataFrame] = None,
-    ):
-        """Export episode KPIs to csv.
+    ) -> Mapping[str, Any]:
+        """Export episode KPIs to csv or parquet, with a manifest; return the manifest.
 
-        `evaluated_kpis` is this env's `evaluate_v2(include_business_as_usual=include_business_as_usual)`
-        table when the caller already has it, so it is not evaluated twice.
+        `evaluated_kpis` is this env's `evaluate_v2(include_business_as_usual=include_business_as_usual,
+        include_battery_health_audit=include_battery_health_audit)` table when the caller already has it, so it
+        is not evaluated twice. The manifest records these three export settings under `kpi_export`.
         """
 
         env = self.env
@@ -184,13 +186,19 @@ class EpisodeExporter:
             kpis = evaluated_kpis
             export_env = env
         elif model is not None and getattr(model, 'env', None) is not None:
-            kpis = model.env.evaluate_v2(include_business_as_usual=include_business_as_usual)
+            kpis = model.env.evaluate_v2(
+                include_business_as_usual=include_business_as_usual,
+                include_battery_health_audit=include_battery_health_audit,
+            )
             export_env = model.env.unwrapped
             identity = getattr(model, 'comparison_identity', None)
             if callable(identity):
                 export_env.set_experiment_identity(**identity())
         else:
-            kpis = env.evaluate_v2(include_business_as_usual=include_business_as_usual)
+            kpis = env.evaluate_v2(
+                include_business_as_usual=include_business_as_usual,
+                include_battery_health_audit=include_battery_health_audit,
+            )
             export_env = env
 
         from citylearn.internal.kpi_catalogue import kpi_definitions
@@ -212,6 +220,12 @@ class EpisodeExporter:
         from citylearn.utils.file_handler import FileHandler
         manifest = experiment_manifest(export_env)
         manifest['kpi_definitions'] = definitions
+        # Settings that change which rows the KPI file holds and how its values are written.
+        manifest['kpi_export'] = dict(
+            include_business_as_usual=bool(include_business_as_usual),
+            include_battery_health_audit=bool(include_battery_health_audit),
+            kpi_round_decimals=kpi_round_decimals,
+        )
         FileHandler.write_json(str(Path(file_path).with_suffix('.manifest.json')), manifest)
         FileHandler.write_json(str(Path(file_path).with_suffix('.deferrable_service.json')),
                                export_env.get_deferrable_service_audit())
@@ -219,6 +233,7 @@ class EpisodeExporter:
             FileHandler.write_json(str(Path(file_path).with_suffix('.robustness.json')),
                                    export_env.get_robustness_audit())
         env._final_kpis_exported = True
+        return manifest
 
     def export_business_as_usual_timeseries(self, source_env: "CityLearnEnv" = None):
         """Export a compact time-series audit for the business-as-usual baseline."""
@@ -800,10 +815,14 @@ class EpisodeExporter:
             env.year, env.current_day = timestamp.year, timestamp.day
             return timestamp.isoformat()
 
+        from citylearn.internal.temporal import shift_clock
         start_datetime = env._render_start_datetime
-        timestamp_dt = start_datetime + datetime.timedelta(seconds=env.time_step * env.seconds_per_time_step)
+        timestamp_dt = shift_clock(start_datetime, env.time_step * env.seconds_per_time_step)
         env.year = timestamp_dt.year
         env.current_day = timestamp_dt.day
+
+        if timestamp_dt.tzinfo is not None:
+            return timestamp_dt.isoformat()
 
         return timestamp_dt.strftime("%Y-%m-%dT%H:%M:%S")
 
@@ -861,13 +880,45 @@ class EpisodeExporter:
             except AttributeError:
                 pass
 
+    def export_origin(self) -> datetime.datetime:
+        """Time of global row 0 in exported timestamps when they do not come from a calendar file.
+
+        Its time of day is that of the dataset's calendar columns and its date the `start_date`, or the date
+        that the `month` and `day_type` columns give (#460); see
+        :py:func:`citylearn.internal.temporal.calendar_export_origin`. Aware in the schema `timezone`, if any.
+        An environment without calendar columns starts at midnight of `render_start_date`.
+        """
+
+        env = self.env
+        cached = getattr(env, '_export_origin', None)
+        if cached is not None:
+            return cached
+
+        from citylearn.internal.temporal import calendar_export_origin
+        origin = None
+        if hasattr(env, '_render_start_date_given'):
+            buildings = list(getattr(env, '_all_buildings', None) or getattr(env, 'buildings', None) or [])
+            simulation = getattr(buildings[0], 'energy_simulation', None) if buildings else None
+            axis = getattr(env, '_time_axis', None)
+            origin = calendar_export_origin(
+                simulation, env.seconds_per_time_step, start_date=env._render_start_date_given,
+                timezone=getattr(axis, 'timezone', None),
+            )
+
+        if origin is None:
+            origin = datetime.datetime.combine(env.render_start_date, datetime.time())
+        else:
+            env._export_origin = origin
+
+        return origin
+
     def reset_time_tracking(self):
         """Reset render timestamp tracking to episode start."""
 
+        from citylearn.internal.temporal import shift_clock
         env = self.env
         start_offset = getattr(env.episode_tracker, 'episode_start_time_step', 0)
-        base_datetime = datetime.datetime.combine(env.render_start_date, datetime.time())
-        base_datetime += datetime.timedelta(seconds=start_offset * env.seconds_per_time_step)
+        base_datetime = shift_clock(self.export_origin(), start_offset * env.seconds_per_time_step)
         env._render_start_datetime = base_datetime
         env.year = base_datetime.year
         env.current_day = base_datetime.day

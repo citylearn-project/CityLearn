@@ -15,9 +15,13 @@ from gymnasium import Env
 
 from citylearn.citylearn import CityLearnEnv, EvaluationCondition
 from citylearn.internal.kpi import BATTERY_NOMINAL_CAPACITY_ATTR, CityLearnKPIService
+from citylearn.internal.kpi_catalogue import kpi_status
 
 
 __all__ = ["MultiCommunityEnv"]
+
+# Table attribute with the rule of each portfolio row, keyed by its name; the export manifest records it.
+PORTFOLIO_AGGREGATION_ATTR = "portfolio_aggregation"
 
 
 @dataclass(frozen=True)
@@ -73,6 +77,8 @@ class MultiCommunityEnv(Env):
                     child_kwargs["evaluation_window"] = evaluation_window
                 child_kwargs["render_directory"] = self.render_output_root
                 child_kwargs["render_session_name"] = str(Path(self.render_session_name) / config.community_id)
+                # Communities with the same seed and the same member or EV names draw independent values (#462).
+                child_kwargs.setdefault("random_stream_namespace", config.community_id)
                 env = CityLearnEnv(config.schema, **child_kwargs)
                 self.envs[config.community_id] = env
                 created_envs.append(env)
@@ -257,15 +263,18 @@ class MultiCommunityEnv(Env):
         The table has the columns of :py:meth:`citylearn.citylearn.CityLearnEnv.evaluate_v2` and a
         ``community_id`` column. Each community contributes its ``'building'`` and ``'district'`` rows under its
         own ``community_id``. The ``'portfolio'`` rows (``community_id`` ``'__portfolio__'``, names starting
-        ``portfolio_``) aggregate the district rows: ratios of totals are recomputed from the summed totals,
-        rates, EV battery health ratios, and battery equivalent full cycles are pooled by their denominators,
-        other ``_kwh``/``_eur``/``_kgco2``/``_count`` rows are summed,
-        other ratios and percentages are means weighted by the community ``weight``, and other rows (``_kw``,
-        ``_c``, ``_hours``) have no portfolio row. When some communities have a community market and others do
-        not, a community without a market enters the portfolio community-market rows with its plain grid
-        settlement: no local trade, its members' grid import and export, and its control cost as settled and
-        counterfactual cost. Its own district rows are unchanged. The KPI reference guide gives the rule of each
-        family.
+        ``portfolio_``) aggregate the district rows: ratios of totals are recomputed from the summed totals;
+        rates, including the EV departure, thermal-service, flexible-appliance and equity audit rates and the
+        useful-PV ratios, are pooled by their count or energy denominators; battery equivalent full cycles,
+        capacity fade and EV battery health ratios are pooled by nominal capacity; the ledger's max-residual
+        diagnostics take the largest community value; other ``_kwh``/``_eur``/``_kgco2``/``_count`` rows are
+        summed; other ratios and percentages are means weighted by the community ``weight``; and other rows
+        (``_kw``, ``_c``, ``_hours``) have no portfolio row. Each portfolio ``description`` states its rule, and
+        the table attribute ``portfolio_aggregation`` lists the rule of every portfolio row. When some
+        communities have a community market and others do not, a community without a market enters the
+        portfolio community-market rows with its plain grid settlement: no local trade, its members' grid
+        import and export, and its control cost as settled and counterfactual cost. Its own district rows are
+        unchanged. The KPI reference guide gives the rule of each family.
         """
 
         return self._combine_community_kpis({
@@ -291,11 +300,76 @@ class MultiCommunityEnv(Env):
 
         local = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
         portfolio = self._portfolio_kpis(local, capacities)
+        rules = portfolio.attrs.get(PORTFOLIO_AGGREGATION_ATTR, {})
 
         if portfolio.empty:
+            local.attrs = {PORTFOLIO_AGGREGATION_ATTR: rules}
             return local
 
-        return pd.concat([local, portfolio], ignore_index=True)
+        combined = pd.concat([local, portfolio], ignore_index=True)
+        # How each portfolio row was aggregated, for the export manifest.
+        combined.attrs = {PORTFOLIO_AGGREGATION_ATTR: rules}
+        return combined
+
+    MANIFEST_DEFINITION_VERSION = "multi-community-export-v1"
+    # Settings every community must share (see `_validate_constructor_homogeneity`), recorded in the manifest.
+    _HOMOGENEOUS_SETTINGS = (
+        "physics_version", "random_stream_version", "baseline_version", "business_as_usual_ev_charge_target",
+        "ev_soc_carryover", "ev_departure_service_tolerance", "ev_departure_within_tolerance", "energy_provenance",
+    )
+
+    def set_experiment_identity(self, implementation, version, parameters, observation_access="agent_payload"):
+        """Declare the controller of every community for exported paired comparisons.
+
+        Calls :py:meth:`citylearn.citylearn.CityLearnEnv.set_experiment_identity` on each community with the same
+        arguments, so each community export and the portfolio manifest record it as ``controller_identity``.
+        """
+
+        for env in self.envs.values():
+            env.set_experiment_identity(implementation, version, parameters, observation_access=observation_access)
+
+        self._controller_identity = next(iter(self.envs.values()))._controller_identity
+
+    def scorecard(self, kpis: pd.DataFrame = None, level: str = None, **evaluate_kwargs: Any) -> pd.DataFrame:
+        """Return the default scorecard rows of :py:meth:`evaluate_v2` for every community and the portfolio.
+
+        The rows are those of `CityLearnEnv.SCORECARD_DEFAULT_KPIS`, with ``portfolio_`` in place of ``district_``
+        for the portfolio rows, in that order, then communities in order with the portfolio last.
+
+        Parameters
+        ----------
+        kpis: pandas.DataFrame, optional
+            A table returned by :py:meth:`evaluate_v2`. When omitted, :py:meth:`evaluate_v2` is called with
+            `evaluate_kwargs`.
+        level: str, optional
+            Keep only ``'portfolio'``, ``'district'`` or ``'building'`` rows.
+        """
+
+        if kpis is None:
+            kpis = self.evaluate_v2(**evaluate_kwargs)
+        elif evaluate_kwargs:
+            raise TypeError("Pass either kpis or evaluate_v2() arguments to scorecard(), not both.")
+
+        if level is not None and level not in ("portfolio", "district", "building"):
+            raise ValueError(f"level must be 'portfolio', 'district', 'building' or None, not {level!r}.")
+
+        order = {name: index for index, name in enumerate(CityLearnEnv.SCORECARD_DEFAULT_KPIS)}
+        names = kpis["cost_function"].astype(str).str.replace(r"^portfolio_", "district_", regex=True)
+        rows = kpis[names.isin(order)]
+        if level is not None:
+            rows = rows[rows["level"] == level]
+
+        communities = {community_id: index for index, community_id in enumerate(self.community_ids)}
+        communities[self.PORTFOLIO_COMMUNITY_ID] = len(communities)
+        return (
+            rows.assign(
+                _order=names[rows.index].map(order),
+                _community=rows["community_id"].map(communities),
+            )
+            .sort_values(["_order", "_community", "name"], kind="stable")
+            .drop(columns=["_order", "_community"])
+            .reset_index(drop=True)
+        )
 
     def export_final_kpis(
         self,
@@ -306,38 +380,135 @@ class MultiCommunityEnv(Env):
         kpi_round_decimals: int = None,
         export_community_kpis: bool = True,
         community_filepath: str = "exported_kpis.csv",
-    ):
-        """Export child KPIs to child folders and global multi-community KPIs."""
+        include_battery_health_audit: bool = False,
+    ) -> Mapping[str, Any]:
+        """Export each community's KPIs to its folder and the portfolio table with its manifest.
+
+        The portfolio table has the long :py:meth:`evaluate_v2` format. It is Parquet (``.parquet``) when every
+        community uses ``render_file_format='parquet'``, otherwise CSV. Next to it,
+        ``<name>.manifest.json`` records the community ids and weights, the settings the communities share, the
+        export settings, the rule of each portfolio row, the KPI definitions and, for each community, its
+        manifest path and the evidence that :py:func:`citylearn.internal.comparison.compare_manifests` reads, so
+        :py:func:`citylearn.internal.comparison.compare_exports` can pair two portfolio exports. Returns the
+        manifest.
+        """
 
         if model is not None:
             raise NotImplementedError("MultiCommunityEnv.export_final_kpis does not support model overrides in v1.")
 
+        from citylearn.internal.comparison import manifest_evidence
+        from citylearn.internal.experiment import experiment_manifest
+
         # Evaluate each community once: its own export and the portfolio rows use the same table.
         community_kpis = {
-            community_id: env.evaluate_v2(include_business_as_usual=include_business_as_usual)
+            community_id: env.evaluate_v2(
+                include_business_as_usual=include_business_as_usual,
+                include_battery_health_audit=include_battery_health_audit,
+            )
             for community_id, env in self.envs.items()
         }
 
-        if export_community_kpis:
-            for community_id, env in self.envs.items():
-                env._episode_exporter.export_final_kpis(
+        self._ensure_output_dir()
+        community_manifests: Dict[str, Mapping[str, Any]] = {}
+        manifest_paths: Dict[str, Optional[str]] = {}
+        for community_id, env in self.envs.items():
+            if export_community_kpis:
+                community_manifests[community_id] = env._episode_exporter.export_final_kpis(
                     filepath=community_filepath,
                     include_business_as_usual=include_business_as_usual,
                     export_business_as_usual_timeseries=export_business_as_usual_timeseries,
                     kpi_round_decimals=kpi_round_decimals,
+                    include_battery_health_audit=include_battery_health_audit,
                     evaluated_kpis=community_kpis[community_id],
                 )
+                written = Path(env.new_folder_path) / env._episode_exporter._export_filename(community_filepath)
+                manifest_paths[community_id] = self._relative_to_output(written.with_suffix(".manifest.json"))
+            else:
+                community_manifests[community_id] = experiment_manifest(env)
+                manifest_paths[community_id] = None
 
-        self._ensure_output_dir()
         kpis = self._combine_community_kpis(community_kpis)
+        rules = kpis.attrs.get(PORTFOLIO_AGGREGATION_ATTR, {})
 
         if kpi_round_decimals is not None:
             kpis = kpis.copy()
             kpis["value"] = pd.to_numeric(kpis["value"], errors="coerce").round(kpi_round_decimals)
 
+        parquet = all(env._episode_exporter._render_file_format() == "parquet" for env in self.envs.values())
         path = self._export_path(filepath)
+        path = path.with_suffix(".parquet") if parquet else path
         path.parent.mkdir(parents=True, exist_ok=True)
-        kpis.to_csv(path, index=False, encoding="utf-8", na_rep="")
+        if parquet:
+            kpis.to_parquet(path, index=False)
+        else:
+            kpis.to_csv(path, index=False, encoding="utf-8", na_rep="")
+
+        from citylearn import __version__
+        from citylearn.utils.file_handler import FileHandler
+
+        manifest = {
+            "kind": "multi_community",
+            "definition_version": self.MANIFEST_DEFINITION_VERSION,
+            "simulator_version": __version__,
+            "community_ids": self.community_ids,
+            "weights": self.weights,
+            "shared_settings": {
+                "interface": self.interface,
+                "central_agent": self.central_agent,
+                "seconds_per_time_step": self.seconds_per_time_step,
+                "episode_time_steps": self.episode_time_steps,
+                "evaluation_window": dict(next(iter(self.envs.values()))._evaluation_window_effective),
+                **{
+                    setting: getattr(next(iter(self.envs.values())), setting)
+                    for setting in self._HOMOGENEOUS_SETTINGS
+                },
+            },
+            "kpi_export": {
+                "include_business_as_usual": bool(include_business_as_usual),
+                "include_battery_health_audit": bool(include_battery_health_audit),
+                "kpi_round_decimals": kpi_round_decimals,
+                "community_kpis_exported": bool(export_community_kpis),
+                "file_format": "parquet" if parquet else "csv",
+            },
+            "controller_identity": getattr(self, "_controller_identity", None),
+            "portfolio_aggregation": rules,
+            "kpi_definitions": self._kpi_definitions(kpis),
+            "communities": {
+                community_id: {
+                    "weight": self.weights[community_id],
+                    "random_stream_namespace": self.envs[community_id].random_stream_namespace,
+                    "manifest": manifest_paths[community_id],
+                    "comparison_evidence": manifest_evidence(community_manifests[community_id]),
+                }
+                for community_id in self.community_ids
+            },
+        }
+        FileHandler.write_json(str(path.with_suffix(".manifest.json")), manifest)
+        return manifest
+
+    @staticmethod
+    def _kpi_definitions(kpis: pd.DataFrame) -> Dict[str, Dict[str, Any]]:
+        """Unit and description of every KPI name in the table, portfolio rows with their own description."""
+
+        definitions: Dict[str, Dict[str, Any]] = {}
+        if "unit" not in kpis.columns:
+            return definitions
+
+        metadata = [column for column in ("unit", "description", "status", "replacement") if column in kpis.columns]
+        for record in kpis.drop_duplicates("cost_function")[["cost_function", *metadata]].to_dict("records"):
+            name = record.pop("cost_function")
+            if record.get("unit") is None or (isinstance(record.get("unit"), float) and np.isnan(record["unit"])):
+                continue
+            definitions[name] = {
+                key: (None if isinstance(value, float) and np.isnan(value) else value) for key, value in record.items()
+            }
+        return definitions
+
+    def _relative_to_output(self, path: Path) -> str:
+        try:
+            return Path(path).resolve().relative_to(Path(self.new_folder_path).resolve()).as_posix()
+        except ValueError:
+            return str(path)
 
     def render(self) -> Mapping[str, Any]:
         """Render every child environment into its own community subfolder."""
@@ -656,6 +827,23 @@ class MultiCommunityEnv(Env):
         finite = values[np.isfinite(values)]
         return float(finite.sum()) if finite.size else 0.0
 
+    # How each portfolio row is built from the community district rows; written into the row description and the
+    # export manifest. `{over}` names the rows that weight or compose it.
+    _PORTFOLIO_RULES = {
+        "sum": "sum of the community values",
+        "ratio_of_sums": "ratio of the summed totals {over}, over the communities that report both",
+        "pooled_mean": (
+            "pooled over the communities: their values weighted by {over}, which is the ratio of the summed "
+            "numerators and denominators; community weights are not used"
+        ),
+        "pooled_comparison": "computed from the portfolio values {over}",
+        "capacity_pooled": "pooled over the nominal battery capacity of the communities",
+        "max": "largest community value",
+        "max_difference": "difference of the portfolio maxima {over}",
+        "window_sum": "signed sum of the community values, undefined if one of them is undefined",
+        "weighted_mean": "mean of the community values weighted by the community weight",
+    }
+
     def _portfolio_kpis(
         self, local: pd.DataFrame, capacities: Mapping[str, Mapping[str, Optional[float]]],
     ) -> pd.DataFrame:
@@ -669,6 +857,7 @@ class MultiCommunityEnv(Env):
         district["numeric_value"] = pd.to_numeric(district.get("value"), errors="coerce")
         district = self._with_plain_grid_settlement(district, local)
         rows: List[Dict[str, Any]] = []
+        rules: Dict[str, Dict[str, Any]] = {}
         total_ratios = CityLearnKPIService.total_ratio_components("district")
         pooled_means = CityLearnKPIService.pooled_mean_components("district")
         pooled_comparisons = CityLearnKPIService.pooled_mean_business_as_usual_comparisons("district")
@@ -676,26 +865,41 @@ class MultiCommunityEnv(Env):
             metric: self._pooled_mean(district, metric, weights)
             for metric, weights in pooled_means.items()
         }
+        capacity_pooled = set()
+
+        def community_capacity(run_name: str, index: pd.Index) -> pd.Series:
+            return pd.Series({
+                community_id: values.get(run_name, np.nan)
+                for community_id, values in capacities.items()
+            }, dtype="float64").reindex(index)
+
         for run_name, suffix in (("control", ""), ("business_as_usual", "_business_as_usual")):
             throughput_name = f"district_battery_total_throughput{suffix}_kwh"
             throughput = district[district["cost_function"] == throughput_name].set_index("community_id")["numeric_value"]
-            capacity = pd.Series({
-                community_id: values.get(run_name, np.nan)
-                for community_id, values in capacities.items()
-            }, dtype="float64").reindex(throughput.index)
+            capacity = community_capacity(run_name, throughput.index)
             nominal_capacity = capacity.sum()
             cycles = np.nan
             if nominal_capacity > 0 and np.isfinite(capacity).all() and np.isfinite(throughput).all():
                 cycles = float(throughput.sum() / (2.0 * nominal_capacity))
             pooled_mean_values[f"district_battery_health_equivalent_full_cycles{suffix}_count"] = cycles
+            capacity_pooled.add(f"district_battery_health_equivalent_full_cycles{suffix}_count")
+
+            # Capacity fade is capacity lost over nominal capacity, so it pools by nominal capacity (#428).
+            fade_name = f"district_battery_health_capacity_fade{suffix}_ratio"
+            fade = district[district["cost_function"] == fade_name].set_index("community_id")["numeric_value"]
+            if not fade.empty:
+                capacity = community_capacity(run_name, fade.index)
+                installed = (capacity > 0.0) & np.isfinite(fade)
+                pooled_fade = np.nan
+                if np.isfinite(capacity).all() and installed.any():
+                    pooled_fade = float((fade[installed] * capacity[installed]).sum() / capacity[installed].sum())
+                pooled_mean_values[fade_name] = pooled_fade
+                capacity_pooled.add(fade_name)
 
         ev_fade_rows = district[district["cost_function"] == "district_ev_battery_health_capacity_fade_kwh"]
         if not ev_fade_rows.empty:
             ev_fade = ev_fade_rows.set_index("community_id")["numeric_value"]
-            ev_cap_fade = pd.Series({
-                community_id: values.get("ev_control", np.nan)
-                for community_id, values in capacities.items()
-            }, dtype="float64").reindex(ev_fade.index)
+            ev_cap_fade = community_capacity("ev_control", ev_fade.index)
             ev_nominal_capacity = ev_cap_fade.sum()
             ev_fade_ratio = np.nan
             ev_soh = np.nan
@@ -705,21 +909,38 @@ class MultiCommunityEnv(Env):
                 ev_soh = float(np.clip((ev_nominal_capacity - ev_fade_total) / ev_nominal_capacity, 0.0, 1.0))
             pooled_mean_values["district_ev_battery_health_capacity_fade_ratio"] = ev_fade_ratio
             pooled_mean_values["district_ev_battery_health_terminal_soh_ratio"] = ev_soh
+            capacity_pooled.update(("district_ev_battery_health_capacity_fade_ratio",
+                                    "district_ev_battery_health_terminal_soh_ratio"))
 
         ev_efc_name = "district_ev_battery_health_equivalent_full_cycles_count"
         ev_efc_rows = district[district["cost_function"] == ev_efc_name]
         if not ev_efc_rows.empty:
             ev_efc = ev_efc_rows.set_index("community_id")["numeric_value"]
-            ev_cap = pd.Series({
-                community_id: values.get("ev_control", np.nan)
-                for community_id, values in capacities.items()
-            }, dtype="float64").reindex(ev_efc.index)
+            ev_cap = community_capacity("ev_control", ev_efc.index)
             positive_ev = ev_cap > 0.0
             ev_cycles = np.nan
             if np.isfinite(ev_cap).all() and positive_ev.any() and np.isfinite(ev_efc[positive_ev]).all():
                 ev_cycles = float((ev_efc[positive_ev] * ev_cap[positive_ev]).sum() / ev_cap[positive_ev].sum())
             pooled_mean_values[ev_efc_name] = ev_cycles
+            capacity_pooled.add(ev_efc_name)
 
+        # The largest residual of the ledger over the communities, not their sum (#428).
+        maxima = {}
+        for group_name in ("storage", "bus"):
+            for suffix in ("", "_business_as_usual"):
+                metric = f"district_energy_provenance_{group_name}_max_residual{suffix}_kwh"
+                values = district.loc[district["cost_function"] == metric, "numeric_value"].dropna()
+                if not values.empty:
+                    maxima[metric] = float(values.max())
+        maximum_differences = {
+            f"district_energy_provenance_{group_name}_max_residual_delta_to_business_as_usual_kwh": (
+                f"district_energy_provenance_{group_name}_max_residual_kwh",
+                f"district_energy_provenance_{group_name}_max_residual_business_as_usual_kwh",
+            )
+            for group_name in ("storage", "bus")
+        }
+
+        portfolio = self._portfolio_cost_function
         for cost_function, group in district.groupby("cost_function", sort=True):
             metric = str(cost_function)
             aggregate: Optional[float]
@@ -729,8 +950,13 @@ class MultiCommunityEnv(Env):
                     district, *total_ratios[metric],
                     zero_over_zero=CityLearnKPIService.ratio_zero_over_zero(metric),
                 )
+                rule = ("ratio_of_sums", [portfolio(name) for name in total_ratios[metric][:2]])
             elif metric in pooled_mean_values:
                 aggregate = pooled_mean_values[metric]
+                rule = (
+                    ("capacity_pooled", []) if metric in capacity_pooled
+                    else ("pooled_mean", [portfolio(name) for name in pooled_means[metric]])
+                )
             elif metric in pooled_comparisons:
                 control_name, reference_name, operation = pooled_comparisons[metric]
                 control = pooled_mean_values.get(control_name, np.nan)
@@ -742,6 +968,15 @@ class MultiCommunityEnv(Env):
                         control, reference, zero_over_zero=CityLearnKPIService.ratio_zero_over_zero(metric),
                     )
                     aggregate = np.nan if value is None else float(value)
+                rule = ("pooled_comparison", [portfolio(control_name), portfolio(reference_name)])
+            elif metric in maxima or metric.endswith(("_max_residual_kwh", "_max_residual_business_as_usual_kwh")):
+                aggregate = maxima.get(metric, np.nan)
+                rule = ("max", [])
+            elif metric in maximum_differences:
+                control_name, reference_name = maximum_differences[metric]
+                control, reference = maxima.get(control_name, np.nan), maxima.get(reference_name, np.nan)
+                aggregate = float(control - reference) if np.isfinite(control) and np.isfinite(reference) else np.nan
+                rule = ("max_difference", [portfolio(control_name), portfolio(reference_name)])
             elif (
                 (metric.startswith("district_energy_grid_window_average_power_") and metric.endswith("_kw"))
                 or metric == "district_ev_window_net_exchange_control_kwh"
@@ -751,31 +986,54 @@ class MultiCommunityEnv(Env):
                     aggregate = np.nan
                 else:
                     aggregate = float(values.sum())
+                rule = ("window_sum", [])
             elif metric.endswith(self._SUM_SUFFIXES):
                 values = group["numeric_value"].dropna()
                 if values.empty:
                     aggregate = np.nan
                 else:
                     aggregate = float(values.sum())
+                rule = ("sum", [])
             elif metric.endswith(self._WEIGHTED_MEAN_SUFFIXES):
                 aggregate = self._weighted_mean(group)
                 if aggregate is None:
                     aggregate = np.nan
+                rule = ("weighted_mean", [])
             else:
                 continue
 
+            name = portfolio(metric)
+            rules[name] = {"rule": rule[0], "over": list(rule[1])}
             row = {column: None for column in local.columns}
-            row["cost_function"] = self._portfolio_cost_function(metric)
+            row["cost_function"] = name
             row["value"] = aggregate
             row["name"] = self.PORTFOLIO_NAME
             row["level"] = "portfolio"
             row["community_id"] = self.PORTFOLIO_COMMUNITY_ID
             if "unit" in row:
                 row["unit"] = group["unit"].iloc[0]
-                row["description"] = group["description"].iloc[0]
+                row["description"] = self._portfolio_description(rules[name], group["description"].iloc[0])
+            if "status" in row:
+                # The status of the district row, with the portfolio name of its replacement (#433).
+                row["status"], row["replacement"] = kpi_status(name)
             rows.append(row)
 
-        return pd.DataFrame(rows, columns=list(local.columns))
+        frame = pd.DataFrame(rows, columns=list(local.columns))
+        frame.attrs[PORTFOLIO_AGGREGATION_ATTR] = rules
+        return frame
+
+    @classmethod
+    def _portfolio_description(cls, rule: Mapping[str, Any], district_description: Any) -> str:
+        """Portfolio rule, then the district definition the communities report."""
+
+        over = rule.get("over") or []
+        text = cls._PORTFOLIO_RULES[rule["rule"]].format(
+            over=" and ".join(f"`{name}`" for name in over) if len(over) <= 2 else ", ".join(f"`{n}`" for n in over),
+        )
+        description = f"Portfolio: {text}."
+        if isinstance(district_description, str) and district_description:
+            description += f" Each community: {district_description}"
+        return description
 
     def _with_plain_grid_settlement(self, district: pd.DataFrame, local: pd.DataFrame) -> pd.DataFrame:
         """Give communities without a market their plain grid settlement in a mixed portfolio (#373).

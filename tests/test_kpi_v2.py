@@ -988,7 +988,7 @@ def test_exported_kpis_csv_preserves_small_unrounded_values(tmp_path: Path, monk
         monkeypatch.setattr(
             env,
             "evaluate_v2",
-            lambda include_business_as_usual=True: pd.DataFrame(
+            lambda include_business_as_usual=True, **_: pd.DataFrame(
                 [
                     {
                         "cost_function": "district_cost_total_control_eur",

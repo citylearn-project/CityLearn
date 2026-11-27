@@ -1320,6 +1320,7 @@ class CityLearnRuntimeService:
         if key not in streams:
             streams[key] = random_streams.generator(
                 env.random_seed, purpose, 'electric_vehicle', ev_name, env.episode_tracker.random_stream_episode,
+                *random_streams.namespace_parts(getattr(env, 'random_stream_namespace', None)),
             )
 
         return streams[key]

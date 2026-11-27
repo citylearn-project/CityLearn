@@ -53,6 +53,12 @@ settings for each one, label their KPI tables, and pivot `cost_function` against
 controller name. Use the same random seeds for matched stochastic scenarios.
 Keep missing/not-applicable values as missing, not as zero.
 
+For a `MultiCommunityEnv` portfolio, `mc.scorecard(level="portfolio")` returns
+the same default rows aggregated over the communities (`portfolio_*`), and
+`mc.scorecard()` adds each community's rows. To leave out legacy and deprecated
+rows when you build your own selection, keep the rows whose `status` is
+`current` or `canonical`; a legacy row names its canonical row in `replacement`.
+
 ## Two different baselines
 
 The [Baselines guide](baselines.md) explains the native BAU policy, its default
