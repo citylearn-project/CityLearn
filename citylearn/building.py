@@ -2768,7 +2768,8 @@ class Building(Environment):
         return low_limit, high_limit
     
     def _get_observation_space_limits_data(self) -> Mapping[str, List[Union[float, int]]]:
-        # Use entire dataset length for space limit estimation
+        # The limits come from the simulation window, not from the whole dataset: two environments on different
+        # windows of the same data can normalise the same value differently. Share one window to compare them.
         data = {
             **{k.lstrip('_'): self.energy_simulation.__getattr__(
                 k.lstrip('_'), 

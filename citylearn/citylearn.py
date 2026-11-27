@@ -1024,9 +1024,19 @@ class CityLearnEnv(Environment, Env):
 
     def _get_flat_action_space(self) -> List[spaces.Box]:
         if self.central_agent:
-            low_limit = [v for b in self.buildings for v in b.action_space.low]
-            high_limit = [v for b in self.buildings for v in b.action_space.high]
-            action_space = [spaces.Box(low=np.array(low_limit), high=np.array(high_limit), dtype=np.float32)]
+            low_limit = np.array([v for b in self.buildings for v in b.action_space.low])
+            high_limit = np.array([v for b in self.buildings for v in b.action_space.high])
+            # The same Box is returned while the bounds do not change, so `action_space[0].seed(s)` lasts.
+            cached = getattr(self, '_central_action_space_cache', None)
+            if (
+                cached is None
+                or cached.shape != low_limit.shape
+                or not np.array_equal(cached.low, low_limit.astype(np.float32))
+                or not np.array_equal(cached.high, high_limit.astype(np.float32))
+            ):
+                cached = spaces.Box(low=low_limit, high=high_limit, dtype=np.float32)
+                self._central_action_space_cache = cached
+            action_space = [cached]
         else:
             action_space = [b.action_space for b in self.buildings]
 

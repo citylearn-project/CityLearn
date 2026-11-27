@@ -116,7 +116,7 @@ Portuguese version: [pt/schema_full_reference.md](pt/schema_full_reference.md).
 | Key | Here | Default | Notes and alternatives |
 |---|---|---|---|
 | `reward_function.type` | `RewardFunction` | required | Other classes: `ComfortReward`, `SolarPenaltyReward`, `SolarPenaltyAndComfortReward`, `Electric_Vehicles_Reward_Function`, `OutageUnservedEnergyReward`, `MARL`, `IndependentSACReward`; or an object keyed by building with `"default"`. |
-| `reward_function.attributes` | the two defaults of `RewardFunction` | `{}` | `exponent` raises the import to a power; `charging_constraint_penalty_coefficient` weights charging-limit violations. |
+| `reward_function.attributes` | the two defaults of `RewardFunction` | `{}` | `exponent` raises the import to a power; `charging_constraint_penalty_coefficient` is accepted here but only `Electric_Vehicles_Reward_Function` uses it, to weight charging-limit violations. |
 | `agent.type`, `agent.attributes` | `BusinessAsUsualAgent` | none | Used by `env.load_agent()` without arguments. The `citylearn simulate` command uses its `-a` option instead. |
 
 ## Observations
