@@ -385,7 +385,7 @@ The bundled datasets start at:
 | `citylearn_challenge_2023_phase_2_online_evaluation_*`, `citylearn_challenge_2023_phase_3_*` | `2021-06-01T00:00:00` | |
 | `baeda_3dem` | `2020-06-01T00:00:00` | |
 | `quebec_neighborhood_*` | `2018-01-01T00:00:00` | The data repeat one January to March period three times; only the first period matches `month` and `day_type`. |
-| `pt_rec_*` | `2023-01-01T00:00:00+00:00` | Lisbon civil time with its offset. Their `day_type` codes weekends and holidays as 1 and Monday to Friday as 2 to 6. |
+| `pt_rec_*` | `2023-01-01T00:00:00+00:00` | Lisbon civil time with its offset. Their `day_type` is the Lisbon weekday, with 8 on holidays from Monday to Friday. |
 
 To read the local time of day, keep the first 19 characters, which are the same with and without an offset:
 `pd.to_datetime(frame["timestamp"].str[:19])`.

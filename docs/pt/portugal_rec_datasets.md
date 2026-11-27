@@ -111,8 +111,9 @@ demoraram de 6 a 127 minutos, do REC-4 ao REC-100, no CityLearn 3.3.0. Uma janel
   100 intervalos nas mudanças de hora.
   As colunas `month`, `hour` e `minutes` estão em hora civil de Lisboa, tal como os
   instantes exportados, que levam o seu desvio UTC (`2023-06-27T03:00:00+01:00`). A
-  coluna `day_type` codifica fins de semana e feriados como 1 e segunda a sexta-feira
-  como 2 a 6, e não 1 segunda-feira a 7 domingo.
+  coluna `day_type` é o dia da semana em Lisboa, 1 segunda-feira a 7 domingo, e 8 nos
+  feriados que calham de segunda a sexta-feira: os feriados nacionais e o 13 de junho,
+  feriado municipal de Lisboa. Um feriado ao sábado ou ao domingo mantém 6 ou 7.
 - **Unidades:** consumo, FV e perfis de programas em kWh por intervalo (multiplicar por
   quatro para kW médio); capacidade das baterias em kWh; limites de potência em kW;
   preços em EUR/kWh; intensidade carbónica em kg CO2e/kWh; SOC como fração.
