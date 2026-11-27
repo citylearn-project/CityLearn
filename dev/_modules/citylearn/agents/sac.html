@@ -632,7 +632,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_learner_parameter_names</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Keyword arguments declared by the learner's constructors, which are not forwarded to the RBC."""</span>
 
-        <span class="n">names</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'action_scaling_coefficienct'</span><span class="p">}</span>  <span class="c1"># deprecated spelling accepted by RLC</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
         <span class="k">for</span> <span class="n">klass</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">klass</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">klass</span><span class="p">,</span> <span class="n">Agent</span><span class="p">))</span> <span class="ow">or</span> <span class="s1">'__init__'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">klass</span><span class="p">):</span>

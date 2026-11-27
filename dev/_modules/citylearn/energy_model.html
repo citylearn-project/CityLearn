@@ -150,7 +150,6 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">array</span><span class="w"> </span><span class="kn">import</span> <span class="n">array</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -160,7 +159,6 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">PySAM</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pvwattsv8</span>
 <span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional dependency</span>
     <span class="n">Pvwattsv8</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_streams</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">EpisodeTracker</span> <span class="k">as</span> <span class="n">EpisodeTracker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DataSet</span><span class="p">,</span>
@@ -953,15 +951,11 @@
         <span class="n">use_sample_target</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">use_sample_target</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">use_sample_target</span>
 
         <span class="n">sizing_data</span> <span class="o">=</span> <span class="n">DataSet</span><span class="p">()</span><span class="o">.</span><span class="n">get_pv_sizing_data</span><span class="p">()</span> <span class="k">if</span> <span class="n">sizing_data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sizing_data</span>
-        <span class="n">random_seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span>
         <span class="n">tries</span> <span class="o">=</span> <span class="mi">3</span>
 
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tries</span><span class="p">):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">==</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
-                <span class="n">sample_random_state</span> <span class="o">=</span> <span class="n">random_seed</span> <span class="o">+</span> <span class="n">i</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Every device of an environment holds the environment seed; draw from this PV's own stream.</span>
-                <span class="n">sample_random_state</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numpy_random_state</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">))</span>
+            <span class="c1"># Every device of an environment holds the environment seed; draw from this PV's own stream.</span>
+            <span class="n">sample_random_state</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numpy_random_state</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">))</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_autosize_config</span> <span class="o">=</span> <span class="n">sizing_data</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">sample_random_state</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">Pvwattsv8</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1163,23 +1157,6 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">efficiency</span><span class="o">**</span><span class="mf">0.5</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">round_trip_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Deprecated alias of `one_way_efficiency`.</span>
-
-<span class="sd">        Despite its name, this property has always returned the one-way efficiency, the square root of</span>
-<span class="sd">        `efficiency`; the round-trip efficiency is `efficiency` itself. It is kept, with the same value,</span>
-<span class="sd">        for existing code and will be removed in a future release.</span>
-<span class="sd">        """</span>
-
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s1">'`round_trip_efficiency` returns the one-way efficiency and is deprecated; use '</span>
-            <span class="s1">'`one_way_efficiency` for that value, or `efficiency` for the round-trip efficiency.'</span><span class="p">,</span>
-            <span class="ne">DeprecationWarning</span><span class="p">,</span>
-            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">one_way_efficiency</span>
-
     <span class="nd">@capacity</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">capacity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">capacity</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
         <span class="n">capacity</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">capacity</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">capacity</span>
@@ -1237,8 +1214,6 @@
             <span class="s1">'loss_coefficient'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_coefficient</span><span class="p">,</span>
             <span class="s1">'initial_soc'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_soc</span><span class="p">,</span>
             <span class="s1">'one_way_efficiency'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">one_way_efficiency</span><span class="p">,</span>
-            <span class="c1"># Legacy key with the same one-way value, kept for existing readers of the metadata.</span>
-            <span class="s1">'round_trip_efficiency'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">one_way_efficiency</span><span class="p">,</span>
         <span class="p">}</span></div>
 
 
@@ -1351,7 +1326,7 @@
 <a class="viewcode-back" href="../../api/citylearn.energy_model.html#citylearn.energy_model.StorageDevice.autosize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">autosize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">demand</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">safety_factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">duration</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">physics_version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">duration</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Autosize `capacity`.</span>
 
@@ -1365,11 +1340,7 @@
 <span class="sd">        safety_factor : Union[float, Tuple[float, float]], default: (1.0, 2.0)</span>
 <span class="sd">            The `capacity` is oversized by factor of `safety_factor`.</span>
 <span class="sd">        duration : Union[float, Tuple[float, float]], default: 1.0</span>
-<span class="sd">            Hours of peak demand power the tank holds. Ignored by physics version 1.</span>
-<span class="sd">        physics_version : int, optional</span>
-<span class="sd">            Physics version, see :py:mod:`citylearn.internal.physics_version`. Version 1 sizes the</span>
-<span class="sd">            tank to the largest control-step demand in [kWh], which equals one hour of peak power</span>
-<span class="sd">            only for hourly steps. Defaults to the latest version.</span>
+<span class="sd">            Hours of peak demand power the tank holds.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1380,14 +1351,8 @@
 <span class="sd">        -----</span>
 <span class="sd">        `capacity` = max(demand power)*duration*safety_factor</span>
 <span class="sd">        """</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.physics_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_physics_version</span>
-
         <span class="n">demand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">demand</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span><span class="p">)</span>
         <span class="n">safety_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property_value</span><span class="p">(</span><span class="n">safety_factor</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="n">resolve_physics_version</span><span class="p">(</span><span class="n">physics_version</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">as_float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">demand</span><span class="p">))</span><span class="o">*</span><span class="n">safety_factor</span>
-
         <span class="n">duration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property_value</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
         <span class="n">power</span> <span class="o">=</span> <span class="n">demand</span> <span class="o">/</span> <span class="n">seconds_to_hours</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
         <span class="n">capacity</span> <span class="o">=</span> <span class="n">as_float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">power</span><span class="p">))</span><span class="o">*</span><span class="n">duration</span><span class="o">*</span><span class="n">safety_factor</span>
@@ -1579,12 +1544,6 @@
 <span class="sd">    `capacity_power_curve` and by the degraded capacity; discharging by `discharge_power_curve` and by the</span>
 <span class="sd">    floor ``(1 - depth_of_discharge) * capacity``. If `initial_soc` is omitted, the battery starts at that floor.</span>
 
-<span class="sd">    Attributes</span>
-<span class="sd">    ----------</span>
-<span class="sd">    legacy_discharge_power_limit : bool</span>
-<span class="sd">        Limit discharge with `capacity_power_curve` instead of `discharge_power_curve`, as CityLearn 3.6.0 and</span>
-<span class="sd">        earlier did. The environment sets it for physics version 1.</span>
-
 <span class="sd">    Other Parameters</span>
 <span class="sd">    ----------------</span>
 <span class="sd">    **kwargs : Any</span>
@@ -1592,7 +1551,6 @@
 <span class="sd">    """</span>
     
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">capacity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nominal_power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">capacity_loss_coefficient</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">power_efficiency_curve</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">capacity_power_curve</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">depth_of_discharge</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">time_step_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">discharge_power_curve</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">legacy_discharge_power_limit</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">discharge_power_curve</span> <span class="o">=</span> <span class="n">discharge_power_curve</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_efficiency_history</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="s1">'d'</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_capacity_history</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="s1">'d'</span><span class="p">)</span>
@@ -1749,8 +1707,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">discharge_power_curve</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Maximum discharge power of the battery as a fraction of `nominal_power`, as a function of its state of charge.</span>
 
-<span class="sd">        Defaults to a flat curve at `nominal_power`. `capacity_power_curve` limits charging only, unless</span>
-<span class="sd">        `legacy_discharge_power_limit` is set.</span>
+<span class="sd">        Defaults to a flat curve at `nominal_power`. `capacity_power_curve` limits charging only.</span>
 <span class="sd">        """</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__discharge_power_curve</span>
@@ -1887,9 +1844,7 @@
             <span class="s1">'capacity_loss_coefficient'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity_loss_coefficient</span><span class="p">,</span>
             <span class="s1">'power_efficiency_curve'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_efficiency_curve</span><span class="p">,</span>
             <span class="s1">'capacity_power_curve'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity_power_curve</span><span class="p">,</span>
-            <span class="s1">'discharge_power_curve'</span><span class="p">:</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">capacity_power_curve</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legacy_discharge_power_limit</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">discharge_power_curve</span>
-            <span class="p">),</span>
+            <span class="s1">'discharge_power_curve'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discharge_power_curve</span><span class="p">,</span>
         <span class="p">}</span></div>
 
 
@@ -2065,17 +2020,11 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_max_output_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_init</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Get maximum output power while considering `discharge_power_curve` limitations.</span>
 
-<span class="sd">        With `legacy_discharge_power_limit` (physics version 1), discharge is limited by the charging</span>
-<span class="sd">        curve, `capacity_power_curve`, as in CityLearn 3.6.0 and earlier.</span>
-
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        max_output_power : float</span>
 <span class="sd">            Maximum amount of power that the storage unit can output [kW].</span>
 <span class="sd">        """</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legacy_discharge_power_limit</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_max_input_power</span><span class="p">(</span><span class="n">energy_init</span><span class="o">=</span><span class="n">energy_init</span><span class="p">)</span>
 
         <span class="n">energy_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_init</span> <span class="k">if</span> <span class="n">energy_init</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">energy_init</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_curve_power_kw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">discharge_power_curve</span><span class="p">,</span> <span class="n">energy_init</span><span class="p">)</span></div>

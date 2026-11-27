@@ -167,9 +167,6 @@
     <span class="c1">#: Charging power in kW assumed when neither `max_charging_power` nor `nominal_power` is given.</span>
     <span class="n">_DEFAULT_MAX_CHARGING_POWER</span> <span class="o">=</span> <span class="mf">50.0</span>
 
-    <span class="c1">#: Defaults of physics version 1 for omitted power limits: a 50 kW charger in both directions.</span>
-    <span class="n">_LEGACY_DEFAULT_POWER</span> <span class="o">=</span> <span class="mf">50.0</span>
-
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">episode_tracker</span><span class="p">:</span> <span class="n">EpisodeTracker</span><span class="p">,</span> <span class="n">charger_simulation</span><span class="p">:</span> <span class="n">ChargerSimulation</span> <span class="p">,</span><span class="n">charger_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">efficiency</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_charging_power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">min_charging_power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_discharging_power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="n">min_discharging_power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">charge_efficiency_curve</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -192,7 +189,7 @@
 <span class="sd">            Minimum charging power in kW.</span>
 <span class="sd">        max_discharging_power : float, default 0</span>
 <span class="sd">            Maximum discharging (V2G) power in kW. The default 0 means the charger cannot</span>
-<span class="sd">            discharge; set it to allow V2G. Physics version 1 loads an omitted value as 50 kW.</span>
+<span class="sd">            discharge; set it to allow V2G.</span>
 <span class="sd">        min_discharging_power : float, default 0</span>
 <span class="sd">            Minimum discharging power in kW.</span>
 <span class="sd">        charge_efficiency_curve : List, none [[0, 0.83],[0.3, 0.83],[0.7, 0.9],[0.8, 0.9],[1, 0.85]]</span>
@@ -435,7 +432,7 @@
     <span class="nd">@max_discharging_power</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">max_discharging_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_discharging_power</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">max_discharging_power</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># V2G is off unless configured (#369); physics version 1 loads an omitted value as 50 kW.</span>
+                <span class="c1"># V2G is off unless configured (#369).</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">__max_discharging_power</span> <span class="o">=</span> <span class="mf">0.0</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">__max_discharging_power</span> <span class="o">=</span> <span class="n">max_discharging_power</span>

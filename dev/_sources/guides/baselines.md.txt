@@ -20,7 +20,7 @@ It is not a scenario with all equipment switched off.
 | Electrical connection | The simulator applies the configured total and per-phase import/export limits; equipment and simulator constraints determine the applied energy. |
 | Local sharing | The scenario's settlement rules value the resulting trajectory. BAU does not optimize the allocation or local-market price. |
 | Demand response | Runs under the scenario, but has no policy that optimizes an activation target, payment or penalty. |
-| HVAC (`heating_device`, `cooling_device`, `cooling_or_heating_device`) | With `baseline_version=2` (default): requests the action that delivers the dataset's own heating or cooling demand at each step (see [HVAC and the baseline version](#hvac-and-the-baseline-version)). With `baseline_version=1`: requests zero, as in CityLearn 3.6.0, so in buildings with temperature dynamics the BAU neither heats nor cools. |
+| HVAC (`heating_device`, `cooling_device`, `cooling_or_heating_device`) | Requests the action that delivers the dataset's own heating or cooling demand at each step (see [HVAC and the baseline version](#hvac-and-the-baseline-version)). CityLearn 3.6.0 requested zero, so in buildings with temperature dynamics its BAU neither heated nor cooled. |
 | Other active actions | Requests zero, clipped to the action bounds. This is not a dedicated thermal-storage or escalator policy; the effect of zero follows each device's action contract. |
 
 ### Choosing the BAU charging target
@@ -68,8 +68,7 @@ available. The bundled datasets with an active HVAC action are
 `ca_alameda_county_neighborhood`, `baeda_3dem` and the
 `citylearn_challenge_2023_*` datasets.
 
-Under `baseline_version=2`, the default, the BAU runs the HVAC as a building
-without optimisation does. At each step it requests the action that delivers
+The BAU runs the HVAC as a building without optimisation does. At each step it requests the action that delivers
 the dataset's own heating or cooling demand, the as-simulated `heating_demand`
 and `cooling_demand` of the building file (the energy simulation's
 `*_demand_without_control` series):
@@ -83,16 +82,16 @@ allows it; with `cooling_or_heating_device` the larger of the two demands sets
 the sign. The BAU does not pre-heat, pre-cool, follow prices or use the thermal
 storage, which still receives zero.
 
-`baseline_version=1` reproduces CityLearn 3.6.0: the BAU requests zero for
-those actions, so once the LSTM warm-up ends its buildings are neither heated
-nor cooled. Indoor temperatures drift away from the set points and every
-`*_business_as_usual` row compares the controller with unheated (or uncooled)
-houses ([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
+CityLearn 3.6.0 requested zero for those actions, so once the LSTM warm-up
+ended its BAU buildings were neither heated nor cooled. Indoor temperatures
+drifted away from the set points and every `*_business_as_usual` row compared
+the controller with unheated (or uncooled) houses
+([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
+`baseline_version` 1, which kept that BAU, was removed in CityLearn 3.8.1.
 
 | `baseline_version` | KPI baseline | BAU HVAC | BAU definition |
 |---|---|---|---|
-| `1` | 3.6.0: no EV charging added back | zero | `immediate-full-charge-v4` |
-| `2` (default) | EV charging of the `'full'` BAU added back | delivers the dataset heating and cooling demand | `immediate-full-charge-v4+hvac-dataset-demand-v1` on datasets with HVAC actions, `immediate-full-charge-v4` on the others |
+| `2` | EV charging of the `'full'` BAU added back | delivers the dataset heating and cooling demand | `immediate-full-charge-v4+hvac-dataset-demand-v1` on datasets with HVAC actions, `immediate-full-charge-v4` on the others |
 
 (With `business_as_usual_ev_charge_target='requested'` the definition starts
 with `immediate-user-target-v3` instead.)
@@ -102,7 +101,8 @@ The HVAC rule changes the `*_business_as_usual` rows, and the
 on datasets with HVAC actions only. On datasets without HVAC actions the BAU,
 its definition and identity, and every KPI are the same, bit for bit, as before
 the HVAC rule was added.
-Comparisons report runs with different baseline versions as incompatible.
+Comparisons report runs with different baseline versions, such as an export of
+an earlier release made with version 1, as incompatible.
 
 On Quebec (`quebec_neighborhood_without_demand_response_set_points`, steps
 0–335), the default BAU now heats the houses:
@@ -118,19 +118,19 @@ On Quebec (`quebec_neighborhood_without_demand_response_set_points`, steps
 ```python
 env = CityLearnEnv('quebec_neighborhood_without_demand_response_set_points')
 agent = BusinessAsUsualAgent(env)  # hvac='dataset_demand', from the env
-
-legacy = CityLearnEnv('quebec_neighborhood_without_demand_response_set_points', baseline_version=1)
+off = BusinessAsUsualAgent(env, hvac='off')  # HVAC at zero
 ```
 
-`BusinessAsUsualAgent(env, hvac=...)` overrides the environment for that agent:
+`BusinessAsUsualAgent(env, hvac=...)` overrides the default for that agent:
 `'off'` sends zero, `'dataset_demand'` delivers the dataset demand. The native
-BAU of `evaluate_v2()` always follows the environment's `baseline_version`.
+BAU of `evaluate_v2()` always delivers the dataset demand on datasets with HVAC
+actions.
 
 **The rule-based baselines run the HVAC the same way.** `RBCBasicPolicy`,
 `RBCSmartPolicy` and `RBCCommunityPolicy` deliver the dataset heating and
-cooling demand with the same rule as the BAU, whatever the `baseline_version`
+cooling demand with the same rule as the BAU
 (see [HVAC of the rule-based baselines](#hvac-of-the-rule-based-baselines)).
-Under the default version their ratios to the BAU therefore compare houses
+Their ratios to the BAU therefore compare houses
 that are heated and cooled alike. `ZeroActionAgent` still sends zero, and so
 does any controller of your own that does not drive the HVAC: its
 `*_ratio_to_business_as_usual_*` values look much better only because the BAU
@@ -245,9 +245,8 @@ does. The mean indoor temperature is 20.6 °C instead of 3.4 °C, the minimum
 `district_comfort_resilience_discomfort_overall_ratio` goes from 0.183 to
 0.026. Quebec has no batteries or EVs, so they then run exactly as the BAU:
 cost 4,403.8 EUR and a cost ratio of 1.000. With `hvac='off'` they cost
-631.8 EUR, a ratio of 0.143. Under `baseline_version=1`, whose BAU does not
-heat, their cost ratio is 6.970; to reproduce the earlier ratio of 1.000 under
-that version, also pass `hvac='off'`.
+631.8 EUR, a ratio of 0.143. Against the BAU of CityLearn 3.6.0, which did
+not heat, their cost ratio was 6.970.
 
 ```python
 smart = RBCSmartPolicy(env)               # HVAC meets the dataset demand
@@ -393,9 +392,8 @@ with temperature dynamics (LSTM): there the default condition uses the dataset's
 ideal-load heating and cooling demand instead of the HVAC the controller ran. The
 `baseline` rows therefore credit the controller with its storage dispatch, its
 EV charging and its V2G against charging on arrival, and in buildings with
-temperature dynamics also with its HVAC control. With `baseline_version=1` nothing is added
-back, as in CityLearn 3.6.0, so on EV datasets the baseline is a community whose
-cars never charge.
+temperature dynamics also with its HVAC control. CityLearn 3.6.0 added nothing
+back, so on EV datasets its baseline was a community whose cars never charged.
 
 Apart from that EV charging, this is a counterfactual calculation from the run's
 own series, not a second `BusinessAsUsualAgent` run. On datasets with EV
@@ -403,7 +401,7 @@ chargers the charging comes from the BAU sidecar, which every evaluation then
 runs, also the legacy `evaluate()` and `evaluate_v2(include_business_as_usual=False)`,
 with the `'full'` target whatever `business_as_usual_ev_charge_target` is. Like
 the BAU rows, it cannot be built when inputs, buildings or devices changed after
-loading; evaluate such runs with `baseline_version=1`.
+loading, and evaluation then raises `ValueError`.
 `EvaluationCondition` also exposes alternatives, including removing PV.
 Choose the same evaluation condition when comparing controllers. During a
 simulated power outage the counterfactual, like the controlled run, exchanges

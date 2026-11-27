@@ -30,22 +30,21 @@ This is the reward section of a schema, not a complete dataset definition.
 Reward versions
 ***************
 
-The EV and comfort rewards have two definitions. Version 2, the default, follows
-the documented definitions. Version 1 is the reward of CityLearn 3.6.0 and
-earlier, which had the defects listed below. It is deprecated and exists only to
-reproduce runs made with those releases: selecting it raises a
-``DeprecationWarning``, and it will be removed in a later release. Keeping a single
-current definition avoids comparing policies that were trained on different
-rewards. The environment metadata, and the manifest of every export, record the
-version in ``reward_evidence.effective_public_parameters``, so the definition
-behind a run stays identifiable.
+The EV and comfort rewards follow version 2 of their definitions, the only
+version. Version 1, the reward of CityLearn 3.6.0 and earlier, had the defects
+listed below; it was removed in CityLearn 3.8.1, and selecting it raises a
+``ValueError``. CityLearn 3.7 reproduces a run made with it. Keeping a single
+definition avoids comparing policies that were trained on different rewards. The
+environment metadata, and the manifest of every export, record the version in
+``reward_evidence.effective_public_parameters``, so the definition behind a run
+stays identifiable.
 
 .. list-table::
    :header-rows: 1
 
    * - Reward
-     - Version 1 (deprecated)
-     - Version 2 (default)
+     - CityLearn 3.6.0 (version 1, removed)
+     - Version 2
    * - :py:class:`citylearn.reward_function.Electric_Vehicles_Reward_Function`
      - The reward of CityLearn 3.6.0 and earlier. A building with chargers gets only its EV terms, and a
        building without chargers gets 0. Leaving 0.25 or more below the required departure SOC adds
@@ -60,20 +59,10 @@ behind a run stays identifiable.
        penalized within the comfort band, and the exponent above it, follow whether the heating demand exceeds
        the cooling demand at that step.
      - Follow the HVAC mode: heating when ``hvac_mode`` is 2, cooling when it is 1. In heating mode at
-       21.5 C with a 20 C set point the reward is -1.5 whether the heater runs or not; version 1 gives 0
-       while the heater is off.
+       21.5 C with a 20 C set point the reward is -1.5 whether the heater runs or not; version 1 gave 0
+       while the heater was off.
 
-The bundled schemas that use these rewards set ``"version": 2``. To reproduce
-a run made with CityLearn 3.6.0 or earlier, select version 1 explicitly:
-
-.. code-block:: json
-
-   {
-     "reward_function": {
-       "type": "citylearn.reward_function.Electric_Vehicles_Reward_Function",
-       "attributes": {"version": 1}
-     }
-   }
+The bundled schemas that use these rewards set ``"version": 2``.
 
 Simulated energy flows and KPIs do not depend on the reward, so the version
 changes only the learning signal.

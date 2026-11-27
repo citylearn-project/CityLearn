@@ -1079,10 +1079,10 @@
 <td class="text-right"><p>ratio</p></td>
 <td><p>Rated round-trip efficiency.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">round_trip_efficiency_ratio</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">one_way_efficiency_ratio</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
 <td class="text-right"><p>ratio</p></td>
-<td><p>One-way efficiency at the last operation, the square root of the current round-trip efficiency. The name is kept for existing observation layouts.</p></td>
+<td><p>One-way efficiency at the last operation, the square root of the current round-trip efficiency. Named <code class="docutils literal notranslate"><span class="pre">round_trip_efficiency_ratio</span></code> before CityLearn 3.8.1.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phase_connection_L1/L2/L3</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
@@ -1150,10 +1150,10 @@ features derived from them (<code class="docutils literal notranslate"><span cla
 <code class="docutils literal notranslate"><span class="pre">available_charge_action_normalized</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge_energy_kwh_step</span></code>,
 <code class="docutils literal notranslate"><span class="pre">charge_headroom_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">max_deliverable_energy_until_departure_kwh</span></code>,
 <code class="docutils literal notranslate"><span class="pre">departure_energy_margin_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">departure_feasibility_ratio</span></code> and the
-<code class="docutils literal notranslate"><span class="pre">flexible_charge_*</span></code> and <code class="docutils literal notranslate"><span class="pre">community_flexible_*</span></code> sums) follow. Under physics
-version 1 they are computed from the nominal capacity, as in CityLearn 3.6.0,
-and report a full faded battery as able to charge. Batteries without fade
-(<code class="docutils literal notranslate"><span class="pre">capacity_loss_coefficient</span></code> 0) give the same values in both versions.</p>
+<code class="docutils literal notranslate"><span class="pre">flexible_charge_*</span></code> and <code class="docutils literal notranslate"><span class="pre">community_flexible_*</span></code> sums) follow. CityLearn 3.6.0
+computed them from the nominal capacity and reported a full faded battery as
+able to charge; batteries without fade (<code class="docutils literal notranslate"><span class="pre">capacity_loss_coefficient</span></code> 0) give the
+same values as in 3.6.0.</p>
 </section>
 <section id="pv">
 <h3><code class="docutils literal notranslate"><span class="pre">pv</span></code><a class="headerlink" href="#pv" title="Link to this heading"></a></h3>

@@ -333,7 +333,7 @@ receives the whole <code class="docutils literal notranslate"><span class="pre">
 </table>
 <p>The wrapper validates these conditions at construction and again after reset, and
 raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that names the setting, for example:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ValueError: MultiCommunityEnv requires all communities to share physics_version, got {'A': 2, 'B': 1}.
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ValueError: MultiCommunityEnv requires all communities to share business_as_usual_ev_charge_target, got {'A': 'full', 'B': 'requested'}.
 </pre></div>
 </div>
 <p>Calendar windows are not part of the contract. Each child selects its episode

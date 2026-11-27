@@ -167,8 +167,8 @@ The deferrable appliance energies are bounded by the appliances' cycle
 definitions: `cycle_energy_kwh` and `remaining_energy_kwh` by [0, the largest
 cycle energy of the building's appliances], and `current_step_energy_kwh` by
 [0, the largest step energy of their cycle profiles]. No cycle can report more,
-so these bounds hold under any controller. Physics version 1 keeps the
-placeholder [-1, 1e6] of CityLearn 3.6.0. The entity `deferrable_appliance`
+so these bounds hold under any controller (CityLearn 3.6.0 used the
+placeholder [-1, 1e6]). The entity `deferrable_appliance`
 table bounds the three by [0, the largest cycle energy in the district, at least
 1 kWh].
 
@@ -176,12 +176,12 @@ Every bound is then widened by `observation_space_limit_delta` (0 by default).
 
 The indoor temperature of the LSTM buildings depends on how the HVAC is run, so
 whether it stays inside these estimates depends on the controller. On the two
-Quebec neighbourhoods (20 buildings, steps 0–2159, physics version 2):
+Quebec neighbourhoods (20 buildings, steps 0–2159):
 
 | Controller | Indoor temperature | Heating delta | Set point |
 |---|---|---|---|
-| HVAC at the dataset demand: `BusinessAsUsualAgent` under `baseline_version=2` (the default), `RBCBasicPolicy`, `RBCSmartPolicy`, `RBCCommunityPolicy` | inside, 17.0–26.5 °C against [−1.1, 42.4] | inside | inside |
-| HVAC not run: `BusinessAsUsualAgent` under `baseline_version=1`, the rule-based baselines with `hvac='off'`, `ZeroActionAgent` | below `low` in 38% of building-steps, by up to 22.6 °C | below `low` in 89% of building-steps, by up to 31.6 °C | inside |
+| HVAC at the dataset demand: `BusinessAsUsualAgent` (the default), `RBCBasicPolicy`, `RBCSmartPolicy`, `RBCCommunityPolicy` | inside, 17.0–26.5 °C against [−1.1, 42.4] | inside | inside |
+| HVAC not run: the BAU and the rule-based baselines with `hvac='off'`, `ZeroActionAgent` | below `low` in 38% of building-steps, by up to 22.6 °C | below `low` in 89% of building-steps, by up to 31.6 °C | inside |
 | Random actions | above `high` in 7% of building-steps, by up to 20.7 °C | above `high` in 19% of building-steps, by up to 27.3 °C | inside |
 
 Without heating the indoor temperature falls towards the outdoor temperature,

@@ -166,8 +166,8 @@
 <span class="sd">    random_seed: int, optional</span>
 <span class="sd">        Pseudorandom number generator seed for repeatable results.</span>
 <span class="sd">    random_stream_version: str, optional</span>
-<span class="sd">        Derivation of the outage stream, ``'v2'`` (default) or ``'v1'`` (CityLearn 3.6.0 and earlier); see</span>
-<span class="sd">        :py:mod:`citylearn.random_streams`. A building that owns the model sets it to its own version at reset.</span>
+<span class="sd">        Derivation of the outage stream, ``'v2'``, the only version; see :py:mod:`citylearn.random_streams`.</span>
+<span class="sd">        A building that owns the model sets it to its own version at reset.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_stream_version</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -201,9 +201,8 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Give the model a stable stream for this building and episode, shared by the controller and BAU.</span>
 
-<span class="sd">        With ``'v1'`` only an unseeded model uses it: a seeded model draws ``RandomState(random_seed)``</span>
-<span class="sd">        in every building and episode. With ``'v2'`` the stream is derived from the model's seed, or</span>
-<span class="sd">        the environment seed when the model has none, the building, the episode key and the window.</span>
+<span class="sd">        The stream is derived from the model's seed, or the environment seed when the model has none, the</span>
+<span class="sd">        building, the episode key and the window.</span>
 <span class="sd">        """</span>
 
         <span class="k">if</span> <span class="n">random_stream_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -214,11 +213,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_episode_root_seed</span> <span class="o">=</span> <span class="n">seed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_episode_stream_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">building_name</span><span class="p">,</span> <span class="n">random_stream_episode</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">start</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">end</span><span class="p">))</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_signal_random_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_signal_random_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Random stream for one call of :py:meth:`get_signals`."""</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">==</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
 
         <span class="n">explicit_seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__random_seed</span>
         <span class="n">key</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_episode_stream_key'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -357,7 +353,6 @@
 <span class="sd">        """</span>
 
         <span class="n">nprs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_signal_random_state</span><span class="p">()</span>
-        <span class="n">legacy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">==</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span>
         <span class="n">days_per_year</span> <span class="o">=</span> <span class="mf">365.0</span>
         <span class="n">seconds_per_day</span> <span class="o">=</span> <span class="mf">86400.0</span>
         <span class="n">seconds_per_minute</span> <span class="o">=</span> <span class="mf">60.0</span>
@@ -367,25 +362,6 @@
         <span class="n">daily_outage_probability</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saifi</span><span class="o">/</span><span class="n">days_per_year</span>
         <span class="n">start_time_steps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time_steps_per_day</span><span class="p">)))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time_steps</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time_steps</span>
         <span class="n">signals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">time_steps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">legacy</span><span class="p">:</span>
-            <span class="c1"># CityLearn 3.6.0: drops day 0 and the partial last day, and floors durations.</span>
-            <span class="n">outage_days</span> <span class="o">=</span> <span class="n">nprs</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">daily_outage_probability</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">day_count</span><span class="p">))</span>
-            <span class="n">outage_day_ixs</span> <span class="o">=</span> <span class="n">outage_days</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">outage_days</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">outage_day_ixs</span> <span class="o">=</span> <span class="n">outage_day_ixs</span><span class="p">[</span><span class="n">outage_day_ixs</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
-            <span class="n">outage_day_count</span> <span class="o">=</span> <span class="n">outage_days</span><span class="p">[</span><span class="n">outage_days</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">outage_start_time_steps</span> <span class="o">=</span> <span class="n">nprs</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">start_time_steps</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">outage_day_count</span><span class="p">)</span>
-            <span class="n">outage_durations</span> <span class="o">=</span> <span class="n">nprs</span><span class="o">.</span><span class="n">exponential</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">caidi</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">outage_day_count</span><span class="p">)</span> <span class="c1"># [mins]</span>
-            <span class="n">outage_duration_time_steps</span> <span class="o">=</span> <span class="n">outage_durations</span><span class="o">*</span><span class="n">time_steps_per_minute</span>
-
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">outage_day_ixs</span><span class="p">,</span> <span class="n">outage_start_time_steps</span><span class="p">,</span> <span class="n">outage_duration_time_steps</span><span class="p">):</span>
-                <span class="n">start_ix</span> <span class="o">=</span> <span class="n">i</span><span class="o">*</span><span class="n">time_steps_per_day</span> <span class="o">+</span> <span class="n">j</span>
-                <span class="n">end_ix</span> <span class="o">=</span> <span class="n">start_ix</span> <span class="o">+</span> <span class="n">k</span>
-                <span class="n">start_ix</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">start_ix</span><span class="p">)</span>
-                <span class="n">end_ix</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">end_ix</span><span class="p">)</span>
-                <span class="n">signals</span><span class="p">[</span><span class="n">start_ix</span><span class="p">:</span><span class="n">end_ix</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-
-            <span class="k">return</span> <span class="n">signals</span>
 
         <span class="c1"># Every day can have an outage, the partial last day included; an outage that starts past</span>
         <span class="c1"># the end of the series is dropped and one that runs past it is truncated.</span>

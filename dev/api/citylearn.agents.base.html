@@ -233,7 +233,7 @@ centralized history has a single <code class="docutils literal notranslate"><spa
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.agents.base.Agent.episode_random_generator">
 <span class="sig-name descname"><span class="pre">episode_random_generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">purpose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span></span></span><a class="reference internal" href="../_modules/citylearn/agents/base.html#Agent.episode_random_generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.base.Agent.episode_random_generator" title="Link to this definition"></a></dt>
-<dd><p>Generator of <cite>purpose</cite> for the current episode (<code class="docutils literal notranslate"><span class="pre">random_stream_version='v2'</span></code>).</p>
+<dd><p>Generator of <cite>purpose</cite> for the current episode.</p>
 <p>The generator is derived from <code class="xref py py-attr docutils literal notranslate"><span class="pre">random_seed</span></code>, <cite>purpose</cite> and the episode key of the shared
 episode tracker, and persists for the rest of the episode, so draws within an episode come from one
 stream and every episode starts a new, independent stream. Generators of earlier episodes are dropped.</p>
@@ -325,9 +325,9 @@ stream and every episode starts a new, independent stream. Generators of earlier
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.agents.base.</span></span><span class="sig-name descname"><span class="pre">NoControlAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><span class="pre">CityLearnEnv</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/base.html#NoControlAgent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.base.NoControlAgent" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#citylearn.agents.base.Agent" title="citylearn.agents.base.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a></p>
 <p>Passive no-control agent: every active control action is disabled.</p>
-<p>Up to CityLearn 3.6.0 this class was called <code class="docutils literal notranslate"><span class="pre">BaselineAgent</span></code>. That name is a deprecated alias that will be
-removed in a later release: in CityLearn, “baseline” names the KPI counterfactual (the same buildings without
-storage, with PV), while this agent controls nothing.</p>
+<p>Up to CityLearn 3.6.0 this class was called <code class="docutils literal notranslate"><span class="pre">BaselineAgent</span></code>; that alias was removed in CityLearn 3.8.1. In
+CityLearn, “baseline” names the KPI counterfactual (the same buildings without storage, with PV), while this
+agent controls nothing.</p>
 <p>This agent will provide results for when there is no storage for load shifting and no heat pump partial load.
 The storage actions prescribed will be 0.0 and the heat pump will have no action, i.e. <cite>None</cite>, causing it to
 deliver the ideal load in the building time series files.</p>

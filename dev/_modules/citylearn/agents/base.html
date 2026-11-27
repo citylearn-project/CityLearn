@@ -151,21 +151,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">spaces</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_streams</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Environment</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
 <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-
-<span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="c1"># Deprecated names of renamed classes resolve to the same class, also for unpickling and import paths.</span>
-    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">'BaselineAgent'</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents._renamed</span><span class="w"> </span><span class="kn">import</span> <span class="n">renamed</span>
-
-        <span class="k">return</span> <span class="n">renamed</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">'BaselineAgent'</span><span class="p">,</span> <span class="s1">'NoControlAgent'</span><span class="p">,</span> <span class="n">NoControlAgent</span><span class="p">)</span>
-
-    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'module </span><span class="si">{</span><span class="vm">__name__</span><span class="si">!r}</span><span class="s1"> has no attribute </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s1">'</span><span class="p">)</span>
 
 <div class="viewcode-block" id="get_env_attr">
 <a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.get_env_attr">[docs]</a>
@@ -249,12 +239,6 @@
             <span class="n">episode_tracker</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">episode_tracker</span><span class="p">,</span>
             <span class="n">time_step_ratio</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">time_step_ratio</span>
         <span class="p">)</span>
-        <span class="c1"># The agent's own random streams follow the derivation of its environment's streams. The default is not</span>
-        <span class="c1"># stored, so agents saved before the setting existed load with the same attributes as new ones.</span>
-        <span class="n">random_stream_version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="p">,</span> <span class="s1">'random_stream_version'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">random_stream_version</span> <span class="o">!=</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">DEFAULT_RANDOM_STREAM_VERSION</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_set_random_stream</span><span class="p">(</span><span class="n">random_stream_version</span><span class="o">=</span><span class="n">random_stream_version</span><span class="p">)</span>
         <span class="c1"># Random actions follow `random_seed`; a space the caller has already seeded keeps its stream. The layout</span>
         <span class="c1"># generation is stored only once a dynamic topology changes it, so agents load as saved by older releases.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_seed_action_spaces</span><span class="p">()</span>
@@ -556,7 +540,7 @@
 <div class="viewcode-block" id="Agent.episode_random_generator">
 <a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.Agent.episode_random_generator">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">episode_random_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Generator of `purpose` for the current episode (``random_stream_version='v2'``).</span>
+<span class="w">        </span><span class="sd">"""Generator of `purpose` for the current episode.</span>
 
 <span class="sd">        The generator is derived from :py:attr:`random_seed`, `purpose` and the episode key of the shared</span>
 <span class="sd">        episode tracker, and persists for the rest of the episode, so draws within an episode come from one</span>
@@ -599,9 +583,9 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">NoControlAgent</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""Passive no-control agent: every active control action is disabled.</span>
 
-<span class="sd">    Up to CityLearn 3.6.0 this class was called ``BaselineAgent``. That name is a deprecated alias that will be</span>
-<span class="sd">    removed in a later release: in CityLearn, "baseline" names the KPI counterfactual (the same buildings without</span>
-<span class="sd">    storage, with PV), while this agent controls nothing.</span>
+<span class="sd">    Up to CityLearn 3.6.0 this class was called ``BaselineAgent``; that alias was removed in CityLearn 3.8.1. In</span>
+<span class="sd">    CityLearn, "baseline" names the KPI counterfactual (the same buildings without storage, with PV), while this</span>
+<span class="sd">    agent controls nothing.</span>
 
 <span class="sd">    This agent will provide results for when there is no storage for load shifting and no heat pump partial load. </span>
 <span class="sd">    The storage actions prescribed will be 0.0 and the heat pump will have no action, i.e. `None`, causing it to </span>

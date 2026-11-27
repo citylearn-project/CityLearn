@@ -32,7 +32,7 @@ carries.
       were renamed for that reason: ``BaselineAgent`` is now :py:class:`citylearn.agents.base.NoControlAgent`,
       a passive controller that disables every active action, and ``ZeroActionBaselineAgent`` is now
       :py:class:`citylearn.agents.baseline.ZeroActionAgent`, which requests zero for every action. The
-      old names remain as deprecated aliases until a later release.
+      old names were removed in CityLearn 3.8.1.
       The rule-based policies are called :term:`Reference controllers`, not baselines. In
       :term:`Demand response` settlement, the request's baseline is its pre-event reference power.
 

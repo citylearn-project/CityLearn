@@ -254,13 +254,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">__exploration_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Uniform draw that decides between exploration and exploitation at this time step.</span>
 
-<span class="sd">        With ``random_stream_version='v1'`` it is the first value of ``RandomState(random_seed + time_step)``, as in</span>
-<span class="sd">        CityLearn 3.6.0, so seed ``s`` at time step ``t + 1`` repeats seed ``s + 1`` at time step ``t``. With ``'v2'``</span>
-<span class="sd">        it is the next value of one generator per episode, derived from :py:attr:`random_seed` and the episode.</span>
+<span class="sd">        It is the next value of one generator per episode, derived from :py:attr:`random_seed` and the episode.</span>
 <span class="sd">        """</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">==</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_random_generator</span><span class="p">(</span><span class="n">random_streams</span><span class="o">.</span><span class="n">AGENT_EXPLORATION</span><span class="p">)</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
 

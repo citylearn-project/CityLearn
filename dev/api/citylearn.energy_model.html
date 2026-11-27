@@ -200,18 +200,6 @@ round-trip value and each conversion keeps its square root, so charging <span cl
 <span class="math notranslate nohighlight">\(\eta\)</span> is read from <cite>power_efficiency_curve</cite> at the applied power. Charging is limited by
 <cite>capacity_power_curve</cite> and by the degraded capacity; discharging by <cite>discharge_power_curve</cite> and by the
 floor <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">-</span> <span class="pre">depth_of_discharge)</span> <span class="pre">*</span> <span class="pre">capacity</span></code>. If <cite>initial_soc</cite> is omitted, the battery starts at that floor.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="citylearn.energy_model.Battery.legacy_discharge_power_limit">
-<span class="sig-name descname"><span class="pre">legacy_discharge_power_limit</span></span><a class="headerlink" href="#citylearn.energy_model.Battery.legacy_discharge_power_limit" title="Link to this definition"></a></dt>
-<dd><p>Limit discharge with <cite>capacity_power_curve</cite> instead of <cite>discharge_power_curve</cite>, as CityLearn 3.6.0 and
-earlier did. The environment sets it for physics version 1.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>**kwargs</strong> (<em>Any</em>) – Other keyword arguments used to initialize super classes.</p>
@@ -364,8 +352,7 @@ Capacity and depth-of-discharge limits use the current stored energy.</p>
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.discharge_power_curve">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">discharge_power_curve</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#citylearn.energy_model.Battery.discharge_power_curve" title="Link to this definition"></a></dt>
 <dd><p>Maximum discharge power of the battery as a fraction of <cite>nominal_power</cite>, as a function of its state of charge.</p>
-<p>Defaults to a flat curve at <cite>nominal_power</cite>. <cite>capacity_power_curve</cite> limits charging only, unless
-<cite>legacy_discharge_power_limit</cite> is set.</p>
+<p>Defaults to a flat curve at <cite>nominal_power</cite>. <cite>capacity_power_curve</cite> limits charging only.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -422,8 +409,6 @@ undefined (<code class="docutils literal notranslate"><span class="pre">NaN</spa
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.get_max_output_power">
 <span class="sig-name descname"><span class="pre">get_max_output_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">energy_init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#Battery.get_max_output_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.Battery.get_max_output_power" title="Link to this definition"></a></dt>
 <dd><p>Get maximum output power while considering <cite>discharge_power_curve</cite> limitations.</p>
-<p>With <cite>legacy_discharge_power_limit</cite> (physics version 1), discharge is limited by the charging
-curve, <cite>capacity_power_curve</cite>, as in CityLearn 3.6.0 and earlier.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>max_output_power</strong> – Maximum amount of power that the storage unit can output [kW].</p>
@@ -1203,7 +1188,7 @@ the default with <code class="docutils literal notranslate"><span class="pre">1<
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.autosize">
-<span class="sig-name descname"><span class="pre">autosize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">demand</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">safety_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">physics_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#StorageDevice.autosize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.StorageDevice.autosize" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">autosize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">demand</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">safety_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#StorageDevice.autosize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.StorageDevice.autosize" title="Link to this definition"></a></dt>
 <dd><p>Autosize <cite>capacity</cite>.</p>
 <p>Set <cite>capacity</cite> to hold <cite>duration</cite> hours of the peak <cite>demand</cite> power.</p>
 <dl class="field-list simple">
@@ -1212,10 +1197,7 @@ the default with <code class="docutils literal notranslate"><span class="pre">1<
 <li><p><strong>demand</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Thermal energy in [kWh] at dataset resolution. It is converted to
 average control-step power in [kW] before <cite>duration</cite> is applied.</p></li>
 <li><p><strong>safety_factor</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default:</em><em> (</em><em>1.0</em><em>, </em><em>2.0</em><em>)</em>) – The <cite>capacity</cite> is oversized by factor of <cite>safety_factor</cite>.</p></li>
-<li><p><strong>duration</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default: 1.0</em>) – Hours of peak demand power the tank holds. Ignored by physics version 1.</p></li>
-<li><p><strong>physics_version</strong> (<em>int</em><em>, </em><em>optional</em>) – Physics version, see <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.physics_version</span></code>. Version 1 sizes the
-tank to the largest control-step demand in [kWh], which equals one hour of peak power
-only for hourly steps. Defaults to the latest version.</p></li>
+<li><p><strong>duration</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default: 1.0</em>) – Hours of peak demand power the tank holds.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1326,15 +1308,6 @@ of its value, and each of the two conversions keeps <cite>one_way_efficiency</ci
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.reset">
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/energy_model.html#StorageDevice.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.StorageDevice.reset" title="Link to this definition"></a></dt>
 <dd><p>Reset <cite>StorageDevice</cite> to initial state.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.round_trip_efficiency">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">round_trip_efficiency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.StorageDevice.round_trip_efficiency" title="Link to this definition"></a></dt>
-<dd><p>Deprecated alias of <cite>one_way_efficiency</cite>.</p>
-<p>Despite its name, this property has always returned the one-way efficiency, the square root of
-<cite>efficiency</cite>; the round-trip efficiency is <cite>efficiency</cite> itself. It is kept, with the same value,
-for existing code and will be removed in a future release.</p>
 </dd></dl>
 
 <dl class="py method">

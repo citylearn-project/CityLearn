@@ -282,8 +282,7 @@ Defaults to -0.1 when not present.</p>
 <span class="sig-name descname"><span class="pre">soc_unit</span></span><a class="headerlink" href="#citylearn.data.ChargerSimulation.soc_unit" title="Link to this definition"></a></dt>
 <dd><p>Unit of the SOC columns, <code class="docutils literal notranslate"><span class="pre">'percent'</span></code> or <code class="docutils literal notranslate"><span class="pre">'fraction'</span></code>, for both columns or per column
 name. <code class="docutils literal notranslate"><span class="pre">None</span></code> (default) infers it once per column: percent if any valid value is above 1.
-<code class="docutils literal notranslate"><span class="pre">'per_value'</span></code> is the value-by-value rule of physics version 1. The schema loader infers it
-from the whole column of the file.</p>
+The schema loader infers it from the whole column of the file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str or Mapping[str, str]</p>
@@ -336,18 +335,8 @@ negative values are missing and become <cite>default_soc_value</cite>.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="citylearn.data.DataSet.DEFAULT_CACHE_DIRECTORY">
-<span class="sig-name descname"><span class="pre">DEFAULT_CACHE_DIRECTORY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'/home/runner/.cache/citylearn/v3.8.0'</span></em><a class="headerlink" href="#citylearn.data.DataSet.DEFAULT_CACHE_DIRECTORY" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="citylearn.data.DataSet.GITHUB_ACCOUNT">
 <span class="sig-name descname"><span class="pre">GITHUB_ACCOUNT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'citylearn-project'</span></em><a class="headerlink" href="#citylearn.data.DataSet.GITHUB_ACCOUNT" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="citylearn.data.DataSet.GITHUB_API_CONTENT_URL">
-<span class="sig-name descname"><span class="pre">GITHUB_API_CONTENT_URL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'https://api.github.com/repos/citylearn-project/CityLearn/contents'</span></em><a class="headerlink" href="#citylearn.data.DataSet.GITHUB_API_CONTENT_URL" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">

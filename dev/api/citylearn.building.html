@@ -345,7 +345,7 @@ LBNL’s Tracking The Sun dataset.</p>
 <dt class="sig sig-object py" id="citylearn.building.Building.baseline_version">
 <span class="sig-name descname"><span class="pre">baseline_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#citylearn.building.Building.baseline_version" title="Link to this definition"></a></dt>
 <dd><p>KPI baseline version of the building, see <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.baseline_version</span></code>. Set by the
-environment; <code class="docutils literal notranslate"><span class="pre">None</span></code> selects the default version.</p>
+environment and recorded in its metadata; 2 is the only version.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -852,8 +852,7 @@ Buildings without chargers need no sidecar. The deferrable appliances and the HV
 controller ran them in this series. The default KPI condition adds, for buildings with temperature
 dynamics (LSTM), the difference to the dataset’s ideal-load heating and cooling demand
 (<code class="xref py py-attr docutils literal notranslate"><span class="pre">net_electricity_consumption_without_storage_and_partial_load</span></code>).</p>
-<p>With <cite>baseline_version</cite> 1 (CityLearn 3.6.0 and earlier) no charging is added back, so on EV datasets the
-baseline is a community whose cars never charge. See <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.baseline_version</span></code>.</p>
+<p>See <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.baseline_version</span></code>.</p>
 <p>Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.</p>
 </dd></dl>
 
@@ -940,7 +939,7 @@ identically to the first.</p>
 <dt class="sig sig-object py" id="citylearn.building.Building.physics_version">
 <span class="sig-name descname"><span class="pre">physics_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#citylearn.building.Building.physics_version" title="Link to this definition"></a></dt>
 <dd><p>Physics version of the building, see <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.physics_version</span></code>. Set by the
-environment; <code class="docutils literal notranslate"><span class="pre">None</span></code> selects the default version.</p>
+environment and recorded in its metadata; 2 is the only version.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1432,8 +1431,7 @@ or heating demand at each <cite>time_step</cite>.</p>
 rest of the episode when <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>set_point_limits</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Range, in [C], an occupant can move a heating or cooling set point to; defaults to
 <a class="reference internal" href="#citylearn.building.LogisticRegressionOccupantInteractionBuilding.DEFAULT_OCCUPANT_SET_POINT_LIMITS" title="citylearn.building.LogisticRegressionOccupantInteractionBuilding.DEFAULT_OCCUPANT_SET_POINT_LIMITS"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_OCCUPANT_SET_POINT_LIMITS</span></code></a>. A change never goes past a limit, and a schedule
-value outside the range is not moved into it. Applies under physics version 2 and later only:
-physics version 1 keeps the unbounded set points of CityLearn 3.6.0 (CityLearn #352).</p></li>
+value outside the range is not moved into it (CityLearn #352).</p></li>
 <li><p><strong>**kwargs</strong> (<em>Any</em>) – Other keyword arguments of <a class="reference internal" href="#citylearn.building.OccupantInteractionBuilding" title="citylearn.building.OccupantInteractionBuilding"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.building.OccupantInteractionBuilding</span></code></a>.</p></li>
 </ul>
 </dd>
@@ -1477,9 +1475,8 @@ at the beginning of an episode.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.building.LogisticRegressionOccupantInteractionBuilding.set_point_limits">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_point_limits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#citylearn.building.LogisticRegressionOccupantInteractionBuilding.set_point_limits" title="Link to this definition"></a></dt>
-<dd><p>Range, in [C], an occupant can move a set point to; <code class="docutils literal notranslate"><span class="pre">None</span></code> under physics version 1, which
-does not limit it.</p>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_point_limits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.building.LogisticRegressionOccupantInteractionBuilding.set_point_limits" title="Link to this definition"></a></dt>
+<dd><p>Range, in [C], an occupant can move a set point to.</p>
 </dd></dl>
 
 <dl class="py method">

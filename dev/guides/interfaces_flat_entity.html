@@ -346,14 +346,14 @@ the simulation window. For the thermal observations:</p>
 definitions: <code class="docutils literal notranslate"><span class="pre">cycle_energy_kwh</span></code> and <code class="docutils literal notranslate"><span class="pre">remaining_energy_kwh</span></code> by [0, the largest
 cycle energy of the building’s appliances], and <code class="docutils literal notranslate"><span class="pre">current_step_energy_kwh</span></code> by
 [0, the largest step energy of their cycle profiles]. No cycle can report more,
-so these bounds hold under any controller. Physics version 1 keeps the
-placeholder [-1, 1e6] of CityLearn 3.6.0. The entity <code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code>
+so these bounds hold under any controller (CityLearn 3.6.0 used the
+placeholder [-1, 1e6]). The entity <code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code>
 table bounds the three by [0, the largest cycle energy in the district, at least
 1 kWh].</p>
 <p>Every bound is then widened by <code class="docutils literal notranslate"><span class="pre">observation_space_limit_delta</span></code> (0 by default).</p>
 <p>The indoor temperature of the LSTM buildings depends on how the HVAC is run, so
 whether it stays inside these estimates depends on the controller. On the two
-Quebec neighbourhoods (20 buildings, steps 0–2159, physics version 2):</p>
+Quebec neighbourhoods (20 buildings, steps 0–2159):</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Controller</p></th>
@@ -363,12 +363,12 @@ Quebec neighbourhoods (20 buildings, steps 0–2159, physics version 2):</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>HVAC at the dataset demand: <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> under <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code> (the default), <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code></p></td>
+<tr class="row-even"><td><p>HVAC at the dataset demand: <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> (the default), <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code></p></td>
 <td><p>inside, 17.0–26.5 °C against [−1.1, 42.4]</p></td>
 <td><p>inside</p></td>
 <td><p>inside</p></td>
 </tr>
-<tr class="row-odd"><td><p>HVAC not run: <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> under <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code>, the rule-based baselines with <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code>, <code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code></p></td>
+<tr class="row-odd"><td><p>HVAC not run: the BAU and the rule-based baselines with <code class="docutils literal notranslate"><span class="pre">hvac='off'</span></code>, <code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code></p></td>
 <td><p>below <code class="docutils literal notranslate"><span class="pre">low</span></code> in 38% of building-steps, by up to 22.6 °C</p></td>
 <td><p>below <code class="docutils literal notranslate"><span class="pre">low</span></code> in 89% of building-steps, by up to 31.6 °C</p></td>
 <td><p>inside</p></td>

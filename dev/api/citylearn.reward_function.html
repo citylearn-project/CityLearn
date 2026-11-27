@@ -185,26 +185,17 @@ building file, or the default time series value of 2.0 is used.</p></li>
 boundary or heating mode but temperature is below setpoint lower boundary.</p></li>
 <li><p><strong>higher_exponent</strong> (<em>float</em><em>, </em><em>default = 2.0</em>) – Penalty exponent for when in cooling mode but temperature is below setpoint lower
 boundary or heating mode but temperature is above setpoint upper boundary.</p></li>
-<li><p><strong>version</strong> (<em>int</em><em>, </em><em>default: 2</em>) – <p>Reward definition version.</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code> (default): follows the HVAC mode as described above. In heating mode at 21.5 C with a 20 C set
-point the reward is -1.5 whether the heater runs or not.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> (deprecated): the reward of CityLearn 3.6.0 and earlier, kept only to reproduce earlier runs and to
-be removed in a later release; selecting it raises a <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>. In cooling (<code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> 1)
-and heating (<code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> 2) mode, the side of the set point penalised within the comfort band, and the exponent
-above the upper boundary, follow whether the heating demand exceeds the cooling demand at the time step,
-not the mode. In heating mode at 21.5 C with a 20 C set point, the reward is 0 while the heater is off
-and -1.5 while it runs; passive overheating within the band is not penalised.</p></li>
-</ul>
-<p>In off (<code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> 0) and automatic (<code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> 3) mode, which do not identify a single service,
-both versions use the demands to choose the exponent outside the band.</p>
-</p></li>
+<li><p><strong>version</strong> (<em>int</em><em>, </em><em>default: 2</em>) – Reward definition version. <code class="docutils literal notranslate"><span class="pre">2</span></code> is the only version: it follows the HVAC mode as described above. In
+heating mode at 21.5 C with a 20 C set point the reward is -1.5 whether the heater runs or not. In off
+(<code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> 0) and automatic (<code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> 3) mode, which do not identify a single service, the
+demands choose the exponent outside the band. Version 1, the reward of CityLearn 3.6.0, was removed in
+CityLearn 3.8.1.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="citylearn.reward_function.ComfortReward.VERSIONS">
-<span class="sig-name descname"><span class="pre">VERSIONS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(1,</span> <span class="pre">2)</span></em><a class="headerlink" href="#citylearn.reward_function.ComfortReward.VERSIONS" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">VERSIONS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(2,)</span></em><a class="headerlink" href="#citylearn.reward_function.ComfortReward.VERSIONS" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -248,7 +239,7 @@ both versions use the demands to choose the exponent outside the band.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="citylearn.reward_function.ComfortReward.version">
-<span class="sig-name descname"><span class="pre">version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#citylearn.reward_function.ComfortReward.version" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#citylearn.reward_function.ComfortReward.version" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -268,26 +259,17 @@ of the building, weighted by <cite>weights</cite>, and a penalty of <cite>chargi
 <li><p><strong>env_metadata</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – General static information about the environment.</p></li>
 <li><p><strong>weights</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Signed weights of the EV terms: <cite>no_car_charging</cite>, <cite>battery_limits</cite>, <cite>soc_impossible</cite>, <cite>soc_under</cite>,
 <cite>close_soc</cite>, <cite>self_ev_consumption</cite> and <cite>extra_self_production</cite>. Penalties are negative.</p></li>
-<li><p><strong>version</strong> (<em>int</em><em>, </em><em>default: 2</em>) – <p>Reward definition version.</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code> (default): every building gets its base reward plus its EV terms; a building without chargers gets
-its base reward. The scale uses the building’s own base reward, with or without a central agent. A
-deficit of 0.25 or more adds <code class="docutils literal notranslate"><span class="pre">min(2</span> <span class="pre">*</span> <span class="pre">w,</span> <span class="pre">-(w</span> <span class="pre">**</span> <span class="pre">2))</span></code> with <code class="docutils literal notranslate"><span class="pre">w</span> <span class="pre">=</span> <span class="pre">weights['soc_under']</span></code> (-25 with the
-default weights), never less than the moderate deficit term.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> (deprecated): the reward of CityLearn 3.6.0 and earlier, kept only to reproduce earlier runs and to
-be removed in a later release; selecting it raises a <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>. A building with chargers gets
-only its EV terms; the base reward scales them but is not added. A building without chargers gets 0.
-With a central agent, the scale uses the district total of the base reward. Leaving with a state of
-charge 0.25 or more below the required departure SOC adds <code class="docutils literal notranslate"><span class="pre">weights['soc_under']</span> <span class="pre">**</span> <span class="pre">2</span></code> (+25 with the default weights), which exceeds
-the moderate deficit term <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">weights['soc_under']</span></code> (-10): severe under-charging is rewarded.</p></li>
-</ul>
-</p></li>
+<li><p><strong>version</strong> (<em>int</em><em>, </em><em>default: 2</em>) – Reward definition version. <code class="docutils literal notranslate"><span class="pre">2</span></code> is the only version: every building gets its base reward plus its EV
+terms; a building without chargers gets its base reward. The scale uses the building’s own base reward,
+with or without a central agent. A deficit of 0.25 or more adds <code class="docutils literal notranslate"><span class="pre">min(2</span> <span class="pre">*</span> <span class="pre">w,</span> <span class="pre">-(w</span> <span class="pre">**</span> <span class="pre">2))</span></code> with
+<code class="docutils literal notranslate"><span class="pre">w</span> <span class="pre">=</span> <span class="pre">weights['soc_under']</span></code> (-25 with the default weights), never less than the moderate deficit term.
+Version 1, the reward of CityLearn 3.6.0, was removed in CityLearn 3.8.1.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="citylearn.reward_function.Electric_Vehicles_Reward_Function.VERSIONS">
-<span class="sig-name descname"><span class="pre">VERSIONS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(1,</span> <span class="pre">2)</span></em><a class="headerlink" href="#citylearn.reward_function.Electric_Vehicles_Reward_Function.VERSIONS" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">VERSIONS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(2,)</span></em><a class="headerlink" href="#citylearn.reward_function.Electric_Vehicles_Reward_Function.VERSIONS" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -321,7 +303,7 @@ the moderate deficit term <code class="docutils literal notranslate"><span class
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="citylearn.reward_function.Electric_Vehicles_Reward_Function.version">
-<span class="sig-name descname"><span class="pre">version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#citylearn.reward_function.Electric_Vehicles_Reward_Function.version" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#citylearn.reward_function.Electric_Vehicles_Reward_Function.version" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -606,8 +588,7 @@ boundary or heating mode but temperature is below setpoint lower boundary.</p></
 <li><p><strong>higher_exponent</strong> (<em>float</em><em>, </em><em>default = 2.0</em>) – Penalty exponent for when in cooling mode but temperature is below setpoint lower
 boundary or heating mode but temperature is above setpoint upper boundary.</p></li>
 <li><p><strong>coefficients</strong> (<em>Tuple</em><em>, </em><em>default =</em><em> (</em><em>1.0</em><em>, </em><em>1.0</em><em>)</em>) – Coefficents for <cite>citylearn.reward_function.SolarPenaltyReward</cite> and <a class="reference internal" href="#citylearn.reward_function.ComfortReward" title="citylearn.reward_function.ComfortReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.reward_function.ComfortReward</span></code></a> values respectively.</p></li>
-<li><p><strong>version</strong> (<em>int</em><em>, </em><em>default: 2</em>) – Version of the <a class="reference internal" href="#citylearn.reward_function.ComfortReward" title="citylearn.reward_function.ComfortReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.reward_function.ComfortReward</span></code></a> term; see its <cite>version</cite> parameter.
-Version 1 is deprecated.</p></li>
+<li><p><strong>version</strong> (<em>int</em><em>, </em><em>default: 2</em>) – Version of the <a class="reference internal" href="#citylearn.reward_function.ComfortReward" title="citylearn.reward_function.ComfortReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.reward_function.ComfortReward</span></code></a> term; see its <cite>version</cite> parameter.</p></li>
 </ul>
 </dd>
 </dl>

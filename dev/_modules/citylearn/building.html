@@ -166,8 +166,6 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal</span><span class="w"> </span><span class="kn">import</span> <span class="n">grid_availability</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.building_ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">BuildingOpsService</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">baseline_version_of</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.physics_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">physics_version_of</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.service_energy</span><span class="w"> </span><span class="kn">import</span> <span class="n">SERVICE_ENERGY_COMPONENTS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.units</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">energy_kwh_to_power_kw</span><span class="p">,</span>
@@ -276,14 +274,14 @@
 <span class="sd">    """</span>
 
     <span class="c1">#: Physics version of the building, see :py:mod:`citylearn.internal.physics_version`. Set by the</span>
-    <span class="c1">#: environment; ``None`` selects the default version.</span>
+    <span class="c1">#: environment and recorded in its metadata; 2 is the only version.</span>
     <span class="n">physics_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1">#: KPI baseline version of the building, see :py:mod:`citylearn.internal.baseline_version`. Set by the</span>
-    <span class="c1">#: environment; ``None`` selects the default version.</span>
+    <span class="c1">#: environment and recorded in its metadata; 2 is the only version.</span>
     <span class="n">baseline_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="c1">#: Supplies the EV charging that the version 2 KPI baseline keeps: a callable that takes the building and</span>
+    <span class="c1">#: Supplies the EV charging that the KPI baseline keeps: a callable that takes the building and</span>
     <span class="c1">#: returns its charger consumption in the native BAU with the ``'full'`` target. Set by the environment.</span>
     <span class="n">_baseline_ev_charging_source</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s1">'Building'</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -684,8 +682,7 @@
 <span class="sd">        dynamics (LSTM), the difference to the dataset's ideal-load heating and cooling demand</span>
 <span class="sd">        (:py:attr:`net_electricity_consumption_without_storage_and_partial_load`).</span>
 
-<span class="sd">        With `baseline_version` 1 (CityLearn 3.6.0 and earlier) no charging is added back, so on EV datasets the</span>
-<span class="sd">        baseline is a community whose cars never charge. See :py:mod:`citylearn.internal.baseline_version`.</span>
+<span class="sd">        See :py:mod:`citylearn.internal.baseline_version`.</span>
 
 <span class="sd">        Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.</span>
 <span class="sd">        """</span>
@@ -698,21 +695,21 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">chargers_electricity_consumption</span><span class="p">,</span>
         <span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">baseline_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span><span class="p">:</span>
             <span class="n">values</span> <span class="o">=</span> <span class="n">values</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_ev_charging</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_without_grid_during_outage</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_baseline_ev_charging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""EV charging that the version 2 baseline keeps: the building's BAU charger consumption, `length` steps."""</span>
+<span class="w">        </span><span class="sd">"""EV charging that the baseline keeps: the building's BAU charger consumption, `length` steps."""</span>
 
         <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_ev_charging_source</span>
 
         <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s1">'Building </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s1"> has EV chargers, and the version 2 KPI baseline adds back their charging in '</span>
+                <span class="sa">f</span><span class="s1">'Building </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s1"> has EV chargers, and the KPI baseline adds back their charging in '</span>
                 <span class="s1">'the native BAU run, which only an environment can supply. Evaluate the building through its '</span>
-                <span class="s1">'CityLearnEnv, or set baseline_version=1.'</span>
+                <span class="s1">'CityLearnEnv.'</span>
             <span class="p">)</span>
 
         <span class="n">charging</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">source</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
@@ -2303,18 +2300,9 @@
         <span class="c1"># Optionally clamp to flexibility range if needed</span>
         <span class="n">energy</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">downward_electrical_flexibility</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_outage</span> <span class="ow">and</span> <span class="n">energy</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="c1"># Physics version 1: a pre-step estimate from the dataset thermal demand, which ignores the</span>
-                <span class="c1"># thermal storage discharge and the device limits, so the battery can discharge more than the</span>
-                <span class="c1"># islanded load and the surplus is booked as PV curtailment (#229).</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">base_total_kw</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ops_service</span><span class="o">.</span><span class="n">_estimate_base_power_at_step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                    <span class="n">base_total_kw</span> <span class="o">=</span> <span class="mf">0.0</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># The battery discharges after this step's demand and thermal storage discharges, so the</span>
-                <span class="c1"># islanded load left for the devices is known; PV covers it first.</span>
-                <span class="n">base_total_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ops_service</span><span class="o">.</span><span class="n">_outage_unserved_load_kw</span><span class="p">()</span>
+            <span class="c1"># The battery discharges after this step's demand and thermal storage discharges, so the</span>
+            <span class="c1"># islanded load left for the devices is known; PV covers it first (#229).</span>
+            <span class="n">base_total_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ops_service</span><span class="o">.</span><span class="n">_outage_unserved_load_kw</span><span class="p">()</span>
 
             <span class="n">local_load_kwh</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">base_total_kw</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
             <span class="n">energy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="o">-</span><span class="n">local_load_kwh</span><span class="p">)</span>
@@ -2334,12 +2322,11 @@
 <span class="w">        </span><span class="sd">"""Keyword argument that makes an HVAC device compare an energy cap with its power over the dataset step.</span>
 
 <span class="sd">        `update_cooling_demand` and `update_heating_demand` pass an energy per dataset step as</span>
-<span class="sd">        `max_electric_power`. Physics version 1 compares it directly with the available power in [kW],</span>
-<span class="sd">        which caps the device at one hour of output for longer steps. Later versions pass the step</span>
-<span class="sd">        duration so the device converts its power to energy first.</span>
+<span class="sd">        `max_electric_power`, and the step duration so the device converts its power to energy before</span>
+<span class="sd">        comparing them (#235).</span>
 <span class="sd">        """</span>
 
-        <span class="k">return</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="p">{</span><span class="s1">'step_hours'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_step_hours</span><span class="p">()}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">'step_hours'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_step_hours</span><span class="p">()}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_dataset_step_hours</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Duration of one dataset step in hours.</span>
@@ -2863,9 +2850,6 @@
                 <span class="n">low_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
                 <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'_ratio'</span><span class="p">)</span> <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s1">'pending'</span><span class="p">,</span> <span class="s1">'running'</span><span class="p">,</span> <span class="s1">'can_start'</span><span class="p">,</span> <span class="s1">'deadline_missed'</span><span class="p">)):</span>
                     <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
-                <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'_kwh'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-                    <span class="c1"># The placeholder of CityLearn 3.6.0, kept to reproduce it.</span>
-                    <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0e6</span>
                 <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'_kwh'</span><span class="p">):</span>
                     <span class="c1"># Energies are never negative (0 without a cycle); the bound is the largest value the</span>
                     <span class="c1"># appliances' cycles can report, so that normalisation keeps the signal.</span>
@@ -3343,7 +3327,7 @@
             <span class="n">start_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_start_time_step</span><span class="p">,</span>
             <span class="n">end_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_end_time_step</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cooling_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cooling_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_tank_autosize_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cooling_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cooling_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Building.autosize_heating_storage">
@@ -3362,7 +3346,7 @@
             <span class="n">start_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_start_time_step</span><span class="p">,</span>
             <span class="n">end_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_end_time_step</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">heating_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heating_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_tank_autosize_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heating_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heating_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Building.autosize_dhw_storage">
@@ -3381,13 +3365,8 @@
             <span class="n">start_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_start_time_step</span><span class="p">,</span>
             <span class="n">end_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_end_time_step</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dhw_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dhw_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_tank_autosize_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dhw_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dhw_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_tank_autosize_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Storage-tank autosize arguments with the building's physics version unless one is given."""</span>
-
-        <span class="k">return</span> <span class="p">{</span><span class="s1">'physics_version'</span><span class="p">:</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
 
 <div class="viewcode-block" id="Building.autosize_electrical_storage">
 <a class="viewcode-back" href="../../api/citylearn.building.html#citylearn.building.Building.autosize_electrical_storage">[docs]</a>
@@ -3436,26 +3415,19 @@
 <span class="sd">            Other keyword arguments parsed to `electrical_storage` `autosize` function.</span>
 <span class="sd">        """</span>
 
-        <span class="n">legacy</span> <span class="o">=</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span>
         <span class="n">demand</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_estimate_baseline_electricity_consumption</span><span class="p">(),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">'value'</span><span class="p">])</span>
 
-        <span class="k">if</span> <span class="n">legacy</span><span class="p">:</span>
-            <span class="c1"># Physics version 1 assumes an hourly 8760-row year whatever the data resolution.</span>
-            <span class="n">demand</span><span class="p">[</span><span class="s1">'year'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">demand</span><span class="o">.</span><span class="n">index</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">365</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-            <span class="n">demand</span> <span class="o">=</span> <span class="n">demand</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'year'</span><span class="p">)[</span><span class="s1">'value'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># The PVWatts yield is for a full year, so the window's demand is scaled to one year.</span>
-            <span class="c1"># A one-year window is unchanged; a shorter one no longer gives a smaller array.</span>
-            <span class="n">rows_per_year</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mf">365.0</span> <span class="o">*</span> <span class="mf">24.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_step_hours</span><span class="p">())),</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">demand</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">demand</span><span class="p">[</span><span class="s1">'value'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="o">*</span> <span class="p">(</span><span class="n">rows_per_year</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">demand</span><span class="p">))</span>
+        <span class="c1"># The PVWatts yield is for a full year, so the window's demand is scaled to one year.</span>
+        <span class="c1"># A one-year window is unchanged; a shorter one does not give a smaller array.</span>
+        <span class="n">rows_per_year</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mf">365.0</span> <span class="o">*</span> <span class="mf">24.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_step_hours</span><span class="p">())),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">demand</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">demand</span><span class="p">[</span><span class="s1">'value'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="o">*</span> <span class="p">(</span><span class="n">rows_per_year</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">demand</span><span class="p">))</span>
 
         <span class="n">epw_filepath</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'epw_filepath'</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">nominal_power</span><span class="p">,</span> <span class="n">solar_generation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="n">epw_filepath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">generation_mode</span> <span class="o">=</span> <span class="s1">'per_kw'</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">legacy</span><span class="p">:</span>
-            <span class="n">solar_generation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hourly_profile_to_dataset_resolution</span><span class="p">(</span>
-                <span class="n">solar_generation</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="n">solar_generation</span><span class="p">))</span>
+        <span class="n">solar_generation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hourly_profile_to_dataset_resolution</span><span class="p">(</span>
+            <span class="n">solar_generation</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="n">solar_generation</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="s1">'solar_generation'</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">solar_generation</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">))</span></div>
 
@@ -3860,7 +3832,7 @@
         <span class="c1"># net electriciy consumption emission</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption_emission</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">net_electricity_consumption</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">carbon_intensity</span><span class="o">.</span><span class="n">carbon_intensity</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">])</span>
 
-        <span class="c1"># Physics version 2 records the electrical-service state from the settled import (#230).</span>
+        <span class="c1"># Record the electrical-service state from the settled import (#230).</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ops_service</span><span class="o">.</span><span class="n">record_settled_electrical_service_state</span><span class="p">()</span></div>
 
 
@@ -4360,9 +4332,7 @@
             <span class="k">return</span> <span class="n">high</span>
 
         <span class="c1"># Same cap as the update methods, with the nominal power as the available power (an upper bound).</span>
-        <span class="c1"># Physics version 1 compares the step energy with the power, which caps it at one hour.</span>
         <span class="n">hours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_step_hours</span><span class="p">()</span>
-        <span class="n">hours</span> <span class="o">=</span> <span class="n">hours</span> <span class="k">if</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
         <span class="n">electric_energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="s1">'nominal_power'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">hours</span>
 
         <span class="k">if</span> <span class="n">electric_energy</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
@@ -4615,8 +4585,7 @@
 <span class="sd">    set_point_limits : Tuple[float, float], optional</span>
 <span class="sd">        Range, in [C], an occupant can move a heating or cooling set point to; defaults to</span>
 <span class="sd">        :py:data:`DEFAULT_OCCUPANT_SET_POINT_LIMITS`. A change never goes past a limit, and a schedule</span>
-<span class="sd">        value outside the range is not moved into it. Applies under physics version 2 and later only:</span>
-<span class="sd">        physics version 1 keeps the unbounded set points of CityLearn 3.6.0 (CityLearn #352).</span>
+<span class="sd">        value outside the range is not moved into it (CityLearn #352).</span>
 <span class="sd">    **kwargs : Any</span>
 <span class="sd">        Other keyword arguments of :py:class:`citylearn.building.OccupantInteractionBuilding`.</span>
 <span class="sd">    """</span>
@@ -4637,11 +4606,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">occupant_interaction_indoor_dry_bulb_temperature_set_point_delta_summary</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_point_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">"""Range, in [C], an occupant can move a set point to; ``None`` under physics version 1, which</span>
-<span class="sd">        does not limit it."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_point_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Range, in [C], an occupant can move a set point to."""</span>
 
-        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__set_point_limits</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__set_point_limits</span>
 
     <span class="nd">@set_point_limits</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_point_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]):</span>
@@ -4658,13 +4626,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__set_point_limits</span> <span class="o">=</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_occupant_set_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_set_point</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">setpoint_delta</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Set point after an occupant change, kept within `set_point_limits` when they apply."""</span>
+<span class="w">        </span><span class="sd">"""Set point after an occupant change, kept within `set_point_limits`."""</span>
 
         <span class="n">set_point</span> <span class="o">=</span> <span class="n">as_float</span><span class="p">(</span><span class="n">current_set_point</span><span class="p">)</span> <span class="o">+</span> <span class="n">setpoint_delta</span>
         <span class="n">limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_point_limits</span>
-
-        <span class="k">if</span> <span class="n">limits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">set_point</span>
 
         <span class="c1"># Never past a limit, and never pulled into the range when the schedule is already outside it.</span>
         <span class="n">current_set_point</span> <span class="o">=</span> <span class="n">as_float</span><span class="p">(</span><span class="n">current_set_point</span><span class="p">)</span>
@@ -4673,7 +4638,7 @@
         <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">set_point</span><span class="p">,</span> <span class="n">low</span><span class="p">),</span> <span class="n">high</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_point_observation_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Set-point limits: the schedule range widened to `set_point_limits` when they apply.</span>
+<span class="w">        </span><span class="sd">"""Set-point limits: the schedule range widened to `set_point_limits`.</span>
 
 <span class="sd">        Occupants move the set point from the schedule or from an earlier change, and never past</span>
 <span class="sd">        `set_point_limits`, so these limits are exact.</span>
@@ -4681,7 +4646,7 @@
 
         <span class="n">limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_point_limits</span>
 
-        <span class="k">if</span> <span class="n">limits</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_occupant</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_occupant</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_set_point_observation_limits</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 
         <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">OccupantInteractionBuilding</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_point_observation_limits</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>

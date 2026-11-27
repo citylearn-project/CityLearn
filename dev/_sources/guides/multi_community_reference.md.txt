@@ -141,7 +141,7 @@ The wrapper validates these conditions at construction and again after reset, an
 raises a `ValueError` that names the setting, for example:
 
 ```text
-ValueError: MultiCommunityEnv requires all communities to share physics_version, got {'A': 2, 'B': 1}.
+ValueError: MultiCommunityEnv requires all communities to share business_as_usual_ev_charge_target, got {'A': 'full', 'B': 'requested'}.
 ```
 
 Calendar windows are not part of the contract. Each child selects its episode

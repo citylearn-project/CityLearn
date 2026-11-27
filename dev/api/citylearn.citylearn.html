@@ -238,10 +238,10 @@ each building independently in a <code class="code docutils literal notranslate"
 <li><p><strong>random_seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Pseudorandom number generator seed for repeatable results.</p></li>
 <li><p><strong>random_stream_version</strong> (<em>str</em><em>, </em><em>optional</em>) – Keyword argument. How the random streams for unspecified device parameters, away-from-charger EV
 state of charge, occupant set-point interactions and stochastic power outages are derived from
-<cite>random_seed</cite>: <code class="docutils literal notranslate"><span class="pre">'v2'</span></code> (default) derives one independent stream per purpose, object and episode
-with <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.SeedSequence</span></code>; <code class="docutils literal notranslate"><span class="pre">'v1'</span></code> reproduces CityLearn 3.6.0 and earlier. Overrides
-<code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> in the schema. Agents built on the environment use the same version for
-their own random streams. See <a class="reference internal" href="citylearn.random_streams.html#module-citylearn.random_streams" title="citylearn.random_streams"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.random_streams</span></code></a>.</p></li>
+<cite>random_seed</cite>: <code class="docutils literal notranslate"><span class="pre">'v2'</span></code>, the only version, derives one independent stream per purpose, object and
+episode with <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.SeedSequence</span></code>. Version <code class="docutils literal notranslate"><span class="pre">'v1'</span></code> was removed in CityLearn 3.8.1.
+Overrides <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> in the schema. Agents built on the environment use the same
+streams. See <a class="reference internal" href="citylearn.random_streams.html#module-citylearn.random_streams" title="citylearn.random_streams"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.random_streams</span></code></a>.</p></li>
 <li><p><strong>offline</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
 error when required files are not available locally. Defaults to the <code class="docutils literal notranslate"><span class="pre">CITYLEARN_OFFLINE</span></code> environment
 variable, read at initialization, or False when it is unset.</p></li>
@@ -270,13 +270,13 @@ If not provided, defaults to the effective rendering setting (enabled when rende
 <li><p><strong>ev_departure_service_tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower SOC service tolerance used by EV departure minimum-acceptable KPIs. Defaults to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
 <li><p><strong>business_as_usual_ev_charge_target</strong> (<em>str</em><em>, </em><em>optional</em>) – EV charging of the native BAU reference built by <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>: <code class="docutils literal notranslate"><span class="pre">'full'</span></code> charges to 100%,
 <code class="docutils literal notranslate"><span class="pre">'requested'</span></code> to the user’s requested departure SOC. Defaults to the schema value, else <code class="docutils literal notranslate"><span class="pre">'full'</span></code>.</p></li>
-<li><p><strong>physics_version</strong> (<em>int</em><em>, </em><em>optional</em>) – Physics definitions: <code class="docutils literal notranslate"><span class="pre">2</span></code> (default) or <code class="docutils literal notranslate"><span class="pre">1</span></code>, which reproduces the physics of CityLearn 3.6.0. Overrides the
-schema key. The migration guide lists the corrections of version 2.</p></li>
-<li><p><strong>baseline_version</strong> (<em>int</em><em>, </em><em>optional</em>) – Definition of the default KPI baseline (the <code class="docutils literal notranslate"><span class="pre">*_without_storage</span></code> series) and of the native BAU HVAC: <code class="docutils literal notranslate"><span class="pre">2</span></code>
-(default) removes the battery, the thermal storage and the EV charging of the controlled run, and adds back the
+<li><p><strong>physics_version</strong> (<em>int</em><em>, </em><em>optional</em>) – Physics definitions: <code class="docutils literal notranslate"><span class="pre">2</span></code>, the only version (version <code class="docutils literal notranslate"><span class="pre">1</span></code> was removed in CityLearn 3.8.1). Overrides the
+schema key. See <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.physics_version</span></code>.</p></li>
+<li><p><strong>baseline_version</strong> (<em>int</em><em>, </em><em>optional</em>) – Definition of the default KPI baseline (the <code class="docutils literal notranslate"><span class="pre">*_without_storage</span></code> series) and of the native BAU HVAC: version
+<code class="docutils literal notranslate"><span class="pre">2</span></code> removes the battery, the thermal storage and the EV charging of the controlled run, and adds back the
 EV charging of the native BAU with the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target, so it is the same for every controller and has no V2G;
-its native BAU also runs the HVAC so that it delivers the dataset’s own heating and cooling demand. <code class="docutils literal notranslate"><span class="pre">1</span></code> adds
-nothing back and its BAU sends zero to the HVAC actions, as in CityLearn 3.6.0. Overrides the schema key. See
+its native BAU also runs the HVAC so that it delivers the dataset’s own heating and cooling demand. <code class="docutils literal notranslate"><span class="pre">2</span></code> is
+the only version (version <code class="docutils literal notranslate"><span class="pre">1</span></code> was removed in CityLearn 3.8.1). Overrides the schema key. See
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.baseline_version</span></code>.</p></li>
 <li><p><strong>debug_timing</strong> (<em>bool</em><em>, </em><em>optional</em>) – Log runtime timings. Defaults to the schema value, else <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p><strong>check_observation_limits</strong> (<em>bool</em><em>, </em><em>optional</em>) – Check observations against their estimated bounds. Defaults to the schema value, else <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
@@ -370,7 +370,7 @@ and electricity pricing at the current time step.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.baseline_version">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">baseline_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.baseline_version" title="Link to this definition"></a></dt>
-<dd><p>Definition of the default KPI baseline and, from version 2, of the native BAU HVAC; see
+<dd><p>Definition of the default KPI baseline and of the native BAU HVAC; see
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.baseline_version</span></code>.</p>
 </dd></dl>
 
