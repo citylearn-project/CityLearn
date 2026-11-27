@@ -35,9 +35,14 @@ STEPS_PER_DAY = 96
 N_STEPS = 35_040
 N_HOURS = 8_760
 TIMEZONE = "Europe/Lisbon"
-GENERATOR_VERSION = "1.9.0"
+GENERATOR_VERSION = "1.9.1"
 DATASET_CONTRACT_VERSION = "2023-q15-v1.9"
 SEED = 2023
+# Portuguese national public holidays in 2023 (MM-DD), Sundays and Saturdays included.
+PUBLIC_HOLIDAYS = (
+    "01-01", "04-07", "04-09", "04-25", "05-01", "06-08",
+    "06-10", "08-15", "10-05", "11-01", "12-01", "12-08", "12-25",
+)
 OMIE_URL_TEMPLATE = (
     "https://www.omie.es/en/file-download?parents=marginalpdbcpt&"
     "filename=marginalpdbcpt_{date}.1"
@@ -428,6 +433,17 @@ def build_calendar() -> pd.DataFrame:
     )
 
 
+def citylearn_day_type(local_index: pd.DatetimeIndex) -> np.ndarray:
+    """CityLearn `day_type` of local timestamps: 1 Monday to 7 Sunday, 8 for a public holiday from Monday to Friday.
+
+    A holiday on a Saturday or Sunday keeps 6 or 7, so it still counts as a weekend day.
+    """
+
+    day_of_week = local_index.dayofweek.to_numpy()
+    holiday = np.isin(local_index.strftime("%m-%d"), PUBLIC_HOLIDAYS) & (day_of_week < 5)
+    return np.where(holiday, 8, day_of_week + 1).astype("int8")
+
+
 def build_shared_series(calendar_frame: pd.DataFrame, omie_hourly: pd.DataFrame):
     local_hour = calendar_frame["hour_local"].to_numpy(dtype="float64") + calendar_frame["minute_local"].to_numpy(dtype="float64") / 60.0
     day_of_year = pd.to_datetime(calendar_frame["timestamp_utc"], utc=True).dt.dayofyear.to_numpy(dtype="float64")
@@ -602,13 +618,7 @@ def build_member_timeseries(
     day_codes, unique_days = pd.factorize(local_index.normalize())
     n_local_days = len(unique_days)
     daily_shift = np.clip(rng.normal(0.0, 0.42, n_local_days), -1.25, 1.25)[day_codes]
-    holiday = np.isin(
-        local_index.strftime("%m-%d"),
-        (
-            "01-01", "04-07", "04-09", "04-25", "05-01", "06-08",
-            "06-10", "08-15", "10-05", "11-01", "12-01", "12-08", "12-25",
-        ),
-    )
+    holiday = np.isin(local_index.strftime("%m-%d"), PUBLIC_HOLIDAYS)
     off_day = ~weekday | holiday
     routine_archetype = _routine_archetype(member_index, category)
 
@@ -809,7 +819,7 @@ def build_member_timeseries(
             "month": calendar_frame["month_local"].to_numpy(dtype="int8"),
             "hour": calendar_frame["hour_local"].to_numpy(dtype="int8"),
             "minutes": calendar_frame["minute_local"].to_numpy(dtype="int8"),
-            "day_type": calendar_frame["day_of_week_local"].to_numpy(dtype="int8"),
+            "day_type": citylearn_day_type(local_index),
             "daylight_savings_status": calendar_frame["daylight_savings_status"].to_numpy(dtype="int8"),
             "indoor_dry_bulb_temperature": np.full(N_STEPS, 21.0, dtype="float32"),
             "average_unmet_cooling_setpoint_difference": np.zeros(N_STEPS, dtype="float32"),

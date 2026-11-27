@@ -388,7 +388,7 @@ Os datasets incluídos começam em:
 | `citylearn_challenge_2023_phase_2_online_evaluation_*`, `citylearn_challenge_2023_phase_3_*` | `2021-06-01T00:00:00` | |
 | `baeda_3dem` | `2020-06-01T00:00:00` | |
 | `quebec_neighborhood_*` | `2018-01-01T00:00:00` | Os dados repetem três vezes um mesmo período de janeiro a março; só o primeiro período coincide com `month` e `day_type`. |
-| `pt_rec_*` | `2023-01-01T00:00:00+00:00` | Hora civil de Lisboa com o seu desvio. O seu `day_type` codifica fins de semana e feriados como 1 e segunda a sexta-feira como 2 a 6. |
+| `pt_rec_*` | `2023-01-01T00:00:00+00:00` | Hora civil de Lisboa com o seu desvio. O seu `day_type` é o dia da semana em Lisboa, com 8 nos feriados de segunda a sexta-feira. |
 
 Para ler a hora local do dia, guarde os primeiros 19 caracteres, que são iguais com e sem desvio:
 `pd.to_datetime(frame["timestamp"].str[:19])`.

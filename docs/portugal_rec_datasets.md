@@ -110,8 +110,9 @@ Begin with a short window: full two-year runs without the BAU reference took
   daylight-saving transitions.
   The `month`, `hour` and `minutes` columns are Lisbon civil time, and exported
   timestamps are too, with their UTC offset (`2023-06-27T03:00:00+01:00`). The
-  `day_type` column codes weekends and holidays as 1 and Monday to Friday
-  as 2 to 6, not 1 Monday to 7 Sunday.
+  `day_type` column is the Lisbon weekday, 1 Monday to 7 Sunday, and 8 on the
+  public holidays that fall from Monday to Friday: the national holidays and 13 June,
+  the Lisbon municipal holiday. A holiday on a Saturday or Sunday keeps 6 or 7.
 - **Units:** demand, PV and programme profiles in kWh per interval (multiply by four
   for average kW); battery capacity in kWh; power limits in kW; prices in EUR/kWh;
   carbon intensity in kg CO2e/kWh; SOC as a fraction. Missing observations use -9999.
