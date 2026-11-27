@@ -506,6 +506,13 @@ step (before <a class="reference internal" href="#citylearn.energy_model.Battery
 
 </dd></dl>
 
+<dl class="py exception">
+<dt class="sig sig-object py" id="citylearn.energy_model.CurveValueError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.energy_model.</span></span><span class="sig-name descname"><span class="pre">CurveValueError</span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#CurveValueError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.CurveValueError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></p>
+<p>An invalid battery or charger curve. The schema loaders prefix the message with the attribute path.</p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="citylearn.energy_model.DeferrableAppliance">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.energy_model.</span></span><span class="sig-name descname"><span class="pre">DeferrableAppliance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deferrable_appliance_simulation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.data.html#citylearn.data.DeferrableApplianceSimulation" title="citylearn.data.DeferrableApplianceSimulation"><span class="pre">DeferrableApplianceSimulation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trigger_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/energy_model.html#DeferrableAppliance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.DeferrableAppliance" title="Link to this definition"></a></dt>
@@ -1285,7 +1292,7 @@ average control-step power in [kW] before <cite>duration</cite> is applied.</p><
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.loss_coefficient">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loss_coefficient</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.StorageDevice.loss_coefficient" title="Link to this definition"></a></dt>
-<dd><p>Effective step loss, compounded from the configured hourly fraction.</p>
+<dd><p>Standby loss as a fraction of the stored energy per hour, as configured in the schema.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1338,6 +1345,13 @@ of its value, and each of the two conversions keeps <cite>one_way_efficiency</ci
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.soc">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">soc</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#citylearn.energy_model.StorageDevice.soc" title="Link to this definition"></a></dt>
 <dd><p>State of charge time series between [0, 1] in [<span class="math notranslate nohighlight">\(\frac{\textrm{capacity}_{\textrm{charged}}}{\textrm{capacity}}\)</span>].</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.step_loss_fraction">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">step_loss_fraction</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.StorageDevice.step_loss_fraction" title="Link to this definition"></a></dt>
+<dd><p>Standby loss as a fraction of the stored energy per control step, compounded from <cite>loss_coefficient</cite>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">loss_coefficient)**(seconds_per_time_step/3600)</span></code>.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1476,6 +1490,19 @@ remaining discharge budget.</p>
 <dd><p>Returns the associated washing machine simulation containing time-based load profiles.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.energy_model.validate_curve">
+<span class="sig-prename descclassname"><span class="pre">citylearn.energy_model.</span></span><span class="sig-name descname"><span class="pre">validate_curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curve</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">efficiency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#validate_curve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.validate_curve" title="Link to this definition"></a></dt>
+<dd><p>Check a <code class="docutils literal notranslate"><span class="pre">[[x,</span> <span class="pre">y],</span> <span class="pre">...]</span></code> curve and return it as a 2 x N float array.</p>
+<p>The x points must be strictly increasing within [0, 1]. Efficiency values must be in (0, 1] and power
+fractions must be &gt;= 0. Outside its first and last x points a curve keeps its end values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#citylearn.energy_model.CurveValueError" title="citylearn.energy_model.CurveValueError"><strong>CurveValueError</strong></a> – If the curve does not satisfy these rules. The message starts with <cite>name</cite>.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

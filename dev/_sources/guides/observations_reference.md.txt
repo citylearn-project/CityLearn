@@ -223,12 +223,12 @@ Demand-response `request_id` and baseline validity are exposed in `observations[
 | `commanded_power_kw`, `applied_power_kw` | `entity_core_electrical` | kW | Commanded and applied charger power. |
 | `applied_energy_kwh_step` | `entity_core_electrical` | kWh/step | Applied energy. |
 | `hours_until_departure`, `time_until_departure_ratio` | `entity_core_electrical` | hours/ratio | Connected EV time pressure. |
-| `energy_to_required_soc_kwh`, `required_average_power_kw` | `entity_core_electrical` | kWh/kW | Energy and average power required to meet departure SOC. |
-| `charging_slack_kw`, `charging_priority_ratio` | `entity_core_electrical` | kW/ratio | Charging urgency descriptors. |
+| `energy_to_required_soc_kwh`, `required_average_power_kw` | `entity_core_electrical` | kWh/kW | Stored energy still required to meet the departure SOC, and the average AC charger power that stores it by departure (charger efficiency times EV battery one-way efficiency, at full charger power). |
+| `charging_slack_kw`, `charging_priority_ratio` | `entity_core_electrical` | kW/ratio | Charging urgency descriptors, from the AC `required_average_power_kw` and the charger power. |
 | `connected_ev_soc_min_ratio`, `connected_ev_energy_available_kwh`, `connected_ev_energy_to_full_kwh` | `entity_core_electrical` | mixed | Connected EV usable discharge energy and remaining charge headroom ([energy to full](#energy-to-full)). |
-| `can_charge`, `can_discharge`, `available_charge/discharge_power_kw`, `available_charge/discharge_action_normalized` | `entity_core_electrical` | mixed | Current feasible charger action capacity after SOC, availability, outage and headroom limits. |
-| `max_deliverable_energy_until_departure_kwh`, `departure_energy_margin_kwh` | `entity_core_electrical` | kWh | Energy still deliverable by departure under current limits and its margin over required energy. |
-| `departure_feasibility_ratio`, `min_required_action_normalized` | `entity_core_electrical` | ratio | Deadline pressure; values above `1` indicate the target needs more than the current feasible/max action. |
+| `can_charge`, `can_discharge`, `available_charge/discharge_power_kw`, `available_charge/discharge_action_normalized` | `entity_core_electrical` | mixed | Current feasible charger action capacity after SOC, availability, outage and headroom limits. Powers are AC-side, at the charger. |
+| `max_deliverable_energy_until_departure_kwh`, `departure_energy_margin_kwh` | `entity_core_electrical` | kWh | Stored energy still deliverable by departure under current limits (AC power times charger and EV battery efficiencies) and its margin over required energy. |
+| `departure_feasibility_ratio`, `min_required_action_normalized` | `entity_core_electrical` | ratio | Deadline pressure; values above `1` indicate the target needs more than the current feasible/max action. `min_required_action_normalized` is `required_average_power_kw / max_charging_power_kw`. |
 | `charge_efficiency_at_max_ratio`, `discharge_efficiency_at_max_ratio` | `entity_core_electrical` | ratio | Efficiency curve values at max power. |
 | `incoming_ev_required_soc_departure`, `incoming_ev_departure_time_step` | `entity_core_electrical` | ratio/steps | Incoming EV departure requirement when known. |
 | `incoming_ev_hours_until_departure`, `incoming_ev_time_until_departure_ratio` | `entity_core_electrical` | hours/ratio | Incoming EV time pressure. |
@@ -258,9 +258,9 @@ Demand-response `request_id` and baseline validity are exposed in `observations[
 | `electrical_storage_soc_ratio` | `entity_core_electrical` | ratio | Canonical BESS SOC. |
 | `max_charge_power_kw`, `max_discharge_power_kw` | `entity_core_electrical` | kW | Current max powers. |
 | `energy_to_full_kwh`, `energy_available_kwh` | `entity_core_electrical` | kWh | Energy headroom ([energy to full](#energy-to-full)) and available energy. |
-| `can_charge`, `can_discharge`, `available_charge/discharge_power_kw`, `available_charge/discharge_action_normalized` | `entity_core_electrical` | mixed | Current feasible BESS action capacity after SOC, outage and headroom limits. |
+| `can_charge`, `can_discharge`, `available_charge/discharge_power_kw`, `available_charge/discharge_action_normalized` | `entity_core_electrical` | mixed | Current feasible BESS action capacity after SOC, outage and headroom limits, at the battery terminals. The SOC limit uses the one-way efficiency (the square root of the round-trip `power_efficiency_curve` value at the power applied). |
 | `available_charge_energy_kwh_step`, `available_discharge_energy_kwh_step` | `entity_core_electrical` | kWh/step | Feasible BESS energy this step after SOC/headroom/outage limits. |
-| `max_charge_energy_kwh_step`, `max_discharge_energy_kwh_step` | `entity_core_electrical` | kWh/step | Nominal BESS power limit converted to this step duration. |
+| `max_charge_energy_kwh_step`, `max_discharge_energy_kwh_step` | `entity_core_electrical` | kWh/step | Current BESS power limit (`max_charge_power_kw`, `max_discharge_power_kw`: `nominal_power` times the SOC-dependent `capacity_power_curve` or `discharge_power_curve`) converted to this step duration. |
 | `charge_headroom_ratio`, `discharge_available_ratio`, `usable_soc_ratio` | `entity_core_electrical` | ratio | Normalized BESS charge room, discharge energy and SOC within usable range. |
 | `current_efficiency_ratio`, `degraded_capacity_kwh`, `soc_min_ratio` | `entity_core_electrical` | mixed | Current efficiency, degraded capacity and minimum SOC. |
 | `last_requested_*`, `last_limited_*`, `last_applied_power_kw`, `last_projection_error_kw`, `clip_reason_*` | `entity_action_feedback` | mixed | Previous BESS action request, limited command, applied power and clipping causes. |

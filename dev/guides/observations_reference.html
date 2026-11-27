@@ -954,12 +954,12 @@
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">energy_to_required_soc_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">required_average_power_kw</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kWh/kW</p></td>
-<td><p>Energy and average power required to meet departure SOC.</p></td>
+<td><p>Stored energy still required to meet the departure SOC, and the average AC charger power that stores it by departure (charger efficiency times EV battery one-way efficiency, at full charger power).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">charging_slack_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">charging_priority_ratio</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kW/ratio</p></td>
-<td><p>Charging urgency descriptors.</p></td>
+<td><p>Charging urgency descriptors, from the AC <code class="docutils literal notranslate"><span class="pre">required_average_power_kw</span></code> and the charger power.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">connected_ev_soc_min_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_energy_available_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_energy_to_full_kwh</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
@@ -969,17 +969,17 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_action_normalized</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>mixed</p></td>
-<td><p>Current feasible charger action capacity after SOC, availability, outage and headroom limits.</p></td>
+<td><p>Current feasible charger action capacity after SOC, availability, outage and headroom limits. Powers are AC-side, at the charger.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_deliverable_energy_until_departure_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">departure_energy_margin_kwh</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kWh</p></td>
-<td><p>Energy still deliverable by departure under current limits and its margin over required energy.</p></td>
+<td><p>Stored energy still deliverable by departure under current limits (AC power times charger and EV battery efficiencies) and its margin over required energy.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">departure_feasibility_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">min_required_action_normalized</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>ratio</p></td>
-<td><p>Deadline pressure; values above <code class="docutils literal notranslate"><span class="pre">1</span></code> indicate the target needs more than the current feasible/max action.</p></td>
+<td><p>Deadline pressure; values above <code class="docutils literal notranslate"><span class="pre">1</span></code> indicate the target needs more than the current feasible/max action. <code class="docutils literal notranslate"><span class="pre">min_required_action_normalized</span></code> is <code class="docutils literal notranslate"><span class="pre">required_average_power_kw</span> <span class="pre">/</span> <span class="pre">max_charging_power_kw</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charge_efficiency_at_max_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">discharge_efficiency_at_max_ratio</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
@@ -1107,7 +1107,7 @@
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_action_normalized</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>mixed</p></td>
-<td><p>Current feasible BESS action capacity after SOC, outage and headroom limits.</p></td>
+<td><p>Current feasible BESS action capacity after SOC, outage and headroom limits, at the battery terminals. The SOC limit uses the one-way efficiency (the square root of the round-trip <code class="docutils literal notranslate"><span class="pre">power_efficiency_curve</span></code> value at the power applied).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">available_charge_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">available_discharge_energy_kwh_step</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
@@ -1117,7 +1117,7 @@
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_charge_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharge_energy_kwh_step</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kWh/step</p></td>
-<td><p>Nominal BESS power limit converted to this step duration.</p></td>
+<td><p>Current BESS power limit (<code class="docutils literal notranslate"><span class="pre">max_charge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharge_power_kw</span></code>: <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> times the SOC-dependent <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> or <code class="docutils literal notranslate"><span class="pre">discharge_power_curve</span></code>) converted to this step duration.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">charge_headroom_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">discharge_available_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">usable_soc_ratio</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>

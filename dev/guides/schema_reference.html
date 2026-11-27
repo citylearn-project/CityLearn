@@ -1930,7 +1930,7 @@ the step energy of the cooling and heating demand with kW, a one-hour cap).</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">loss_coefficient</span></code></p></td>
 <td><p>drawn in [0.001, 0.009]</p></td>
 <td><p>per hour</p></td>
-<td><p>Standby loss, compounded per step: <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">loss)</span> <span class="pre">**</span> <span class="pre">(seconds_per_time_step</span> <span class="pre">/</span> <span class="pre">3600)</span></code>.</p></td>
+<td><p>Standby loss, compounded per step: <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">loss)</span> <span class="pre">**</span> <span class="pre">(seconds_per_time_step</span> <span class="pre">/</span> <span class="pre">3600)</span></code>. The attribute and <code class="docutils literal notranslate"><span class="pre">get_metadata()</span></code> give this hourly value; <code class="docutils literal notranslate"><span class="pre">step_loss_fraction</span></code> gives the compounded loss per control step.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">initial_soc</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
@@ -2022,7 +2022,7 @@ building side of the battery. The state of charge (SOC) is a fraction of <code c
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">loss_coefficient</span></code></p></td>
 <td class="text-right"><p>ratio per hour</p></td>
 <td><p>drawn in [0.001, 0.009]</p></td>
-<td><p>Standby loss of the stored energy, compounded per step as for thermal storage.</p></td>
+<td><p>Standby loss of the stored energy, compounded per step as for thermal storage. The attribute reads back the configured hourly value; <code class="docutils literal notranslate"><span class="pre">step_loss_fraction</span></code> gives the loss per control step.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phase_connection</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">L1</span></code>, <code class="docutils literal notranslate"><span class="pre">L2</span></code>, <code class="docutils literal notranslate"><span class="pre">L3</span></code>, <code class="docutils literal notranslate"><span class="pre">all_phases</span></code></p></td>
@@ -2045,6 +2045,13 @@ about 0.975.</p></li>
 <li><p><strong>Power curves.</strong> <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> and <code class="docutils literal notranslate"><span class="pre">discharge_power_curve</span></code> are evaluated at the SOC
 at the start of the step, and their values are multiplied by <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code>. Between points
 the curves are interpolated linearly.</p></li>
+<li><p><strong>Curve rules.</strong> Each curve needs at least two <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y]</span></code> points with <code class="docutils literal notranslate"><span class="pre">x</span></code> strictly increasing
+within [0, 1]. Efficiencies must be in (0, 1] and power fractions must be &gt;= 0. An invalid
+curve fails at construction with a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that names the attribute path, for example
+<code class="docutils literal notranslate"><span class="pre">buildings.Building_1.electrical_storage.attributes.power_efficiency_curve</span></code>. Outside its first
+and last <code class="docutils literal notranslate"><span class="pre">x</span></code> a curve keeps its end values, as <code class="docutils literal notranslate"><span class="pre">np.interp</span></code> does: a curve that starts at
+<code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">0.2</span></code> gives its first value at a SOC of 0.1. Until CityLearn 3.8.0 the battery curves were
+extrapolated linearly, which could give an efficiency above 1.</p></li>
 <li><p><strong>Depth of discharge.</strong> Discharging stops at a SOC of <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">depth_of_discharge</span></code>, a floor
 measured on the rated <code class="docutils literal notranslate"><span class="pre">capacity</span></code>. Charging stops at the degraded capacity.</p></li>
 <li><p><strong>Capacity fade.</strong> After each charge or discharge the capacity falls by
@@ -2475,7 +2482,7 @@ column names the EV connected or arriving at each step.</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charge_efficiency_curve</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[[power</span> <span class="pre">fraction,</span> <span class="pre">efficiency],</span> <span class="pre">...]</span></code></p></td>
 <td><p>none</p></td>
-<td><p>Efficiency against charging power / <code class="docutils literal notranslate"><span class="pre">max_charging_power</span></code>, interpolated linearly.</p></td>
+<td><p>Efficiency against the applied AC charging power / <code class="docutils literal notranslate"><span class="pre">max_charging_power</span></code>, interpolated linearly and held at its end values. When the EV battery accepts less than the command, the efficiency is read at the power actually applied. At least two points, power fractions strictly increasing within [0, 1], efficiencies in (0, 1]; otherwise construction fails with a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that names the attribute path.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">discharge_efficiency_curve</span></code></p></td>
 <td><p>same</p></td>
@@ -2781,6 +2788,11 @@ rows from 0.</p>
 <code class="docutils literal notranslate"><span class="pre">vehicle_to_building</span></code>) EVs; unserved energy is reported as <code class="docutils literal notranslate"><span class="pre">power_outage_unserved_energy</span></code>. The
 battery and EVs discharge after the thermal storage and before the loads are served; see
 <a class="reference internal" href="#what-each-version-changes"><span class="std std-ref">What each version changes</span></a>.</p>
+<p>Charging takes only the supply that the loads leave. The cooling, heating and DHW devices serve
+their demand and the non-shiftable load is served first; then the thermal storages charge, then the
+battery, the EVs and the deferrable appliances, each from what is left. Until CityLearn 3.8.0 a
+charging thermal storage ran before the heating and DHW devices and the non-shiftable load, and
+could leave them unserved.</p>
 </section>
 <section id="community-market-and-settlement">
 <h2>Community market and settlement<a class="headerlink" href="#community-market-and-settlement" title="Link to this heading"></a></h2>
@@ -3327,10 +3339,18 @@ first one is activated).</p>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">overrides</span></code></p></td>
 <td><p>no</p></td>
-<td><p>Attributes set on the cloned object; each must exist on it. Ignored for remove operations.</p></td>
+<td><p>Attributes set on the cloned object; each must exist on it. Ignored for remove operations. An <code class="docutils literal notranslate"><span class="pre">efficiency</span></code> override of <code class="docutils literal notranslate"><span class="pre">electrical_storage</span></code> sets the battery’s rated efficiency and rescales a generated <code class="docutils literal notranslate"><span class="pre">power_efficiency_curve</span></code>; when the source battery has a <code class="docutils literal notranslate"><span class="pre">power_efficiency_curve</span></code> from its schema, override <code class="docutils literal notranslate"><span class="pre">power_efficiency_curve</span></code> as well, or construction fails.</p></td>
 </tr>
 </tbody>
 </table>
+<p>The events that can fire in the simulation window (up to <code class="docutils literal notranslate"><span class="pre">simulation_end_time_step</span></code>) are checked at
+construction, in order, and an invalid event raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> there instead of when it fires. Member ids must
+name a loaded member or one that an earlier <code class="docutils literal notranslate"><span class="pre">add_member</span></code> cloned: a member declared in the schema but left out
+with <code class="docutils literal notranslate"><span class="pre">buildings=[...]</span></code> is not loaded. Asset events must target an active member. A removed charger or deferrable
+appliance must exist on the target member at that time, an added one must have a new id, and the source asset an
+<code class="docutils literal notranslate"><span class="pre">add_asset</span></code> copies (<code class="docutils literal notranslate"><span class="pre">source_asset_id</span></code>, else <code class="docutils literal notranslate"><span class="pre">target_asset_id</span></code>) must exist on the source member. Override keys are
+checked on that source asset and override values are applied to a copy. Until CityLearn 3.8.0 these events were
+accepted and failed, or did nothing, when they fired.</p>
 <p>Adding PV or storage replaces the building’s current one. Removing a deferrable appliance cancels pending/running
 cycles and clears future consumption. Removing PV creates a zero PV. Removing storage creates a zero BESS. What a
 replaced or removed PV or battery produced or consumed before the event stays in the building’s series, so the
