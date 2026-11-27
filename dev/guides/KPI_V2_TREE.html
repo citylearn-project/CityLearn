@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KPI catalogue &mdash; CityLearn 3.7.0 documentation</title>
+  <title>KPI catalogue &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -181,7 +181,7 @@
   changes listed under <a href="releases.html">Unreleased</a> that are not yet in a PyPI release.
   Use the version selector or <strong>Other versions</strong> in the left sidebar to switch to the latest stable
   release or an earlier release (<code>pip show citylearn</code>), or open the <code>docs</code> folder of a tag on
-  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v3.7.0/docs">v3.7.0</a>.</p>
+  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v3.8.0/docs">v3.8.0</a>.</p>
 </div>
 
            <div itemprop="articleBody">
@@ -872,7 +872,7 @@ district_solar_self_consumption_community_market_local_share_of_export_ratio
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">battery_health_equivalent_full_cycles{,_business_as_usual,_delta_to_business_as_usual}_count</span></code></p></td>
 <td><p>building, district</p></td>
-<td><p>cycles</p></td>
+<td><p>count</p></td>
 <td><p>Equivalent full cycles, throughput / (2 · nominal capacity), pooled over capacity at district and portfolio levels. <code class="docutils literal notranslate"><span class="pre">_business_as_usual</span></code> and <code class="docutils literal notranslate"><span class="pre">_delta_to_business_as_usual</span></code> as in the shared rules.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">battery_health_capacity_fade{,_business_as_usual,_delta_to_business_as_usual}_ratio</span></code></p></td>
@@ -1101,7 +1101,7 @@ district_electrical_service_phase_violations_event_count
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_battery_health_equivalent_full_cycles_count</span></code></p></td>
 <td><p>building, district</p></td>
-<td><p>cycles</p></td>
+<td><p>count</p></td>
 <td><p>Opt-in equivalent full cycles of EV batteries from accepted gross battery-terminal throughput over (2 · nominal capacity) (<code class="docutils literal notranslate"><span class="pre">include_battery_health_audit=True</span></code>), attributed to executed transfers over realized connected EV capacity at building level and pooled over unique eligible fleet EV nominal capacity at district and portfolio levels; undefined when nominal capacity ≤ 0 (whereas <code class="docutils literal notranslate"><span class="pre">Battery.equivalent_full_cycles</span></code> returns <code class="docutils literal notranslate"><span class="pre">0.0</span></code>).</p></td>
 </tr>
 </tbody>

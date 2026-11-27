@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Train a controller with RLlib &mdash; CityLearn 3.7.0 documentation</title>
+  <title>Train a controller with RLlib &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -19,7 +19,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -164,7 +164,7 @@
   changes listed under <a href="../guides/releases.html">Unreleased</a> that are not yet in a PyPI release.
   Use the version selector or <strong>Other versions</strong> in the left sidebar to switch to the latest stable
   release or an earlier release (<code>pip show citylearn</code>), or open the <code>docs</code> folder of a tag on
-  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v3.7.0/docs">v3.7.0</a>.</p>
+  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v3.8.0/docs">v3.8.0</a>.</p>
 </div>
 
            <div itemprop="articleBody">
@@ -221,8 +221,8 @@ action ordering) are in CityLearn 3.7.0 and later, which the cell below installs
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2026-11-27 01:20:50,608 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
-2026-11-27 01:20:52,223 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-27 02:05:08,596 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-27 02:05:10,501 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
 </pre></div></div>
 </div>
 </section>
@@ -253,7 +253,7 @@ action ordering) are in CityLearn 3.7.0 and later, which the cell below installs
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2026-11-27 01:20:54,823 WARNING algorithm_config.py:5160 -- You are running PPO on the new API stack! This is the new default behavior for this algorithm. If you don&#39;t want to use the new API stack, set `config.api_stack(enable_rl_module_and_learner=False,enable_env_runner_and_connector_v2=False)`. For a detailed migration guide, see here: https://docs.ray.io/en/master/rllib/new-api-stack-migration-guide.html
+2026-11-27 02:05:13,377 WARNING algorithm_config.py:5160 -- You are running PPO on the new API stack! This is the new default behavior for this algorithm. If you don&#39;t want to use the new API stack, set `config.api_stack(enable_rl_module_and_learner=False,enable_env_runner_and_connector_v2=False)`. For a detailed migration guide, see here: https://docs.ray.io/en/master/rllib/new-api-stack-migration-guide.html
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -345,37 +345,37 @@ environment steps sampled: 96.0
   <tbody>
     <tr>
       <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
-      <td>0.0</td>
+      <td>0.000</td>
       <td>0.000</td>
       <td>0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
-      <td>-0.0</td>
+      <td>-0.000</td>
       <td>0.000</td>
       <td>-0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_capacity_fade_ratio</th>
-      <td>0.0</td>
+      <td>0.000</td>
       <td>0.000</td>
       <td>0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
-      <td>0.7</td>
+      <td>0.700</td>
       <td>0.197</td>
       <td>0.705</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_count</th>
-      <td>0.0</td>
       <td>0.427</td>
-      <td>0.000</td>
+      <td>0.206</td>
+      <td>0.439</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -390,35 +390,35 @@ environment steps sampled: 96.0
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>222.96</td>
+      <td>231.569</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_thermal_coverage_ratio</th>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>1.00</td>
+      <td>1.000</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>0.00</td>
+      <td>0.000</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>0.00</td>
+      <td>0.000</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_unserved_service_ratio</th>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>0.00</td>
+      <td>0.000</td>
     </tr>
   </tbody>
 </table>
@@ -503,37 +503,37 @@ environment steps sampled: 96.0
   <tbody>
     <tr>
       <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
-      <td>0.000</td>
+      <td>0.0</td>
       <td>0.000</td>
       <td>0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
-      <td>-0.000</td>
+      <td>-0.0</td>
       <td>0.000</td>
       <td>-0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_capacity_fade_ratio</th>
-      <td>0.000</td>
+      <td>0.0</td>
       <td>0.000</td>
       <td>0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
-      <td>0.700</td>
+      <td>0.7</td>
       <td>0.197</td>
       <td>0.705</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_count</th>
-      <td>0.021</td>
-      <td>0.427</td>
-      <td>0.286</td>
+      <td>0.0</td>
+      <td>0.580</td>
+      <td>0.031</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -548,7 +548,7 @@ environment steps sampled: 96.0
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>241.214</td>
+      <td>228.974</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_thermal_coverage_ratio</th>
@@ -580,7 +580,7 @@ environment steps sampled: 96.0
     </tr>
   </tbody>
 </table>
-<p>949 rows × 4 columns</p>
+<p>959 rows × 4 columns</p>
 </div></div>
 </div>
 <div class="nbinput nblast docutils container">
