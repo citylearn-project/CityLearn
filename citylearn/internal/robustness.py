@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from citylearn.utilities import parse_bool
+from citylearn.internal.actions import zero_building_action_kwargs
 from citylearn.internal.robustness_history import RobustnessHistory
 
 if TYPE_CHECKING:
@@ -1025,6 +1026,32 @@ class CityLearnRobustnessService:
                         }
                     )
 
+            # Escalator actions stay building-level targets named by their action (`escalator_<id>`).
+            escalator_actions = mutable.get("escalator_actions", {})
+            if isinstance(escalator_actions, Mapping):
+                for action_name in list(escalator_actions.keys()):
+                    feature = str(action_name)
+
+                    def getter(container=escalator_actions, action_key=action_name):
+                        return float(container.get(action_key, 0.0))
+
+                    def setter(updated, container=escalator_actions, action_key=action_name):
+                        container[action_key] = float(updated)
+
+                    descriptors.append(
+                        {
+                            "target_type": "building",
+                            "target_id": building.name,
+                            "target_feature": feature,
+                            "building": building.name,
+                            "raw_id": feature,
+                            "global_id": building.name,
+                            "target_key": f"building:{building.name}:{feature}",
+                            "get": getter,
+                            "set": setter,
+                        }
+                    )
+
             deferrable_actions = mutable.get("deferrable_appliance_actions", {})
             if isinstance(deferrable_actions, Mapping):
                 for action_name in list(deferrable_actions.keys()):
@@ -1123,23 +1150,8 @@ class CityLearnRobustnessService:
         return targets
 
     def _validation_action_descriptors(self) -> List[Mapping[str, Any]]:
-        zero_actions = []
-        for building in self.env.buildings:
-            action_dict = {}
-            ev_actions = {}
-            deferrable_actions = {}
-            for action_name in building.active_actions:
-                if action_name.startswith("electric_vehicle_storage_"):
-                    ev_actions[action_name.replace("electric_vehicle_storage_", "")] = 0.0
-                elif action_name.startswith("deferrable_appliance_"):
-                    deferrable_actions[action_name] = 0.0
-                else:
-                    action_dict[f"{action_name}_action"] = 0.0
-            if ev_actions:
-                action_dict["electric_vehicle_storage_actions"] = ev_actions
-            if deferrable_actions:
-                action_dict["deferrable_appliance_actions"] = deferrable_actions
-            zero_actions.append(action_dict)
+        # The same routing as the parsers, so validation sees exactly the targets the runtime exposes.
+        zero_actions = [dict(zero_building_action_kwargs(building.active_actions)) for building in self.env.buildings]
         return self._action_descriptors(zero_actions)
 
     def _observation_event_matches(self, event: RobustnessEvent, descriptor: Mapping[str, Any]) -> bool:

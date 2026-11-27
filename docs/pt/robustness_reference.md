@@ -50,6 +50,8 @@ A corrupção de observações e previsões afeta apenas o que o agente vê. As 
 
 As políticas de referência em `citylearn.agents.baseline` leem observações entity nas duas interfaces. Na interface flat, `predict(observations)` aplica os eventos de observação do passo a essas observações entity, tal como faz a interface entity, pelo que uma política de referência usada como controlador toma as mesmas ações nas duas interfaces. Isto não consome nenhum fluxo aleatório (o ruído é função de `random_seed`, do evento, do passo e do alvo), não regista nada no histórico nem nos KPIs de robustez e deixa as observações flat inalteradas. A referência business-as-usual nativa de `evaluate_v2()` chama `predict([])` e lê observações sem corrupção.
 
+Uma ação de escada rolante (só na interface flat) é um alvo `building` cujo `target_feature` é o nome da ação, `escalator_<id>`; um evento `action` sobre ele altera o estado pedido a essa escada rolante.
+
 Um sistema FV não tem ação. Um evento `asset` com alvo `pv` e `target_feature` `control` ou `both` coloca o sistema fora de serviço: não produz nada durante o evento, pelo que o consumo líquido, o custo, as emissões, a proveniência da energia e os KPIs FV usam produção nula nesses passos. A referência business-as-usual vê a mesma falha. Só com `telemetry`, o sistema FV continua a produzir e apenas as suas observações ficam ocultas.
 
 ## Diagnóstico entity

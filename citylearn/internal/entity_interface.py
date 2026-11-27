@@ -10,6 +10,7 @@ from gymnasium import spaces
 import numpy as np
 
 from citylearn.internal import entity_layout, entity_observations
+from citylearn.internal.actions import building_action_kwargs
 from citylearn.internal.scalars import clip_action
 
 
@@ -561,9 +562,7 @@ class CityLearnEntityInterfaceService:
         parsed_actions = []
         for building_idx, building in enumerate(self.env.buildings):
             per_building_map = building_overrides.get(building.name, {})
-            action_dict = {}
-            electric_vehicle_actions = {}
-            deferrable_appliance_actions = {}
+            values = []
 
             for action_name, low, high in zip(building.active_actions, building.action_space.low, building.action_space.high):
                 value = 0.0
@@ -601,21 +600,9 @@ class CityLearnEntityInterfaceService:
                     raise ValueError(
                         f"Action '{action_name}' of building '{building.name}' is {value!r}; actions must be finite numbers."
                     )
-                value = float(clip_action(value, low, high))
-                if action_name.startswith("electric_vehicle_storage_"):
-                    charger_id = action_name.replace("electric_vehicle_storage_", "")
-                    electric_vehicle_actions[charger_id] = value
-                elif action_name.startswith("deferrable_appliance_"):
-                    deferrable_appliance_actions[action_name] = value
-                else:
-                    action_dict[f"{action_name}_action"] = value
+                values.append(float(clip_action(value, low, high)))
 
-            if electric_vehicle_actions:
-                action_dict["electric_vehicle_storage_actions"] = electric_vehicle_actions
-            if deferrable_appliance_actions:
-                action_dict["deferrable_appliance_actions"] = deferrable_appliance_actions
-
-            parsed_actions.append(action_dict)
+            parsed_actions.append(building_action_kwargs(building.active_actions, values))
 
         return parsed_actions
 
@@ -837,28 +824,10 @@ class CityLearnEntityInterfaceService:
 
         # Flat vectors follow the flat rule: clipped to the action space, as the entity tables are.
         for i, building in enumerate(self.env.buildings):
-            action_dict = {}
-            electric_vehicle_actions = {}
-            deferrable_appliance_actions = {}
             space = building.action_space
             lows, highs = space.low.tolist(), space.high.tolist()
-
-            for action_name, action, low, high in zip(active_actions[i], vectors[i], lows, highs):
-                action = clip_action(action, low, high)
-                if "electric_vehicle_storage" in action_name:
-                    charger_id = action_name.replace("electric_vehicle_storage_", "")
-                    electric_vehicle_actions[charger_id] = action
-                elif action_name.startswith("deferrable_appliance_"):
-                    deferrable_appliance_actions[action_name] = action
-                else:
-                    action_dict[f"{action_name}_action"] = action
-
-            if electric_vehicle_actions:
-                action_dict["electric_vehicle_storage_actions"] = electric_vehicle_actions
-            if deferrable_appliance_actions:
-                action_dict["deferrable_appliance_actions"] = deferrable_appliance_actions
-
-            parsed_actions.append(action_dict)
+            values = [clip_action(action, low, high) for action, low, high in zip(vectors[i], lows, highs)]
+            parsed_actions.append(building_action_kwargs(active_actions[i], values))
 
         return parsed_actions
 
