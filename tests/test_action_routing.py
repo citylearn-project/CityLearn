@@ -174,6 +174,9 @@ def test_bundled_layouts_cover_every_device_action():
 
 @pytest.mark.parametrize('name', sorted(LAYOUTS) + [ESCALATOR_LAYOUT])
 def test_every_parser_routes_a_layout_the_same_way(name: str, tmp_path: Path):
+    if name == 'ca_alameda_county_neighborhood':
+        # This dataset sizes its PV with PySAM, which has no wheel for every Python version.
+        pytest.importorskip('PySAM')
     flat_env = _env(name, tmp_path / 'flat', 'flat')
     try:
         vectors = _vectors(flat_env)
