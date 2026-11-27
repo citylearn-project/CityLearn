@@ -127,7 +127,6 @@ def experiment_manifest(env):
                 baseline_version=env.baseline_version,
                 episode_split_boundary=env.episode_split_boundary,
                 ev_soc_carryover=bool(getattr(env, 'ev_soc_carryover', False)),
-                episode_end=getattr(env, 'episode_end', 'terminated'),
                 time_step_ratio_mode=env.time_step_ratio_mode,
                 seconds_per_time_step=env.seconds_per_time_step,
                 episode_start_time_step=tracker.episode_start_time_step,

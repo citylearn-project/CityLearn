@@ -48,16 +48,6 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
-## Unreleased
-
-### The end of an episode is reported as truncation
-
-The last step of an episode now returns `terminated=False, truncated=True`, because a CityLearn episode always ends at a time limit (the end of its window or split). Simulation results and KPIs do not change.
-
-- **Your own learner.** Stop bootstrapping only on `terminated` and reset on `terminated or truncated`: the target is `reward + gamma * (1 - terminated) * next_value`. A learner that masks on `terminated or truncated` behaves as before.
-- **Loops.** `while not env.terminated:` keeps working, because the `env.terminated` property still means that the episode is over; `env.done` says the same. A loop that reads only the `terminated` flag returned by `step()`, such as `while not terminated:`, now calls `step()` once more and raises `RuntimeError`; check `terminated or truncated` instead.
-- **Reproducing 3.7.0 training.** Pass `episode_end='terminated'` to `CityLearnEnv`, or set it in the schema. Every community of a `MultiCommunityEnv` must use the same value.
-
 ## Upgrade from 3.6.0 to 3.7.0
 
 ### Dataset cache keyed by content
