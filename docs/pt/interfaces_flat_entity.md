@@ -172,8 +172,8 @@ As energias dos aparelhos diferíveis são limitadas pelas definições dos cicl
 dos aparelhos: `cycle_energy_kwh` e `remaining_energy_kwh` por [0, a maior
 energia de ciclo dos aparelhos do edifício], e `current_step_energy_kwh` por
 [0, a maior energia por passo dos seus perfis de ciclo]. Nenhum ciclo pode
-indicar mais, pelo que estes limites valem com qualquer controlador. A física
-da versão 1 mantém o limite provisório [-1, 1e6] do CityLearn 3.6.0. A tabela
+indicar mais, pelo que estes limites valem com qualquer controlador (o CityLearn
+3.6.0 usava o limite provisório [-1, 1e6]). A tabela
 entity `deferrable_appliance` limita as três por [0, a maior energia de ciclo da
 comunidade, pelo menos 1 kWh].
 
@@ -181,12 +181,12 @@ Cada limite é depois alargado de `observation_space_limit_delta` (0 por omissã
 
 A temperatura interior dos edifícios LSTM depende da forma como o AVAC é usado,
 pelo que ficar dentro destas estimativas depende do controlador. Nos dois bairros
-do Quebec (20 edifícios, passos 0–2159, física da versão 2):
+do Quebec (20 edifícios, passos 0–2159):
 
 | Controlador | Temperatura interior | Delta de aquecimento | Set point |
 |---|---|---|---|
-| AVAC à procura do dataset: `BusinessAsUsualAgent` com `baseline_version=2` (predefinida), `RBCBasicPolicy`, `RBCSmartPolicy`, `RBCCommunityPolicy` | dentro, 17,0–26,5 °C face a [−1,1; 42,4] | dentro | dentro |
-| AVAC sem funcionar: `BusinessAsUsualAgent` com `baseline_version=1`, as referências baseadas em regras com `hvac='off'`, `ZeroActionAgent` | abaixo de `low` em 38% dos passos-edifício, até 22,6 °C | abaixo de `low` em 89% dos passos-edifício, até 31,6 °C | dentro |
+| AVAC à procura do dataset: `BusinessAsUsualAgent` (predefinição), `RBCBasicPolicy`, `RBCSmartPolicy`, `RBCCommunityPolicy` | dentro, 17,0–26,5 °C face a [−1,1; 42,4] | dentro | dentro |
+| AVAC sem funcionar: o BAU e as referências baseadas em regras com `hvac='off'`, `ZeroActionAgent` | abaixo de `low` em 38% dos passos-edifício, até 22,6 °C | abaixo de `low` em 89% dos passos-edifício, até 31,6 °C | dentro |
 | Ações aleatórias | acima de `high` em 7% dos passos-edifício, até 20,7 °C | acima de `high` em 19% dos passos-edifício, até 27,3 °C | dentro |
 
 Sem aquecimento, a temperatura interior desce em direção à temperatura exterior,

@@ -1,5 +1,4 @@
 from typing import Any, List
-import warnings
 import numpy as np
 from citylearn.citylearn import CityLearnEnv
 from citylearn.preprocessing import Encoder, PeriodicNormalization, Normalize, OnehotEncoding
@@ -61,20 +60,11 @@ class RLC(Agent):
         action_scaling_coefficient: float = None, reward_scaling: float = None,
         update_per_time_step: int = None, **kwargs: Any
     ):
-        # Earlier releases only accepted the misspelled keyword, so the documented
-        # spelling was swallowed by **kwargs and the 0.5 default always applied.
-        misspelled = kwargs.pop('action_scaling_coefficienct', None)
-        if misspelled is not None:
-            warnings.warn(
-                '`action_scaling_coefficienct` is deprecated; use `action_scaling_coefficient`.',
-                DeprecationWarning,
-                stacklevel=2,
+        # Agents ignore unknown keyword arguments, so the misspelling removed in 3.8.1 would be dropped silently.
+        if 'action_scaling_coefficienct' in kwargs:
+            raise TypeError(
+                '`action_scaling_coefficienct` was removed in CityLearn 3.8.1; use `action_scaling_coefficient`.'
             )
-            if action_scaling_coefficient is not None and action_scaling_coefficient != misspelled:
-                raise TypeError(
-                    'Got conflicting `action_scaling_coefficient` and deprecated `action_scaling_coefficienct` values.'
-                )
-            action_scaling_coefficient = misspelled
 
         require_flat_interface(env, type(self).__name__)
         super().__init__(env, **kwargs)

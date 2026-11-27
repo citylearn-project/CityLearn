@@ -45,42 +45,22 @@ def test_district_counterfactual_series_keep_departed_members():
         executed = env.time_step
         assert executed > EVENT_STEP
 
-        # Version 1 removes the EV charging of the run and adds none back; with zero actions the EVs and the
-        # storage stay idle, so each without-storage series must equal the control series. Version 2 adds the
+        # Every reference series, PV-free variants included, is the sum of the members' series over
+        # the steps at which they were members, as the building-level KPIs read them. The baseline adds the
         # BAU's EV charging back, from a BAU run that must find the joined and the departed member too.
-        for version in (1, 2):
-            env.baseline_version = version
+        members = kpi_buildings(env)
+        assert {'Building_6', 'Building_18'} <= {b.name for b in members}
+        for name in COUNTERFACTUAL_PROPERTIES:
+            expected = np.zeros(executed)
+            for b in members:
+                values = kpi_service(env)._energy_values(b, getattr(
+                    b, name if isinstance(b, DynamicsBuilding) else name.replace('_and_partial_load', '')
+                ))
+                expected[:len(values)] += values
+            actual = np.asarray(getattr(env, name), dtype='float64')[:executed]
+            np.testing.assert_allclose(actual, expected, rtol=0.0, atol=1e-4, err_msg=name)
 
-            if version == 1:
-                for kind in ('', '_emission'):
-                    control = np.asarray(getattr(env, f'net_electricity_consumption{kind}'), dtype='float64')[:executed]
-                    for condition in ('_without_storage', '_without_storage_and_partial_load'):
-                        baseline = np.asarray(getattr(env, f'net_electricity_consumption{kind}{condition}'), dtype='float64')
-                        np.testing.assert_allclose(baseline[:executed], control, rtol=0.0, atol=1e-4, err_msg=kind + condition)
-
-            # Every reference series, PV-free variants included, is the sum of the members' series over
-            # the steps at which they were members, as the building-level KPIs read them.
-            members = kpi_buildings(env)
-            assert {'Building_6', 'Building_18'} <= {b.name for b in members}
-            for name in COUNTERFACTUAL_PROPERTIES:
-                expected = np.zeros(executed)
-                for b in members:
-                    values = kpi_service(env)._energy_values(b, getattr(
-                        b, name if isinstance(b, DynamicsBuilding) else name.replace('_and_partial_load', '')
-                    ))
-                    expected[:len(values)] += values
-                actual = np.asarray(getattr(env, name), dtype='float64')[:executed]
-                np.testing.assert_allclose(actual, expected, rtol=0.0, atol=1e-4, err_msg=f'{name} (version {version})')
-
-            kpis = env.evaluate_v2(include_business_as_usual=False)
-            district = kpis[kpis['level'] == 'district'].set_index('cost_function')['value']
-            if version == 1:
-                for name in (
-                    'district_energy_grid_total_import_delta_kwh',
-                    'district_energy_grid_total_export_delta_kwh',
-                    'district_emissions_total_delta_kgco2',
-                ):
-                    assert abs(float(district[name])) < 1e-4, name
+        assert len(env.evaluate_v2(include_business_as_usual=False)) > 0
     finally:
         env.close()
 

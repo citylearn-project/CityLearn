@@ -4,8 +4,8 @@
 #230: headroom was allocated before thermal storage charging, so import could exceed the limit unrecorded.
 #232: deferrable start feasibility used the realised future outage, load and PV.
 
-Each test reproduces its issue under physics version 1, which keeps the behaviour of CityLearn 3.6.0, and checks
-the correction under version 2.
+Each test reproduces its issue and checks the correction. Physics version 1, the behaviour of CityLearn 3.6.0, was
+removed in CityLearn 3.8.1 (#466).
 """
 
 from __future__ import annotations
@@ -68,19 +68,18 @@ def _service_demo(tmp_path: Path, *, battery_soc: float, no_ev: bool) -> str:
     return str(path)
 
 
-def _service_env(path: str, physics_version: int) -> CityLearnEnv:
-    return CityLearnEnv(path, central_agent=True, episode_time_steps=48, simulation_end_time_step=47, random_seed=0,
-                        physics_version=physics_version)
+def _service_env(path: str) -> CityLearnEnv:
+    return CityLearnEnv(path, central_agent=True, episode_time_steps=48, simulation_end_time_step=47, random_seed=0)
 
 
-def _ev_energy(path: str, physics_version: int, battery_action: float) -> np.ndarray:
-    env = _service_env(path, physics_version)
+def _ev_energy(path: str, battery_action: float) -> np.ndarray:
+    env = _service_env(path)
     building = _run(env, _actions(env, electric_vehicle_storage=1.0, electrical_storage=battery_action))
     return sum(np.asarray(c.electricity_consumption[:48], dtype=float) for c in building.electric_vehicle_chargers)
 
 
-def _battery_energy(path: str, physics_version: int, charger_action: float) -> np.ndarray:
-    env = _service_env(path, physics_version)
+def _battery_energy(path: str, charger_action: float) -> np.ndarray:
+    env = _service_env(path)
     building = _run(env, _actions(env, electric_vehicle_storage=charger_action, electrical_storage=1.0))
     return np.asarray(building.electrical_storage.electricity_consumption[:48], dtype=float)
 
@@ -88,31 +87,29 @@ def _battery_energy(path: str, physics_version: int, charger_action: float) -> n
 def test_issue_231_full_battery_request_does_not_curtail_ev_charging(tmp_path):
     path = _service_demo(tmp_path, battery_soc=1.0, no_ev=False)
 
-    legacy_idle, legacy_request = _ev_energy(path, 1, 0.0), _ev_energy(path, 1, 1.0)
-    idle, request = _ev_energy(path, 2, 0.0), _ev_energy(path, 2, 1.0)
+    idle, request = _ev_energy(path, 0.0), _ev_energy(path, 1.0)
 
-    # 3.6.0: the full battery's request takes EV headroom (7.08 against 8.62 kWh at step 0).
-    assert legacy_request[0] < legacy_idle[0] - 1.0
+    # 3.6.0: the full battery's request took EV headroom (7.08 against 8.62 kWh at step 0).
+    assert idle[0] > 8.0
     np.testing.assert_allclose(request, idle, atol=1.0e-6)
 
 
 def test_issue_231_chargers_without_ev_do_not_curtail_battery_charging(tmp_path):
     path = _service_demo(tmp_path, battery_soc=0.0, no_ev=True)
 
-    legacy_idle, legacy_request = _battery_energy(path, 1, 0.0), _battery_energy(path, 1, 1.0)
-    idle, request = _battery_energy(path, 2, 0.0), _battery_energy(path, 2, 1.0)
+    idle, request = _battery_energy(path, 0.0), _battery_energy(path, 1.0)
 
-    # 3.6.0: the requests of the chargers without an EV take battery headroom (1.92 against 4.79 kWh at step 0).
-    assert legacy_request[0] < legacy_idle[0] - 1.0
+    # 3.6.0: the requests of the chargers without an EV took battery headroom (1.92 against 4.79 kWh at step 0).
+    assert idle[0] > 4.0
     np.testing.assert_allclose(request, idle, atol=1.0e-6)
 
 
 # --- #230 ---------------------------------------------------------------------------------------------
 
-def _thermal_storage_env(tmp_path: Path, physics_version: int) -> CityLearnEnv:
+def _thermal_storage_env(tmp_path: Path) -> CityLearnEnv:
     """The issue's repro: an electric DHW heater and tank behind a 6 kW single-phase limit."""
 
-    dataset = tmp_path / f'dhw_v{physics_version}'
+    dataset = tmp_path / 'dhw'
     shutil.copytree(MINUTE_DATASET, dataset)
     schema = json.loads((dataset / 'schema.json').read_text(encoding='utf-8'))
     schema['root_directory'] = str(dataset)
@@ -126,11 +123,11 @@ def _thermal_storage_env(tmp_path: Path, physics_version: int) -> CityLearnEnv:
                                       'observations': {'headroom': True, 'violation': True}}
     path = dataset / 'schema.json'
     path.write_text(json.dumps(schema), encoding='utf-8')
-    return CityLearnEnv(str(path), central_agent=True, random_seed=0, physics_version=physics_version)
+    return CityLearnEnv(str(path), central_agent=True, random_seed=0)
 
 
-def _thermal_storage_run(tmp_path: Path, physics_version: int):
-    env = _thermal_storage_env(tmp_path, physics_version)
+def _thermal_storage_run(tmp_path: Path):
+    env = _thermal_storage_env(tmp_path)
     env.reset()
     env.step([np.ones(env.action_space[0].shape, dtype='float32').tolist()])
     building = env.buildings[0]
@@ -141,25 +138,19 @@ def _thermal_storage_run(tmp_path: Path, physics_version: int):
     return actual_kw, recorded_kw, violation_kwh, tank_kwh
 
 
-def test_issue_230_physics_version_1_records_the_pre_allocation_import(tmp_path):
-    actual_kw, recorded_kw, _, tank_kwh = _thermal_storage_run(tmp_path, 1)
-
-    assert tank_kwh == pytest.approx(2.5)
-    assert actual_kw > 6.0 + 5.0
-    assert recorded_kw == pytest.approx(6.0)
-
-
 def test_issue_230_settled_import_and_its_violation_are_recorded(tmp_path):
-    actual_kw, recorded_kw, violation_kwh, tank_kwh = _thermal_storage_run(tmp_path, 2)
+    actual_kw, recorded_kw, violation_kwh, tank_kwh = _thermal_storage_run(tmp_path)
 
     assert tank_kwh == pytest.approx(2.5)
+    # 3.6.0 recorded the pre-allocation import, 6 kW, while the building drew more than 11 kW.
+    assert actual_kw > 6.0 + 5.0
     assert recorded_kw == pytest.approx(actual_kw, rel=1.0e-5)
     # The penalty is the settled excess, or the excess the requests would have caused when larger.
     assert violation_kwh >= (actual_kw - 6.0) * 0.25 - 1.0e-5
 
 
 def test_issue_230_thermal_storage_charging_takes_headroom_before_ev_and_battery(tmp_path):
-    env = _thermal_storage_env(tmp_path, 2)
+    env = _thermal_storage_env(tmp_path)
     env.reset()
     env.step([np.ones(env.action_space[0].shape, dtype='float32').tolist()])
     building = env.buildings[0]
@@ -172,9 +163,9 @@ def test_issue_230_thermal_storage_charging_takes_headroom_before_ev_and_battery
 
 # --- #232 ---------------------------------------------------------------------------------------------
 
-def _deferrable_env(tmp_path: Path, physics_version: int, *, outage_step: int = None, spike_step: int = None,
+def _deferrable_env(tmp_path: Path, *, outage_step: int = None, spike_step: int = None,
                     limit_kw: float = None) -> CityLearnEnv:
-    dataset = tmp_path / f'deferrable_v{physics_version}_{outage_step}_{spike_step}'
+    dataset = tmp_path / f'deferrable_{outage_step}_{spike_step}'
     shutil.copytree(MINUTE_DATASET, dataset)
     profile = [0.1, 0.2, 0.3]
     pd.DataFrame([{'profile_id': 'normal', 'duration_steps': len(profile), 'total_energy_kwh': 0.6,
@@ -209,8 +200,7 @@ def _deferrable_env(tmp_path: Path, physics_version: int, *, outage_step: int = 
         building['electrical_service'] = {'mode': 'single_phase', 'limits': {'total': {'import_kw': limit_kw}}}
     path = dataset / 'schema.json'
     path.write_text(json.dumps(schema), encoding='utf-8')
-    return CityLearnEnv(str(path), central_agent=True, random_seed=0, physics_version=physics_version,
-                        physics_invariant_checks=True)
+    return CityLearnEnv(str(path), central_agent=True, random_seed=0, physics_invariant_checks=True)
 
 
 def _observation(env: CityLearnEnv, suffix: str) -> float:
@@ -231,19 +221,10 @@ def _start_at_step_1(env: CityLearnEnv):
 
 
 @pytest.mark.parametrize('scenario', ['outage', 'load'])
-def test_issue_232_physics_version_1_leaks_future_events_through_can_start(tmp_path, scenario):
-    kwargs = dict(outage_step=3) if scenario == 'outage' else dict(spike_step=3, limit_kw=6.5)
-    can_start, outage, started = _start_at_step_1(_deferrable_env(tmp_path, 1, **kwargs))
-
-    assert outage == 0.0
-    assert can_start == 0.0
-    assert not started
-
-
-@pytest.mark.parametrize('scenario', ['outage', 'load'])
 def test_issue_232_start_feasibility_uses_only_the_current_step(tmp_path, scenario):
+    # 3.6.0 refused this start because of the future outage or load spike at step 3.
     kwargs = dict(outage_step=3) if scenario == 'outage' else dict(spike_step=3, limit_kw=6.5)
-    can_start, outage, started = _start_at_step_1(_deferrable_env(tmp_path, 2, **kwargs))
+    can_start, outage, started = _start_at_step_1(_deferrable_env(tmp_path, **kwargs))
 
     assert outage == 0.0
     assert can_start == 1.0
@@ -251,7 +232,7 @@ def test_issue_232_start_feasibility_uses_only_the_current_step(tmp_path, scenar
 
 
 def test_issue_232_an_outage_curtails_a_running_cycle_and_the_shortfall_is_reported(tmp_path):
-    env = _deferrable_env(tmp_path, 2, outage_step=3)
+    env = _deferrable_env(tmp_path, outage_step=3)
     _start_at_step_1(env)
     building = env.buildings[0]
     appliance = building.deferrable_appliances[0]
@@ -268,7 +249,7 @@ def test_issue_232_an_outage_curtails_a_running_cycle_and_the_shortfall_is_repor
 
 
 def test_issue_232_a_start_during_an_outage_is_still_refused(tmp_path):
-    env = _deferrable_env(tmp_path, 2, outage_step=1)
+    env = _deferrable_env(tmp_path, outage_step=1)
     can_start, outage, started = _start_at_step_1(env)
 
     assert outage == 1.0

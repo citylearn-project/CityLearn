@@ -24,7 +24,7 @@ STEP_HOURS = 0.25  # the dataset and the control step are 900 s
 
 
 def _env(tmp_path: Path, vehicle_to_building, non_shiftable_load=2.0, solar_generation=0.0,
-         cooling_demand=0.0, interface='flat', *, outage_signal=1.0, physics_version=None) -> CityLearnEnv:
+         cooling_demand=0.0, interface='flat', *, outage_signal=1.0) -> CityLearnEnv:
     dataset = tmp_path / 'v2b'
     shutil.copytree(MINUTE_DATASET, dataset)
     frame = pd.read_csv(dataset / 'Building_1.csv')
@@ -56,11 +56,9 @@ def _env(tmp_path: Path, vehicle_to_building, non_shiftable_load=2.0, solar_gene
     path = dataset / 'schema.json'
     path.write_text(json.dumps(schema), encoding='utf-8')
     if interface == 'entity':
-        env = CityLearnEnv(str(path), interface='entity', episode_time_steps=4, random_seed=0,
-                           physics_version=physics_version)
+        env = CityLearnEnv(str(path), interface='entity', episode_time_steps=4, random_seed=0)
     else:
-        env = CityLearnEnv(str(path), central_agent=True, episode_time_steps=4, random_seed=0,
-                           physics_version=physics_version)
+        env = CityLearnEnv(str(path), central_agent=True, episode_time_steps=4, random_seed=0)
     env.reset(seed=0)
     return env
 
@@ -88,10 +86,8 @@ def test_vehicle_to_building_is_off_by_default(tmp_path):
 
 @pytest.mark.parametrize('net_kwh', [-1.5, 1.5], ids=['export', 'import'])
 @pytest.mark.parametrize('outage_signal', [1.0, 0.5, -0.5])
-@pytest.mark.parametrize('physics_version', [1, 2])
-def test_physics_checks_reject_grid_exchange_during_outage(tmp_path, monkeypatch, net_kwh, outage_signal,
-                                                          physics_version):
-    env = _env(tmp_path, vehicle_to_building=False, outage_signal=outage_signal, physics_version=physics_version)
+def test_physics_checks_reject_grid_exchange_during_outage(tmp_path, monkeypatch, net_kwh, outage_signal):
+    env = _env(tmp_path, vehicle_to_building=False, outage_signal=outage_signal)
     env.physics_invariant_checks = True
 
     try:

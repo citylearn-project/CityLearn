@@ -19,7 +19,7 @@ Versão em inglês: [../schema_reference.md](../schema_reference.md).
 | Simular um período mais curto | `simulation_start_time_step`, `simulation_end_time_step` | [Janela temporal](#janela-temporal-e-passo-de-controlo) |
 | Treinar em muitos episódios curtos | `episode_time_steps`, `rolling_episode_split`, `random_episode_split` | [Episódios](#episódios) |
 | Usar dados de 15 minutos ou de 15 segundos | `seconds_per_time_step` igual ao passo dos dados | [Janela temporal](#janela-temporal-e-passo-de-controlo) |
-| Reproduzir um resultado do CityLearn 3.6.0 | `physics_version: 1`, `baseline_version: 1`, `random_stream_version: "v1"`, `episode_split_boundary: "disjoint"`, `time_step_ratio_mode: "compress"` | [Versões](#versões) |
+| Reproduzir um resultado do CityLearn 3.6.0 | Use o CityLearn 3.7; esta versão removeu as versões da 3.6.0 | [Versões](#versões) |
 | Repetir execuções com os mesmos resultados | `random_seed` | [Sementes e fluxos aleatórios](#sementes-e-fluxos-aleatórios) |
 | Controlar todos os edifícios com um só agente | `central_agent: true`, `shared_in_central_agent` | [Observações](#observações) |
 | Escolher o que o agente vê | `observations.<name>.active`, `buildings.<b>.inactive_observations` | [Observações e ações](#observações-e-ações) |
@@ -230,27 +230,32 @@ Estas chaves descrevem o relógio do dataset. Mudam a forma como os instantes e 
 
 ### Versões
 
-Três chaves de versão escolhem comportamentos que mudaram depois do CityLearn 3.6.0. Cada uma aceita um int, um float
-inteiro ou uma string de dígitos (`2`, `2.0`, `"2"`); um booleano lança `ValueError`. O argumento do construtor com o
-mesmo nome prevalece. [O que cada versão altera](#o-que-cada-versão-altera) lista todas as diferenças.
+Cinco definições têm uma versão. Todas seguem a mesma regra: uma versão é um inteiro ou uma string de dígitos (`2` ou
+`"2"`), e `random_stream_version` aceita também o seu nome (`"v2"`). Floats (incluindo `2.0`), booleanos e qualquer
+outro valor lançam `ValueError`, que indica a definição e os valores aceites. Quando uma definição é ao mesmo tempo
+chave do schema e argumento do construtor, o argumento prevalece. [O que cada versão altera](#o-que-cada-versão-altera)
+lista as diferenças em relação ao CityLearn 3.6.0.
 
-| Chave | Valores | Predefinição | Escolhe | Desde |
+| Definição | Onde | Valores | Predefinição | Escolhe |
 |---|---|---|---|---|
-| `physics_version` | `1`, `2` | `2` | Física dos dispositivos e do despacho. `1` reproduz o CityLearn 3.6.0. | depois da 3.6.0 |
-| `baseline_version` | `1`, `2` | `2` | Definição da baseline dos KPIs (séries `*_without_storage`) e do AVAC do BAU. `1` como na 3.6.0: não volta a somar nada, e o BAU envia zero às ações de AVAC. `2` volta a somar o carregamento dos VE do BAU e, nos datasets com ações de AVAC, o BAU fornece a procura de aquecimento e de arrefecimento do dataset. Qualquer outro valor lança `ValueError`. `env.baseline_version = v` também funciona depois da construção. | depois da 3.6.0 |
-| `random_stream_version` | `v1`, `v2` (também `1`, `2`, `"V2"`) | `v2` | Como os números aleatórios são tirados de `random_seed`. `v1` reproduz a 3.6.0. | depois da 3.6.0 |
+| `physics_version` | chave da raiz, argumento do construtor | `2` | `2` | Física dos dispositivos e do despacho. |
+| `baseline_version` | chave da raiz, argumento do construtor, `env.baseline_version = v` | `2` | `2` | Definição da baseline dos KPIs (séries `*_without_storage`) e do AVAC do BAU: a baseline volta a somar o carregamento dos VE do BAU e, nos datasets com ações de AVAC, o BAU fornece a procura de aquecimento e de arrefecimento do dataset. |
+| `random_stream_version` | chave da raiz, argumento do construtor | `v2` (também `2`, `"2"`) | `v2` | Como os números aleatórios são tirados de `random_seed`. |
+| `version` da recompensa | `reward_function.attributes` de `ComfortReward`, `SolarPenaltyAndComfortReward` e `Electric_Vehicles_Reward_Function` | `2` | `2` | Definição da recompensa; consulte [Função de recompensa](#função-de-recompensa). |
+| `settlement_version` | `community_market` | `1`, `2` | `1` | `2` paga as exportações residuais para a rede a `grid_export_price`; consulte [Mercado comunitário](#mercado-comunitário-e-liquidação). |
 
-O mercado comunitário tem a sua própria `settlement_version`; consulte [Mercado comunitário](#mercado-comunitário-e-liquidação).
-Para reproduzir um resultado da 3.6.0, defina `physics_version: 1`, `baseline_version: 1`, `random_stream_version: "v1"`,
-`episode_split_boundary: "disjoint"` e, para dados cujo passo difere do passo de controlo,
-`time_step_ratio_mode: "compress"`. Consulte o [guia de migração](migration.md#versão-da-física).
+As versões que reproduziam o CityLearn 3.6.0, `physics_version` 1, `baseline_version` 1, `random_stream_version`
+`v1` e a versão 1 das recompensas, foram removidas no CityLearn 3.8.1: escolher uma delas lança `ValueError`. O
+CityLearn 3.7 reproduz um resultado da 3.6.0. As execuções continuam a registar `physics_version`, `baseline_version`
+e `random_stream_version` nos metadados e nos manifestos de exportação, pelo que as suas exportações continuam
+comparáveis com as de versões anteriores.
 
 ### Sementes e fluxos aleatórios
 
 | Chave | Tipo | Predefinição | Efeito | Argumento |
 |---|---|---|---|---|
 | `random_seed` | int | uma semente aleatória nova em cada construção | Semente dos parâmetros sorteados dos dispositivos, do SOC inicial dos VE, da deriva dos VE ausentes, dos sorteios dos ocupantes, das falhas estocásticas, do ruído dos dados, da escolha aleatória de episódios e do ruído de robustez. Defina-a para execuções repetíveis. `env.reset(seed=s)` substitui-a. | `random_seed` |
-| `random_stream_version` | string | `v2` | `v2`: um fluxo independente por finalidade, objeto e episódio. `v1`: o esquema da 3.6.0 (um gerador por sorteio, partilhado entre edifícios). A escolha aleatória de episódios, o ruído dos dados e o SOC inicial dos VE não dependem dela. | `random_stream_version` |
+| `random_stream_version` | string | `v2` | `v2`, a única versão: um fluxo independente por finalidade, objeto e episódio. A escolha aleatória de episódios, o ruído dos dados e o SOC inicial dos VE não dependem dela. | `random_stream_version` |
 
 ### Função de recompensa
 
@@ -284,7 +289,7 @@ recompensas dos edifícios são somadas.
 | `citylearn.reward_function.MARL` | nenhum | Penalização do consumo do edifício ligada ao consumo líquido do distrito. |
 | `citylearn.reward_function.IndependentSACReward` | nenhum | `min(-consumo líquido, 0)`. |
 | `citylearn.reward_function.SolarPenaltyReward` | nenhum | Penaliza a importação, mais quando o armazenamento não absorve a FV. |
-| `citylearn.reward_function.ComfortReward` | `band` (`null`: a coluna `comfort_band`), `lower_exponent` (2,0), `higher_exponent` (2,0), `version` (2) | Penaliza a distância para fora da banda de conforto. `version: 1` (obsoleta) segue o sinal da procura em vez do modo AVAC. |
+| `citylearn.reward_function.ComfortReward` | `band` (`null`: a coluna `comfort_band`), `lower_exponent` (2,0), `higher_exponent` (2,0), `version` (2) | Penaliza a distância para fora da banda de conforto, do lado que o modo AVAC define. A versão 1, que seguia o sinal da procura, foi removida na 3.8.1. |
 | `citylearn.reward_function.SolarPenaltyAndComfortReward` | `band`, `lower_exponent` (2,0), `higher_exponent` (2,0), `coefficients` (`[1.0, 1.0]`), `version` (2) | Soma ponderada das duas recompensas anteriores. |
 | `citylearn.reward_function.Electric_Vehicles_Reward_Function` | `weights` (objeto com as sete chaves `no_car_charging`, `battery_limits`, `soc_impossible`, `soc_under`, `close_soc`, `self_ev_consumption`, `extra_self_production`), `version` (2), `charging_constraint_penalty_coefficient` (1,0, por kWh de violação dos limites de carregamento) | Recompensa com VE. Um objeto `weights` parcial substitui as predefinições, por isso indique as sete chaves. |
 | `citylearn.reward_function.OutageUnservedEnergyReward` | `coefficient` (1,0), `base_reward` (caminho de importação ou `{type, attributes}`, predefinição `RewardFunction`), outras chaves passadas à recompensa base | Recompensa base menos `coefficient` vezes a energia não servida durante falhas. |
@@ -506,7 +511,7 @@ as ações são aplicadas.
 | `dynamics` | objeto | nenhum | [Dinâmica térmica](#dinâmica-térmica). | |
 | `occupant` | objeto | nenhum | [Modelo de ocupantes](#modelo-de-ocupantes). | |
 | `set_point_hold_time_steps` | int, pelo menos 0, ou `null` | `null` (mantém até o horário mudar) | Passos de controlo durante os quais uma alteração de set point de um ocupante se mantém. | só tipo de edifício com ocupantes |
-| `set_point_limits` | `[mínimo, máximo]`, °C | `[15, 30]` | Intervalo para onde um ocupante pode mover um set point; `mínimo < máximo`. Não é aplicado na versão 1 da física. | só tipo de edifício com ocupantes; depois da 3.6.0 |
+| `set_point_limits` | `[mínimo, máximo]`, °C | `[15, 30]` | Intervalo para onde um ocupante pode mover um set point; `mínimo < máximo`. | só tipo de edifício com ocupantes; depois da 3.6.0 |
 
 Uma secção de dispositivo ausente passa a um marcador de tamanho 0, pelo que o edifício não tem esse dispositivo.
 
@@ -608,9 +613,9 @@ Todas as secções de dispositivo têm a mesma forma:
 | | `efficiency` | sorteada em [0,9, 0,99] | rácio | Calor por kWh consumido. |
 
 Em `citylearn.building.Building`, os dispositivos servem a procura do dataset, e o limite de energia de um dispositivo
-é a sua potência vezes a duração do passo nas duas versões da física. Nos edifícios com dinâmica LSTM, a versão 1
-compara a energia do passo da procura de arrefecimento e aquecimento com kW (um limite de uma hora); a versão 2 usa
-também potência × duração do passo.
+é a sua potência vezes a duração do passo. Nos edifícios com dinâmica LSTM, o limite é também potência × duração do
+passo (o CityLearn 3.6.0 comparava a energia do passo da procura de arrefecimento e aquecimento com kW, um limite de
+uma hora).
 
 ### Armazenamento térmico
 
@@ -653,7 +658,7 @@ da bateria, do lado do edifício. O estado de carga (SOC) é uma fração de `ca
 | `efficiency` | rácio | sorteada em [0,90, 0,98] | Eficiência de ida e volta. Uma `power_efficiency_curve` gerada é construída à volta dela; durante a simulação, a curva dá a eficiência em cada passo. |
 | `power_efficiency_curve` | `[[x, y], ...]` | sorteada, ver abaixo | Eficiência de ida e volta `y` em função da potência nos terminais dividida por `nominal_power` (`x` em [0, 1]). |
 | `capacity_power_curve` | `[[x, y], ...]` | sorteada, ver abaixo | Potência máxima de carregamento como fração de `nominal_power` (`y`) em função do SOC (`x`). |
-| `discharge_power_curve` | `[[x, y], ...]` | `[[0, 1], [1, 1]]` | Potência máxima de descarga como fração de `nominal_power` em função do SOC. A versão da física 1 usa `capacity_power_curve` em vez desta. |
+| `discharge_power_curve` | `[[x, y], ...]` | `[[0, 1], [1, 1]]` | Potência máxima de descarga como fração de `nominal_power` em função do SOC. |
 | `depth_of_discharge` | rácio | 1,0 | Fração de `capacity` que pode ser descarregada. |
 | `initial_soc` | rácio | `1 - depth_of_discharge` | SOC no início do episódio, em [0, 1]. |
 | `capacity_loss_coefficient` | rácio | sorteado em [1e-5, 1e-4] | Fração de `capacity` perdida por ciclo completo equivalente. |
@@ -687,7 +692,7 @@ atributos explicitamente para as fixar.
   1,0 com SOC 0, 0,90 a 0,95 com um SOC perto de 0,8, e 0,20 a 0,30 com SOC 1.
 - Com o `initial_soc` predefinido, uma bateria começa na sua reserva: vazia quando
   `depth_of_discharge` é 1. Defina `initial_soc` para começar noutro ponto.
-- **Falhas.** Na versão 2 da física, a bateria descarrega durante uma falha depois do armazenamento térmico, e só até à
+- **Falhas.** A bateria descarrega durante uma falha depois do armazenamento térmico, e só até à
   carga em ilha que a FV deixa por cobrir.
 
 ### FV
@@ -725,13 +730,12 @@ atributos dimensionados são substituídos.
 |---|---|---|
 | `HeatPump` | `nominal_power` = procura máxima / COP × `safety_factor` | `safety_factor` (1,0) |
 | `ElectricHeater` | `nominal_power` = procura máxima / eficiência × `safety_factor` | `safety_factor` (1,0) |
-| `StorageTank` | `capacity`: versão 2 = potência máxima da procura × `duration` × `safety_factor`; versão 1 = procura máxima de um passo × `safety_factor` | `safety_factor` (sorteado em [1, 2]), `duration` (h, 1,0) |
+| `StorageTank` | `capacity` = potência máxima da procura × `duration` × `safety_factor` | `safety_factor` (sorteado em [1, 2]), `duration` (h, 1,0) |
 | `Battery` | `capacity`, `nominal_power`, `depth_of_discharge`, `efficiency`, `loss_coefficient`, `capacity_loss_coefficient` a partir de um catálogo de baterias | `duration` (h, sorteada em [1,5, 3,5]), `parallel` (`false`), `safety_factor` (1,0) |
 | `PV` | `nominal_power` e o perfil `solar_generation` a partir do PVWatts; força `generation_mode: per_kw` | `epw_filepath` (obrigatório), `use_sample_target` (`false`), `zero_net_energy_proportion` (sorteada em [0,7, 1,0]), `roof_area` (m², sem limite), `safety_factor` (1,0) |
 
 O dimensionamento da bateria e da FV descarrega dados de dimensionamento se não estiverem em cache (`offline=True`
-impede a descarga); a FV precisa de `pip install nrel-pysam`. Na versão 1 da física, o dimensionamento da FV assume
-dados horários. Na versão 2, a procura da janela é escalada para um ano antes de ser comparada com a produção anual do
+impede a descarga); a FV precisa de `pip install nrel-pysam`. A procura da janela é escalada para um ano antes de ser comparada com a produção anual do
 PVWatts, pelo que uma janela de uma semana dimensiona o painel como uma janela de um ano com a mesma procura média (uma
 janela sazonal continua a dar um dimensionamento sazonal).
 
@@ -769,8 +773,8 @@ consulte [Erros comuns](#erros-comuns-e-o-que-evitar)).
 
 Os carregadores e a bateria são colocados numa fase com `phase_connection` nos respetivos `attributes` (`L1`, `L2`, `L3`
 ou `all_phases`; predefinição `L1` nos serviços monofásicos e `all_phases` nos trifásicos). As observações das margens
-descrevem o último intervalo executado. Na versão 2 da física, a margem é repartida pelas potências que os dispositivos
-conseguem de facto absorver, depois das cargas térmicas e não deslocáveis; a versão 1 reparte os pedidos em bruto.
+descrevem o último intervalo executado. A margem é repartida pelas potências que os dispositivos conseguem de facto
+absorver, depois das cargas térmicas e não deslocáveis.
 
 ### Potência de rede disponível
 
@@ -874,7 +878,7 @@ Um VE é definido uma vez em `electric_vehicles_def`. Cada carregador lê um fic
 | `type` | caminho de importação | obrigatório | Classe do carregador, normalmente `citylearn.electric_vehicle_charger.Charger`. | |
 | `charger_simulation` | caminho | obrigatório | Ficheiro de horário do carregador; consulte as [colunas dos carregadores](dataset_reference.md#colunas-da-simulação-de-carregadores). | |
 | `attributes` | objeto | `{}` | Consulte [Atributos do carregador](#atributos-do-carregador). | |
-| `soc_unit` | `percent`, `fraction` | inferida por coluna | Unidade das colunas de SOC do ficheiro de horário. Omitida, é inferida uma vez por coluna a partir de todo o ficheiro (versão 2 da física) ou valor a valor (versão 1); consulte [Unidade do SOC](dataset_reference.md#unidade-do-soc). | depois da 3.6.0 |
+| `soc_unit` | `percent`, `fraction` | inferida por coluna | Unidade das colunas de SOC do ficheiro de horário. Omitida, é inferida uma vez por coluna a partir de todo o ficheiro; consulte [Unidade do SOC](dataset_reference.md#unidade-do-soc). | depois da 3.6.0 |
 | `noise_std` | número | `0.0` | Ruído gaussiano, em pontos percentuais de SOC, somado ao SOC pedido para a partida e ao SOC estimado à chegada. Altera os alvos usados pelos KPIs, não só as observações. | 2.x |
 | `autosize` | | | Aceite e ignorado: os carregadores não têm dimensionamento automático. | |
 
@@ -882,18 +886,18 @@ Outra chave dá um `UserWarning` que sugere a chave mais próxima e é ignorada.
 
 #### Atributos do carregador
 
-| Atributo | Unidade | Predefinição (física 2) | Predefinição (física 1) | Efeito |
-|---|---|---|---|---|
-| `nominal_power` | kW | nenhuma | não usada | Potência nominal; predefinição de `max_charging_power`. |
-| `max_charging_power` | kW | `nominal_power`, senão 50 com aviso | 50 com aviso | Potência para uma ação de 1,0. |
-| `min_charging_power` | kW | 0 | 0 | Pedidos abaixo dela dão 0; pedidos acima dela são pelo menos este valor. |
-| `max_discharging_power` | kW | **0** (sem V2G) com aviso | 50 com aviso | Potência para uma ação de -1,0. Com 0, o intervalo da ação é [0, 1]. |
-| `min_discharging_power` | kW | 0 | 0 | Potência mínima de descarga, como no carregamento. |
-| `efficiency` | rácio, (0, 1] | 1,0, com aviso quando é usada | igual | O carregamento armazena `AC × efficiency` no VE; a descarga entrega `energia da bateria × efficiency`. Usada no sentido sem curva. |
-| `charge_efficiency_curve` | `[[fração de potência, eficiência], ...]` | nenhuma | nenhuma | Eficiência em função da potência de carga / `max_charging_power`, interpolada linearmente. |
-| `discharge_efficiency_curve` | igual | nenhuma | nenhuma | O mesmo para a descarga, em relação a `max_discharging_power`. |
-| `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | `L1` / `all_phases` | igual | Fase sob um [serviço elétrico](#serviço-elétrico); não é usada por `charging_constraints`. |
-| `charger_type` | qualquer | nenhuma | nenhuma | Só uma etiqueta (por exemplo 0 para AC, 1 para DC). |
+| Atributo | Unidade | Predefinição | Efeito |
+|---|---|---|---|
+| `nominal_power` | kW | nenhuma | Potência nominal; predefinição de `max_charging_power`. |
+| `max_charging_power` | kW | `nominal_power`, senão 50 com aviso | Potência para uma ação de 1,0. |
+| `min_charging_power` | kW | 0 | Pedidos abaixo dela dão 0; pedidos acima dela são pelo menos este valor. |
+| `max_discharging_power` | kW | **0** (sem V2G) com aviso | Potência para uma ação de -1,0. Com 0, o intervalo da ação é [0, 1]. |
+| `min_discharging_power` | kW | 0 | Potência mínima de descarga, como no carregamento. |
+| `efficiency` | rácio, (0, 1] | 1,0, com aviso quando é usada | O carregamento armazena `AC × efficiency` no VE; a descarga entrega `energia da bateria × efficiency`. Usada no sentido sem curva. |
+| `charge_efficiency_curve` | `[[fração de potência, eficiência], ...]` | nenhuma | Eficiência em função da potência de carga / `max_charging_power`, interpolada linearmente. |
+| `discharge_efficiency_curve` | igual | nenhuma | O mesmo para a descarga, em relação a `max_discharging_power`. |
+| `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | `L1` / `all_phases` | Fase sob um [serviço elétrico](#serviço-elétrico); não é usada por `charging_constraints`. |
+| `charger_type` | qualquer | nenhuma | Só uma etiqueta (por exemplo 0 para AC, 1 para DC). |
 
 Outro nome de atributo lança `ValueError`, que indica o carregador e sugere o nome válido mais próximo. Não defina
 `seconds_per_time_step` nem `time_step_ratio` em `attributes`: são definidos ao carregar o schema, e um valor indicado
@@ -949,8 +953,8 @@ Com `"battery": {"type": "citylearn.community_dataset.InventoryBattery"}`, são 
 de `initial_soc`), `charging_efficiency` e `discharging_efficiency`; com uma `Battery` simples lançam `TypeError`.
 Qualquer outra chave em `battery.attributes` é ignorada sem aviso.
 
-Enquanto um VE não está ligado, o seu SOC varia aleatoriamente em cada passo. Na versão 1 da física, essa variação
-ignora a perda em repouso.
+Enquanto um VE não está ligado, o seu SOC varia aleatoriamente em cada passo, a partir do SOC depois da perda em
+repouso do passo.
 
 ### Resumo do ficheiro do carregador
 
@@ -983,7 +987,7 @@ ligação define o SOC do VE que chega. Consulte as [colunas dos carregadores](d
 | `attributes.trigger_threshold` | não | `0.5` | Uma ação acima deste valor arranca o próximo ciclo viável. Limitado a [0, 1]. |
 | `attributes.nominal_power` | não | `0` (sem verificação) | kW. Quando é positivo, o pico de potência de cada ciclo tem de ficar igual ou abaixo dele. |
 
-Na versão 2 da física, um ciclo arranca só com a informação do passo atual, e uma falha de energia suspende um ciclo em
+Um ciclo arranca só com a informação do passo atual, e uma falha de energia suspende um ciclo em
 curso.
 
 ## Escadas rolantes
@@ -1039,8 +1043,8 @@ linhas carregadas a partir de 0.
 | `vehicle_to_building` | bool | `false` | Permite que um VE ligado descarregue para o edifício durante uma falha, até à carga em ilha que a FV e a bateria deixam por cobrir. O carregador precisa de `max_discharging_power` acima de 0. A descarga pode deixar o veículo abaixo do SOC pedido para a partida. | |
 
 Durante uma falha o edifício fica em ilha: é alimentado pela FV, pela bateria, pelo armazenamento térmico e (com
-`vehicle_to_building`) pelos VE; a energia não servida é indicada em `power_outage_unserved_energy`. Na versão 2 da
-física, a bateria e os VE descarregam depois do armazenamento térmico e antes de as cargas serem servidas; consulte
+`vehicle_to_building`) pelos VE; a energia não servida é indicada em `power_outage_unserved_energy`. A
+bateria e os VE descarregam depois do armazenamento térmico e antes de as cargas serem servidas; consulte
 [O que cada versão altera](#o-que-cada-versão-altera).
 
 ## Mercado comunitário e liquidação
@@ -1061,7 +1065,7 @@ física, a bateria e os VE descarregam depois do armazenamento térmico e antes 
 | `enabled` | `false` | Ativa a liquidação local. |
 | `local_price_ratio_to_grid_import` | `0.8` | Preço local em relação ao preço de importação da rede do membro. Um número de 0 a 1. |
 | `intra_community_sell_ratio` | sinónimo | Nome antigo da mesma razão. Se as duas chaves forem definidas, têm de ser iguais. |
-| `settlement_version` | `1` | `1` ou `2`, como número (`2.0` é aceite, a string `"2"` não). `2` ativa `grid_export_price`; com `1`, as exportações residuais para a rede não recebem nada. |
+| `settlement_version` | `1` | `1` ou `2`, como inteiro ou string de dígitos (`2` ou `"2"`; `2.0` lança erro), como todas as [versões](#versões). `2` ativa `grid_export_price`; com `1`, as exportações residuais para a rede não recebem nada. |
 | `grid_export_price` | `0.0` | EUR/kWh pagos pelas exportações residuais para a rede. Um número finito; um valor diferente de zero exige `"settlement_version": 2`. |
 | `tariff_files` | `{}` | Tarifas CSV por membro, `{"<edifício>": "<ficheiro dentro do dataset>"}`. Cada ficheiro tem uma linha por passo global com `grid_export_price`, `community_buy_price` e `community_sell_price` (EUR/kWh) e tem de cobrir o episódio. Um membro com ficheiro usa estes preços em vez da razão e de `grid_export_price`, nas duas versões de liquidação. Resolvido a partir do `root_directory` do schema. |
 | `local_trading_enabled` | `true` | `false` mantém a liquidação e os KPIs do mercado mas não troca energia localmente. Booleanos ou `"true"`/`"false"`; `null` significa `false`. |
@@ -1098,7 +1102,7 @@ Consulte os [KPIs do mercado comunitário](kpis_reference.md#mercado-comunitári
 
 As definições são verificadas quando o ambiente é construído, mesmo com `enabled: false`.
 Uma chave desconhecida (por exemplo `enable`), uma razão que não seja um número ou que esteja fora de `[0, 1]`, uma
-`settlement_version` diferente de `1` ou `2` (incluindo a string `"2"`), um `grid_export_price` diferente de zero sem
+`settlement_version` diferente de `1` ou `2` (incluindo o float `2.0`), um `grid_export_price` diferente de zero sem
 `"settlement_version": 2`, e um peso ou ficheiro de tarifas de um edifício que não está no schema lançam `ValueError`.
 Os ficheiros de tarifas também são carregados quando o mercado está desativado.
 
@@ -1324,7 +1328,7 @@ inativos, o primeiro é ativado).
 Acrescentar FV ou armazenamento substitui o que o edifício já tem. Remover um aparelho diferível cancela os ciclos
 pendentes/em curso e limpa o consumo futuro. Remover a FV cria uma FV nula. Remover o armazenamento cria uma BESS nula.
 O que uma FV ou bateria substituída ou removida produziu ou consumiu antes do evento fica nas séries do edifício, pelo
-que as referências sem armazenamento e as somas do distrito o mantêm (na bateria, a partir da `baseline_version` 2). Um schema com `topology_events` lança
+que as referências sem armazenamento e as somas do distrito o mantêm Um schema com `topology_events` lança
 `ValueError` salvo se `topology_mode` for `dynamic`.
 
 Os ficheiros de séries temporais de um membro (simulação energética, carregadores, escadas rolantes) cobrem o horizonte completo, com uma linha por passo do dataset, ou a janela do membro, mais curtos do que o dataset e com a primeira linha no passo do evento `add_member` do membro. Um ficheiro da janela do membro deve cobrir os passos ativos do membro na janela de simulação (caso contrário a última linha é repetida, com um aviso), e um membro que volta a entrar depois de sair precisa de ficheiros do horizonte completo. Um membro que entra a meio do episódio começa a bateria e o armazenamento térmico em `initial_soc`.
@@ -1339,9 +1343,12 @@ episódio, `physics_version`, `random_stream_version` e `baseline_version`. `ren
 
 ## O que cada versão altera
 
+Cada chave de versão tem agora uma só versão. As tabelas indicam o que a versão alterou em relação ao CityLearn
+3.6.0, cujas definições (versão 1, `v1`) foram removidas no CityLearn 3.8.1.
+
 ### `physics_version`
 
-| Área | Versão 1 (CityLearn 3.6.0) | Versão 2 (predefinição) |
+| Área | CityLearn 3.6.0 | Versão 2 |
 |---|---|---|
 | Potência de descarga da bateria e dos VE | limitada por `capacity_power_curve` | limitada por `discharge_power_curve` |
 | Limite dos dispositivos AVAC nos edifícios com dinâmica LSTM | energia do passo comparada com kW (limite de uma hora) | potência × duração do passo |
@@ -1363,19 +1370,20 @@ episódio, `physics_version`, `random_stream_version` e `baseline_version`. `ren
 
 | Versão | Baseline dos KPIs (`*_without_storage`) | AVAC do BAU nativo |
 |---|---|---|
-| 1 | retira a bateria, o armazenamento térmico e o carregamento dos VE; não volta a somar nada | desligado |
-| 2 (predefinição) | como a 1 e, depois, volta a somar o carregamento dos VE do BAU com o alvo `full` | fornece a procura de aquecimento e de arrefecimento do dataset nos datasets com ações de AVAC |
+| CityLearn 3.6.0 | retira a bateria, o armazenamento térmico e o carregamento dos VE; não volta a somar nada | desligado |
+| 2 | como na 3.6.0 e, depois, volta a somar o carregamento dos VE do BAU com o alvo `full` | fornece a procura de aquecimento e de arrefecimento do dataset nos datasets com ações de AVAC |
 
-Nos datasets sem ações de AVAC, o BAU, a sua definição e a sua identidade são os mesmos nas duas versões. Qualquer outro
-valor lança `ValueError`. Com a versão 2, avaliar um dataset com carregadores corre o BAU nativo; se não puder correr, um `ValueError`
-sugere `baseline_version=1`. Consulte [Referências](baselines.md#avac-e-a-versão-da-baseline). Com topologia dinâmica, a versão 2
-também mantém nas séries do edifício o passado de uma bateria removida ou substituída; a versão 1 perde-o, como a 3.6.0.
+Nos datasets sem ações de AVAC, o BAU, a sua definição e a sua identidade são os mesmos que na 3.6.0. Avaliar um
+dataset com carregadores corre o BAU nativo; se não puder correr, a avaliação lança `ValueError`. Consulte
+[Referências](baselines.md#avac-e-a-versão-da-baseline). Com topologia dinâmica, o passado de uma bateria removida ou
+substituída fica nas séries do edifício; a 3.6.0 perdia-o.
 
 ### `random_stream_version`
 
-`v1` sorteia os parâmetros dos dispositivos, a deriva dos VE, o comportamento dos ocupantes e as falhas estocásticas
-como o CityLearn 3.6.0 (as mesmas falhas em todos os episódios, os mesmos sorteios de ocupantes em todos os edifícios).
-`v2` dá a cada objeto, finalidade e episódio o seu próprio fluxo. Consulte o [guia de migração](migration.md#fluxos-aleatórios).
+`v2` dá a cada objeto, finalidade e episódio o seu próprio fluxo. O CityLearn 3.6.0 sorteava os parâmetros dos
+dispositivos, a deriva dos VE, o comportamento dos ocupantes e as falhas estocásticas a partir de sementes partilhadas
+(as mesmas falhas em todos os episódios, os mesmos sorteios de ocupantes em todos os edifícios). Consulte o
+[guia de migração](migration.md#fluxos-aleatórios).
 
 ### `settlement_version`
 
@@ -1393,7 +1401,7 @@ são as mesmas.
 | Um intervalo `[mínimo, máximo]` como atributo | `TypeError`. | Indique um número. |
 | Ativar `electrical_storage` num edifício sem bateria | `ValueError` na construção. | Liste a ação em `inactive_actions` desse edifício. |
 | Ações `cooling_device` / `heating_device` em `citylearn.building.Building` | A ação existe mas não faz nada. | Use um tipo de edifício com dinâmica. |
-| Omitir `max_discharging_power` e esperar V2G | A versão 2 da física define-o como 0. | Defina-o explicitamente. |
+| Omitir `max_discharging_power` e esperar V2G | É definido como 0. | Defina-o explicitamente. |
 | Ficheiros de carregadores com valores numéricos em `electric_vehicle_id` | O VE nunca se liga. | Use IDs de texto iguais aos de `electric_vehicles_def`. |
 | Uma chave mal escrita em `battery.attributes` de um VE | Ignorada. | Compare `env.electric_vehicles[i].battery` com o schema. |
 | Definir `stochastic_power_outage: true` sem modelo | Metade dos passos são falhas. | Use `ReliabilityMetricsPowerOutage`. |

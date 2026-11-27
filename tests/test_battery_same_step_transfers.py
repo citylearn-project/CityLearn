@@ -26,7 +26,6 @@ def _make_battery(
     seconds_per_time_step: int = 3600,
     time_step_ratio: float = 1.0,
     episode_time_steps: int = 4,
-    legacy_discharge_power_limit: bool = False,
 ) -> Battery:
     tracker = EpisodeTracker(0, episode_time_steps - 1)
     tracker.next_episode(episode_time_steps, rolling_episode_split=False, random_episode_split=False, random_seed=0)
@@ -46,12 +45,10 @@ def _make_battery(
         episode_tracker=tracker,
         random_seed=0,
     )
-    battery.legacy_discharge_power_limit = legacy_discharge_power_limit
     battery.reset()
     return battery
 
 
-@pytest.mark.parametrize("legacy_discharge_power_limit", [False, True])
 @pytest.mark.parametrize(
     ("first_kwh", "second_kwh"),
     [
@@ -60,11 +57,10 @@ def _make_battery(
     ],
 )
 def test_two_same_direction_transfers_in_one_step(
-    legacy_discharge_power_limit: bool,
     first_kwh: float,
     second_kwh: float,
 ):
-    battery = _make_battery(legacy_discharge_power_limit=legacy_discharge_power_limit)
+    battery = _make_battery()
     one_way = battery.efficiency**0.5
     c0 = float(battery.capacity)
     e0 = float(battery.soc[0]) * c0
@@ -96,7 +92,6 @@ def test_two_same_direction_transfers_in_one_step(
         assert battery.gross_energy_discharge[0] == pytest.approx(-net_terminal, rel=1e-6)
 
 
-@pytest.mark.parametrize("legacy_discharge_power_limit", [False, True])
 @pytest.mark.parametrize(
     ("first_kwh", "second_kwh"),
     [
@@ -106,11 +101,10 @@ def test_two_same_direction_transfers_in_one_step(
     ],
 )
 def test_two_opposite_direction_transfers_in_one_step(
-    legacy_discharge_power_limit: bool,
     first_kwh: float,
     second_kwh: float,
 ):
-    battery = _make_battery(legacy_discharge_power_limit=legacy_discharge_power_limit)
+    battery = _make_battery()
     one_way = battery.efficiency**0.5
     c0 = float(battery.capacity)
     e0 = float(battery.soc[0]) * c0
@@ -202,14 +196,12 @@ def test_subhourly_time_step_ratio_and_storage_tank_and_inventory_battery():
     assert tank.energy_balance[0] == pytest.approx(2.0, rel=1e-6)
 
 
-@pytest.mark.parametrize("physics_version", [1, 2])
-def test_environment_physics_invariants_and_single_transfer_parity_v1_and_v2(physics_version: int):
-    # 1. Calling Battery.charge() twice inside a simulated step satisfies physics_invariant_checks under both v1 and v2.
+def test_environment_physics_invariants_and_single_transfer_parity():
+    # 1. Calling Battery.charge() twice inside a simulated step satisfies physics_invariant_checks.
     env = CityLearnEnv(
         str(MINUTE_EV_SCHEMA),
         central_agent=True,
         episode_time_steps=4,
-        physics_version=physics_version,
         physics_invariant_checks=True,
         random_seed=0,
     )
@@ -242,7 +234,7 @@ def test_environment_physics_invariants_and_single_transfer_parity_v1_and_v2(phy
     env.close()
 
     # 2. Normal single-transfer-per-step dispatch produces bit-identical single-call accounting to the direct formula.
-    b_single = _make_battery(legacy_discharge_power_limit=(physics_version == 1))
+    b_single = _make_battery()
     b_single.charge(4.5)
     one_way = b_single.efficiency**0.5
     raw_delta = (50.0 + 4.5 * one_way) - 50.0
@@ -253,12 +245,10 @@ def test_environment_physics_invariants_and_single_transfer_parity_v1_and_v2(phy
     assert b_single.degraded_capacity == expected_cap
 
 
-@pytest.mark.parametrize("legacy_discharge_power_limit", [False, True])
-def test_repeated_transfers_share_one_power_budget_per_step(legacy_discharge_power_limit: bool):
+def test_repeated_transfers_share_one_power_budget_per_step():
     # Issue #363: each call used to receive the full nominal_power x step budget, so three 5 kWh charges
     # moved 13.38 kWh through a 5 kW battery in one hour.
-    battery = _make_battery(nominal_power=5.0, capacity_loss_coefficient=0.0,
-                            legacy_discharge_power_limit=legacy_discharge_power_limit)
+    battery = _make_battery(nominal_power=5.0, capacity_loss_coefficient=0.0)
     input_budget = battery.get_max_input_power()
     assert input_budget == pytest.approx(4.5)
 
@@ -354,14 +344,12 @@ def test_storage_tank_subhourly_repeated_transfers_share_the_control_step_budget
     assert tank.energy_balance[0] == pytest.approx(1.25, rel=1e-6)
 
 
-@pytest.mark.parametrize("legacy_discharge_power_limit", [False, True])
 @pytest.mark.parametrize(("first_share", "first_sign"), [(1.0, 1.0), (0.5, 1.0), (1.0, -1.0), (0.25, -1.0)])
-def test_opposite_transfers_in_one_step_share_the_step(legacy_discharge_power_limit, first_share, first_sign):
+def test_opposite_transfers_in_one_step_share_the_step(first_share, first_sign):
     # A charge and a discharge in the same step each used to get a full budget: +5 then -5 kWh moved 9.5 kWh
     # through a 5 kW battery in one hour. A transfer takes its share of the step, |E|/(P*dt), and the shares
     # of the step's transfers add up to at most one.
-    battery = _make_battery(nominal_power=5.0, capacity_loss_coefficient=0.0,
-                            legacy_discharge_power_limit=legacy_discharge_power_limit)
+    battery = _make_battery(nominal_power=5.0, capacity_loss_coefficient=0.0)
     input_budget, output_budget = battery.get_max_input_power(), battery.get_max_output_power()
     first_budget, second_budget = (input_budget, output_budget) if first_sign > 0 else (output_budget, input_budget)
 

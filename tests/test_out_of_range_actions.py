@@ -97,16 +97,6 @@ def test_out_of_range_flat_actions_give_the_clipped_simulation():
     _assert_same(flat_like, clipped)
 
 
-def test_physics_version_1_applies_out_of_range_flat_actions_as_given():
-    # CityLearn 3.6.0 behaviour, kept for reproduction: only the entity tables are clipped.
-    unclipped = _run(THERMAL, 'flat', 'vector', scale=3.0, physics_version=1)
-    clipped = _run(THERMAL, 'flat', 'vector', scale=3.0, clip=True, physics_version=1)
-    tables = _run(THERMAL, 'entity', 'tables', scale=3.0, physics_version=1)
-    assert any(not np.array_equal(unclipped[b], clipped[b]) for b in clipped)
-    assert max(np.max(np.abs(unclipped[b] - clipped[b])) for b in clipped) > 1.0
-    _assert_same(tables, clipped)
-
-
 @pytest.mark.parametrize('central_agent', [True, False])
 def test_flat_parser_clips_to_the_action_space_and_keeps_in_range_values(central_agent):
     env = _env(THERMAL, steps=4, interface='flat', central_agent=central_agent)

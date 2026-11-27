@@ -100,13 +100,8 @@ class TabularQLearning(Agent):
     def __exploration_draw(self) -> float:
         """Uniform draw that decides between exploration and exploitation at this time step.
 
-        With ``random_stream_version='v1'`` it is the first value of ``RandomState(random_seed + time_step)``, as in
-        CityLearn 3.6.0, so seed ``s`` at time step ``t + 1`` repeats seed ``s + 1`` at time step ``t``. With ``'v2'``
-        it is the next value of one generator per episode, derived from :py:attr:`random_seed` and the episode.
+        It is the next value of one generator per episode, derived from :py:attr:`random_seed` and the episode.
         """
-
-        if self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
-            return np.random.RandomState(self.random_seed + self.time_step).random()
 
         return self.episode_random_generator(random_streams.AGENT_EXPLORATION).random()
 

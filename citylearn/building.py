@@ -17,8 +17,6 @@ from citylearn.energy_model import (
 )
 from citylearn.internal import grid_availability
 from citylearn.internal.building_ops import BuildingOpsService
-from citylearn.internal.baseline_version import baseline_version_of
-from citylearn.internal.physics_version import physics_version_of
 from citylearn.internal.service_energy import SERVICE_ENERGY_COMPONENTS
 from citylearn.internal.units import (
     energy_kwh_to_power_kw,
@@ -125,14 +123,14 @@ class Building(Environment):
     """
 
     #: Physics version of the building, see :py:mod:`citylearn.internal.physics_version`. Set by the
-    #: environment; ``None`` selects the default version.
+    #: environment and recorded in its metadata; 2 is the only version.
     physics_version: Optional[int] = None
 
     #: KPI baseline version of the building, see :py:mod:`citylearn.internal.baseline_version`. Set by the
-    #: environment; ``None`` selects the default version.
+    #: environment and recorded in its metadata; 2 is the only version.
     baseline_version: Optional[int] = None
 
-    #: Supplies the EV charging that the version 2 KPI baseline keeps: a callable that takes the building and
+    #: Supplies the EV charging that the KPI baseline keeps: a callable that takes the building and
     #: returns its charger consumption in the native BAU with the ``'full'`` target. Set by the environment.
     _baseline_ev_charging_source: Optional[Callable[['Building'], np.ndarray]] = None
 
@@ -530,8 +528,7 @@ class Building(Environment):
         dynamics (LSTM), the difference to the dataset's ideal-load heating and cooling demand
         (:py:attr:`net_electricity_consumption_without_storage_and_partial_load`).
 
-        With `baseline_version` 1 (CityLearn 3.6.0 and earlier) no charging is added back, so on EV datasets the
-        baseline is a community whose cars never charge. See :py:mod:`citylearn.internal.baseline_version`.
+        See :py:mod:`citylearn.internal.baseline_version`.
 
         Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.
         """
@@ -544,21 +541,21 @@ class Building(Environment):
             self.chargers_electricity_consumption,
         ], axis=0)
 
-        if baseline_version_of(self) >= 2 and self.electric_vehicle_chargers:
+        if self.electric_vehicle_chargers:
             values = values + self._baseline_ev_charging(len(values))
 
         return self._without_grid_during_outage(values)
 
     def _baseline_ev_charging(self, length: int) -> np.ndarray:
-        """EV charging that the version 2 baseline keeps: the building's BAU charger consumption, `length` steps."""
+        """EV charging that the baseline keeps: the building's BAU charger consumption, `length` steps."""
 
         source = self._baseline_ev_charging_source
 
         if source is None:
             raise ValueError(
-                f'Building {self.name!r} has EV chargers, and the version 2 KPI baseline adds back their charging in '
+                f'Building {self.name!r} has EV chargers, and the KPI baseline adds back their charging in '
                 'the native BAU run, which only an environment can supply. Evaluate the building through its '
-                'CityLearnEnv, or set baseline_version=1.'
+                'CityLearnEnv.'
             )
 
         charging = np.asarray(source(self))
@@ -2081,18 +2078,9 @@ class Building(Environment):
         # Optionally clamp to flexibility range if needed
         energy = min(energy, self.downward_electrical_flexibility)
         if self.power_outage and energy < 0.0:
-            if physics_version_of(self) < 2:
-                # Physics version 1: a pre-step estimate from the dataset thermal demand, which ignores the
-                # thermal storage discharge and the device limits, so the battery can discharge more than the
-                # islanded load and the surplus is booked as PV curtailment (#229).
-                try:
-                    base_total_kw, _ = self._ops_service._estimate_base_power_at_step(self.time_step)
-                except Exception:
-                    base_total_kw = 0.0
-            else:
-                # The battery discharges after this step's demand and thermal storage discharges, so the
-                # islanded load left for the devices is known; PV covers it first.
-                base_total_kw = self._ops_service._outage_unserved_load_kw()
+            # The battery discharges after this step's demand and thermal storage discharges, so the
+            # islanded load left for the devices is known; PV covers it first (#229).
+            base_total_kw = self._ops_service._outage_unserved_load_kw()
 
             local_load_kwh = power_kw_to_energy_kwh(max(float(base_total_kw), 0.0), self.seconds_per_time_step)
             energy = max(energy, -local_load_kwh)
@@ -2111,12 +2099,11 @@ class Building(Environment):
         """Keyword argument that makes an HVAC device compare an energy cap with its power over the dataset step.
 
         `update_cooling_demand` and `update_heating_demand` pass an energy per dataset step as
-        `max_electric_power`. Physics version 1 compares it directly with the available power in [kW],
-        which caps the device at one hour of output for longer steps. Later versions pass the step
-        duration so the device converts its power to energy first.
+        `max_electric_power`, and the step duration so the device converts its power to energy before
+        comparing them (#235).
         """
 
-        return {} if physics_version_of(self) < 2 else {'step_hours': self._dataset_step_hours()}
+        return {'step_hours': self._dataset_step_hours()}
 
     def _dataset_step_hours(self) -> float:
         """Duration of one dataset step in hours.
@@ -2635,9 +2622,6 @@ class Building(Environment):
                 low_limit[key] = -1.0
                 if key.endswith('_ratio') or key.endswith(('pending', 'running', 'can_start', 'deadline_missed')):
                     high_limit[key] = 1.0
-                elif key.endswith('_kwh') and physics_version_of(self) < 2:
-                    # The placeholder of CityLearn 3.6.0, kept to reproduce it.
-                    high_limit[key] = 1.0e6
                 elif key.endswith('_kwh'):
                     # Energies are never negative (0 without a cycle); the bound is the largest value the
                     # appliances' cycles can report, so that normalisation keeps the signal.
@@ -3100,7 +3084,7 @@ class Building(Environment):
             start_time_step=self.episode_tracker.simulation_start_time_step,
             end_time_step=self.episode_tracker.simulation_end_time_step
         )
-        self.cooling_storage.capacity = self.cooling_storage.autosize(demand, **self._tank_autosize_kwargs(kwargs))
+        self.cooling_storage.capacity = self.cooling_storage.autosize(demand, **kwargs)
 
     def autosize_heating_storage(self, **kwargs):
         """Autosize `heating_storage` `capacity` to minimum capacity needed to always meet `heating_demand`.
@@ -3116,7 +3100,7 @@ class Building(Environment):
             start_time_step=self.episode_tracker.simulation_start_time_step,
             end_time_step=self.episode_tracker.simulation_end_time_step
         )
-        self.heating_storage.capacity = self.heating_storage.autosize(demand, **self._tank_autosize_kwargs(kwargs))
+        self.heating_storage.capacity = self.heating_storage.autosize(demand, **kwargs)
 
     def autosize_dhw_storage(self, **kwargs):
         """Autosize `dhw_storage` `capacity` to minimum capacity needed to always meet `dhw_demand`.
@@ -3132,12 +3116,7 @@ class Building(Environment):
             start_time_step=self.episode_tracker.simulation_start_time_step,
             end_time_step=self.episode_tracker.simulation_end_time_step
         )
-        self.dhw_storage.capacity = self.dhw_storage.autosize(demand, **self._tank_autosize_kwargs(kwargs))
-
-    def _tank_autosize_kwargs(self, kwargs: Mapping[str, Any]) -> Mapping[str, Any]:
-        """Storage-tank autosize arguments with the building's physics version unless one is given."""
-
-        return {'physics_version': physics_version_of(self), **kwargs}
+        self.dhw_storage.capacity = self.dhw_storage.autosize(demand, **kwargs)
 
     def autosize_electrical_storage(self, **kwargs):
         """Autosize `electrical_storage` `capacity`, `nominal_power`, `depth_of_discharge`, `efficiency`, 
@@ -3181,26 +3160,19 @@ class Building(Environment):
             Other keyword arguments parsed to `electrical_storage` `autosize` function.
         """
 
-        legacy = physics_version_of(self) < 2
         demand = pd.DataFrame(self._estimate_baseline_electricity_consumption(), columns=['value'])
 
-        if legacy:
-            # Physics version 1 assumes an hourly 8760-row year whatever the data resolution.
-            demand['year'] = (demand.index / (self.seconds_per_time_step * 24 * 365 / self.seconds_per_time_step)).astype(int)
-            demand = demand.groupby('year')['value'].sum().mean()
-        else:
-            # The PVWatts yield is for a full year, so the window's demand is scaled to one year.
-            # A one-year window is unchanged; a shorter one no longer gives a smaller array.
-            rows_per_year = max(int(round(365.0 * 24.0 / self._dataset_step_hours())), 1)
-            demand = float(demand['value'].sum()) * (rows_per_year / len(demand))
+        # The PVWatts yield is for a full year, so the window's demand is scaled to one year.
+        # A one-year window is unchanged; a shorter one does not give a smaller array.
+        rows_per_year = max(int(round(365.0 * 24.0 / self._dataset_step_hours())), 1)
+        demand = float(demand['value'].sum()) * (rows_per_year / len(demand))
 
         epw_filepath = kwargs.pop('epw_filepath')
         self.pv.nominal_power, solar_generation = self.pv.autosize(demand, epw_filepath, **kwargs)
         self.pv.generation_mode = 'per_kw'
 
-        if not legacy:
-            solar_generation = self._hourly_profile_to_dataset_resolution(
-                solar_generation, len(self.energy_simulation.solar_generation))
+        solar_generation = self._hourly_profile_to_dataset_resolution(
+            solar_generation, len(self.energy_simulation.solar_generation))
 
         self.energy_simulation.__setattr__('solar_generation', np.array(solar_generation, dtype='float32'))
 
@@ -3587,7 +3559,7 @@ class Building(Environment):
         # net electriciy consumption emission
         self.__net_electricity_consumption_emission[self.time_step] = max(0.0, net_electricity_consumption*self.carbon_intensity.carbon_intensity[self.time_step])
 
-        # Physics version 2 records the electrical-service state from the settled import (#230).
+        # Record the electrical-service state from the settled import (#230).
         self._ops_service.record_settled_electrical_service_state()
 
     def set_net_electricity_consumption_cost(self, value: float, time_step: int = None):
@@ -4050,9 +4022,7 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
             return high
 
         # Same cap as the update methods, with the nominal power as the available power (an upper bound).
-        # Physics version 1 compares the step energy with the power, which caps it at one hour.
         hours = self._dataset_step_hours()
-        hours = hours if physics_version_of(self) >= 2 else min(hours, 1.0)
         electric_energy = float(getattr(device, 'nominal_power', 0.0) or 0.0) * hours
 
         if electric_energy <= 0.0:
@@ -4278,8 +4248,7 @@ class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding,
     set_point_limits : Tuple[float, float], optional
         Range, in [C], an occupant can move a heating or cooling set point to; defaults to
         :py:data:`DEFAULT_OCCUPANT_SET_POINT_LIMITS`. A change never goes past a limit, and a schedule
-        value outside the range is not moved into it. Applies under physics version 2 and later only:
-        physics version 1 keeps the unbounded set points of CityLearn 3.6.0 (CityLearn #352).
+        value outside the range is not moved into it (CityLearn #352).
     **kwargs : Any
         Other keyword arguments of :py:class:`citylearn.building.OccupantInteractionBuilding`.
     """
@@ -4300,11 +4269,10 @@ class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding,
         self.occupant_interaction_indoor_dry_bulb_temperature_set_point_delta_summary = []
 
     @property
-    def set_point_limits(self) -> Optional[Tuple[float, float]]:
-        """Range, in [C], an occupant can move a set point to; ``None`` under physics version 1, which
-        does not limit it."""
+    def set_point_limits(self) -> Tuple[float, float]:
+        """Range, in [C], an occupant can move a set point to."""
 
-        return None if physics_version_of(self) < 2 else self.__set_point_limits
+        return self.__set_point_limits
 
     @set_point_limits.setter
     def set_point_limits(self, value: Tuple[float, float]):
@@ -4321,13 +4289,10 @@ class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding,
         self.__set_point_limits = (low, high)
 
     def _occupant_set_point(self, current_set_point: float, setpoint_delta: float) -> float:
-        """Set point after an occupant change, kept within `set_point_limits` when they apply."""
+        """Set point after an occupant change, kept within `set_point_limits`."""
 
         set_point = as_float(current_set_point) + setpoint_delta
         limits = self.set_point_limits
-
-        if limits is None:
-            return set_point
 
         # Never past a limit, and never pulled into the range when the schedule is already outside it.
         current_set_point = as_float(current_set_point)
@@ -4336,7 +4301,7 @@ class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding,
         return min(max(set_point, low), high)
 
     def _set_point_observation_limits(self, key: str, data: Mapping[str, Any]) -> Tuple[float, float]:
-        """Set-point limits: the schedule range widened to `set_point_limits` when they apply.
+        """Set-point limits: the schedule range widened to `set_point_limits`.
 
         Occupants move the set point from the schedule or from an earlier change, and never past
         `set_point_limits`, so these limits are exact.
@@ -4344,7 +4309,7 @@ class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding,
 
         limits = self.set_point_limits
 
-        if limits is None or self.ignore_occupant:
+        if self.ignore_occupant:
             return super()._set_point_observation_limits(key, data)
 
         low, high = super(OccupantInteractionBuilding, self)._set_point_observation_limits(key, data)

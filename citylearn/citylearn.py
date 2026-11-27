@@ -179,10 +179,10 @@ class CityLearnEnv(Environment, Env):
     random_stream_version: str, optional
         Keyword argument. How the random streams for unspecified device parameters, away-from-charger EV
         state of charge, occupant set-point interactions and stochastic power outages are derived from
-        `random_seed`: ``'v2'`` (default) derives one independent stream per purpose, object and episode
-        with :class:`numpy.random.SeedSequence`; ``'v1'`` reproduces CityLearn 3.6.0 and earlier. Overrides
-        ``random_stream_version`` in the schema. Agents built on the environment use the same version for
-        their own random streams. See :py:mod:`citylearn.random_streams`.
+        `random_seed`: ``'v2'``, the only version, derives one independent stream per purpose, object and
+        episode with :class:`numpy.random.SeedSequence`. Version ``'v1'`` was removed in CityLearn 3.8.1.
+        Overrides ``random_stream_version`` in the schema. Agents built on the environment use the same
+        streams. See :py:mod:`citylearn.random_streams`.
     offline: bool, optional
         If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
         error when required files are not available locally. Defaults to the ``CITYLEARN_OFFLINE`` environment
@@ -231,14 +231,14 @@ class CityLearnEnv(Environment, Env):
         EV charging of the native BAU reference built by ``evaluate_v2()``: ``'full'`` charges to 100%,
         ``'requested'`` to the user's requested departure SOC. Defaults to the schema value, else ``'full'``.
     physics_version: int, optional
-        Physics definitions: ``2`` (default) or ``1``, which reproduces the physics of CityLearn 3.6.0. Overrides the
-        schema key. The migration guide lists the corrections of version 2.
+        Physics definitions: ``2``, the only version (version ``1`` was removed in CityLearn 3.8.1). Overrides the
+        schema key. See :py:mod:`citylearn.internal.physics_version`.
     baseline_version: int, optional
-        Definition of the default KPI baseline (the ``*_without_storage`` series) and of the native BAU HVAC: ``2``
-        (default) removes the battery, the thermal storage and the EV charging of the controlled run, and adds back the
+        Definition of the default KPI baseline (the ``*_without_storage`` series) and of the native BAU HVAC: version
+        ``2`` removes the battery, the thermal storage and the EV charging of the controlled run, and adds back the
         EV charging of the native BAU with the ``'full'`` target, so it is the same for every controller and has no V2G;
-        its native BAU also runs the HVAC so that it delivers the dataset's own heating and cooling demand. ``1`` adds
-        nothing back and its BAU sends zero to the HVAC actions, as in CityLearn 3.6.0. Overrides the schema key. See
+        its native BAU also runs the HVAC so that it delivers the dataset's own heating and cooling demand. ``2`` is
+        the only version (version ``1`` was removed in CityLearn 3.8.1). Overrides the schema key. See
         :py:mod:`citylearn.internal.baseline_version`.
     debug_timing: bool, optional
         Log runtime timings. Defaults to the schema value, else ``False``.
@@ -744,11 +744,11 @@ class CityLearnEnv(Environment, Env):
 
     @property
     def baseline_version(self) -> int:
-        """Definition of the default KPI baseline and, from version 2, of the native BAU HVAC; see
+        """Definition of the default KPI baseline and of the native BAU HVAC; see
         :py:mod:`citylearn.internal.baseline_version`."""
 
-        from citylearn.internal.baseline_version import baseline_version_of
-        return getattr(self, '_baseline_version', None) or baseline_version_of(None)
+        from citylearn.internal.baseline_version import DEFAULT_BASELINE_VERSION
+        return getattr(self, '_baseline_version', None) or DEFAULT_BASELINE_VERSION
 
     @baseline_version.setter
     def baseline_version(self, value: Union[int, str]):
@@ -1824,7 +1824,7 @@ class CityLearnEnv(Environment, Env):
                 'intra_community_sell_ratio': self.community_market_sell_ratio,
                 'grid_export_price': self.community_market_grid_export_price,
                 'local_trading_enabled': getattr(self, 'community_market_local_enabled', True),
-                'settlement_version': (self.schema.get('community_market') or {}).get('settlement_version', 1),
+                'settlement_version': getattr(self, 'community_market_settlement_version', 1),
                 'import_member_weights': self.community_market_import_member_weights,
                 'kpis': {
                     'community_local_traded_enabled': self.community_market_kpi_local_traded_enabled,
@@ -2306,22 +2306,14 @@ class CityLearnEnv(Environment, Env):
         self._community_market_settlement_history = MarketSettlementHistory()
         self._observations_cache = None
         self._observations_cache_time_step = -1
-        episode_index = int(getattr(self.episode_tracker, 'episode', 0))
         self._reset_seed_explicit = seed is not None
         self._ev_drift_generators = {}
 
-        if self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
-            self._ev_drift_seed = int(self.random_seed) if seed is not None else int(self.random_seed) + episode_index
-            self._ev_drift_random_state = np.random.RandomState(self._ev_drift_seed)
-        else:
-            # Each EV draws from its own stream (see `CityLearnRuntimeService.ev_drift_generator`);
-            # this identifies the episode's streams in metadata and comparisons.
-            self._ev_drift_seed = random_streams.stream_id(
-                self.random_seed, random_streams.EV_AWAY_SOC_DRIFT, self.episode_tracker.random_stream_episode,
-            )
-            self._ev_drift_random_state = None
-
-        self._ev_suspended_drift_random_state = None
+        # Each EV draws from its own stream (see `CityLearnRuntimeService.ev_drift_generator`);
+        # this identifies the episode's streams in metadata and comparisons.
+        self._ev_drift_seed = random_streams.stream_id(
+            self.random_seed, random_streams.EV_AWAY_SOC_DRIFT, self.episode_tracker.random_stream_episode,
+        )
         self._render_buffer.clear()
         self._refresh_action_cache()
         self.update_variables()
@@ -2462,6 +2454,7 @@ class CityLearnEnv(Environment, Env):
         )
         self.community_market_sell_ratio = parsed['local_price_ratio_to_grid_import']
         self.community_market_grid_export_price = parsed['grid_export_price']
+        self.community_market_settlement_version = parsed['settlement_version']
         from citylearn.community_dataset import configure_tariffs
         configure_tariffs(self, config)
         self.community_market_import_member_weights = parsed['import_member_weights']

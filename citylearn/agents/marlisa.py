@@ -395,15 +395,10 @@ class MARLISA(SAC):
     def shuffle_coordination_order(self, action_order: List[int]):
         """Shuffle, in place, the order in which buildings act during exploration with information sharing.
 
-        With ``random_stream_version='v1'`` the order is shuffled by ``RandomState(random_seed + time_step)``, as in
-        CityLearn 3.6.0, so seed ``s`` at time step ``t + 1`` repeats seed ``s + 1`` at time step ``t``. With ``'v2'``
-        it is shuffled by one generator per episode, derived from :py:attr:`random_seed` and the episode.
+        It is shuffled by one generator per episode, derived from :py:attr:`random_seed` and the episode.
         """
 
-        if self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
-            np.random.RandomState(int(self.random_seed + self.time_step)).shuffle(action_order)
-        else:
-            self.episode_random_generator(random_streams.AGENT_COORDINATION_ORDER).shuffle(action_order)
+        self.episode_random_generator(random_streams.AGENT_COORDINATION_ORDER).shuffle(action_order)
 
     def get_exploration_prediction_without_information_sharing(self, observations: List[List[float]]) -> Tuple[List[List[float]], List[List[float]]]:
         actions = super().get_exploration_prediction(observations)

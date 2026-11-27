@@ -255,7 +255,7 @@ O `request_id` da resposta à procura e a validade da referência são expostos 
 | `soc`, `capacity_kwh`, `nominal_power_kw`, `electricity_consumption_kwh` | legacy | misto | Estado do BESS e consumo liquidado. |
 | `min_charge_power_kw`, `min_discharge_power_kw` | `entity_base` | kW | Potências mínimas técnicas. |
 | `efficiency_ratio` | `entity_base` | rácio | Eficiência nominal de ida e volta (round-trip). |
-| `round_trip_efficiency_ratio` | `entity_base` | rácio | Eficiência num sentido na última operação, a raiz quadrada da eficiência de ida e volta atual. O nome mantém-se por causa dos layouts de observação existentes. |
+| `one_way_efficiency_ratio` | `entity_base` | rácio | Eficiência num sentido na última operação, a raiz quadrada da eficiência de ida e volta atual. Chamava-se `round_trip_efficiency_ratio` antes do CityLearn 3.8.1. |
 | `phase_connection_L1/L2/L3` | `entity_base` | one-hot | Ligação de fase do armazenamento. |
 | `electrical_storage_soc_ratio` | `entity_core_electrical` | rácio | SOC canónico do BESS. |
 | `max_charge_power_kw`, `max_discharge_power_kw` | `entity_core_electrical` | kW | Potências máximas atuais. |
@@ -281,11 +281,10 @@ a energia armazenada. As features de carregamento derivadas delas (`can_charge`,
 `available_charge_energy_kwh_step`, `charge_headroom_ratio`,
 `max_deliverable_energy_until_departure_kwh`, `departure_energy_margin_kwh`,
 `departure_feasibility_ratio` e as somas `flexible_charge_*` e
-`community_flexible_*`) acompanham-nas. Na versão 1 da física são calculadas a
-partir da capacidade nominal, como no CityLearn 3.6.0, e indicam que uma
-bateria degradada cheia ainda pode carregar. As baterias sem perda de
-capacidade (`capacity_loss_coefficient` 0) dão os mesmos valores nas duas
-versões.
+`community_flexible_*`) acompanham-nas. O CityLearn 3.6.0 calculava-as a partir
+da capacidade nominal e indicava que uma bateria degradada cheia ainda podia
+carregar; as baterias sem perda de capacidade (`capacity_loss_coefficient` 0)
+dão os mesmos valores que na 3.6.0.
 
 ### `pv`
 

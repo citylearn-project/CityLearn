@@ -104,16 +104,14 @@ controlador que carregasse os carros parecia pior do que a baseline
   `evaluate_v2(include_business_as_usual=False)`, e usa o alvo `'full'` qualquer
   que seja `business_as_usual_ev_charge_target`. Quando o sidecar não pode ser
   executado, porque as entradas, os edifícios ou os equipamentos mudaram depois
-  do carregamento, a avaliação lança `ValueError`; use aí `baseline_version=1`.
+  do carregamento, a avaliação lança `ValueError`.
   O manifesto dessa execução regista a referência do BAU como avaliada.
 - Só mudam os datasets com carregadores de VE: `citylearn_challenge_2022_phase_all_plus_evs`,
   os datasets `pt_rec_*` e os demos trifásicos. A simulação, as linhas do
   controlo e as recompensas não mudam, nem as linhas do BAU nos datasets sem
   ações de AVAC (ver [AVAC no BAU](#avac-no-bau)). Os KPIs de equidade,
   calculados a partir do benefício de cada membro face à baseline, mudam com ela.
-- Defina `baseline_version` como `1` (argumento do construtor ou chave do
-  schema) para reproduzir a baseline do CityLearn 3.6.0, incluindo o seu BAU
-  que não usa o AVAC. A versão fica em
+- A `baseline_version` fica em
   `env.get_metadata()` e no manifesto de exportação, no nível de topo e em
   `comparison_context`; `compare_exports()` dá como `incompatible` duas
   execuções com versões diferentes. O `MultiCommunityEnv` exige que todas as
@@ -127,7 +125,7 @@ seus edifícios não eram aquecidos nem arrefecidos e as linhas
 `*_business_as_usual` comparavam o controlador com casas sem aquecimento ou sem
 arrefecimento ([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
 
-- Com `baseline_version=2`, a predefinida, o BAU passa a fornecer, em cada
+- O BAU passa a fornecer, em cada
   passo, a procura de aquecimento e de arrefecimento do próprio dataset,
   limitada aos limites da ação e do equipamento. Nesses datasets, a definição do BAU passa a
   `immediate-full-charge-v4+hvac-dataset-demand-v1` (ou
@@ -143,10 +141,8 @@ arrefecimento ([#362](https://github.com/citylearn-project/CityLearn/issues/362)
   temperatura interior média de 3,4 para 20,6 °C, e o rácio de custo do
   `RBCSmartPolicy` face ao BAU de 6,970 para 1,000.
 - Nos datasets sem ações de AVAC nada muda, bit a bit.
-- `baseline_version=1` mantém o BAU com o AVAC a zero, como no CityLearn 3.6.0,
-  para reproduzir resultados anteriores.
-- Um `BusinessAsUsualAgent` executado por si segue a versão do ambiente;
-  `hvac='off'` ou `hvac='dataset_demand'` substitui-a.
+- Um `BusinessAsUsualAgent` executado por si fornece a procura do dataset nos
+  datasets com ações de AVAC; `hvac='off'` ou `hvac='dataset_demand'` substitui-o.
 - Um controlador que não comande o AVAC, como o `ZeroActionAgent`, parece agora
   muito mais barato do que o BAU nestes datasets, porque o BAU paga o
   aquecimento e o arrefecimento. Leia os seus rácios face ao BAU em conjunto com
@@ -161,8 +157,8 @@ com a regra do BAU predefinido.
 - Datasets sem ações de AVAC: nada muda, bit a bit, incluindo a
   `comparison_identity()`.
 - Datasets com ações de AVAC: as referências baseadas em regras aquecem e
-  arrefecem, pelo que os seus KPIs de energia, custo e conforto mudam. Com a
-  `baseline_version=2` predefinida, o BAU também aquece e arrefece, pelo que os
+  arrefecem, pelo que os seus KPIs de energia, custo e conforto mudam. O BAU
+  também aquece e arrefece, pelo que os
   seus rácios face ao BAU comparam casas aquecidas e arrefecidas da mesma forma.
   A sua identidade regista `hvac='dataset_demand'` e a definição ganha o sufixo
   `+hvac-dataset-demand-v1`.
@@ -197,7 +193,7 @@ O `CityLearnEnv` verifica agora a secção `community_market` quando é constru�
 e dá `ValueError` para definições que as versões anteriores ignoravam ou
 substituíam: chaves desconhecidas (`enable` em vez de `enabled`), um rácio que
 não é um número ou está fora de `[0, 1]`, aliases do rácio com valores
-diferentes, um `settlement_version` que não seja `1` ou `2` (incluindo uma string como `"2"`), um
+diferentes, um `settlement_version` que não seja `1` ou `2` (consulte [Versões](schema_reference.md#versões) para as formas aceites), um
 `grid_export_price` diferente de zero sem `"settlement_version": 2`, e pesos ou
 ficheiros de tarifa de edifícios que não estão no schema. A mensagem nomeia a
 chave e a correção. Um schema que carregava antes e agora dá erro não simulava o
@@ -265,9 +261,7 @@ sua observação
   (como a `ComfortReward`). Com ações aleatórias mudam também os KPIs de
   desconforto; a energia, o custo e as emissões não, porque é a ação AVAC, e não o
   set point, que define o aquecimento fornecido.
-- `set_point_limits` aplica-se apenas na versão 2 da física e seguintes. Defina
-  `physics_version` como `1` para reproduzir os set points sem limite do
-  CityLearn 3.6.0. Para alargar ou estreitar o intervalo, defina
+- Para alargar ou estreitar o intervalo, defina
   `set_point_limits` em cada edifício do schema, por exemplo
   `"set_point_limits": [16, 28]`.
 
@@ -314,8 +308,6 @@ cheio e não era carregado
   um valor perdido acima de 1 (1,00001, por exemplo) numa coluna em rácio torna
   toda a coluna em percentagem, e 0,3 passaria a 0,3 %. Corrija esse valor ou
   declare `"soc_unit": "fraction"`.
-- Defina `physics_version` como `1` para reproduzir a regra valor a valor do
-  CityLearn 3.6.0.
 
 ### Valores predefinidos e nomes dos atributos dos carregadores
 
@@ -328,8 +320,7 @@ explicitamente: `nominal_power` é o valor predefinido de `max_charging_power`, 
 `charger_type` é uma etiqueta sem efeito
 ([#369](https://github.com/citylearn-project/CityLearn/issues/369)).
 
-Na versão 2 da física, um limite omitido deixa de dar um carregador
-bidirecional de 50 kW:
+Um limite omitido deixa de dar um carregador bidirecional de 50 kW:
 
 - um `max_discharging_power` omitido vale 0, pelo que o carregador não pode
   descarregar (V2G desligado) e o seu espaço de ações começa em 0 em vez de -1.
@@ -342,9 +333,7 @@ bidirecional de 50 kW:
 
 Todos os carregadores incluídos definem todos os seus limites, pelo que os
 resultados incluídos não mudam. Um schema que omite `max_discharging_power` e
-contava com os 50 kW de V2G tem de o definir explicitamente, ou usar
-`physics_version=1`, que mantém os 50 kW do CityLearn 3.6.0 (a verificação dos
-nomes aplica-se às duas versões).
+contava com os 50 kW de V2G tem de o definir explicitamente.
 
 ### Os ids dos carregadores são únicos no schema
 
@@ -435,9 +424,7 @@ corridas novas. Isto inclui os RBC horários (`BasicRBC`, `OptimizedRBC`,
 `BasicBatteryRBC`) em `baeda_3dem`, nos datasets
 `citylearn_challenge_2020_climate_zone_*` e em `citylearn_challenge_2021`,
 cuja regra de armazenamento excede o limite do armazenamento térmico de alguns
-edifícios. `physics_version=1` mantém a regra da versão 3.6.0, ações flat
-aplicadas tal como são enviadas, para reproduzir essas corridas. Leia os limites
-de `env.action_space`. Ver
+edifícios. Leia os limites de `env.action_space`. Ver
 [ações fora dos limites](actions_reference.md#ações-fora-dos-limites).
 
 ### Limites das observações de energia dos diferíveis
@@ -445,8 +432,7 @@ de `env.action_space`. Ver
 Os limites flat de `deferrable_appliance_*_cycle_energy_kwh`,
 `*_remaining_energy_kwh` e `*_current_step_energy_kwh` passam de [-1, 1e6] para
 [0, maior energia de ciclo] e [0, maior energia por passo] dos aparelhos do
-edifício, com a versão da física 2, a predefinida; `physics_version=1` mantém
-[-1, 1e6]. Os valores das observações e a simulação não mudam. As observações
+edifício. Os valores das observações e a simulação não mudam. As observações
 normalizadas (`NormalizedObservationWrapper`) e discretizadas, e os codificadores
 do `SAC` e do `MARLISA`, leem estes limites, pelo que uma política treinada num
 dataset com aparelhos diferíveis (`pt_rec_*`,
@@ -490,9 +476,9 @@ devem ser retreinados, e os seus resultados anteriores não são comparáveis.
 
 Estes limites continuam a ser estimativas onde o modelo não tem um limite rígido.
 Sob um controlo arbitrário, por exemplo ações aleatórias ao longo de um episódio
-completo do Quebec, a temperatura interior LSTM e, na versão 1 da física, os setpoints dos
-ocupantes podem sair deles; `ClippedObservationWrapper` mantém esses valores
-dentro do espaço. Na versão 2 da física os set points dos ocupantes ficam dentro
+completo do Quebec, a temperatura interior LSTM pode sair deles;
+`ClippedObservationWrapper` mantém esses valores dentro do espaço. Os set points
+dos ocupantes ficam dentro
 de `set_point_limits` (ver
 [limites dos set points dos ocupantes](#limites-dos-set-points-dos-ocupantes)).
 Sem aquecimento, por exemplo com o BAU predefinido, a temperatura interior sai
@@ -637,14 +623,12 @@ Estas alterações afetam apenas `topology_mode='dynamic'`:
   que os nomes das observações, ações e entidades do clone mudam; atualize os
   agentes guardados e os eventos de robustez que identificam os carregadores do
   clone pelo id da origem.
-- Com a predefinição `baseline_version=2`, uma bateria removida ou substituída
+- Uma bateria removida ou substituída
   por `remove_asset` ou `add_asset` mantém nas séries da bateria do edifício o
   que transferiu antes do evento, pelo que as referências sem armazenamento
   desse edifício e do distrito deixam de manter o seu despacho e de depender do
   controlador. Só mudam as linhas de referência (`*_baseline_*`, rácios e deltas
-  à referência) das execuções que removem ou substituem uma bateria. Use
-  `baseline_version=1` para manter as séries do CityLearn 3.6.0, em que o
-  histórico se perdia.
+  à referência) das execuções que removem ou substituem uma bateria.
 
 ### Passo de controlo diferente do passo do dataset
 
@@ -678,7 +662,7 @@ Nenhum dataset incluído usa funções de recompensa por edifício.
 
 `Electric_Vehicles_Reward_Function`, `ComfortReward` e
 `SolarPenaltyAndComfortReward` aceitam um atributo `version`, e a versão 2 é a
-predefinida. A versão 2 corrige a penalização da partida dos VE, acrescenta a
+única versão. A versão 2 corrige a penalização da partida dos VE, acrescenta a
 recompensa de base e segue o modo de AVAC no termo de conforto, como descreve a
 visão geral das funções de recompensa da documentação. Todos os schemas incluídos
 que usam estas recompensas definem `"version": 2`, pelo que as recompensas de
@@ -688,13 +672,10 @@ do desafio de 2023, das duas vizinhanças do Quebec e de `baeda_3dem` diferem da
 recompensas antes de as comparar com novas execuções, e compare políticas apenas
 dentro de uma mesma versão.
 
-A versão 1, a recompensa da 3.6.0, está obsoleta e existe apenas para reproduzir
-execuções feitas com o CityLearn 3.6.0 ou anterior. Selecione-a com
-`"version": 1` nos atributos da recompensa (ou
-`reward_function_kwargs={"version": 1}`); gera um `DeprecationWarning` e será
-removida numa versão futura. Os objetos de recompensa serializados (pickle) pela
-3.6.0, por exemplo dentro de um agente ou ambiente guardado, mantêm a versão 1 sem
-aviso. A evidência da recompensa nos metadados do ambiente e nos manifestos de
+A versão 1, a recompensa da 3.6.0, foi removida no CityLearn 3.8.1, e escolhê-la
+lança `ValueError`. Os objetos de recompensa serializados (pickle) pela 3.6.0,
+por exemplo dentro de um agente ou ambiente guardado, não têm o atributo da
+versão e calculam a versão 2. A evidência da recompensa nos metadados do ambiente e nos manifestos de
 export regista a versão.
 
 ### Definições dos KPIs
@@ -710,8 +691,8 @@ todas as linhas alteradas e o nome que mantém o seu valor da 3.6.0.
   emissões são rácios dos totais do distrito em vez de médias dos rácios dos
   edifícios ([#237](https://github.com/citylearn-project/CityLearn/issues/237)).
   Os valores da 3.6.0 são publicados como `*_building_mean_ratio`, e as linhas de
-  distrito do `evaluate()` legado continuam a guardá-los; nos datasets com
-  carregadores de VE, com `baseline_version=1` (ver [Carregamento dos VE na baseline por omissão](#carregamento-dos-ve-na-baseline-por-omissão)).
+  distrito do `evaluate()` legado continuam a guardá-los, exceto a baseline dos
+  datasets com carregadores de VE (ver [Carregamento dos VE na baseline por omissão](#carregamento-dos-ve-na-baseline-por-omissão)).
 - **As emissões do distrito** são as da importação líquida do distrito, pelo que
   a partilha local entre membros as reduz, de forma coerente com a importação e
   o custo do distrito
@@ -798,19 +779,16 @@ todas as linhas alteradas e o nome que mantém o seu valor da 3.6.0.
 
 As correções à física simulada estão agrupadas em definições versionadas da
 física, selecionadas com a chave de schema `physics_version` ou com o argumento
-`CityLearnEnv(physics_version=...)`, que tem precedência. A versão `1` é a física
-do CityLearn 3.6.0 e anteriores; a versão `2`, a predefinida, contém as correções
-abaixo. A referência BAU nativa de `evaluate_v2()` usa a versão do ambiente
+`CityLearnEnv(physics_version=...)`, que tem precedência. A versão `2` contém as
+correções abaixo; é a única versão. A referência BAU nativa de `evaluate_v2()` usa a versão do ambiente
 avaliado. A versão resolvida está em `env.get_metadata()`, no seu bloco temporal e
 no manifesto de exportação, tanto no nível de topo como em `comparison_context`.
 `compare_manifests()` e `compare_exports()` reportam duas execuções com versões
 da física diferentes como `incompatible`, com `physics_version` entre as
 divergências, e um manifesto escrito antes de a versão ser registada como
 `unknown`, com `physics_version` entre a evidência em falta; exporte de novo
-essas execuções para as emparelhar. Para reproduzir um resultado da 3.6.0, defina
-`physics_version` como `1`, e também `baseline_version` como `1` para os KPIs dos
-datasets com carregadores de VE; para comparar controladores, execute-os com as
-mesmas versões.
+essas execuções para as emparelhar. Para comparar controladores, execute-os com
+as mesmas versões.
 
 `MultiCommunityEnv` exige que todas as comunidades usem a mesma
 `physics_version` e a mesma `random_stream_version`, porque os KPIs de portefólio
@@ -940,11 +918,10 @@ Altera também as execuções que usam o seguinte:
 
 `StorageDevice.round_trip_efficiency` devolvia a eficiência num só sentido, a raiz
 quadrada de `efficiency`. Use `one_way_efficiency` para esse valor, ou
-`efficiency` para a eficiência de ida e volta; `round_trip_efficiency` mantém o
-seu valor, avisa com `DeprecationWarning` e será removido. Os metadados dos
-dispositivos acrescentam `one_way_efficiency` e mantêm `round_trip_efficiency`
-com o mesmo valor. A característica entity `round_trip_efficiency_ratio` mantém o
-seu nome e valor, que é a eficiência num só sentido.
+`efficiency` para a eficiência de ida e volta; `round_trip_efficiency` foi
+removido no CityLearn 3.8.1. Os metadados dos dispositivos registam
+`one_way_efficiency`, e a característica entity com a eficiência num só sentido
+é `one_way_efficiency_ratio` (`round_trip_efficiency_ratio` antes da 3.8.1).
 `Battery.efficiency_history` ganha agora uma entrada por carregamento ou descarga
 em vez de duas. Nenhum valor simulado muda.
 
@@ -959,7 +936,7 @@ estocásticos. A nova chave de schema de nível de topo e argumento do construto
 `random_stream_version` seleciona como estes fluxos são derivados de
 `random_seed` ([#248](https://github.com/citylearn-project/CityLearn/issues/248)).
 
-`v2`, o novo valor predefinido, deriva cada fluxo com
+`v2`, a única versão, deriva cada fluxo com
 `numpy.random.SeedSequence`, com a semente como entropia e o propósito, o objeto
 e o episódio como chave de spawn, e mantém um gerador por fluxo:
 
@@ -989,8 +966,7 @@ e o episódio como chave de spawn, e mantém um gerador por fluxo:
   ocupantes e de dispositivos; antes mantinha as chaves da sua origem e sorteava
   exatamente o mesmo que a sua origem
   ([#304](https://github.com/citylearn-project/CityLearn/issues/304)). Nenhum
-  dataset incluído clona um membro. `v1` não identifica os seus fluxos por objeto
-  e não muda.
+  dataset incluído clona um membro.
 
 `reset(seed=s)` define `random_seed` como `s` e reinicia os fluxos por episódio
 (deriva dos VE, interações dos ocupantes e cortes de energia estocásticos) na
@@ -1013,21 +989,13 @@ cada reset dá a todos os episódios os mesmos fluxos por episódio. A referênc
 BAU nativa usa os fluxos do episódio que avalia.
 
 As execuções que não usam nenhuma destas funcionalidades aleatórias não mudam.
-Para reproduzir resultados obtidos com a 3.6.0 ou anterior para a mesma semente,
-defina `random_stream_version` como `v1`:
-
-```python
-env = CityLearnEnv(schema, random_seed=0, random_stream_version='v1')
-```
-
-ou acrescente `"random_stream_version": "v1"` ao schema. A versão usada é
+A versão usada é
 registada em `get_metadata()['random_stream_version']`, nos metadados
 `temporal_reproducibility` e no manifesto da experiência; as comparações entre
 execuções com versões diferentes reportam uma divergência temporal.
 
 Medido com as mesmas ações pseudoaleatórias e as restantes definições nos seus
-valores predefinidos, `v1` reproduz os fluxos aleatórios da 3.6.0 bit a bit em
-todas as execuções abaixo; `v2` altera:
+valores predefinidos, `v2` altera estas execuções face à 3.6.0:
 
 - `citylearn_challenge_2022_phase_all` (168 h, curvas de bateria aleatórias):
   custo do controlo 1,171.0 → 1,171.1 EUR (+0.01%) e consumo líquido +0.1%;
@@ -1046,8 +1014,7 @@ todas as execuções abaixo; `v2` altera:
   mudam.
 
 Volte a executar as experiências estocásticas, e retreine as políticas cujos
-resultados compare entre sementes, com `v2`; mantenha `v1` apenas para reproduzir
-números publicados da 3.6.0.
+resultados compare entre sementes.
 
 Os agentes e as vizinhanças geradas seguem a mesma definição
 ([#287](https://github.com/citylearn-project/CityLearn/issues/287)).
@@ -1056,18 +1023,13 @@ Os agentes e as vizinhanças geradas seguem a mesma definição
 baralhava a ordem pela qual os seus edifícios agem com a mesma semente, pelo que
 a semente `s` no passo de tempo `t + 1` repetia a semente `s + 1` no passo de
 tempo `t`. Com `v2`, um agente mantém um gerador por propósito e por episódio,
-derivado da sua semente e do episódio, e adota a versão do seu ambiente, pelo que
-um ambiente construído com `random_stream_version='v1'` dá aos seus agentes os
-fluxos da 3.6.0. O gerador de vizinhanças
+derivado da sua semente e do episódio, e adota a versão do seu ambiente. O gerador
+de vizinhanças
 (`citylearn.end_use_load_profiles.neighborhood.Neighborhood`) usava como semente
 da simulação de carga parcial `i` do edifício `b` o valor `b + i`, o que ignorava
 a semente da vizinhança e repetia a simulação `i - 1` do edifício `b + 1`. O seu
-novo argumento `random_stream_version`, `v2` por omissão, deriva essa semente da
-semente da vizinhança, do edifício e do índice da simulação:
-
-```python
-Neighborhood(random_seed=0, random_stream_version='v1')  # 3.6.0 partial-load seeds
-```
+argumento `random_stream_version`, `v2`, deriva essa semente da semente da
+vizinhança, do edifício e do índice da simulação.
 
 Estas alterações mudam a exploração destes agentes e, por isso, as políticas que
 aprendem, e os datasets gerados de novo; as simulações e os datasets incluídos
@@ -1112,11 +1074,9 @@ estas chaves precisam da flag.
 No CityLearn, "baseline" designa o contrafactual dos KPIs, os mesmos edifícios sem
 armazenamento e com FV, que os KPIs `*_baseline_*` reportam; os dois agentes são
 um controlador sem controlo e um controlador de ação nula, pelo que os seus nomes
-passam a dizê-lo. Os nomes antigos são aliases obsoletos das mesmas classes, pelo
-que as importações existentes, os caminhos `-a` da CLI, os valores `agent.type`
-do schema e os agentes serializados continuam a funcionar e apenas geram um
-`DeprecationWarning`. Substitua os nomes antigos antes de uma versão futura os
-remover:
+passam a dizê-lo. Os nomes antigos foram removidos no CityLearn 3.8.1, pelo que as
+importações, os caminhos `-a` da CLI, os valores `agent.type` do schema e os
+agentes serializados que os usam falham; use os nomes novos:
 
 ```python
 from citylearn.agents.base import NoControlAgent        # was BaselineAgent
@@ -1500,9 +1460,9 @@ Não é necessária nenhuma migração de datasets, schemas ou ficheiros de expo
   lista as grafias de referências a ficheiros que são normalizadas e como
   atualizar uma cópia do repositório feita antes de `.gitattributes`.
 - **Argumento nomeado dos agentes RL:** passe `action_scaling_coefficient=` ao
-  `SAC`, ao `MARLISA` e a outros agentes `RLC`. A grafia errada
-  `action_scaling_coefficienct=` continua a funcionar com um
-  `DeprecationWarning`; antes, só a grafia errada tinha efeito.
+  `SAC`, ao `MARLISA` e a outros agentes `RLC`; antes, só a grafia errada
+  `action_scaling_coefficienct=` tinha efeito. A grafia errada foi removida no
+  CityLearn 3.8.1 e lança `TypeError`.
 - **Verificação da referência BAU nativa:** `evaluate_v2()` gera um `ValueError`
   que indica a definição quando a referência, reconstruída a partir do schema e
   dos argumentos do construtor, difere do ambiente avaliado tal como estava no seu

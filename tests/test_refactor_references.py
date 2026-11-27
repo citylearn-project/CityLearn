@@ -33,16 +33,6 @@ def test_reference_covers_both_delivered_and_unserved_machine_requests(physics_v
     assert any(row["final_unserved_energy_kwh"] > 0.0 for row in service)
 
 
-def test_physics_versions_have_distinct_references_for_the_same_inputs():
-    # Both versions run the same schema and inputs, and version 2 changes the trajectories of every case, so a
-    # refactor that alters the default physics cannot pass by matching the 3.6.0 reference.
-    v1, v2 = (json.loads(parity.REFERENCES[version].read_text()) for version in (1, 2))
-    assert v1["definition_version"] == v2["definition_version"] and v1["tolerances"] == v2["tolerances"]
-    for name in parity.CASES:
-        assert v1["cases"][name]["input_fingerprint"] == v2["cases"][name]["input_fingerprint"]
-        assert not parity.compare(v1["cases"][name], v2["cases"][name])["matches"], name
-
-
 @pytest.mark.parametrize("field,change", [
     ("storage_kwh", 0.001), ("cost_eur", 0.0001), ("storage_soc", 0.0001),
     ("served_cycles_count", 1), ("requested_power_kw", 0.01),
@@ -66,7 +56,7 @@ def test_missing_reference_fails_without_capturing_or_creating_one(tmp_path, mon
         pytest.fail("Verification must load its reference before running/capturing candidates.")
     monkeypatch.setattr(parity, "capture", unexpected_capture)
     missing, output = tmp_path / "missing.json", tmp_path / "report.json"
-    assert parity.main(["--reference", str(missing), "--physics-version", "1", "--output", str(output)]) == 1
+    assert parity.main(["--reference", str(missing), "--physics-version", "2", "--output", str(output)]) == 1
     assert json.loads(output.read_text())["verification_passed"] is False
     assert not missing.exists()
 
@@ -78,16 +68,17 @@ def test_existing_reference_proposal_cannot_be_overwritten(tmp_path):
         parity.main(["--capture-reference", str(path), "--physics-version", "2", "--output", str(tmp_path / "report.json")])
     assert error.value.code == 2 and path.read_text() == "original"
     with pytest.raises(SystemExit) as error:
-        parity.main(["--reference", str(path), "--physics-version", "1",
+        parity.main(["--reference", str(path), "--physics-version", "2",
                      "--output", str(path.parent / "sub/../reference.json")])
     assert error.value.code == 2 and path.read_text() == "original"
 
 
-def test_a_reference_file_needs_exactly_one_physics_version(tmp_path):
-    for flags in ([], ["--physics-version", "1", "--physics-version", "2"]):
-        with pytest.raises(SystemExit) as error:
-            parity.main(["--reference", str(parity.REFERENCES[1]), *flags, "--output", str(tmp_path / "report.json")])
-        assert error.value.code == 2
+def test_only_physics_version_2_has_a_reference(tmp_path):
+    # Physics version 1 and its frozen reference were removed in CityLearn 3.8.1 (#466).
+    assert sorted(parity.REFERENCES) == [2]
+    with pytest.raises(SystemExit) as error:
+        parity.main(["--physics-version", "1", "--output", str(tmp_path / "report.json")])
+    assert error.value.code == 2
 
 
 @pytest.mark.parametrize("changed", sorted(parity.REFERENCES))

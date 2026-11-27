@@ -390,8 +390,8 @@ def fill_storage_rows(entity: "CityLearnEntityInterfaceService", context: Observ
             base_efficiency = entity._safe_scalar(efficiency_history[0], 1.0)
         else:
             base_efficiency = entity._safe_scalar(getattr(storage, "efficiency", 1.0), 1.0)
-        # `round_trip_efficiency_ratio` keeps its name for existing observation layouts; its value is
-        # the one-way efficiency, the square root of the current round-trip efficiency.
+        # `one_way_efficiency_ratio` is the one-way efficiency, the square root of the current round-trip
+        # efficiency.
         one_way_efficiency = entity._safe_scalar(
             getattr(storage, "one_way_efficiency", base_efficiency ** 0.5),
             base_efficiency ** 0.5,
@@ -418,7 +418,7 @@ def fill_storage_rows(entity: "CityLearnEntityInterfaceService", context: Observ
             entity._safe_scalar(getattr(storage, "min_discharge_power", 0.0), 0.0),
         )
         entity._set_obs_value(row, entity._storage_feature_cols, "efficiency_ratio", base_efficiency)
-        entity._set_obs_value(row, entity._storage_feature_cols, "round_trip_efficiency_ratio", one_way_efficiency)
+        entity._set_obs_value(row, entity._storage_feature_cols, "one_way_efficiency_ratio", one_way_efficiency)
         if core_bundle_enabled:
             depth_of_discharge = entity._safe_scalar(getattr(storage, "depth_of_discharge", 1.0), 1.0)
             soc_min = max(1.0 - depth_of_discharge, 0.0)

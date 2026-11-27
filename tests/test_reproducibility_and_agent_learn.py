@@ -159,17 +159,20 @@ def test_unconnected_ev_soc_drift_uses_time_aware_variance():
             self.electric_vehicles = [_EV("EV1", _Battery([0.5, 0.5], target_index=1))]
             self.buildings = []
             self.random_seed = 7
-            # The 3.6.0 single drift stream, which this stub records draws from.
-            self.random_stream_version = 'v1'
-            self._ev_drift_random_state = _RandomState()
+            # The drift stream, which this stub records draws from.
+            self.drift = _RandomState()
+
+    class _Runtime(CityLearnRuntimeService):
+        def ev_drift_generator(self, ev_name, purpose):
+            return self.env.drift
 
     env_hourly = _Env(3600)
     env_minute = _Env(60)
-    CityLearnRuntimeService(env_hourly).simulate_unconnected_ev_soc()
-    CityLearnRuntimeService(env_minute).simulate_unconnected_ev_soc()
+    _Runtime(env_hourly).simulate_unconnected_ev_soc()
+    _Runtime(env_minute).simulate_unconnected_ev_soc()
 
-    hourly_scale = env_hourly._ev_drift_random_state.calls[0][1]
-    minute_scale = env_minute._ev_drift_random_state.calls[0][1]
+    hourly_scale = env_hourly.drift.calls[0][1]
+    minute_scale = env_minute.drift.calls[0][1]
 
     assert hourly_scale > minute_scale
     assert env_hourly.electric_vehicles[0].battery.soc[1] > env_minute.electric_vehicles[0].battery.soc[1]

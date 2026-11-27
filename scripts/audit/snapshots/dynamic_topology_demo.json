@@ -1844,7 +1844,7 @@
           "legacy": false,
           "unit": "scalar"
         },
-        "round_trip_efficiency_ratio": {
+        "one_way_efficiency_ratio": {
           "bundle": "entity_base",
           "legacy": false,
           "unit": "ratio"
@@ -1873,7 +1873,7 @@
         "min_charge_power_kw",
         "min_discharge_power_kw",
         "efficiency_ratio",
-        "round_trip_efficiency_ratio",
+        "one_way_efficiency_ratio",
         "electrical_storage_soc_ratio",
         "max_charge_power_kw",
         "max_discharge_power_kw",

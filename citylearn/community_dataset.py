@@ -59,9 +59,6 @@ class InventoryBattery(Battery):
                    headroom/self.charging_efficiency*3600/self.seconds_per_time_step)
 
     def get_max_output_power(self, energy_init=None):
-        if self.legacy_discharge_power_limit:
-            # Physics version 1: the charging curve, without this class's charge power and headroom limits.
-            return min(self.max_discharge_kw, Battery.get_max_input_power(self, energy_init))
         return min(self.max_discharge_kw, Battery.get_max_output_power(self, energy_init))
 
     def _step_share_power(self, charging, energy_init):

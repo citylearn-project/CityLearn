@@ -127,10 +127,9 @@ rácio e as metas em percentagem. Uma coluna com todos os valores entre 0 e 1 é
 `"soc_unit": "percent"` no carregador do esquema se esse ficheiro estiver em percentagem (a unidade
 declarada aplica-se a todas as suas colunas de SOC). Uma coluna lida em percentagem que também
 tem valores entre 0 e 1 dá um aviso, porque um valor perdido acima de 1 numa coluna em rácio
-transformaria 0,3 em 0,3 %. A versão de física 1 mantém a regra
-do CityLearn 3.6.0, valor a valor: um valor em [0, 1] é um rácio e um valor acima de 1 uma
-percentagem, pelo que 1 (1 %) num ficheiro em percentagem era lido como 100 %, exceto se o carregador declarar `soc_unit`
-([#368](https://github.com/citylearn-project/CityLearn/issues/368)).
+transformaria 0,3 em 0,3 %. O CityLearn 3.6.0 decidia a unidade valor a valor: um valor em [0, 1]
+era um rácio e um valor acima de 1 uma percentagem, pelo que 1 (1 %) num ficheiro em percentagem
+era lido como 100 % ([#368](https://github.com/citylearn-project/CityLearn/issues/368)).
 
 ## Bundles de observação de entidades nos datasets incluídos
 

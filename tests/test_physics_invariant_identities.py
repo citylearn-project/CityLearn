@@ -54,10 +54,9 @@ def _step_with_unchecked_net_balance(env, action):
     return str(error.value)
 
 
-@pytest.mark.parametrize('physics_version', [1, 2])
 @pytest.mark.parametrize('schema,window', [(MINUTE_EV_DEMO, dict(episode_time_steps=8)), (CHALLENGE_2021, SUMMER)])
-def test_identities_hold_in_normal_rollouts(schema, window, physics_version):
-    env = _env(schema, first_step=False, physics_version=physics_version, **window)
+def test_identities_hold_in_normal_rollouts(schema, window):
+    env = _env(schema, first_step=False, **window)
     try:
         spaces = env.action_space
         for space in spaces:

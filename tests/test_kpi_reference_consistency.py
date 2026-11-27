@@ -328,12 +328,9 @@ def test_business_as_usual_reference_reports_a_charger_changed_before_reset():
     with pytest.raises(ValueError, match=rf'{charger.charger_id}: max_charging_power \(0\.0 vs '):
         env.evaluate_v2()
 
-    # The version 2 baseline takes the EV charging from the same reference, so it cannot be built either.
-    with pytest.raises(ValueError, match=r'max_charging_power .*set baseline_version=1'):
+    # The baseline takes the EV charging from the same reference, so it cannot be built either.
+    with pytest.raises(ValueError, match=r'max_charging_power .*The KPI baseline takes the EV charging'):
         env.evaluate_v2(include_business_as_usual=False)
-
-    env.baseline_version = 1
-    assert len(env.evaluate_v2(include_business_as_usual=False)) > 0
 
 
 @pytest.fixture

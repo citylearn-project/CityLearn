@@ -7,7 +7,6 @@ falling back to a different class or equipment definition.
 from __future__ import annotations
 
 import difflib
-import hashlib
 import importlib
 import inspect
 import os
@@ -16,10 +15,8 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from citylearn import random_streams
 from citylearn.data import ChargerSimulation, LogisticRegressionOccupantParameters
 from citylearn.energy_model import PV, Battery
-from citylearn.internal.physics_version import physics_version_of, resolve_physics_version
 from citylearn.utilities import parse_bool
 
 if TYPE_CHECKING:
@@ -102,7 +99,7 @@ def add_model_options(building_kwargs, building_name, building_schema, schema, e
     if hold_time_steps is not None and accepts_keyword(constructor, 'set_point_hold_time_steps'):
         building_kwargs['set_point_hold_time_steps'] = hold_time_steps
 
-    # Occupant set-point range (physics version 2 and later, CityLearn #352).
+    # Occupant set-point range (CityLearn #352).
     set_point_limits = building_schema.get('set_point_limits')
     if set_point_limits is not None and accepts_keyword(constructor, 'set_point_limits'):
         building_kwargs['set_point_limits'] = set_point_limits
@@ -171,15 +168,12 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
                 )
             check_charger_keys(charger_config, f'buildings.{building_name}.chargers.{charger_name}')
             # One unit per SOC column (#368). The loader reads only the simulation window, so the unit
-            # is decided from the whole column of the file unless the schema declares it. Physics
-            # version 1 keeps the old value-by-value rule.
+            # is decided from the whole column of the file unless the schema declares it.
             soc_unit = ChargerSimulation._resolve_soc_unit(
                 charger_config.get('soc_unit'), path=f'buildings.{building_name}.chargers.{charger_name}.soc_unit',
             )
             if soc_unit is not None:
                 soc_unit = {column: soc_unit for column in ChargerSimulation._SOC_COLUMNS}
-            elif resolve_physics_version(schema.get('physics_version')) < 2:
-                soc_unit = {column: 'per_value' for column in ChargerSimulation._SOC_COLUMNS}
             else:
                 soc_unit = loader._charger_soc_units(charger_simulation_filepath)
             charger_simulation = ChargerSimulation(
@@ -212,10 +206,7 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
             charger_class = component_constructor(charger_type, f'buildings.{building_name}.chargers.{charger_name}.type')
             charger_attributes = dict(charger_config.get('attributes', {}) or {})
             charger_path = f'buildings.{building_name}.chargers.{charger_name}'
-            charger_attributes = charger_power_attributes(
-                charger_class, charger_attributes, charger_path,
-                resolve_physics_version(schema.get('physics_version')),
-            )
+            charger_attributes = charger_power_attributes(charger_class, charger_attributes, charger_path)
             charger_attributes['episode_tracker'] = episode_tracker
             # Chargers draw no random values, but an unseeded one draws its seed from Python's global `random`.
             charger_attributes.setdefault('random_seed', schema['random_seed'])
@@ -253,12 +244,11 @@ def check_charger_keys(charger_config: dict, path: str):
         )
 
 
-def charger_power_attributes(charger_class, attributes: dict, path: str, physics_version: int) -> dict:
+def charger_power_attributes(charger_class, attributes: dict, path: str) -> dict:
     """Validate a charger's schema `attributes` and resolve its omitted power limits (#369).
 
-    A name the charger class does not accept raises `ValueError` instead of being dropped. Under
-    physics version 2 an omitted `max_discharging_power` is 0 (no V2G) and an omitted
-    `max_charging_power` is `nominal_power`; physics version 1 keeps the 50 kW of 3.6.0 for both.
+    A name the charger class does not accept raises `ValueError` instead of being dropped. An omitted
+    `max_discharging_power` is 0 (no V2G) and an omitted `max_charging_power` is `nominal_power`.
     A warning names the limits that fall back to an assumed value.
     """
 
@@ -270,21 +260,12 @@ def charger_power_attributes(charger_class, attributes: dict, path: str, physics
     attributes = dict(attributes)
     assumed = []
 
-    if physics_version < 2:
-        legacy = getattr(charger_class, '_LEGACY_DEFAULT_POWER', 50.0)
+    if attributes.get('max_charging_power') is None and attributes.get('nominal_power') is None:
+        default = getattr(charger_class, '_DEFAULT_MAX_CHARGING_POWER', 50.0)
+        assumed.append(f'max_charging_power={default:g} kW')
 
-        for key in ('max_charging_power', 'max_discharging_power'):
-            if attributes.get(key) is None:
-                attributes[key] = legacy
-                assumed.append(f'{key}={legacy:g} kW')
-
-    else:
-        if attributes.get('max_charging_power') is None and attributes.get('nominal_power') is None:
-            default = getattr(charger_class, '_DEFAULT_MAX_CHARGING_POWER', 50.0)
-            assumed.append(f'max_charging_power={default:g} kW')
-
-        if attributes.get('max_discharging_power') is None:
-            assumed.append('max_discharging_power=0 kW (no V2G)')
+    if attributes.get('max_discharging_power') is None:
+        assumed.append('max_discharging_power=0 kW (no V2G)')
 
     # `efficiency` applies only to a direction without an efficiency curve, and discharging only if
     # the charger can discharge.
@@ -346,20 +327,8 @@ def configure_devices(building, building_name, building_type, building_schema, s
                 attributes.pop('phase_connection', None)
             attributes['seconds_per_time_step'] = schema['seconds_per_time_step']
 
-            if schema['random_stream_version'] == random_streams.LEGACY_RANDOM_STREAM_VERSION:
-                md5 = hashlib.md5()
-                device_random_seed = 0
-
-                for string in [building_name, building_type, device_name, device_type]:
-                    md5.update(string.encode())
-                    hash_to_integer_base = 16
-                    device_random_seed += int(md5.hexdigest(), hash_to_integer_base)
-
-                device_random_seed = int(str(device_random_seed * (schema['random_seed'] + 1))[:9])
-
-            else:
-                # The stream key separates the devices; the seed stays the environment seed.
-                device_random_seed = schema['random_seed']
+            # The stream key separates the devices; the seed stays the environment seed.
+            device_random_seed = schema['random_seed']
 
             attributes = {
                 **attributes,
@@ -378,9 +347,6 @@ def configure_devices(building, building_name, building_type, building_schema, s
                 default=False,
                 path=f'buildings.{building.name}.{device_name}.autosize',
             )
-            if isinstance(device, Battery):
-                # Physics version 1 limits battery discharge with the charging curve (#227).
-                device.legacy_discharge_power_limit = physics_version_of(building) < 2
             building.__setattr__(device_name, device)
             # Schema-built devices do not know the dataset/control-step ratio yet, but the autosizers
             # convert dataset-resolution demand with it. Without this, hourly data run at 15-minute

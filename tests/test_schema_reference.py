@@ -222,7 +222,7 @@ def test_inventory_matches_the_code_constants():
         assert init_parameters(cls) - LOADER_SET == expected, cls.__name__
         autosize = set(inspect.signature(cls.autosize).parameters)
         autosize -= {"self", "demand", "outdoor_dry_bulb_temperature", "cooling_demand", "heating_demand",
-                     "sizing_data", "physics_version"}
+                     "sizing_data"}
         assert autosize == INVENTORY[f"{cls.__name__}.autosize"], cls.__name__
     assert init_parameters(DeferrableAppliance) - LOADER_SET == INVENTORY["deferrable_appliance.attributes"]
     # Escalator: nominal_power is set from normal_power, and efficiency is not used.
@@ -364,7 +364,7 @@ def test_full_reference_schema_loads_and_runs():
             actions = [np.zeros(space.shape, dtype="float32") for space in env.action_space]
             observations, _, terminated, truncated, _ = env.step(actions)
         assert env.time_step == 24
-        # The KPIs run the native BAU for the EV baseline of baseline_version 2.
+        # The KPIs run the native BAU for the EV charging of the baseline.
         kpis = env.evaluate()
         assert len(kpis) > 0
         # Every observation a building of this schema can produce is listed in the reference catalogue.

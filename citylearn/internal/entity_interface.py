@@ -10,7 +10,6 @@ from gymnasium import spaces
 import numpy as np
 
 from citylearn.internal import entity_layout, entity_observations
-from citylearn.internal.physics_version import physics_version_of
 from citylearn.internal.scalars import clip_action
 
 
@@ -236,7 +235,7 @@ class CityLearnEntityInterfaceService:
         "min_charge_power_kw",
         "min_discharge_power_kw",
         "efficiency_ratio",
-        "round_trip_efficiency_ratio",
+        "one_way_efficiency_ratio",
     ]
     PV_FEATURES = [
         "generation_power_kw",
@@ -836,10 +835,7 @@ class CityLearnEntityInterfaceService:
         parsed_actions = []
         active_actions = self.env._active_actions_cache
 
-        # Flat vectors follow the flat rule: clipped to the action space, as the entity tables are, except
-        # under physics version 1, which applies them as given, as CityLearn 3.6.0 did.
-        clip = physics_version_of(self.env) >= 2
-
+        # Flat vectors follow the flat rule: clipped to the action space, as the entity tables are.
         for i, building in enumerate(self.env.buildings):
             action_dict = {}
             electric_vehicle_actions = {}
@@ -848,8 +844,7 @@ class CityLearnEntityInterfaceService:
             lows, highs = space.low.tolist(), space.high.tolist()
 
             for action_name, action, low, high in zip(active_actions[i], vectors[i], lows, highs):
-                if clip:
-                    action = clip_action(action, low, high)
+                action = clip_action(action, low, high)
                 if "electric_vehicle_storage" in action_name:
                     charger_id = action_name.replace("electric_vehicle_storage_", "")
                     electric_vehicle_actions[charger_id] = action
@@ -2858,7 +2853,7 @@ class CityLearnEntityInterfaceService:
                     feature_low, feature_high = 0.0, 1.0
                 elif feature == "electricity_consumption_kwh":
                     feature_low, feature_high = -energy_limit, energy_limit
-                elif feature in {"efficiency_ratio", "round_trip_efficiency_ratio", "current_efficiency_ratio", "soc_min_ratio"}:
+                elif feature in {"efficiency_ratio", "one_way_efficiency_ratio", "current_efficiency_ratio", "soc_min_ratio"}:
                     feature_low, feature_high = 0.0, 1.0
                 elif feature == "degraded_capacity_kwh":
                     feature_low, feature_high = 0.0, max(capacity, 1.0)
@@ -3038,11 +3033,11 @@ class CityLearnEntityInterfaceService:
 
         `Battery.charge` stops at `degraded_capacity`, which fade lowers below `capacity` while the SOC
         stays relative to `capacity`, so a faded battery is full below `_soc_max`. Where the SOC limit
-        binds first, and under physics version 1, the nominal value is returned unchanged.
+        binds first, the nominal value is returned unchanged.
         """
 
         degraded_capacity = getattr(battery, "degraded_capacity", None)
-        if degraded_capacity is None or physics_version_of(self.env) < 2:
+        if degraded_capacity is None:
             return energy_to_full
         degraded_capacity = max(self._safe_scalar(degraded_capacity, capacity), 0.0)
         if degraded_capacity >= self._soc_max(battery) * capacity:

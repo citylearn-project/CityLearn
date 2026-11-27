@@ -23,10 +23,12 @@ def _value(kpis, level, name, cost_function):
     return float(rows["value"].iloc[0])
 
 
-def _market_rollout(tmp_path, *, outage=False, baseline_version=None):
+def _market_rollout(tmp_path, *, outage=False, baseline_ev_charging=True):
     env = scenario(tmp_path, outage=outage)
-    if baseline_version is not None:
-        env.baseline_version = baseline_version
+    if not baseline_ev_charging:
+        # The baseline adds back the BAU's EV charging. Without it the members are net exporters in the baseline.
+        for building in env.buildings:
+            building._baseline_ev_charging_source = lambda b: np.zeros(len(b.net_electricity_consumption))
     env.reset()
     while not env.terminated:
         env.step(commands(env, [-0.5, -0.5]))
@@ -50,10 +52,9 @@ def test_signed_ratio_is_lower_is_better_for_a_net_exporting_baseline():
 
 
 def test_net_exchange_and_cost_ratios_do_not_flip_for_net_exporting_baselines(tmp_path):
-    # The version 1 baseline leaves out the EV charging, which makes both members net exporters in it. The
-    # version 2 baseline charges the EVs at full power as the BAU does, so no member exports in it, and the
-    # signed ratios would not be exercised.
-    env = _market_rollout(tmp_path, baseline_version=1)
+    # The baseline charges the EVs at full power as the BAU does, so no member exports in it, and the signed ratios
+    # would not be exercised. Without that charging both members are net exporters in the baseline.
+    env = _market_rollout(tmp_path, baseline_ev_charging=False)
 
     try:
         kpis = env.evaluate_v2()

@@ -32,26 +32,26 @@ def _export(path, output, **kwargs):
     return p
 
 
-def test_exports_under_different_physics_versions_are_incompatible(tmp_path):
+def test_exports_record_the_physics_version_and_compare_it(tmp_path):
     path = _schema_with_deferrable_appliance(tmp_path/'source')
-    a = _export(path, tmp_path/'a', physics_version=1)
+    a = _export(path, tmp_path/'a')
     b = _export(path, tmp_path/'b', physics_version=2)
     left, right = (json.loads(p.with_suffix('.manifest.json').read_text()) for p in (a, b))
 
-    assert (left['physics_version'], right['physics_version']) == (1, 2)
-    assert left['comparison_context']['physics_version'] == 1
-    assert left['temporal_reproducibility']['physics_version'] == 1
+    # Version 2 is the only physics version, and exports still record it so that they stay comparable with
+    # exports of earlier releases.
+    assert (left['physics_version'], right['physics_version']) == (2, 2)
+    assert left['comparison_context']['physics_version'] == 2
+    assert left['temporal_reproducibility']['physics_version'] == 2
+    assert compare_exports(a, b)['status'] == 'paired'
 
-    report = compare_exports(a, b)
+    # An export of an earlier release made with physics version 1 does not pair with them.
+    other = deepcopy(right)
+    other['comparison_context']['physics_version'] = 1
+    report = compare_manifests(left, other)
     assert report['status'] == 'incompatible'
     assert 'physics_version' in report['mismatches']
     assert report['permitted_claim'] is None
-
-    # The same run compared with itself still pairs, so physics_version is the only difference.
-    assert compare_manifests(left, deepcopy(left))['status'] == 'paired'
-    other = deepcopy(right)
-    other['comparison_context']['physics_version'] = 1
-    assert 'physics_version' not in compare_manifests(left, other)['mismatches']
 
     # A manifest without the physics version (written before it was recorded) cannot be paired.
     other = deepcopy(left)
@@ -60,21 +60,22 @@ def test_exports_under_different_physics_versions_are_incompatible(tmp_path):
     assert report['status'] == 'unknown' and 'physics_version' in report['missing_evidence']
 
 
-def test_exports_under_different_baseline_versions_are_incompatible(tmp_path):
+def test_exports_record_the_baseline_version_and_compare_it(tmp_path):
     path = _schema_with_deferrable_appliance(tmp_path/'source')
-    a = _export(path, tmp_path/'a', baseline_version=1)
-    b = _export(path, tmp_path/'b')
-    left, right = (json.loads(p.with_suffix('.manifest.json').read_text()) for p in (a, b))
+    a = _export(path, tmp_path/'a')
+    left = json.loads(a.with_suffix('.manifest.json').read_text())
 
-    assert (left['baseline_version'], right['baseline_version']) == (1, 2)
-    assert left['comparison_context']['baseline_version'] == 1
+    assert left['baseline_version'] == 2
+    assert left['comparison_context']['baseline_version'] == 2
+    # The schema has an EV charger, so the baseline ran the native BAU for its EV charging.
+    assert left['business_as_usual_reference']['evaluated'] is True
 
-    report = compare_exports(a, b)
+    # An export of an earlier release made with baseline version 1 does not pair with it.
+    other = deepcopy(left)
+    other['comparison_context']['baseline_version'] = 1
+    report = compare_manifests(left, other)
     assert report['status'] == 'incompatible'
-    # The schema has an EV charger, so the version 2 baseline ran the native BAU for its EV charging and the
-    # manifest records it as evaluated; the version 1 run did not need it.
-    assert report['mismatches'] == ['baseline_version', 'business_as_usual_reference']
-    assert (left['business_as_usual_reference']['evaluated'], right['business_as_usual_reference']['evaluated']) == (False, True)
+    assert 'baseline_version' in report['mismatches']
 
     other = deepcopy(left)
     del other['comparison_context']['baseline_version']
@@ -85,7 +86,7 @@ def test_exports_under_different_baseline_versions_are_incompatible(tmp_path):
 def test_metadata_and_manifest_record_split_boundary_and_ratio_mode(tmp_path):
     path = _schema_with_deferrable_appliance(tmp_path)
     env = CityLearnEnv(str(path), episode_time_steps=4, random_seed=0, episode_split_boundary='disjoint',
-                       time_step_ratio_mode='compress', physics_version=1, render_directory=tmp_path/'out')
+                       time_step_ratio_mode='compress', physics_version='2', render_directory=tmp_path/'out')
     env.reset()
     metadata = env.get_metadata()
     manifest = experiment_manifest(env)
@@ -94,17 +95,20 @@ def test_metadata_and_manifest_record_split_boundary_and_ratio_mode(tmp_path):
     for record in (metadata, metadata['temporal_reproducibility'], manifest, manifest['temporal_reproducibility']):
         assert record['episode_split_boundary'] == 'disjoint'
         assert record['time_step_ratio_mode'] == 'compress'
-        assert record['physics_version'] == 1
+        assert record['physics_version'] == 2
 
 
 @pytest.mark.parametrize('option,value,match', [
     ('episode_split_boundary', 'overlapping', 'episode_split_boundary must be one of'),
     ('time_step_ratio_mode', 'squash', 'time_step_ratio_mode must be one of'),
-    ('physics_version', 3, r'physics_version must be one of \[1, 2\]'),
-    ('physics_version', True, r'physics_version must be one of \[1, 2\]'),
-    ('baseline_version', 3, r'baseline_version must be one of \[1, 2\]'),
-    ('baseline_version', 1.5, r'baseline_version must be one of \[1, 2\]'),
-    ('random_stream_version', 'v9', 'random_stream_version'),
+    ('physics_version', 3, r'physics_version must be 2, got 3'),
+    ('physics_version', True, r'physics_version must be 2, got True'),
+    ('physics_version', 1, r'physics_version must be 2, got 1\. Version 1 was removed in CityLearn 3\.8\.1'),
+    ('baseline_version', 3, r'baseline_version must be 2, got 3'),
+    ('baseline_version', 1.5, r'baseline_version must be 2, got 1\.5'),
+    ('baseline_version', 1, r'baseline_version must be 2, got 1\. Version 1 was removed in CityLearn 3\.8\.1'),
+    ('random_stream_version', 'v9', "random_stream_version must be 'v2'"),
+    ('random_stream_version', 'v1', "Version 'v1' was removed in CityLearn 3\\.8\\.1"),
 ])
 def test_invalid_setting_values_are_rejected(tmp_path, option, value, match):
     path = _schema_with_deferrable_appliance(tmp_path)
@@ -182,25 +186,15 @@ def _community(community_id, **env_kwargs):
     return dict(community_id=community_id, schema=str(MINUTE_SCHEMA), env_kwargs=kwargs)
 
 
-@pytest.mark.parametrize('setting,values', [
-    ('physics_version', (1, 2)),
-    ('random_stream_version', ('v1', 'v2')),
-    ('baseline_version', (1, 2)),
-])
-def test_multi_community_rejects_mixed_definition_versions(setting, values):
+def test_multi_community_records_the_definition_versions():
+    # The portfolio requires every community to share these settings; each has one version now.
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        with pytest.raises(ValueError, match=f'share {setting}'):
-            MultiCommunityEnv(communities=[
-                _community('community_a', **{setting: values[0]}),
-                _community('community_b', **{setting: values[1]}),
-            ])
-
         env = MultiCommunityEnv(communities=[
-            _community('community_a', **{setting: values[0]}),
-            _community('community_b', **{setting: values[0]}),
+            _community('community_a', physics_version=2, baseline_version='2', random_stream_version='v2'),
+            _community('community_b'),
         ])
 
     metadata = env.get_metadata()
     env.close()
-    assert metadata[setting] == values[0]
+    assert (metadata['physics_version'], metadata['baseline_version'], metadata['random_stream_version']) == (2, 2, 'v2')

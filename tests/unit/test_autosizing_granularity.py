@@ -80,15 +80,6 @@ def test_thermal_capacity_holds_hours_of_peak_power(seconds, ratio, storage_type
 
 
 @pytest.mark.parametrize("seconds,ratio", INTERVALS)
-@pytest.mark.parametrize("storage_type", [StorageDevice, StorageTank])
-def test_thermal_capacity_of_physics_version_1_is_energy_for_one_control_step(seconds, ratio, storage_type):
-    storage = storage_type(seconds_per_time_step=seconds, time_step_ratio=ratio)
-    demand = _dataset_energy([5.0, 10.0], seconds, ratio)
-    assert storage.autosize(demand, safety_factor=1.5, physics_version=1) == pytest.approx(
-        10.0 * seconds/3600.0 * 1.5)
-
-
-@pytest.mark.parametrize("seconds,ratio", INTERVALS)
 def test_building_battery_uses_physical_days_for_average_peaks(seconds, ratio):
     hourly_power = np.ones(48)
     hourly_power[6] = 10.0

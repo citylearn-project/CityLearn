@@ -143,7 +143,7 @@ O wrapper valida estas condições na construção e novamente depois do reset, 
 lança um `ValueError` que indica a definição, por exemplo:
 
 ```text
-ValueError: MultiCommunityEnv requires all communities to share physics_version, got {'A': 2, 'B': 1}.
+ValueError: MultiCommunityEnv requires all communities to share business_as_usual_ev_charge_target, got {'A': 'full', 'B': 'requested'}.
 ```
 
 As janelas de calendário não fazem parte do contrato. Cada filho seleciona a
