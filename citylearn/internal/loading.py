@@ -961,18 +961,12 @@ class CityLearnLoadingService:
 
         terminal = dataframe.iloc[-1].copy()
         # The padded row is a terminal observation, not an additional physical
-        # interval. Calendar fields describe the next quarter-hour boundary.
-        if {'month', 'hour', 'minutes', 'day_type'}.issubset(dataframe.columns):
-            minutes = int(terminal['minutes']) + int(
-                round(float(schema.get('seconds_per_time_step', 3600)) / 60.0)
-            )
-            hour_increment, terminal['minutes'] = divmod(minutes, 60)
-            hour = int(terminal['hour']) + hour_increment
-            day_increment, terminal['hour'] = divmod(hour, 24)
-            if day_increment:
-                terminal['day_type'] = (int(terminal['day_type']) % 7) + 1
-                if int(terminal['month']) == 12:
-                    terminal['month'] = 1
+        # interval. Its calendar fields describe the next step boundary.
+        if {'month', 'hour', 'day_type'}.issubset(dataframe.columns):
+            for column, value in self._terminal_calendar(
+                dataframe, float(schema.get('seconds_per_time_step', 3600)), schema.get('start_date'),
+            ).items():
+                terminal[column] = value
 
         # A vehicle whose countdown reaches one leaves at the boundary after
         # the final controlled interval. Make that transition observable to the
@@ -1037,6 +1031,76 @@ class CityLearnLoadingService:
             f'simulation_end_time_step is {last_end}{padding_note}. The terminal observation of an episode '
             'reads the row at its end time step.'
         )
+
+    @staticmethod
+    def _terminal_calendar(dataframe: pd.DataFrame, seconds_per_time_step: float, start_date=None) -> Mapping[str, int]:
+        """Calendar fields of the row after the last one, following the file's own conventions.
+
+        The time of day is copied from the row one day earlier, so a file that writes hours 1-24 or 0-23 keeps
+        its convention. The weekday is taken from the row one week earlier when it is not a holiday (`day_type`
+        8), otherwise it follows the last row. The month advances only when the next row starts a new day and
+        the data show the current month has reached its last day.
+        """
+
+        import calendar as _calendar
+
+        rows_per_day = max(int(round(86400.0 / max(float(seconds_per_time_step), 1.0))), 1)
+        n = len(dataframe)
+        last = dataframe.iloc[-1]
+        has_minutes = 'minutes' in dataframe.columns
+        out = {}
+
+        def clock(row):
+            return (int(row['hour']), int(row['minutes']) if has_minutes else 0)
+
+        if n >= rows_per_day:
+            same_time = dataframe.iloc[n - rows_per_day]
+            out['hour'] = int(same_time['hour'])
+            if has_minutes:
+                out['minutes'] = int(same_time['minutes'])
+        else:
+            hours = dataframe['hour'].astype(int)
+            first_hour = 1 if int(hours.min()) >= 1 and int(hours.max()) == 24 else 0
+            step_minutes = int(round(float(seconds_per_time_step) / 60.0))
+            minutes = (int(last['minutes']) if has_minutes else 0) + step_minutes
+            hour_increment, minute = divmod(minutes, 60)
+            hour = (int(last['hour']) - first_hour + hour_increment) % 24 + first_hour
+            out['hour'] = hour
+            if has_minutes:
+                out['minutes'] = minute
+
+        new_day = (out['hour'], out.get('minutes', 0)) < clock(last)
+        weekday = int(last['day_type'])
+
+        if not new_day:
+            out['day_type'] = weekday
+            out['month'] = int(last['month'])
+            return out
+
+        week_earlier = n - 7 * rows_per_day
+        if week_earlier >= 0 and 1 <= int(dataframe.iloc[week_earlier]['day_type']) <= 7:
+            out['day_type'] = int(dataframe.iloc[week_earlier]['day_type'])
+        elif 1 <= weekday <= 7:
+            out['day_type'] = weekday % 7 + 1
+        else:
+            out['day_type'] = weekday
+
+        month = int(last['month'])
+        months = dataframe['month'].astype(int).to_numpy()
+        run = int(np.argmax(months[::-1] != month)) if np.any(months != month) else None
+        out['month'] = month
+        if run is not None:
+            # The current month started inside the data, so its day count is known.
+            days = int(np.ceil(run / rows_per_day))
+            year = None
+            try:
+                year = pd.Timestamp(start_date).year if start_date is not None else None
+            except (TypeError, ValueError):
+                year = None
+            length = _calendar.monthrange(year if year is not None else 2023, month)[1]
+            if days >= length:
+                out['month'] = month % 12 + 1
+        return out
 
     def _read_timeseries_dataframe(
         self,

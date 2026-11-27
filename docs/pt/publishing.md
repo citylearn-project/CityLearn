@@ -34,7 +34,8 @@ evidência de validação.
 2. Criar a tag `vX.Y.Z` no commit aprovado e enviá-la (`git push origin vX.Y.Z`).
    - **Publicação no PyPI:** O push da tag, por si só, não publica no PyPI. O
      [workflow de publicação](https://github.com/citylearn-project/CityLearn/blob/master/.github/workflows/pypi_deploy.yml)
-     é acionado pela publicação de uma GitHub Release ou por execução manual; escolher
+     é acionado pela publicação de uma GitHub Release ou por execução manual a partir da tag da versão, e a sua
+     construção falha se essa tag não for `v` + `__version__`; escolher
      um único acionamento por versão. Confirmar que a construção, a verificação dos
      exports instalados e a publicação passaram para o commit pretendido, e instalar a
      versão exata do PyPI num ambiente limpo.

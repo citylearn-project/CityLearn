@@ -19,7 +19,7 @@ para que cada resultado possa ser rastreado.
 | Quanta atividade de armazenamento foi usada? | Energia movimentada pelas baterias e exportação V2G | Reporte com custos, serviço e degradação; mais alto ou mais baixo não é sempre melhor. |
 | Quanta energia solar ficou na comunidade? | Rácio de autoconsumo solar | Mais alto significa mais produção FV consumida localmente. Leia com a produção total e as importações. |
 | Quanta energia atravessou a fronteira com a rede? | Importação, exportação e net exchange | Leia as três: o net exchange sozinho pode esconder grandes importações e exportações. |
-| Quão exigente foi o perfil de importação? | Rácios de pico e de penalização do fator de carga face ao BAU | Abaixo de 1 é mais baixo do que o BAU e acima de 1 é mais alto. As penalizações do fator de carga usam a potência importada; os picos usam a potência líquida com sinal, pelo que uma comunidade que exporta em todos os passos tem um pico nulo ou negativo (ver [energia da rede e forma da carga](kpis_reference.md#energia-da-rede-e-forma-da-carga)). |
+| Quão exigente foi o perfil de importação? | Rácios de pico e de penalização do fator de carga face ao BAU | Abaixo de 1 é mais baixo do que o BAU e acima de 1 é mais alto. As penalizações do fator de carga usam a potência importada; os picos usam a potência líquida com sinal, pelo que uma comunidade que exporta em todos os passos tem um pico nulo ou negativo; os rácios de pico usam a regra com sinal, pelo que um pico de controlo mais alto nunca fica abaixo de 1 (ver [energia da rede e forma da carga](kpis_reference.md#energia-da-rede-e-forma-da-carga)). |
 
 O simulador define uma seleção predefinida para as linhas de edifício e de
 distrito, que `env.scorecard()` devolve. Os
@@ -36,8 +36,8 @@ selected = [
     "district_cost_total_control_eur",
     "district_cost_total_business_as_usual_eur",
     "district_energy_grid_total_import_control_kwh",
-    "district_ev_performance_departure_min_acceptable_feasible_ratio",
-    "district_ev_performance_departure_within_tolerance_feasible_ratio",
+    "district_ev_departure_audit_min_acceptable_service_feasible_ratio",
+    "district_ev_departure_audit_within_tolerance_service_feasible_ratio",
     "district_electrical_service_phase_violations_energy_total_kwh",
     "district_electrical_service_phase_requested_pressure_energy_total_kwh",
 ]
@@ -72,11 +72,11 @@ armazenamento estacionário para autoconsumo FV. `evaluate_v2()` executa ou
 reutiliza essa comparação, salvo com `include_business_as_usual=False`.
 
 Não misture colunas `ratio_to_baseline` e `ratio_to_business_as_usual` numa
-comparação sem identificar a referência. Um rácio é adimensional. Com
-denominador zero, a divisão segura devolve 1 quando os dois valores são
-praticamente zero, e um valor em falta quando o numerador não é zero. Os rácios
-dos equipamentos flexíveis ao BAU são a exceção: ficam em falta quando os seus
-dois totais são zero (ver [regras comuns](kpis_reference.md#regras-comuns)).
+comparação sem identificar a referência. Um rácio é adimensional. Quando a sua
+referência é nula ou desprezável, um rácio pode ser 1 ou ficar em falta: as
+[regras comuns](kpis_reference.md#regras-comuns) dão a regra zero sobre zero, as
+suas exceções para custo, emissões e equipamentos flexíveis, e a regra para
+referências abaixo de 1% de um membro típico.
 
 ## Serviço dos VE versus exatidão do alvo
 

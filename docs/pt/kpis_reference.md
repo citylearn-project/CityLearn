@@ -307,7 +307,7 @@ penalização  L = média sobre as janelas w de (1 − média_{t∈w} x_t / max_
 - Os passos não finitos são excluídos de cada janela. Uma janela de pico sem nenhum valor finito é ignorada.
 - Uma janela do fator de carga cujo máximo seja ≤ 1e-6 não tem penalização e é ignorada. `L` é indefinida quando nenhuma janela está definida. Com `_signed_net`, uma janela de média negativa dá uma penalização superior a 1.
 - `R_média` é indefinida quando não há nenhuma transição finita.
-- Um exportador líquido pode ter um pico negativo, pelo que os rácios de pico podem ser negativos ou indefinidos.
+- Um exportador líquido pode ter um pico negativo. Os rácios de pico do `evaluate_v2()` face à baseline e ao BAU usam por isso o rácio com sinal da [secção de custo](#custo), `1 + (controlo − referência) / |referência|` quando o pico de referência é negativo, pelo que um pico de controlo mais alto nunca fica abaixo de 1; as linhas do `evaluate()` legado mantêm o rácio simples.
 
 Dois conjuntos de linhas usam séries diferentes:
 

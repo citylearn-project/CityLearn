@@ -18,7 +18,7 @@ weighted score. Keep the full KPI export so each headline result can be traced.
 | How much storage activity was used? | Battery throughput and V2G export | Report with costs, service and degradation; higher or lower is not universally better. |
 | How much solar energy stayed local? | Solar self-consumption ratio | Higher means more PV-backed generation consumed locally. Read alongside total generation and imports. |
 | How much energy crossed the grid boundary? | Import, export and net exchange | Read all three: net exchange alone can hide large imports and exports. |
-| How demanding was the import profile? | Peak and load-factor-penalty ratios to BAU | Below 1 is lower than BAU and above 1 is higher. Load-factor penalties use import power; peaks use signed net power, so a community that exports at every step has a zero or negative peak (see [grid energy and load shape](kpis_reference.md#grid-energy-and-load-shape)). |
+| How demanding was the import profile? | Peak and load-factor-penalty ratios to BAU | Below 1 is lower than BAU and above 1 is higher. Load-factor penalties use import power; peaks use signed net power, so a community that exports at every step has a zero or negative peak; the peak ratios use the signed rule, so a higher control peak never reads as below 1 (see [grid energy and load shape](kpis_reference.md#grid-energy-and-load-shape)). |
 
 The simulator defines a default selection for both building and district rows,
 which `env.scorecard()` returns. The
@@ -35,8 +35,8 @@ selected = [
     "district_cost_total_control_eur",
     "district_cost_total_business_as_usual_eur",
     "district_energy_grid_total_import_control_kwh",
-    "district_ev_performance_departure_min_acceptable_feasible_ratio",
-    "district_ev_performance_departure_within_tolerance_feasible_ratio",
+    "district_ev_departure_audit_min_acceptable_service_feasible_ratio",
+    "district_ev_departure_audit_within_tolerance_service_feasible_ratio",
     "district_electrical_service_phase_violations_energy_total_kwh",
     "district_electrical_service_phase_requested_pressure_energy_total_kwh",
 ]
@@ -69,12 +69,11 @@ for PV self-consumption. `evaluate_v2()` runs or reuses that comparison unless
 `include_business_as_usual=False`.
 
 Do not mix `ratio_to_baseline` and `ratio_to_business_as_usual` columns in a
-comparison without identifying the reference. A ratio is dimensionless.
-For a zero denominator the safe division rule returns 1 when both values are
-effectively zero, and a missing value when the numerator is non-zero. The
-flexible-appliance ratios to the BAU are the exception: they are missing when
-both of their totals are zero (see
-[shared rules](kpis_reference.md#shared-rules)).
+comparison without identifying the reference. A ratio is dimensionless. When
+its reference is zero or negligible a ratio can be 1 or missing: the
+[shared rules](kpis_reference.md#shared-rules) give the zero-over-zero rule,
+its exceptions for cost, emissions and flexible appliances, and the rule for
+references below 1% of a typical member.
 
 ## EV service versus target accuracy
 

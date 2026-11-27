@@ -2755,9 +2755,11 @@ class CityLearnKPIService:
                 None if control_defined is None or bau_defined is None else control_defined - bau_defined,
             )
             if with_ratio:
+                # A peak of signed net power is negative for an exporting district, so peaks use the signed rule.
+                ratio = self._signed_ratio if metric.startswith('peak_') else self._safe_div
                 put(
                     v2('district', 'energy_grid', 'shape_quality', f'{metric}_to_business_as_usual', None, 'ratio'),
-                    self._safe_div(control_value, bau_value),
+                    ratio(control_value, bau_value),
                 )
 
     @population_scope
@@ -2872,8 +2874,6 @@ class CityLearnKPIService:
             ('ramping_average', 'energy_grid', 'shape_quality', 'ramping_average_to_baseline', None, 'ratio'),
             ('daily_one_minus_load_factor_average', 'energy_grid', 'shape_quality', 'load_factor_penalty_daily_average_to_baseline', 'signed_net', 'ratio'),
             ('monthly_one_minus_load_factor_average', 'energy_grid', 'shape_quality', 'load_factor_penalty_monthly_average_to_baseline', 'signed_net', 'ratio'),
-            ('daily_peak_average', 'energy_grid', 'shape_quality', 'peak_daily_average_to_baseline', None, 'ratio'),
-            ('all_time_peak_average', 'energy_grid', 'shape_quality', 'peak_all_time_average_to_baseline', None, 'ratio'),
             ('discomfort_proportion', 'comfort_resilience', 'discomfort', 'overall', None, 'ratio'),
             ('discomfort_cold_proportion', 'comfort_resilience', 'discomfort', 'cold', None, 'ratio'),
             ('discomfort_hot_proportion', 'comfort_resilience', 'discomfort', 'hot', None, 'ratio'),
@@ -2924,6 +2924,8 @@ class CityLearnKPIService:
             ('carbon_emissions_control_member_sum_total_kgco2', 'emissions', 'total', 'control', 'member_sum', 'kgco2'),
             ('carbon_emissions_baseline_member_sum_total_kgco2', 'emissions', 'total', 'baseline', 'member_sum', 'kgco2'),
             ('load_factor_penalty_daily_average_to_baseline_ratio', 'energy_grid', 'shape_quality', 'load_factor_penalty_daily_average_to_baseline', None, 'ratio'),
+            ('peak_daily_average_to_baseline_signed_ratio', 'energy_grid', 'shape_quality', 'peak_daily_average_to_baseline', None, 'ratio'),
+            ('peak_all_time_average_to_baseline_signed_ratio', 'energy_grid', 'shape_quality', 'peak_all_time_average_to_baseline', None, 'ratio'),
             ('load_factor_penalty_monthly_average_to_baseline_ratio', 'energy_grid', 'shape_quality', 'load_factor_penalty_monthly_average_to_baseline', None, 'ratio'),
             ('pv_curtailment_total_kwh', 'solar_self_consumption', 'total', 'curtailment', None, 'kwh'),
             ('pv_generation_total_kwh', 'solar_self_consumption', 'total', 'generation', None, 'kwh'),

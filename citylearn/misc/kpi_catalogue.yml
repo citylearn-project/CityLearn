@@ -428,7 +428,7 @@
     levels:
     - building
     - district
-    unit: count
+    unit: cycles
     en: Equivalent full cycles, throughput / (2 · nominal capacity), pooled over capacity at district and
       portfolio levels. `_business_as_usual` and `_delta_to_business_as_usual` as in the shared rules.
     pt: Ciclos completos equivalentes, energia movimentada / (2 · capacidade nominal), agregados pela capacidade
@@ -680,7 +680,7 @@
     levels:
     - building
     - district
-    unit: count
+    unit: cycles
     en: Opt-in equivalent full cycles of EV batteries from accepted gross battery-terminal throughput over (2 · nominal
       capacity) (`include_battery_health_audit=True`), attributed to executed transfers over realized connected EV
       capacity at building level and pooled over unique eligible fleet EV nominal capacity at district and portfolio
@@ -1125,7 +1125,7 @@
     levels:
     - building
     - district
-    unit: hours
+    unit: degC_h
     en: 'Degree-hours (°C·h) of discomfort: the sum over too-cold intervals of (T_heat − T), or over too-hot intervals
       of (T − T_cool), times the step length in hours; measured from the set point, not the band edge. Not carried
       to the portfolio.'

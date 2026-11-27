@@ -139,4 +139,9 @@ A ordem simplificada das ações do edifício é:
 
 Quando `electrical_storage_action < 0`, a descarga do BESS tem prioridade sobre os outros consumos elétricos.
 
+Esta é a ordem da versão 1 da física. Na versão 2 (a predefinição), a atribuição do serviço elétrico reparte a margem
+depois das atualizações térmicas e da carga não deslocável, entre as potências que os equipamentos conseguem de facto
+receber, e durante um corte de energia a bateria e os VE descarregam depois da procura térmica e das descargas do
+armazenamento térmico, até à carga que a produção FV deixa.
+
 Durante um corte de energia, as ações dos carregadores de VE ficam limitadas ao abastecimento local, e uma ação negativa (descarga) é posta a zero, salvo se o `power_outage.vehicle_to_building` do edifício for `true`. Com essa opção, um VE ligado pode descarregar para o edifício. A descarga fica limitada à carga não deslocável mais a eletricidade de que os equipamentos de arrefecimento, aquecimento e AQS precisam para a procura que resta depois da descarga do armazenamento, menos a produção FV e a saída da bateria já disponíveis, pelo que nada é exportado para a rede em falha. É aplicada depois das descargas térmicas e da bateria e antes dessas cargas; os aparelhos diferíveis continuam a arrancar apenas com o abastecimento que essas cargas deixam.
