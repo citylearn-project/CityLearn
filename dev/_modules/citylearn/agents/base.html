@@ -255,6 +255,9 @@
 
         <span class="k">if</span> <span class="n">random_stream_version</span> <span class="o">!=</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">DEFAULT_RANDOM_STREAM_VERSION</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_random_stream</span><span class="p">(</span><span class="n">random_stream_version</span><span class="o">=</span><span class="n">random_stream_version</span><span class="p">)</span>
+        <span class="c1"># Random actions follow `random_seed`; a space the caller has already seeded keeps its stream. The layout</span>
+        <span class="c1"># generation is stored only once a dynamic topology changes it, so agents load as saved by older releases.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_seed_action_spaces</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
     <span class="nd">@property</span>
@@ -494,8 +497,13 @@
 
         <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span>
         <span class="k">if</span> <span class="n">is_entity_interface</span><span class="p">(</span><span class="n">env</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'dynamic'</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">flat_action_space</span>
+            <span class="n">action_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">flat_action_space</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">new</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">old</span> <span class="k">for</span> <span class="n">new</span><span class="p">,</span> <span class="n">old</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">action_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">action_space</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">):</span>
+                <span class="c1"># A new layout gets new spaces, seeded from a stream of their own so they do not repeat earlier draws.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_action_space_generation</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_action_space_generation'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="n">action_space</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">action_names</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_names</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_seed_action_spaces</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__set_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logging_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Set logging level."""</span>
@@ -522,7 +530,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">key</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Seed of one of the agent's random streams, derived from :attr:`random_seed` and `key`.</span>
 
-<span class="sd">        Keys in use: ``(0, i)`` for action space ``i`` (see :meth:`_seed_action_spaces`), ``(1, i)`` for the SAC</span>
+<span class="sd">        Keys in use: ``(0, i)`` for action space ``i`` (``(0, i, g)`` after the ``g``-th dynamic-topology layout</span>
+<span class="sd">        change, see :meth:`_seed_action_spaces`), ``(1, i)`` for the SAC</span>
 <span class="sd">        replay buffer of action space ``i``, ``(2,)`` for the SAC policy noise and ``(3, i)`` for the MARLISA PCA of</span>
 <span class="sd">        action space ``i``.</span>
 <span class="sd">        """</span>
@@ -537,9 +546,12 @@
 <span class="sd">        caller has seeded keep their stream.</span>
 <span class="sd">        """</span>
 
+        <span class="n">generation</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_action_space_generation'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">space</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="s1">'_np_random'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">space</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_seed</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">if</span> <span class="n">generation</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">generation</span><span class="p">)</span>
+                <span class="n">space</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_seed</span><span class="p">(</span><span class="o">*</span><span class="n">key</span><span class="p">))</span>
 
 <div class="viewcode-block" id="Agent.episode_random_generator">
 <a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.Agent.episode_random_generator">[docs]</a>

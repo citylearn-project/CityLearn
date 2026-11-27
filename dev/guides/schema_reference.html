@@ -945,7 +945,7 @@ are summed.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.reward_function.RewardFunction</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">exponent</span></code> (1.0), <code class="docutils literal notranslate"><span class="pre">charging_constraint_penalty_coefficient</span></code> (1.0)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">exponent</span></code> (1.0); <code class="docutils literal notranslate"><span class="pre">charging_constraint_penalty_coefficient</span></code> is accepted but only <code class="docutils literal notranslate"><span class="pre">Electric_Vehicles_Reward_Function</span></code> uses it</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">-(max(net</span> <span class="pre">consumption,</span> <span class="pre">0)</span> <span class="pre">**</span> <span class="pre">exponent)</span></code> per building.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.reward_function.MARL</span></code></p></td>
@@ -969,7 +969,7 @@ are summed.</p>
 <td><p>Weighted sum of the two rewards above.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.reward_function.Electric_Vehicles_Reward_Function</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code> (object with all seven keys <code class="docutils literal notranslate"><span class="pre">no_car_charging</span></code>, <code class="docutils literal notranslate"><span class="pre">battery_limits</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_impossible</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_under</span></code>, <code class="docutils literal notranslate"><span class="pre">close_soc</span></code>, <code class="docutils literal notranslate"><span class="pre">self_ev_consumption</span></code>, <code class="docutils literal notranslate"><span class="pre">extra_self_production</span></code>), <code class="docutils literal notranslate"><span class="pre">version</span></code> (2)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code> (object with all seven keys <code class="docutils literal notranslate"><span class="pre">no_car_charging</span></code>, <code class="docutils literal notranslate"><span class="pre">battery_limits</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_impossible</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_under</span></code>, <code class="docutils literal notranslate"><span class="pre">close_soc</span></code>, <code class="docutils literal notranslate"><span class="pre">self_ev_consumption</span></code>, <code class="docutils literal notranslate"><span class="pre">extra_self_production</span></code>), <code class="docutils literal notranslate"><span class="pre">version</span></code> (2), <code class="docutils literal notranslate"><span class="pre">charging_constraint_penalty_coefficient</span></code> (1.0, per kWh of charging-limit violation)</p></td>
 <td><p>EV-aware reward. A partial <code class="docutils literal notranslate"><span class="pre">weights</span></code> object replaces the defaults, so give all seven keys.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.reward_function.OutageUnservedEnergyReward</span></code></p></td>
@@ -3536,9 +3536,9 @@ same.</p>
 <td><p>The observation exceeds its space bound.</p></td>
 <td><p>Normalise by the capacity, or leave it inactive.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charging_constraint_penalty_coefficient</span></code> in the attributes of <code class="docutils literal notranslate"><span class="pre">Electric_Vehicles_Reward_Function</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">TypeError</span></code> at construction: this reward takes only <code class="docutils literal notranslate"><span class="pre">weights</span></code> and <code class="docutils literal notranslate"><span class="pre">version</span></code>.</p></td>
-<td><p>Leave it out; the coefficient keeps its default of 1.0.</p></td>
+<tr class="row-even"><td><p>An attribute that a built-in reward does not use, such as a misspelt <code class="docutils literal notranslate"><span class="pre">exponant</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TypeError</span></code> at construction, with the closest valid name. Rewards defined outside <code class="docutils literal notranslate"><span class="pre">citylearn.reward_function</span></code> still receive unknown keys.</p></td>
+<td><p>Fix the name, or remove the key.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">request_purposes</span></code> written as a list</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> when the requests are loaded.</p></td>

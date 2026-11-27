@@ -276,13 +276,13 @@ are summed.
 
 | Class | Attributes and defaults | Reward |
 |---|---|---|
-| `citylearn.reward_function.RewardFunction` | `exponent` (1.0), `charging_constraint_penalty_coefficient` (1.0) | `-(max(net consumption, 0) ** exponent)` per building. |
+| `citylearn.reward_function.RewardFunction` | `exponent` (1.0); `charging_constraint_penalty_coefficient` is accepted but only `Electric_Vehicles_Reward_Function` uses it | `-(max(net consumption, 0) ** exponent)` per building. |
 | `citylearn.reward_function.MARL` | none | Penalty on the building's consumption coupled to the district's net consumption. |
 | `citylearn.reward_function.IndependentSACReward` | none | `min(-net consumption, 0)`. |
 | `citylearn.reward_function.SolarPenaltyReward` | none | Penalises import, more when storage is not used to absorb PV. |
 | `citylearn.reward_function.ComfortReward` | `band` (`null`: the `comfort_band` column), `lower_exponent` (2.0), `higher_exponent` (2.0), `version` (2) | Penalises the distance outside the comfort band. `version: 1` (deprecated) follows the demand sign instead of the HVAC mode. |
 | `citylearn.reward_function.SolarPenaltyAndComfortReward` | `band`, `lower_exponent` (2.0), `higher_exponent` (2.0), `coefficients` (`[1.0, 1.0]`), `version` (2) | Weighted sum of the two rewards above. |
-| `citylearn.reward_function.Electric_Vehicles_Reward_Function` | `weights` (object with all seven keys `no_car_charging`, `battery_limits`, `soc_impossible`, `soc_under`, `close_soc`, `self_ev_consumption`, `extra_self_production`), `version` (2) | EV-aware reward. A partial `weights` object replaces the defaults, so give all seven keys. |
+| `citylearn.reward_function.Electric_Vehicles_Reward_Function` | `weights` (object with all seven keys `no_car_charging`, `battery_limits`, `soc_impossible`, `soc_under`, `close_soc`, `self_ev_consumption`, `extra_self_production`), `version` (2), `charging_constraint_penalty_coefficient` (1.0, per kWh of charging-limit violation) | EV-aware reward. A partial `weights` object replaces the defaults, so give all seven keys. |
 | `citylearn.reward_function.OutageUnservedEnergyReward` | `coefficient` (1.0), `base_reward` (import path or `{type, attributes}`, default `RewardFunction`), other keys passed to the base reward | Base reward minus `coefficient` times the unserved energy during outages. |
 
 See the [reward function overview](https://www.citylearn.net/overview/reward_function.html) for the formulas.
@@ -1390,7 +1390,7 @@ same.
 | Non-zero `noise_std` for a building without `pricing` or `carbon_intensity` | Random prices or emissions appear. | Add the files or keep `noise_std` at 0. |
 | Passing `electric_vehicles=[...]` to select EVs | Ignored. | Use `electric_vehicles_def.<ev>.include`. |
 | EV batteries above 100 kWh with `connected_electric_vehicle_at_charger_battery_capacity` | The observation exceeds its space bound. | Normalise by the capacity, or leave it inactive. |
-| `charging_constraint_penalty_coefficient` in the attributes of `Electric_Vehicles_Reward_Function` | `TypeError` at construction: this reward takes only `weights` and `version`. | Leave it out; the coefficient keeps its default of 1.0. |
+| An attribute that a built-in reward does not use, such as a misspelt `exponant` | `TypeError` at construction, with the closest valid name. Rewards defined outside `citylearn.reward_function` still receive unknown keys. | Fix the name, or remove the key. |
 | `request_purposes` written as a list | `AttributeError` when the requests are loaded. | Write an object, `{"<request_id>": "service"}`. |
 | Non-integer or negative `start_time_step` / `end_time_step` in a demand-response request file | Decimals are truncated with `int()` (3.7 becomes 3), and negative values are accepted. | Write whole, non-negative data-row indices. |
 | Per-device names (`electric_vehicle_storage_<charger>`, per-charger observations) in `inactive_actions` or the `active_/inactive_observations` arguments | Static and dynamic topology treat them differently. Static topology ignores expanded per-device names in `inactive_actions`; dynamic topology honours them, but recomputes the charger, deferrable-appliance and battery observation flags from the schema, ignoring the `active_/inactive_observations` arguments and the building's `inactive_observations`. | Turn device features on or off with the catalogue names in `observations` and `actions`, and check `env.observation_names` and `env.action_names`. |

@@ -194,7 +194,7 @@
 <h2>1. Dataset, reward and windows<a class="headerlink" href="#1.-Dataset,-reward-and-windows" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code> holds a year of hourly data for 17 buildings with PV, batteries and EV chargers. To keep the example fast, it uses three buildings and a single central agent, which controls all their batteries and chargers.</p>
 <p>The reward is the learning signal, while the KPIs judge the finished episode. This dataset configures version 2 of <code class="docutils literal notranslate"><span class="pre">Electric_Vehicles_Reward_Function</span></code>, the default, which adds the grid-import reward of each building to the EV charging terms and penalises vehicles that leave far below their requested state of charge (see the <a class="reference external" href="../overview/reward_function.html">reward function guide</a>).</p>
-<p>The controller trains on the first week and is evaluated on the second week, which it has not seen during training.</p>
+<p>The controller trains on the first week and is evaluated on the second week, which it has not seen during training. Both environments simulate the same two weeks and each runs only its own week as its episode, because the observation limits that the normalisation uses come from the simulation window: two environments built on different windows would scale the same value differently.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -209,12 +209,15 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">make_env</span><span class="p">(</span><span class="n">window</span><span class="p">):</span>
+    <span class="c1"># Both environments simulate the same two weeks, so the observation limits that</span>
+    <span class="c1"># NormalizedObservationWrapper uses are the same; each one runs only its own week.</span>
     <span class="k">return</span> <span class="n">CityLearnEnv</span><span class="p">(</span>
         <span class="n">DATASET</span><span class="p">,</span>
         <span class="n">buildings</span><span class="o">=</span><span class="n">BUILDINGS</span><span class="p">,</span>
         <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-        <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="n">TRAIN_WINDOW</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">EVALUATION_WINDOW</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">episode_time_steps</span><span class="o">=</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">window</span><span class="p">)],</span>
         <span class="n">random_seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
     <span class="p">)</span>
 </pre></div>
@@ -245,8 +248,8 @@
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2026-11-27 00:21:23,655 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
-2026-11-27 00:21:25,264 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-27 00:48:47,788 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-27 00:48:48,910 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -319,9 +322,9 @@ observations: (77,) actions: (7,)
 <div class="highlight"><pre>
 indicator
 Cost, BAU (EUR)                           151.975
-Cost, SAC (EUR)                            39.268
+Cost, SAC (EUR)                            39.267
 Grid import, BAU (kWh)                    985.065
-Grid import, SAC (kWh)                    166.752
+Grid import, SAC (kWh)                    166.726
 EVs leaving with enough charge (ratio)      0.000
 Name: value, dtype: float64
 </pre></div></div>

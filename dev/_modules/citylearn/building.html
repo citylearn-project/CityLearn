@@ -2997,7 +2997,8 @@
 
     
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_observation_space_limits_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]:</span>
-        <span class="c1"># Use entire dataset length for space limit estimation</span>
+        <span class="c1"># The limits come from the simulation window, not from the whole dataset: two environments on different</span>
+        <span class="c1"># windows of the same data can normalise the same value differently. Share one window to compare them.</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">'_'</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="fm">__getattr__</span><span class="p">(</span>
                 <span class="n">k</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">'_'</span><span class="p">),</span> 

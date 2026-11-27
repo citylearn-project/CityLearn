@@ -157,6 +157,28 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
 <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_unknown_reward_arguments</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Error message for keyword arguments a built-in reward does not use, with the closest valid name."""</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">difflib</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+
+    <span class="n">valid</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">klass</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__mro__</span><span class="p">:</span>
+        <span class="n">init</span> <span class="o">=</span> <span class="n">klass</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'__init__'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">init</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">valid</span> <span class="o">|=</span> <span class="p">{</span>
+                <span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">init</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'self'</span><span class="p">,</span> <span class="s1">'env_metadata'</span><span class="p">,</span> <span class="s1">'env'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">parameter</span><span class="o">.</span><span class="n">kind</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">parameter</span><span class="o">.</span><span class="n">VAR_KEYWORD</span>
+            <span class="p">}</span>
+    <span class="n">valid</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">'charging_constraint_penalty_coefficient'</span><span class="p">)</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">close</span> <span class="o">=</span> <span class="n">difflib</span><span class="o">.</span><span class="n">get_close_matches</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">valid</span><span class="p">),</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2">"</span> <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">" (did you mean </span><span class="si">{</span><span class="n">close</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">!r}</span><span class="s2">?)"</span> <span class="k">if</span> <span class="n">close</span> <span class="k">else</span> <span class="s1">''</span><span class="p">))</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> got unexpected keyword argument(s) </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s2">; valid: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">valid</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+
 <div class="viewcode-block" id="RewardFunction">
 <a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.RewardFunction">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RewardFunction</span><span class="p">:</span>
@@ -169,11 +191,15 @@
 <span class="sd">    env_metadata: Mapping[str, Any]:</span>
 <span class="sd">        General static information about the environment.</span>
 <span class="sd">    **kwargs : dict</span>
-<span class="sd">        Other keyword arguments for custom reward calculation.</span>
+<span class="sd">        Other keyword arguments for custom reward calculation. The rewards of this module reject keys they do not</span>
+<span class="sd">        use with a `TypeError`, so a misspelt schema attribute is not ignored; subclasses defined elsewhere still</span>
+<span class="sd">        receive them.</span>
 <span class="sd">    """</span>
     
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">exponent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">penalty_coefficient</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'charging_constraint_penalty_coefficient'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__module__</span> <span class="o">==</span> <span class="vm">__name__</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">_unknown_reward_arguments</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">kwargs</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env_metadata</span> <span class="o">=</span> <span class="n">env_metadata</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="o">=</span> <span class="n">exponent</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">charging_constraint_penalty_coefficient</span> <span class="o">=</span> <span class="n">penalty_coefficient</span>
@@ -484,6 +510,10 @@
 <span class="sd">    during net export to the grid. Whereas, when the energy storage systems are charged to capacity and there is net import from the </span>
 <span class="sd">    grid the penalty is maximized.</span>
 
+<span class="sd">    The reward has one term per storage type with a positive capacity (cooling, heating, DHW and electrical storage). A</span>
+<span class="sd">    building without storage therefore always gets 0, and a building with several storage types counts its grid import</span>
+<span class="sd">    once per storage type.</span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    env_metadata: Mapping[str, Any]:</span>
@@ -714,7 +744,7 @@
 <span class="sd">    lower_exponent: float, default = 2.0</span>
 <span class="sd">        Penalty exponent for when in cooling mode but temperature is above setpoint upper</span>
 <span class="sd">        boundary or heating mode but temperature is below setpoint lower boundary.</span>
-<span class="sd">    higher_exponent: float, default = 3.0</span>
+<span class="sd">    higher_exponent: float, default = 2.0</span>
 <span class="sd">        Penalty exponent for when in cooling mode but temperature is below setpoint lower</span>
 <span class="sd">        boundary or heating mode but temperature is above setpoint upper boundary.</span>
 <span class="sd">    coefficients: Tuple, default = (1.0, 1.0)</span>
@@ -813,8 +843,12 @@
     <span class="c1"># trained with. New instances default to version 2.</span>
     <span class="n">version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">charging_constraint_penalty_coefficient</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">charging_constraint_penalty_coefficient</span> <span class="o">=</span> <span class="n">charging_constraint_penalty_coefficient</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_version</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">VERSIONS</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">deprecated</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,))</span>
 
         <span class="c1"># Default tunable weights for EV-related reward components</span>
@@ -1035,16 +1069,23 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">coefficient</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">base_reward</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">RewardFunction</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">base_reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_base_reward</span><span class="p">(</span><span class="n">base_reward</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_base_reward</span><span class="p">(</span><span class="n">base_reward</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">coefficient</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_build_base_reward</span><span class="p">(</span><span class="n">base_reward</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RewardFunction</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_base_reward</span><span class="p">(</span><span class="n">base_reward</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">,</span> <span class="n">extra</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RewardFunction</span><span class="p">:</span>
+        <span class="c1"># Keys other than `coefficient` and `base_reward` are attributes of the base reward.</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">extra</span> <span class="ow">or</span> <span class="p">{})</span>
         <span class="k">if</span> <span class="n">base_reward</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">RewardFunction</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">RewardFunction</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_reward</span><span class="p">,</span> <span class="n">RewardFunction</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">extra</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"OutageUnservedEnergyReward got </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span><span class="si">}</span><span class="s2"> for a base reward that is already built; "</span>
+                    <span class="s2">"set them on that instance instead."</span>
+                <span class="p">)</span>
             <span class="k">return</span> <span class="n">base_reward</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_reward</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -1053,7 +1094,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_reward</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_reward</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'type'</span><span class="p">),</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">module_name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">class_name</span> <span class="o">=</span> <span class="n">base_reward</span><span class="p">[</span><span class="s1">'type'</span><span class="p">]</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)</span>
             <span class="n">constructor</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">),</span> <span class="n">class_name</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">constructor</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">base_reward</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'attributes'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}))</span>
+            <span class="k">return</span> <span class="n">constructor</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="p">(</span><span class="n">base_reward</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'attributes'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}),</span> <span class="o">**</span><span class="n">extra</span><span class="p">})</span>
 
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
             <span class="s1">'base_reward must be a RewardFunction, an import path or a mapping with a "type" import path, '</span>

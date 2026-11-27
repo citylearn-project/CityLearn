@@ -536,27 +536,23 @@
         
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Returns action space for normalized actions."""</span>
+<span class="w">        </span><span class="sd">"""Returns action space for normalized actions.</span>
 
-        <span class="n">low_limit</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">high_limit</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="sd">        The same spaces are returned while the action sizes do not change, so seeding them lasts.</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
-
-            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
-                <span class="n">low_limit</span> <span class="o">+=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span><span class="o">*</span><span class="n">b</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">low</span><span class="o">.</span><span class="n">size</span>
-                <span class="n">high_limit</span> <span class="o">+=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span><span class="o">*</span><span class="n">b</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">high</span><span class="o">.</span><span class="n">size</span>
-            
-            <span class="n">action_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">low_limit</span><span class="p">),</span> <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">high_limit</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)]</span>
-
+            <span class="n">sizes</span> <span class="o">=</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">low</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">),)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">action_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
-                <span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">]</span><span class="o">*</span><span class="n">b</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">low</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> 
-                <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">]</span><span class="o">*</span><span class="n">b</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">high</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> 
-                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> 
-            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">]</span>
-        
-        <span class="k">return</span> <span class="n">action_space</span>
+            <span class="n">sizes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">low</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">)</span>
+
+        <span class="n">cached</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_normalized_action_space_cache'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cached</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">sizes</span><span class="p">:</span>
+            <span class="n">action_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">]</span>
+            <span class="n">cached</span> <span class="o">=</span> <span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">action_space</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normalized_action_space_cache</span> <span class="o">=</span> <span class="n">cached</span>
+
+        <span class="k">return</span> <span class="n">cached</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
 <div class="viewcode-block" id="NormalizedActionWrapper.action">
 <a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.NormalizedActionWrapper.action">[docs]</a>
@@ -737,8 +733,15 @@
 <span class="sd">        CityLearn environment.</span>
 <span class="sd">    bin_sizes: List[Mapping[str, int]], optional</span>
 <span class="sd">        Then number of bins for each active action in each building.</span>
-<span class="sd">    default_bin_size: int, default = 10</span>
+<span class="sd">    default_bin_size: int, default = 11</span>
 <span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building action.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Bin `k` of an action with bounds `[low, high]` and `n` bins maps to `np.linspace(low, high, n)[k]`. When</span>
+<span class="sd">    `low &lt; 0 &lt; high`, the grid point closest to 0 is set to exactly 0, so a discrete agent can always leave a</span>
+<span class="sd">    battery, a thermal storage or a V2G charger idle; with the default 11 bins on [-1, 1] the grid is</span>
+<span class="sd">    -1, -0.8, ..., 0, ..., 0.8, 1.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -747,7 +750,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
         <span class="k">assert</span> <span class="n">bin_sizes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_sizes</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">),</span> <span class="s1">'length of bin_size must equal number of buildings.'</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">]</span> <span class="k">if</span> <span class="n">bin_sizes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">bin_sizes</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">default_bin_size</span> <span class="o">=</span> <span class="mi">10</span> <span class="k">if</span> <span class="n">default_bin_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">default_bin_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_bin_size</span> <span class="o">=</span> <span class="mi">11</span> <span class="k">if</span> <span class="n">default_bin_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">default_bin_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_bin_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">active_actions</span><span class="p">}</span> 
             <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span><span class="p">)</span>
@@ -755,21 +758,36 @@
         
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Returns action space for discretized actions."""</span>
+<span class="w">        </span><span class="sd">"""Returns action space for discretized actions.</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
-            <span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="sd">        The same spaces are returned while the bins do not change, so seeding them lasts.</span>
+<span class="sd">        """</span>
 
-            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">bin_sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-            
-            <span class="n">action_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">(</span><span class="n">bin_sizes</span><span class="p">)]</span>
+        <span class="n">central</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">)</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">central</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span><span class="p">))</span>
+        <span class="n">cached</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_discrete_action_space_cache'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">action_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cached</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">key</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">central</span><span class="p">:</span>
+                <span class="n">action_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">values</span><span class="p">()])]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">action_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span><span class="p">]</span>
+            <span class="n">cached</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">action_space</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_discrete_action_space_cache</span> <span class="o">=</span> <span class="n">cached</span>
 
-        <span class="k">return</span> <span class="n">action_space</span>
+        <span class="k">return</span> <span class="n">cached</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<div class="viewcode-block" id="DiscreteActionWrapper.action_grid">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.DiscreteActionWrapper.action_grid">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_grid</span><span class="p">(</span><span class="n">low</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Action values of the `n` bins of an action with bounds `[low, high]`, with 0 included when `low &lt; 0 &lt; high`."""</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">low</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">high</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">grid</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">grid</span><span class="p">)))]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="n">grid</span></div>
+
 
 <div class="viewcode-block" id="DiscreteActionWrapper.action">
 <a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.DiscreteActionWrapper.action">[docs]</a>
@@ -782,7 +800,7 @@
             <span class="n">transformed_actions_</span> <span class="o">=</span> <span class="p">[]</span>
             
             <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">hl</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">cs</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">cs</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">ds</span><span class="p">)):</span>
-                <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">hl</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">n</span><span class="p">)[</span><span class="n">actions</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]]</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_grid</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">hl</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">n</span><span class="p">)[</span><span class="n">actions</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]]</span>
                 <span class="n">transformed_actions_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
             
             <span class="n">transformed_actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transformed_actions_</span><span class="p">)</span>
@@ -808,7 +826,7 @@
 <span class="sd">        Then number of bins for each active action in each building.</span>
 <span class="sd">    default_observation_bin_size: int, default = 10</span>
 <span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building observation.</span>
-<span class="sd">    default_action_bin_size: int, default = 10</span>
+<span class="sd">    default_action_bin_size: int, default = 11</span>
 <span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building action.</span>
 <span class="sd">    """</span>
 
@@ -887,7 +905,7 @@
 <span class="sd">        CityLearn environment.</span>
 <span class="sd">    bin_sizes: List[Mapping[str, int]], optional</span>
 <span class="sd">        Then number of bins for each active action in each building.</span>
-<span class="sd">    default_bin_size: int, default = 10</span>
+<span class="sd">    default_bin_size: int, default = 11</span>
 <span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building action.</span>
 <span class="sd">    """</span>
 
@@ -946,7 +964,7 @@
 <span class="sd">        Then number of bins for each active action in each building.</span>
 <span class="sd">    default_observation_bin_size: int, default = 10</span>
 <span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building observation.</span>
-<span class="sd">    default_action_bin_size: int, default = 10</span>
+<span class="sd">    default_action_bin_size: int, default = 11</span>
 <span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building action.</span>
 <span class="sd">    """</span>
 
