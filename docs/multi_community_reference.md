@@ -135,6 +135,8 @@ All child environments must use:
 | Same `baseline_version` | Portfolio baseline KPIs add up district baselines, so the baseline definition must match. |
 | Same `business_as_usual_ev_charge_target` | Portfolio BAU totals and ratios to the BAU add up the district BAU runs, so every community must charge its EVs in the BAU to the same target (`full` or `requested`). |
 | Same `ev_soc_carryover` | It changes the EV state at the start of each episode in the controlled and BAU runs, so portfolio totals would otherwise mix two EV definitions. |
+| Same `ev_departure_service_tolerance` and `ev_departure_within_tolerance` | They set the min-acceptable and within-tolerance thresholds of the EV departure counts that the portfolio adds up. |
+| Same `energy_provenance` | A community with the provenance ledger off has no provenance rows, so the portfolio provenance totals would cover only the other communities. |
 | Same `evaluation_window` when enabled | Keeps recurring window KPIs aligned across communities. |
 
 The wrapper validates these conditions at construction and again after reset, and

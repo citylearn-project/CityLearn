@@ -135,6 +135,8 @@ Todos os ambientes filhos têm de usar:
 | A mesma `baseline_version` | Os KPI de referência do portefólio somam as referências dos distritos, pelo que a definição da referência tem de coincidir. |
 | O mesmo `business_as_usual_ev_charge_target` | Os totais BAU do portefólio e os rácios face ao BAU somam as execuções BAU dos distritos, pelo que todas as comunidades têm de carregar os VE no BAU até ao mesmo alvo (`full` ou `requested`). |
 | O mesmo `ev_soc_carryover` | Altera o estado dos VE no início de cada episódio, na execução controlada e no BAU, pelo que os totais do portefólio misturariam duas definições de VE. |
+| Os mesmos `ev_departure_service_tolerance` e `ev_departure_within_tolerance` | Definem os limiares mínimo aceitável e dentro da tolerância das contagens de partidas dos VE que o portefólio soma. |
+| O mesmo `energy_provenance` | Uma comunidade com o registo de proveniência desligado não tem linhas de proveniência, pelo que os totais de proveniência do portefólio cobririam só as outras comunidades. |
 | A mesma `evaluation_window` quando ativa | Mantém alinhados os KPIs da janela recorrente entre comunidades. |
 
 O wrapper valida estas condições na construção e novamente depois do reset, e

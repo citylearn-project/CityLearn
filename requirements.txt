@@ -1,7 +1,7 @@
 filelock
 gymnasium>=0.28.1,<2.0.0
 numpy<3.0.0
-pandas
+pandas>=2.2
 platformdirs
 pyyaml
 requests

@@ -511,10 +511,10 @@ class ElectricHeater(ElectricDevice):
 
     Parameters
     ----------
-    nominal_power : float, default: (0.9, 0.99)
+    nominal_power : float, default: 0.0
         Maximum amount of electric power that the electric heater can consume from the power grid.
-    efficiency : Union[float, Tuple[float, float]], default: 0.9
-        Technical efficiency.
+    efficiency : Union[float, Tuple[float, float]], default: (0.9, 0.99)
+        Technical efficiency; a tuple draws it uniformly in that range.
 
     Other Parameters
     ----------------

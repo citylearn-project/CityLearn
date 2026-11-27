@@ -36,7 +36,7 @@ on the current page.
 2. Tag the approved commit as `vX.Y.Z` and push the tag (`git push origin vX.Y.Z`).
    - **PyPI publication:** A tag push by itself does not publish to PyPI. The
      [publication workflow](https://github.com/citylearn-project/CityLearn/blob/master/.github/workflows/pypi_deploy.yml)
-     runs when a GitHub Release is published or when explicitly dispatched; choose one
+     runs when a GitHub Release is published or when explicitly dispatched from the release tag, and its build job fails unless that tag is `v` + `__version__`; choose one
      trigger per release. Confirm the build, installed-export check and `pypi` publish
      jobs succeeded for the intended commit, then verify the pinned package from PyPI
      in a clean environment.

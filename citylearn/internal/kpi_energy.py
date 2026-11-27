@@ -349,6 +349,10 @@ def district_records(kpi: "CityLearnKPIService", legacy_building, control_condit
         kpi._metric('carbon_emissions_baseline_member_sum_total_kgco2', ce_b_member_sum, 'District', 'district'),
         kpi._metric('load_factor_penalty_daily_average_to_baseline_ratio', import_lf_ratios['daily'], 'District', 'district'),
         kpi._metric('load_factor_penalty_monthly_average_to_baseline_ratio', import_lf_ratios['monthly'], 'District', 'district'),
+        # Peaks of signed net power are negative for an exporting district; the v2 ratios use the signed rule,
+        # the legacy rows above keep the plain ratio of 3.6.0.
+        kpi._metric('peak_daily_average_to_baseline_signed_ratio', kpi._signed_ratio(peak_daily_c, peak_daily_b), 'District', 'district'),
+        kpi._metric('peak_all_time_average_to_baseline_signed_ratio', kpi._signed_ratio(peak_all_c, peak_all_b), 'District', 'district'),
         kpi._metric('cost_control_total_eur', cost_c_env_raw, 'District', 'district'),
         kpi._metric('cost_baseline_total_eur', cost_b_env_raw, 'District', 'district'),
         kpi._metric('cost_delta_total_eur', cost_c_env_raw - cost_b_env_raw, 'District', 'district'),

@@ -137,4 +137,9 @@ The simplified building action order is:
 
 When `electrical_storage_action < 0`, BESS discharge is prioritized before other electrical consumption.
 
+This is the order of physics version 1. Under version 2 (the default), the electrical-service allocation shares the
+headroom after the thermal and non-shiftable updates, among the powers the assets can actually take, and during an
+outage the battery and the EVs discharge after the thermal demand and the thermal storage discharges, up to the load
+that PV leaves.
+
 During a power outage, EV charger actions are limited to local supply, and a negative (discharge) action is set to zero unless the building's `power_outage.vehicle_to_building` is `true`. With that option, a connected EV may discharge to the building. The discharge is limited to the non-shiftable load plus the electricity the cooling, heating and DHW devices need for the demand left after storage discharge, less the PV and battery output already available, so nothing is exported to the failed grid. It is applied after the thermal and battery discharges and before those loads; deferrable appliances still start only on supply that the loads leave.

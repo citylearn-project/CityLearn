@@ -608,9 +608,10 @@ Todas as secções de dispositivo têm a mesma forma:
 | `citylearn.energy_model.ElectricHeater` | `nominal_power` | `0` | kW | Potência elétrica máxima. |
 | | `efficiency` | sorteada em [0,9, 0,99] | rácio | Calor por kWh consumido. |
 
-Em `citylearn.building.Building`, os dispositivos servem a procura do dataset. Na versão 2 da física, o limite de
-energia de um dispositivo é a sua potência vezes a duração do passo; a versão 1 compara a energia do passo com kW (um
-limite de uma hora).
+Em `citylearn.building.Building`, os dispositivos servem a procura do dataset, e o limite de energia de um dispositivo
+é a sua potência vezes a duração do passo nas duas versões da física. Nos edifícios com dinâmica LSTM, a versão 1
+compara a energia do passo da procura de arrefecimento e aquecimento com kW (um limite de uma hora); a versão 2 usa
+também potência × duração do passo.
 
 ### Armazenamento térmico
 
@@ -1344,7 +1345,7 @@ episódio, `physics_version`, `random_stream_version` e `baseline_version`. `ren
 | Área | Versão 1 (CityLearn 3.6.0) | Versão 2 (predefinição) |
 |---|---|---|
 | Potência de descarga da bateria e dos VE | limitada por `capacity_power_curve` | limitada por `discharge_power_curve` |
-| Limite dos dispositivos AVAC | energia do passo comparada com kW (limite de uma hora) | potência × duração do passo |
+| Limite dos dispositivos AVAC nos edifícios com dinâmica LSTM | energia do passo comparada com kW (limite de uma hora) | potência × duração do passo |
 | Dimensionamento do armazenamento térmico | um passo da procura máxima × `safety_factor` | potência máxima da procura × `duration` × `safety_factor` |
 | Dimensionamento da FV | assume 8760 linhas horárias | segue a resolução do dataset |
 | Bateria durante falhas | estimativa antes do passo | depois do armazenamento térmico, até à carga em ilha que a FV deixa |
@@ -1356,6 +1357,8 @@ episódio, `physics_version`, `random_stream_version` e `baseline_version`. `ren
 | Deriva dos VE ausentes | ignora a perda em repouso | mantém a perda em repouso |
 | `set_point_limits` dos ocupantes | não aplicado | aplicado, predefinição `[15, 30]` |
 | Características entity de energia até à carga completa | capacidade nominal | capacidade degradada |
+| Ações flat fora dos limites | aplicadas como são dadas | cortadas ao espaço de ações |
+| Limites das observações flat `*_kwh` dos aparelhos diferíveis | fixos | a partir dos ciclos do aparelho |
 
 ### `baseline_version`
 

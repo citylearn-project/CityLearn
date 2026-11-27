@@ -300,7 +300,7 @@ penalty   L = mean over windows w of (1 − mean_{t∈w} x_t / max_{t∈w} x_t)
 - Non-finite steps are left out of each window. A peak window with no finite value is skipped.
 - A load-factor window whose maximum is ≤ 1e-6 has no penalty and is skipped. `L` is undefined when no window is defined. With `_signed_net`, a negative window mean gives a penalty above 1.
 - `R_avg` is undefined when there is no finite transition.
-- A net exporter can have a negative peak, so peak ratios can be negative or undefined.
+- A net exporter can have a negative peak. The `evaluate_v2()` peak ratios to the baseline and to the BAU therefore use the signed ratio of the [cost section](#cost), `1 + (control − reference) / |reference|` when the reference peak is negative, so a higher control peak never reads as below 1; the legacy `evaluate()` rows keep the plain ratio.
 
 Two sets of rows use different series:
 

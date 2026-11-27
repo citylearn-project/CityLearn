@@ -18,6 +18,30 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Check that the tag matches the package version
+        # The installed package downloads its datasets from the tag v<__version__>, so publishing a version that
+        # differs from the release tag would ship a package that reads another release's datasets.
+        env:
+          EVENT: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          version=$(python -c "import re, pathlib; print(re.search(r'__version__ = .([^\x27\x22]+).', pathlib.Path('citylearn/__init__.py').read_text()).group(1))")
+          if [ "$EVENT" = "release" ]; then
+            tag="$RELEASE_TAG"
+          elif [ "$REF_TYPE" = "tag" ]; then
+            tag="$REF_NAME"
+          else
+            echo "::error::Run the publication from a release tag, not from the branch $REF_NAME."
+            exit 1
+          fi
+          if [ "$tag" != "v$version" ]; then
+            echo "::error::The tag $tag does not match the package version v$version."
+            exit 1
+          fi
+          echo "Publishing v$version from $tag"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

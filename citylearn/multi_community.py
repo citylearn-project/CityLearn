@@ -524,6 +524,11 @@ class MultiCommunityEnv(Env):
             "business_as_usual_ev_charge_target",
             "ev_soc_carryover",
             "episode_end",
+            # The EV departure thresholds set the min-acceptable and within-tolerance counts that the portfolio
+            # adds up, and a community without the provenance ledger has no provenance rows to add.
+            "ev_departure_service_tolerance",
+            "ev_departure_within_tolerance",
+            "energy_provenance",
         ):
             values = {community_id: getattr(env, setting) for community_id, env in self.envs.items()}
             if len(set(values.values())) != 1:
