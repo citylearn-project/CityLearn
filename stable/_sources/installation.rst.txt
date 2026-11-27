@@ -171,6 +171,7 @@ the pin that sets the limit. CityLearn 2.4.0 to 2.4.2 were withdrawn from PyPI.
 .. csv-table::
    :header: "CityLearn", "Tag date", "Python", "NumPy", "Gym / Gymnasium", "scikit-learn", "PyTorch", "Other pins", "Installable Python (derived)"
 
+   "3.8.0", "2026-11-27", ">=3.10", "<3.0.0", "gymnasium>=0.28.1,<2.0.0", "any", "any", "pandas>=2.2", "3.10 - 3.14 in CI; 3.15 lacks wheels for pandas, scikit-learn and PyYAML on some platforms"
    "3.7.0", "2026-11-26", ">=3.10", "<3.0.0", "gymnasium>=0.28.1,<2.0.0", "any", "any", "none; PyTorch and scikit-learn moved to the dynamics and rl extras", "3.10 - 3.14 in CI; 3.15 lacks wheels for pandas, scikit-learn and PyYAML on some platforms"
    "3.6.0", "2026-11-19", ">=3.10", "<3.0.0", "gymnasium>=0.28.1,<2.0.0", "any", "any", "none", "3.10 - 3.14 in CI; 3.15 lacks wheels for pandas, scikit-learn and PyYAML on some platforms"
    "3.3.0 - 3.5.0", "2026-11-13 - 2026-11-17", ">=3.9", "<3.0.0", "gymnasium>=0.28.1,<2.0.0", "any", "any", "none", "No pin limits Python; see the CI coverage below"

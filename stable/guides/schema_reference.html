@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Schema Reference &mdash; CityLearn 3.7.0 documentation</title>
+  <title>Schema Reference &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -233,7 +233,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -943,7 +943,7 @@ are summed.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.reward_function.RewardFunction</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">exponent</span></code> (1.0), <code class="docutils literal notranslate"><span class="pre">charging_constraint_penalty_coefficient</span></code> (1.0)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">exponent</span></code> (1.0); <code class="docutils literal notranslate"><span class="pre">charging_constraint_penalty_coefficient</span></code> is accepted but only <code class="docutils literal notranslate"><span class="pre">Electric_Vehicles_Reward_Function</span></code> uses it</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">-(max(net</span> <span class="pre">consumption,</span> <span class="pre">0)</span> <span class="pre">**</span> <span class="pre">exponent)</span></code> per building.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.reward_function.MARL</span></code></p></td>
@@ -967,7 +967,7 @@ are summed.</p>
 <td><p>Weighted sum of the two rewards above.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.reward_function.Electric_Vehicles_Reward_Function</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code> (object with all seven keys <code class="docutils literal notranslate"><span class="pre">no_car_charging</span></code>, <code class="docutils literal notranslate"><span class="pre">battery_limits</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_impossible</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_under</span></code>, <code class="docutils literal notranslate"><span class="pre">close_soc</span></code>, <code class="docutils literal notranslate"><span class="pre">self_ev_consumption</span></code>, <code class="docutils literal notranslate"><span class="pre">extra_self_production</span></code>), <code class="docutils literal notranslate"><span class="pre">version</span></code> (2)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code> (object with all seven keys <code class="docutils literal notranslate"><span class="pre">no_car_charging</span></code>, <code class="docutils literal notranslate"><span class="pre">battery_limits</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_impossible</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_under</span></code>, <code class="docutils literal notranslate"><span class="pre">close_soc</span></code>, <code class="docutils literal notranslate"><span class="pre">self_ev_consumption</span></code>, <code class="docutils literal notranslate"><span class="pre">extra_self_production</span></code>), <code class="docutils literal notranslate"><span class="pre">version</span></code> (2), <code class="docutils literal notranslate"><span class="pre">charging_constraint_penalty_coefficient</span></code> (1.0, per kWh of charging-limit violation)</p></td>
 <td><p>EV-aware reward. A partial <code class="docutils literal notranslate"><span class="pre">weights</span></code> object replaces the defaults, so give all seven keys.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.reward_function.OutageUnservedEnergyReward</span></code></p></td>
@@ -1885,8 +1885,9 @@ raises <code class="docutils literal notranslate"><span class="pre">TypeError</s
 </tr>
 </tbody>
 </table>
-<p>On <code class="docutils literal notranslate"><span class="pre">citylearn.building.Building</span></code> the devices serve the dataset demand. Under physics version 2 the energy limit of a
-device is its power times the step duration; version 1 compares step energy with kW (a one-hour cap).</p>
+<p>On <code class="docutils literal notranslate"><span class="pre">citylearn.building.Building</span></code> the devices serve the dataset demand, and the energy limit of a device is its power
+times the step duration in both physics versions. On LSTM dynamics buildings, version 1 compares the step energy of the
+cooling and heating demand with kW (a one-hour cap); version 2 uses power × step duration there too.</p>
 </section>
 <section id="thermal-storage">
 <h3>Thermal storage<a class="headerlink" href="#thermal-storage" title="Link to this heading"></a></h3>
@@ -3356,7 +3357,7 @@ replaced by those of the wrapper. See the <a class="reference internal" href="mu
 <td><p>limited by <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code></p></td>
 <td><p>limited by <code class="docutils literal notranslate"><span class="pre">discharge_power_curve</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>HVAC device limit</p></td>
+<tr class="row-odd"><td><p>HVAC device limit on LSTM dynamics buildings</p></td>
 <td><p>step energy compared with kW (one-hour cap)</p></td>
 <td><p>power × step duration</p></td>
 </tr>
@@ -3403,6 +3404,14 @@ replaced by those of the wrapper. See the <a class="reference internal" href="mu
 <tr class="row-even"><td><p>Entity energy-to-full features</p></td>
 <td><p>nominal capacity</p></td>
 <td><p>degraded capacity</p></td>
+</tr>
+<tr class="row-odd"><td><p>Out-of-range flat actions</p></td>
+<td><p>applied as given</p></td>
+<td><p>clipped to the action space</p></td>
+</tr>
+<tr class="row-even"><td><p>Flat deferrable <code class="docutils literal notranslate"><span class="pre">*_kwh</span></code> observation bounds</p></td>
+<td><p>fixed</p></td>
+<td><p>from the appliance’s cycles</p></td>
 </tr>
 </tbody>
 </table>
@@ -3534,9 +3543,9 @@ same.</p>
 <td><p>The observation exceeds its space bound.</p></td>
 <td><p>Normalise by the capacity, or leave it inactive.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charging_constraint_penalty_coefficient</span></code> in the attributes of <code class="docutils literal notranslate"><span class="pre">Electric_Vehicles_Reward_Function</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">TypeError</span></code> at construction: this reward takes only <code class="docutils literal notranslate"><span class="pre">weights</span></code> and <code class="docutils literal notranslate"><span class="pre">version</span></code>.</p></td>
-<td><p>Leave it out; the coefficient keeps its default of 1.0.</p></td>
+<tr class="row-even"><td><p>An attribute that a built-in reward does not use, such as a misspelt <code class="docutils literal notranslate"><span class="pre">exponant</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TypeError</span></code> at construction, with the closest valid name. Rewards defined outside <code class="docutils literal notranslate"><span class="pre">citylearn.reward_function</span></code> still receive unknown keys.</p></td>
+<td><p>Fix the name, or remove the key.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">request_purposes</span></code> written as a list</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> when the requests are loaded.</p></td>

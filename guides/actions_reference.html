@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Actions Reference &mdash; CityLearn 3.7.0 documentation</title>
+  <title>Actions Reference &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -151,7 +151,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -387,6 +387,10 @@ charger and deferrable appliance ids are <code class="docutils literal notransla
 <li><p>Update net balance, rewards, KPIs and observations.</p></li>
 </ol>
 <p>When <code class="docutils literal notranslate"><span class="pre">electrical_storage_action</span> <span class="pre">&lt;</span> <span class="pre">0</span></code>, BESS discharge is prioritized before other electrical consumption.</p>
+<p>This is the order of physics version 1. Under version 2 (the default), the electrical-service allocation shares the
+headroom after the thermal and non-shiftable updates, among the powers the assets can actually take, and during an
+outage the battery and the EVs discharge after the thermal demand and the thermal storage discharges, up to the load
+that PV leaves.</p>
 <p>During a power outage, EV charger actions are limited to local supply, and a negative (discharge) action is set to zero unless the building’s <code class="docutils literal notranslate"><span class="pre">power_outage.vehicle_to_building</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>. With that option, a connected EV may discharge to the building. The discharge is limited to the non-shiftable load plus the electricity the cooling, heating and DHW devices need for the demand left after storage discharge, less the PV and battery output already available, so nothing is exported to the failed grid. It is applied after the thermal and battery discharges and before those loads; deferrable appliances still start only on supply that the loads leave.</p>
 </section>
 </section>

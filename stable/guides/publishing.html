@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Publishing CityLearn &mdash; CityLearn 3.7.0 documentation</title>
+  <title>Publishing CityLearn &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -150,7 +150,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -194,7 +194,7 @@ the relevant CI to pass.</p></li>
 <ul class="simple">
 <li><p><strong>PyPI publication:</strong> A tag push by itself does not publish to PyPI. The
 <a class="reference external" href="https://github.com/citylearn-project/CityLearn/blob/master/.github/workflows/pypi_deploy.yml">publication workflow</a>
-runs when a GitHub Release is published or when explicitly dispatched; choose one
+runs when a GitHub Release is published or when explicitly dispatched from the release tag, and its build job fails unless that tag is <code class="docutils literal notranslate"><span class="pre">v</span></code> + <code class="docutils literal notranslate"><span class="pre">__version__</span></code>; choose one
 trigger per release. Confirm the build, installed-export check and <code class="docutils literal notranslate"><span class="pre">pypi</span></code> publish
 jobs succeeded for the intended commit, then verify the pinned package from PyPI
 in a clean environment.</p></li>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Data Unit Contract &mdash; CityLearn 3.7.0 documentation</title>
+  <title>Data Unit Contract &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -154,7 +154,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -224,7 +224,7 @@
 <td><p>Thermal demand in the step.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">energy_simulation.solar_generation</span></code></p></td>
-<td><p>PV profile per installed kW or <code class="docutils literal notranslate"><span class="pre">kWh/step</span></code></p></td>
+<td><p>average power per installed kW (W/kW) or <code class="docutils literal notranslate"><span class="pre">kWh/step</span></code></p></td>
 <td><p>Depends on <code class="docutils literal notranslate"><span class="pre">pv.attributes.generation_mode</span></code>; see PV section.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pricing.electricity_pricing</span></code></p></td>
@@ -535,9 +535,13 @@ load_kwh_step = 55.0 * 15 / 3600 = 0.2291667
 <h2>PV<a class="headerlink" href="#pv" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">energy_simulation.solar_generation</span></code> is the easiest field to misinterpret. The simulator reads this field from the dataset. For compatibility with original CityLearn, the default mode treats it as generation profile per <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">kW</span></code> of installed PV and multiplies by <code class="docutils literal notranslate"><span class="pre">pv.nominal_power</span></code>.</p>
 <p>Default <code class="docutils literal notranslate"><span class="pre">per_kw</span></code> mode:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pv_generation_kwh_step = pv.nominal_power_kw * solar_generation / 1000
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pv_generation_kwh_step = pv.nominal_power_kw * solar_generation / 1000 * step_hours
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">solar_generation</span></code> is the average AC power per installed kW over the step, in W/kW, and <code class="docutils literal notranslate"><span class="pre">step_hours</span></code> is the step
+length in hours (<code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span> <span class="pre">/</span> <span class="pre">3600</span></code>). At hourly resolution the step factor is 1, so a value in Wh/kW
+gives the same result; at 15 minutes, a profile stored as energy per step instead of average power is 4 times too
+small.</p>
 <p>For real absolute data, declare:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"pv"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"citylearn.energy_model.PV"</span><span class="p">,</span>

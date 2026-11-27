@@ -1,0 +1,143 @@
+# Actions Reference
+
+Actions are normalized for the agent. The simulator converts them to physical power or energy using capacity, nominal power, asset limits and `seconds_per_time_step`.
+
+## General Contract
+
+| Rule | Contract |
+|---|---|
+| Bounds | Read from `env.action_space` and `env.action_names`. An action outside its bounds is clipped to them; see [Out-of-range actions](#out-of-range-actions). |
+| Storage actions | Positive charges, negative discharges. |
+| EV charger actions | Positive charges the EV, negative discharges/V2G if enabled. |
+| Deferrable actions | Binary start command. `action > trigger_threshold` attempts to start the next pending cycle (`trigger_threshold` default: `0.5`). |
+| Escalator actions | Three states: standby (`[0, 1/3[`), slow (`[1/3, 2/3[`) and normal (`[2/3, 1]`). |
+| Internal energy | Applied step energy is `kWh/step`. |
+| Power limits | Device ratings and service limits are `kW`. |
+| Constraints | Charging/electrical service constraints may clip actions before application. |
+
+## Flat Actions
+
+| Action | Typical range | Entity | Effect |
+|---|---:|---|---|
+| `cooling_or_heating_device` | `[-1, 1]` | building | Negative controls cooling, positive controls heating. Mutually exclusive with separate cooling/heating actions. |
+| `cooling_device` | `[0, 1]` | building | Controls cooling demand/setpoint in dynamic buildings. |
+| `heating_device` | `[0, 1]` | building | Controls heating demand/setpoint in dynamic buildings. |
+| `cooling_storage` | `[-limit, limit]` | building | Charge/discharge cooling thermal storage. |
+| `heating_storage` | `[-limit, limit]` | building | Charge/discharge heating thermal storage. |
+| `dhw_storage` | `[-limit, limit]` | building | Charge/discharge domestic hot water storage. |
+| `electrical_storage` | `[-1, 1]` | building | Controls the building BESS. |
+| `electric_vehicle_storage_{charger_id}` | `[-1, 1]` or `[0, 1]` | charger | Controls the EV connected to a charger. Negative bound depends on `max_discharging_power`. |
+| `deferrable_appliance_{appliance_id}` | `[0, 1]` | appliance | Binary start command (`0` off, `1` on) for the next feasible cycle. |
+| `escalator_{escalator_id}` | `[0, 1]` | escalator | Selects standby, slow or normal operation. |
+
+## Out-of-Range Actions
+
+Both interfaces apply one rule to an action outside `env.action_space`: it is
+clipped to the nearest bound before it reaches the device. This holds for flat
+action vectors, flat vectors sent to an entity environment, and entity `tables`
+and `map` payloads. An action inside the bounds is applied as sent, bit for bit.
+`NaN` and infinite actions are not clipped: `step()` rejects them with a
+`ValueError`. Under `physics_version=1` flat actions are applied as given, as in
+CityLearn 3.6.0, and only entity tables and maps are clipped.
+
+For example, with `cooling_storage` bounded by `[-0.25, 0.25]`, an action of
+`0.75` charges the tank as `0.25` does. The device limits (power, capacity, SOC)
+then apply as usual.
+
+## Physical Conversion
+
+BESS action:
+
+```text
+energy_kwh_step = action * nominal_power_kw * seconds_per_time_step / 3600
+```
+
+EV charger action:
+
+```text
+charge_energy_kwh_step = positive_action * max_charging_power_kw * seconds_per_time_step / 3600
+discharge_energy_kwh_step = negative_action * max_discharging_power_kw * seconds_per_time_step / 3600
+```
+
+After conversion, the asset applies SOC, capacity, efficiency, power curves and service constraints.
+
+## Deferrable Appliance Start Logic
+
+A cycle starts only when all conditions hold:
+
+| Condition | Rule |
+|---|---|
+| Pending cycle | A cycle with state `pending` exists. |
+| Action threshold | `action > trigger_threshold` (default `0.5`). |
+| Start window | `earliest_start_time_step <= current_global_time_step <= latest_start_time_step`. |
+| Deadline | `current + duration_steps - 1 <= deadline_time_step`. |
+| Episode window | The full cycle fits inside the current episode. |
+
+If the agent tries too late, the start is rejected. If `latest_start_time_step` passes with no valid start, the cycle is marked as missed.
+
+Controller recommendation: use `deferrable_appliance_can_start` as the readiness signal and emit `1.0` only when a start is intended.
+
+## Escalator Control
+
+An escalator action is continuous only for agent compatibility; it is discretized
+into three operating states. `standby` consumes standby power and leaves any
+passenger demand above `service_threshold_passengers` unserved. Both `slow` and
+`normal` serve aggregate demand. `available=0` forces standby. This model does
+not simulate passenger queues or capacity limits.
+
+## Entity Actions
+
+| Table | Feature | Maps to |
+|---|---|---|
+| `building` | building action names | `cooling_storage`, `dhw_storage`, `electrical_storage`, etc. |
+| `charger` | `electric_vehicle_storage` | One row per active charger. |
+| `deferrable_appliance` | `start` | One row per active appliance. |
+
+Table payload:
+
+```python
+actions = {
+    "tables": {
+        "building": [[0.0, 0.2, -0.1]],
+        "charger": [[1.0], [0.0]],
+        "deferrable_appliance": [[1.0]]
+    }
+}
+```
+
+Map payload (keys are `<kind>:<id>`, with the ids listed in `env.entity_specs["actions"][<kind>]["ids"]`;
+charger and deferrable appliance ids are `<building>/<device>`, here from `citylearn_challenge_2022_phase_all_plus_evs`):
+
+```python
+actions = {
+    "map": {
+        "building:Building_1": {"electrical_storage": 0.1},
+        "charger:Building_1/charger_1_1": {"electric_vehicle_storage": 0.7},
+        "deferrable_appliance:Building_1/deferrable_appliance_1": {"start": 1.0}
+    }
+}
+```
+
+## Step Ordering
+
+The simplified building action order is:
+
+1. Resolve active/inactive actions.
+2. Apply charging/electrical constraints to EVs and BESS.
+3. Update dynamic demands when applicable.
+4. Update HVAC devices and thermal storage.
+5. Update non-shiftable load.
+6. Update BESS.
+7. Update EV chargers.
+8. Update deferrable appliances.
+9. Update escalators.
+10. Update net balance, rewards, KPIs and observations.
+
+When `electrical_storage_action < 0`, BESS discharge is prioritized before other electrical consumption.
+
+This is the order of physics version 1. Under version 2 (the default), the electrical-service allocation shares the
+headroom after the thermal and non-shiftable updates, among the powers the assets can actually take, and during an
+outage the battery and the EVs discharge after the thermal demand and the thermal storage discharges, up to the load
+that PV leaves.
+
+During a power outage, EV charger actions are limited to local supply, and a negative (discharge) action is set to zero unless the building's `power_outage.vehicle_to_building` is `true`. With that option, a connected EV may discharge to the building. The discharge is limited to the non-shiftable load plus the electricity the cooling, heating and DHW devices need for the demand left after storage discharge, less the PV and battery output already available, so nothing is exported to the failed grid. It is applied after the thermal and battery discharges and before those loads; deferrable appliances still start only on supply that the loads leave.

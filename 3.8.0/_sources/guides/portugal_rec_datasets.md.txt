@@ -1,0 +1,190 @@
+# Portugal REC Datasets
+
+Four synthetic datasets of Portuguese renewable energy communities (RECs), with
+4, 15, 30 and 100 residential and commercial members. They cover 2023-2024 at
+15-minute resolution. Building demand and PV generation are linked to explicit
+EV charging and appliance requests, weather, prices and carbon intensity.
+Scenarios add membership changes, restricted import limits, grid interruptions,
+equipment faults and missing observations, each labelled. Comparison scenarios
+remove individual conditions; each differs from its main scenario only in the
+condition it removes. Controllers can therefore
+be tested on whether they keep delivering the requested services, on identical
+and reproducible inputs.
+
+The datasets are edition v3.4 of *Synthetic electricity demand and flexibility
+datasets for Portuguese energy communities* (Fonseca et al.), distributed with
+CityLearn from 3.5.0. Their time series are Parquet files, so install CityLearn
+with the `parquet` extra, `pip install "citylearn[parquet]"`, which adds pyarrow.
+
+## Datasets
+
+REC-4 and REC-15 are residential. REC-30 and REC-100 add commercial members,
+workplace charging and visiting vehicles.
+
+| | REC-4 | REC-15 | REC-30 | REC-100 |
+|---|---:|---:|---:|---:|
+| Dataset name | `pt_rec_4` | `pt_rec_15` | `pt_rec_30` | `pt_rec_100` |
+| Residential / commercial members | 4 / 0 | 15 / 0 | 24 / 6 | 80 / 20 |
+| Three-phase connections | 0 | 1 | 7 | 28 |
+| Sum of import limits (kW) | 28.8 | 107.0 | 324.3 | 1,168.4 |
+| Members with PV / capacity (kWp) | 1 / 3.8 | 4 / 16.8 | 10 / 89.5 | 36 / 312.5 |
+| Members with batteries / capacity (kWh) | 1 / 10.2 | 1 / 10.2 | 3 / 25.6 | 20 / 220.2 |
+| Chargers (kW) | 2 (3.7-7.4) | 6 (3.7-7.4) | 15 (3.7-22.1) | 65 (3.7-22.1) |
+| EVs: resident / visitor | 2 / 0 | 6 / 0 | 9 / 10 | 37 / 48 |
+| Appliances: controlled / fixed | 2 / 5 | 10 / 18 | 19 / 27 | 64 / 84 |
+| Download size | 7 MB | 13 MB | 84 MB | 113 MB |
+
+These are the fixed inventories; Topology, Combined and All-in add or remove
+members and equipment. Most members have a single-phase connection with a 6.9 kW import limit;
+some larger homes and commercial members have three-phase connections of up to 82.8 kW.
+
+## Scenarios
+
+A scenario is a schema that selects the members, period, data files and event
+programme. Its file paths are relative to the dataset folder, so scenarios share
+the same records. Each dataset's root `schema.json` is an alias of its Normal scenario.
+
+| Scenario | Dataset | Schema in `evaluation/` | Conditions |
+|---|---|---|---|
+| REC-4 Normal | `pt_rec_4` | `rec_4.json` | Ordinary conditions |
+| REC-15 Normal | `pt_rec_15` | `rec_15.json` | Ordinary conditions |
+| REC-30 Normal | `pt_rec_30` | `rec_30_normal.json` | Ordinary conditions |
+| REC-30 Topology | `pt_rec_30` | `rec_30_topology.json` | Membership and equipment changes |
+| REC-30 Safety | `pt_rec_30` | `rec_30_safety.json` | Restricted import limits for selected members |
+| REC-30 Robustness | `pt_rec_30` | `rec_30_robustness.json` | Disturbances and grid interruptions |
+| REC-30 Combined | `pt_rec_30` | `rec_30_combined.json` | Topology, Safety and Robustness together |
+| REC-100 Normal | `pt_rec_100` | `rec_100_normal.json` | Ordinary conditions |
+| REC-100 All-in | `pt_rec_100` | `rec_100_allin.json` | Membership changes, disturbances, grid interruptions and demand response |
+
+Six comparison scenarios in `evaluation/references/` remove individual conditions.
+Each differs from its main scenario only in the condition it removes; every other
+input file, including every service request, is shared. No disturbances removes the
+disturbances and the grid interruptions together.
+
+| Comparison | Of | Change |
+|---|---|---|
+| `rec_30_combined_no_disturbances`, `rec_100_allin_no_disturbances` | Combined, All-in | Removes disturbances and grid interruptions |
+| `rec_30_combined_nominal_limits` | Combined | Restores the import limits of the three restricted members |
+| `rec_100_allin_no_dr` | All-in | Removes the demand-response requests |
+| `rec_30_topology_frozen_2024`, `rec_100_allin_frozen_2024` | Topology, All-in | Keeps the 2023 membership changes and suppresses those of 2024 |
+
+To tune on 2023 and evaluate on 2024, end the simulation window at step 35039,
+the last interval of 2023 UTC.
+
+The Safety scenario restricts import limits only; it does not model voltage,
+protection or phase-level network safety. The Robustness, Combined and All-in
+scenarios label their disturbances; withhold these labels from controllers in
+fault-detection studies.
+
+## Loading
+
+Pass a dataset name for its Normal scenario. The first call downloads the dataset
+into the CityLearn cache:
+
+```python
+from citylearn.citylearn import CityLearnEnv
+
+env = CityLearnEnv('pt_rec_30', episode_time_steps=96)
+```
+
+Load another scenario from the cached dataset folder:
+
+```python
+from pathlib import Path
+from citylearn.data import DataSet
+
+root = Path(DataSet().get_dataset('pt_rec_30')).parent
+env = CityLearnEnv(str(root/'evaluation'/'rec_30_combined.json'), episode_time_steps=96)
+```
+
+All scenarios use the entity interface, and the community market is enabled.
+Begin with a short window: full two-year runs without the BAU reference took
+6 to 127 minutes, from REC-4 to REC-100, on CityLearn 3.3.0. A window with *n* stored states supports *n* - 1 transitions.
+
+## Conventions
+
+- **Calendar:** 70,176 interval-start timestamps from 1 January 2023 00:00 UTC to
+  31 December 2024 23:45 UTC. Lisbon civil days have 92 or 100 intervals at
+  daylight-saving transitions.
+- **Units:** demand, PV and programme profiles in kWh per interval (multiply by four
+  for average kW); battery capacity in kWh; power limits in kW; prices in EUR/kWh;
+  carbon intensity in kg CO2e/kWh; SOC as a fraction. Missing observations use -9999.
+- **Annual fields:** annual summary fields in the catalogues refer to 2023; the series cover both years.
+- **Charging sessions:** a charging session runs from its arrival interval up to,
+  but excluding, its departure interval. Sessions still connected at the end of
+  the record are right-censored; the end of the file is not a deadline.
+- **Advance information:** by default each charger announces an arriving vehicle
+  one hour (four intervals) ahead, with its expected arrival time and SOC; at
+  connection, each session gives its departure time and target SOC.
+- **Prices:** grid purchase is `max(Portuguese OMIE day-ahead price / 1000, 0)`
+  EUR/kWh, without network tariffs, taxes or retail margins. Local exchanges settle
+  at 80 % of it and grid export is valued at zero.
+- **Identifiers:** member and equipment identifiers are unique within a dataset only.
+
+## Folder contents
+
+CityLearn ships only the files the schemas read:
+
+| Path | Contents |
+|---|---|
+| `schema.json` | Alias of the Normal scenario |
+| `evaluation/*.json`, `evaluation/references/*.json` | Main and comparison scenarios |
+| `evaluation/native_inputs/<scenario>/` | Member time series, chargers and events of each scenario |
+| `evaluation/campaign_2024/` | Inputs for the 2024 campaign |
+| `shared/` | Weather, OMIE price and carbon intensity |
+| `catalogs/`, `deferrables/` | Electrical services and appliance profiles read by the schemas |
+
+The data tables described in the article (member end uses, charging sessions,
+appliance requests, catalogues), provenance records, checksums and documentation
+are in the dataset deposit, not in CityLearn. The `2023` in some internal paths is inherited
+from the generator.
+
+## Reporting results
+
+Report energy, cost and carbon together with service delivery: lower consumption
+can come from a vehicle that left below its target or an appliance that never ran.
+Evaluate service per request, comparing delivered with requested EV energy and each
+appliance start with its window and deadline.
+
+| Limitation | Consequence |
+|---|---|
+| Designed inventories; members shared between datasets | Suitable for controlled comparisons; not representative of Portuguese RECs, and the datasets are not independent samples. |
+| Prescribed charging targets and appliance windows | Service requirements are modelling assumptions, not measured user preferences. |
+| Residential demand 30-36 % above SHEERM measurements | Self-sufficiency is likely lower than for the measured homes; normalise or test sensitivity where absolute levels matter. |
+| Longer EV connections than in measured sessions | May favour scheduling-based controllers. |
+| Arrival SOC prescribed for each charging session | Travel continuity over consecutive days is not tested. |
+| Experimental price rules; average carbon intensity | Results are not savings under a real tariff or marginal emission reductions. |
+| Event rates derived from pilot communities | Robustness studies should also vary them. |
+
+## Licence and attribution
+
+The authors' original data and documentation are licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Give appropriate credit,
+link to the licence and indicate changes. CC BY 4.0 is not a blanket licence for
+the collection: material derived from third-party sources keeps its own terms.
+
+| Source | Use | Terms |
+|---|---|---|
+| [OMIE](https://www.omie.es/) Portuguese day-ahead prices | Transformed price benchmark (converted, floored at zero); not original OMIE observations | OMIE public-information terms; credit the source |
+| [REN](https://datahub.ren.pt/en/api-instructions), [REE](https://www.ree.es/en/datos/apidata) and [APA](https://apambiente.pt/clima/fator-de-emissao-de-gases-de-efeito-de-estufa-para-eletricidade-produzida-em-portugal) | Calculated carbon-intensity series | Provider terms; raw responses not included |
+| [PVGIS](https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis_en), European Commission JRC | Irradiance and weather inputs | JRC free-use terms; acknowledgement requested |
+| [ERA5](https://doi.org/10.24381/cds.adbb2d47) via [Open-Meteo](https://open-meteo.com/) | Humidity and weather | CC BY 4.0; credit Copernicus C3S and Open-Meteo |
+| [E-REDES](https://www.e-redes.pt/) standard consumption profiles | Historical household prior | Provider terms; source workbooks not included |
+| [SHEERM](https://doi.org/10.5281/zenodo.13972210) | Calibration and comparison of household load | CC BY 4.0 |
+| [REFIT](https://doi.org/10.5281/zenodo.5063428), Murray and Stankovic | Domestic appliance programmes | CC BY 4.0 |
+| [Building Data Genome 2](https://doi.org/10.1038/s41597-020-00712-x) | Commercial calibration statistics only | Upstream BDG2 licence; no hourly extracts included |
+| [SINTEF residential EV charging](https://doi.org/10.5281/zenodo.13896176), [FIKElectricity](https://doi.org/10.1038/s41597-023-02698-8) | Comparison | CC BY 4.0 |
+
+The dataset deposit holds the per-file licence map, full attribution, generator and
+reconstruction tools, data dictionary and validation reports.
+
+## Citation
+
+When you use the data, cite the dataset and its article:
+
+- Fonseca et al., *Synthetic electricity demand and flexibility datasets for
+  Portuguese energy communities*, dataset edition v3.4. Zenodo, DOI
+  10.5281/zenodo.24182353 (reserved; it resolves once the record is published,
+  so it is not linked yet).
+- Fonseca et al., "Synthetic electricity demand and flexibility datasets for
+  Portuguese energy communities", *Scientific Data* (under review).

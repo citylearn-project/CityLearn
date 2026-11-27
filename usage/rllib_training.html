@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Train a controller with RLlib &mdash; CityLearn 3.7.0 documentation</title>
+  <title>Train a controller with RLlib &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -19,7 +19,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -160,7 +160,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -171,14 +171,13 @@
 <section id="Train-a-controller-with-RLlib">
 <h1>Train a controller with RLlib<a class="headerlink" href="#Train-a-controller-with-RLlib" title="Link to this heading"></a></h1>
 <p>This tutorial trains Proximal Policy Optimization (PPO) controllers from <a class="reference external" href="https://docs.ray.io/en/latest/rllib/index.html">Ray RLlib</a> on a CityLearn energy community with the wrappers <code class="docutils literal notranslate"><span class="pre">RLlibSingleAgentWrapper</span></code> (one central agent) and <code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code> (one agent per building), and runs the trained policies through <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>. For the Stable Baselines3 workflow, see <a class="reference external" href="rl_training.html">Train and evaluate a reinforcement learning controller</a>.</p>
-<p><strong>Versions and installation.</strong> The notebook is tested with Ray 2.60.0 (new API stack, which pins gymnasium 1.2.2) on Python 3.12; Ray 2.60 supports Python 3.10 to 3.14. Ray releases pin their own gymnasium version, so install Ray in a separate environment if you need another gymnasium. Older Ray releases, such as 2.10, use the old API stack and have no wheels for Python 3.12 or newer. CityLearn 3.6.0 on PyPI predates the Ray 2.60 wrapper updates (<code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code> <code class="docutils literal notranslate"><span class="pre">agents</span></code> /
-<code class="docutils literal notranslate"><span class="pre">possible_agents</span></code> and deterministic agent-ID action ordering): until the next release ships on PyPI, install from the <code class="docutils literal notranslate"><span class="pre">master</span></code> branch (as in the cell below) or from a local checkout (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/citylearn-project/CityLearn.git</span> <span class="pre">&amp;&amp;</span> <span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">&quot;./CityLearn[rl]&quot;</span> <span class="pre">&quot;ray[rllib]&quot;</span></code>). Once a release newer than 3.6.0 is published on PyPI, replace the Git URL with <code class="docutils literal notranslate"><span class="pre">&quot;citylearn[rl]&gt;3.6.0&quot;</span></code>. The training is deliberately tiny (two iterations over one day) and only shows
-the workflow; the policies are not expected to beat the business-as-usual operation.</p>
+<p><strong>Versions and installation.</strong> The notebook is tested with Ray 2.60.0 (new API stack, which pins gymnasium 1.2.2) on Python 3.12; Ray 2.60 supports Python 3.10 to 3.14. Ray releases pin their own gymnasium version, so install Ray in a separate environment if you need another gymnasium. Older Ray releases, such as 2.10, use the old API stack and have no wheels for Python 3.12 or newer. The Ray 2.60 wrapper updates (<code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code> <code class="docutils literal notranslate"><span class="pre">agents</span></code> / <code class="docutils literal notranslate"><span class="pre">possible_agents</span></code> and deterministic agent-ID
+action ordering) are in CityLearn 3.7.0 and later, which the cell below installs from PyPI. The training is deliberately tiny (two iterations over one day) and only shows the workflow; the policies are not expected to beat the business-as-usual operation.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install "citylearn[rl] @ git+https://github.com/citylearn-project/CityLearn.git" "ray[rllib]"
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install "citylearn[rl]&gt;=3.7.0" "ray[rllib]"
 </pre></div>
 </div>
 </div>
@@ -220,8 +219,8 @@ the workflow; the policies are not expected to beat the business-as-usual operat
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2026-11-26 12:53:28,207 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
-2026-11-26 12:53:29,941 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-27 02:03:42,093 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-27 02:03:43,591 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
 </pre></div></div>
 </div>
 </section>
@@ -252,7 +251,7 @@ the workflow; the policies are not expected to beat the business-as-usual operat
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2026-11-26 12:53:32,590 WARNING algorithm_config.py:5160 -- You are running PPO on the new API stack! This is the new default behavior for this algorithm. If you don&#39;t want to use the new API stack, set `config.api_stack(enable_rl_module_and_learner=False,enable_env_runner_and_connector_v2=False)`. For a detailed migration guide, see here: https://docs.ray.io/en/master/rllib/new-api-stack-migration-guide.html
+2026-11-27 02:03:46,181 WARNING algorithm_config.py:5160 -- You are running PPO on the new API stack! This is the new default behavior for this algorithm. If you don&#39;t want to use the new API stack, set `config.api_stack(enable_rl_module_and_learner=False,enable_env_runner_and_connector_v2=False)`. For a detailed migration guide, see here: https://docs.ray.io/en/master/rllib/new-api-stack-migration-guide.html
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -344,37 +343,37 @@ environment steps sampled: 96.0
   <tbody>
     <tr>
       <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
-      <td>0.0</td>
+      <td>0.000</td>
       <td>0.000</td>
       <td>0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
-      <td>-0.0</td>
       <td>-0.000</td>
+      <td>0.000</td>
       <td>-0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_capacity_fade_ratio</th>
-      <td>0.0</td>
+      <td>0.000</td>
       <td>0.000</td>
       <td>0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
-      <td>0.7</td>
+      <td>0.700</td>
       <td>0.197</td>
       <td>0.705</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_count</th>
-      <td>0.0</td>
-      <td>0.044</td>
-      <td>0.169</td>
+      <td>0.479</td>
+      <td>0.427</td>
+      <td>0.227</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -389,7 +388,7 @@ environment steps sampled: 96.0
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>222.161</td>
+      <td>228.551</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_thermal_coverage_ratio</th>
@@ -502,37 +501,37 @@ environment steps sampled: 96.0
   <tbody>
     <tr>
       <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
-      <td>0.000</td>
+      <td>0.0</td>
       <td>0.000</td>
       <td>0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
+      <td>-0.0</td>
       <td>-0.000</td>
-      <td>0.000</td>
       <td>-0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_capacity_fade_ratio</th>
-      <td>0.000</td>
+      <td>0.0</td>
       <td>0.000</td>
       <td>0.000</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
-      <td>0.700</td>
+      <td>0.7</td>
       <td>0.197</td>
       <td>0.705</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_count</th>
-      <td>0.429</td>
-      <td>0.449</td>
-      <td>0.198</td>
+      <td>0.0</td>
+      <td>0.101</td>
+      <td>0.440</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -547,35 +546,35 @@ environment steps sampled: 96.0
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>216.529</td>
+      <td>236.19</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_thermal_coverage_ratio</th>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>1.000</td>
+      <td>1.00</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>0.000</td>
+      <td>0.00</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>0.000</td>
+      <td>0.00</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_unserved_service_ratio</th>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>0.000</td>
+      <td>0.00</td>
     </tr>
   </tbody>
 </table>

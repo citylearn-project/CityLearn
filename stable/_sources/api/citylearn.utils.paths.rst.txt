@@ -1,7 +1,0 @@
-citylearn.utils.paths module
-============================
-
-.. automodule:: citylearn.utils.paths
-   :members:
-   :show-inheritance:
-   :undoc-members:

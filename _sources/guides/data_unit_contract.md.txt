@@ -27,7 +27,7 @@ With that conversion, simulated electricity series are control-step kWh. This in
 | `energy_simulation.cooling_demand` | `kWh/step` | Thermal demand in the step. |
 | `energy_simulation.heating_demand` | `kWh/step` | Thermal demand in the step. |
 | `energy_simulation.dhw_demand` | `kWh/step` | Thermal demand in the step. |
-| `energy_simulation.solar_generation` | PV profile per installed kW or `kWh/step` | Depends on `pv.attributes.generation_mode`; see PV section. |
+| `energy_simulation.solar_generation` | average power per installed kW (W/kW) or `kWh/step` | Depends on `pv.attributes.generation_mode`; see PV section. |
 | `pricing.electricity_pricing` | currency/`kWh` | Not scaled by step size. |
 | `carbon_intensity.carbon_intensity` | CO2/`kWh` | Not scaled by step size. |
 | `weather` | physical unit of each variable | Temperature, irradiance and humidity are not energy. |
@@ -178,8 +178,13 @@ In the entity interface, EV flexibility should preferably be consumed through ph
 Default `per_kw` mode:
 
 ```text
-pv_generation_kwh_step = pv.nominal_power_kw * solar_generation / 1000
+pv_generation_kwh_step = pv.nominal_power_kw * solar_generation / 1000 * step_hours
 ```
+
+`solar_generation` is the average AC power per installed kW over the step, in W/kW, and `step_hours` is the step
+length in hours (`seconds_per_time_step / 3600`). At hourly resolution the step factor is 1, so a value in Wh/kW
+gives the same result; at 15 minutes, a profile stored as energy per step instead of average power is 4 times too
+small.
 
 For real absolute data, declare:
 

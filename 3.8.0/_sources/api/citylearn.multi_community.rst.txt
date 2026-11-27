@@ -1,0 +1,7 @@
+citylearn.multi\_community module
+=================================
+
+.. automodule:: citylearn.multi_community
+   :members:
+   :show-inheritance:
+   :undoc-members:

@@ -1,0 +1,320 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.end_use_load_profiles package &mdash; CityLearn 3.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="citylearn.end_use_load_profiles.lstm_model package" href="citylearn.end_use_load_profiles.lstm_model.html" />
+    <link rel="prev" title="citylearn.agents.sac module" href="citylearn.agents.sac.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_full_reference.html">Full Reference Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../python_api.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">All modules</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="citylearn.html">citylearn package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="citylearn.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../python_api.html">Python API</a></li>
+          <li class="breadcrumb-item"><a href="modules.html">citylearn</a></li>
+          <li class="breadcrumb-item"><a href="citylearn.html">citylearn package</a></li>
+      <li class="breadcrumb-item active">citylearn.end_use_load_profiles package</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/api/citylearn.end_use_load_profiles.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="module-citylearn.end_use_load_profiles">
+<span id="citylearn-end-use-load-profiles-package"></span><h1>citylearn.end_use_load_profiles package<a class="headerlink" href="#module-citylearn.end_use_load_profiles" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.html">citylearn.end_use_load_profiles.lstm_model package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.model.html">citylearn.end_use_load_profiles.lstm_model.model module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.model.html#citylearn.end_use_load_profiles.lstm_model.model.LSTM"><code class="docutils literal notranslate"><span class="pre">LSTM</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.model_generation.html">citylearn.end_use_load_profiles.lstm_model.model_generation module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.model_generation.html#citylearn.end_use_load_profiles.lstm_model.model_generation.eval"><code class="docutils literal notranslate"><span class="pre">eval()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.model_generation.html#citylearn.end_use_load_profiles.lstm_model.model_generation.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.model_generation.html#citylearn.end_use_load_profiles.lstm_model.model_generation.train"><code class="docutils literal notranslate"><span class="pre">train()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.model_generation_wrapper.html">citylearn.end_use_load_profiles.lstm_model.model_generation_wrapper module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.model_generation_wrapper.html#citylearn.end_use_load_profiles.lstm_model.model_generation_wrapper.get_model"><code class="docutils literal notranslate"><span class="pre">get_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.model_generation_wrapper.html#citylearn.end_use_load_profiles.lstm_model.model_generation_wrapper.run_one_model"><code class="docutils literal notranslate"><span class="pre">run_one_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.model_generation_wrapper.html#citylearn.end_use_load_profiles.lstm_model.model_generation_wrapper.set_random_seeds"><code class="docutils literal notranslate"><span class="pre">set_random_seeds()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.preprocessing.html">citylearn.end_use_load_profiles.lstm_model.preprocessing module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.preprocessing.html#citylearn.end_use_load_profiles.lstm_model.preprocessing.dataset_dataloader"><code class="docutils literal notranslate"><span class="pre">dataset_dataloader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.preprocessing.html#citylearn.end_use_load_profiles.lstm_model.preprocessing.preprocess_df"><code class="docutils literal notranslate"><span class="pre">preprocess_df()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.end_use_load_profiles.lstm_model.preprocessing.html#citylearn.end_use_load_profiles.lstm_model.preprocessing.sliding_windows"><code class="docutils literal notranslate"><span class="pre">sliding_windows()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="citylearn.end_use_load_profiles.clustering.html">citylearn.end_use_load_profiles.clustering module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="citylearn.end_use_load_profiles.clustering.html#citylearn.end_use_load_profiles.clustering.Clustering"><code class="docutils literal notranslate"><span class="pre">Clustering</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.clustering.html#citylearn.end_use_load_profiles.clustering.Clustering.bldg_ids"><code class="docutils literal notranslate"><span class="pre">Clustering.bldg_ids</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.clustering.html#citylearn.end_use_load_profiles.clustering.Clustering.cluster"><code class="docutils literal notranslate"><span class="pre">Clustering.cluster()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.clustering.html#citylearn.end_use_load_profiles.clustering.Clustering.get_optimal_clusters"><code class="docutils literal notranslate"><span class="pre">Clustering.get_optimal_clusters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.clustering.html#citylearn.end_use_load_profiles.clustering.Clustering.maximum_clusters"><code class="docutils literal notranslate"><span class="pre">Clustering.maximum_clusters</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.clustering.html#citylearn.end_use_load_profiles.clustering.Clustering.random_seed"><code class="docutils literal notranslate"><span class="pre">Clustering.random_seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.clustering.html#citylearn.end_use_load_profiles.clustering.Clustering.set_data"><code class="docutils literal notranslate"><span class="pre">Clustering.set_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.clustering.html#citylearn.end_use_load_profiles.clustering.Clustering.sum_of_squares_error_minimum_percent_change"><code class="docutils literal notranslate"><span class="pre">Clustering.sum_of_squares_error_minimum_percent_change</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="citylearn.end_use_load_profiles.clustering.html#citylearn.end_use_load_profiles.clustering.MetadataClustering"><code class="docutils literal notranslate"><span class="pre">MetadataClustering</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.clustering.html#citylearn.end_use_load_profiles.clustering.MetadataClustering.set_data"><code class="docutils literal notranslate"><span class="pre">MetadataClustering.set_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html">citylearn.end_use_load_profiles.neighborhood module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood"><code class="docutils literal notranslate"><span class="pre">Neighborhood</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.build"><code class="docutils literal notranslate"><span class="pre">Neighborhood.build()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.dataset_directory"><code class="docutils literal notranslate"><span class="pre">Neighborhood.dataset_directory</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.delete_energyplus_simulation_output"><code class="docutils literal notranslate"><span class="pre">Neighborhood.delete_energyplus_simulation_output()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.end_use_load_profiles"><code class="docutils literal notranslate"><span class="pre">Neighborhood.end_use_load_profiles</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.energyplus_output_directory"><code class="docutils literal notranslate"><span class="pre">Neighborhood.energyplus_output_directory</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.get_lstm_training_data"><code class="docutils literal notranslate"><span class="pre">Neighborhood.get_lstm_training_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.get_weather_data"><code class="docutils literal notranslate"><span class="pre">Neighborhood.get_weather_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.max_workers"><code class="docutils literal notranslate"><span class="pre">Neighborhood.max_workers</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.multiprocess_test_lstm"><code class="docutils literal notranslate"><span class="pre">Neighborhood.multiprocess_test_lstm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.random_seed"><code class="docutils literal notranslate"><span class="pre">Neighborhood.random_seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.random_stream_version"><code class="docutils literal notranslate"><span class="pre">Neighborhood.random_stream_version</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.sample_buildings"><code class="docutils literal notranslate"><span class="pre">Neighborhood.sample_buildings()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.set_schema"><code class="docutils literal notranslate"><span class="pre">Neighborhood.set_schema()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.simulate_energy_plus"><code class="docutils literal notranslate"><span class="pre">Neighborhood.simulate_energy_plus()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.test_citylearn_simulation"><code class="docutils literal notranslate"><span class="pre">Neighborhood.test_citylearn_simulation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.test_lstm"><code class="docutils literal notranslate"><span class="pre">Neighborhood.test_lstm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.train_lstm"><code class="docutils literal notranslate"><span class="pre">Neighborhood.train_lstm()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.NeighborhoodBuild"><code class="docutils literal notranslate"><span class="pre">NeighborhoodBuild</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.NeighborhoodBuild.bldg_ids"><code class="docutils literal notranslate"><span class="pre">NeighborhoodBuild.bldg_ids</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.NeighborhoodBuild.citylearn_simulation_lstm_error_data"><code class="docutils literal notranslate"><span class="pre">NeighborhoodBuild.citylearn_simulation_lstm_error_data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.NeighborhoodBuild.citylearn_simulation_lstm_prediction_data"><code class="docutils literal notranslate"><span class="pre">NeighborhoodBuild.citylearn_simulation_lstm_prediction_data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.NeighborhoodBuild.citylearn_simulation_test_evaluation"><code class="docutils literal notranslate"><span class="pre">NeighborhoodBuild.citylearn_simulation_test_evaluation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.NeighborhoodBuild.lstm_test_data"><code class="docutils literal notranslate"><span class="pre">NeighborhoodBuild.lstm_test_data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.NeighborhoodBuild.sample_cluster_labels"><code class="docutils literal notranslate"><span class="pre">NeighborhoodBuild.sample_cluster_labels</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.NeighborhoodBuild.sample_metadata"><code class="docutils literal notranslate"><span class="pre">NeighborhoodBuild.sample_metadata</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.NeighborhoodBuild.schema_filepath"><code class="docutils literal notranslate"><span class="pre">NeighborhoodBuild.schema_filepath</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.NeighborhoodBuild.simulators"><code class="docutils literal notranslate"><span class="pre">NeighborhoodBuild.simulators</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.SampleMethod"><code class="docutils literal notranslate"><span class="pre">SampleMethod</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.SampleMethod.METADATA_CLUSTER_FREQUENCY"><code class="docutils literal notranslate"><span class="pre">SampleMethod.METADATA_CLUSTER_FREQUENCY</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.SampleMethod.RANDOM"><code class="docutils literal notranslate"><span class="pre">SampleMethod.RANDOM</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html">citylearn.end_use_load_profiles.simulate module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.QUERIES_DIRECTORY"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.QUERIES_DIRECTORY</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.add_other_equipment"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.add_other_equipment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.allow_multi_load_time_step"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.allow_multi_load_time_step</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.get_ideal_loads"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.get_ideal_loads()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.get_multipliers"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.get_multipliers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.get_zone_conditioning_metadata"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.get_zone_conditioning_metadata()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.ideal_loads_simulator"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.ideal_loads_simulator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.insert_zone_metadata"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.insert_zone_metadata()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.multi_simulate"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.multi_simulate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.multiplier_maximum"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.multiplier_maximum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.multiplier_minimum"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.multiplier_minimum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.multiplier_probability"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.multiplier_probability</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.preprocess_idf_for_simulation"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.preprocess_idf_for_simulation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.random_seed"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.random_seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.remove_ideal_loads_air_system"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.remove_ideal_loads_air_system()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.simulate"><code class="docutils literal notranslate"><span class="pre">EndUseLoadProfilesEnergyPlusPartialLoadSimulator.simulate()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="citylearn.agents.sac.html" class="btn btn-neutral float-left" title="citylearn.agents.sac module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="citylearn.end_use_load_profiles.lstm_model.html" class="btn btn-neutral float-right" title="citylearn.end_use_load_profiles.lstm_model package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

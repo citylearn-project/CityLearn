@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="240" viewBox="0 0 500 240" role="img" aria-labelledby="title desc">
+  <title id="title">PV, battery and grid energy paths</title>
+  <desc id="desc">PV generation and grid imports supply building demand or charge storage. The battery can discharge, and surplus can be exported. Device and connection limits apply.</desc>
+  <defs>
+    <marker id="teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#19746e"/></marker>
+    <marker id="gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#b67719"/></marker>
+  </defs>
+  <rect width="500" height="240" fill="#fff"/>
+  <g font-family="Arial, sans-serif" fill="#253641">
+    <text x="24" y="38" font-size="16" fill="#586872">Energy paths at the building connection</text>
+    <path d="M125 85H339" stroke="#b67719" stroke-width="3" fill="none" marker-end="url(#gold)"/>
+    <path d="M125 162H228V85" stroke="#19746e" stroke-width="3" fill="none" marker-start="url(#teal)" marker-end="url(#teal)"/>
+    <path d="M251 89V162H339" stroke="#19746e" stroke-width="3" fill="none" marker-start="url(#teal)" marker-end="url(#teal)"/>
+    <circle cx="228" cy="85" r="4" fill="#253641"/>
+    <circle cx="251" cy="85" r="4" fill="#253641"/>
+    <text x="24" y="91" font-size="21" font-weight="700">PV</text>
+    <text x="24" y="167" font-size="21" font-weight="700">Battery</text>
+    <text x="355" y="91" font-size="21" font-weight="700">Loads</text>
+    <text x="355" y="167" font-size="21" font-weight="700">Grid</text>
+    <text x="24" y="192" font-size="15" fill="#586872">Charge / discharge</text>
+    <text x="300" y="192" font-size="15" fill="#586872">Import / export</text>
+    <path d="M24 210H476" stroke="#d9e2e4"/>
+    <text x="24" y="232" font-size="15" fill="#586872">Device limits + electrical-service constraints apply.</text>
+  </g>
+</svg>

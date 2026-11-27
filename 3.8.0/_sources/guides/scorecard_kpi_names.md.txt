@@ -1,0 +1,84 @@
+# Default scorecard KPI names
+
+This list is generated from the simulator's `SCORECARD_DEFAULT_KPIS`
+selection at documentation build time. See [How to read the scorecard](scorecard.md)
+for interpretation and [KPI reference](kpis_reference.md) for definitions.
+The full evaluation table contains additional KPIs.
+
+## District
+
+- `district_thermal_service_audit_discomfort_ratio`
+- `district_thermal_service_audit_thermal_coverage_ratio`
+- `district_thermal_service_audit_outage_discomfort_ratio`
+- `district_thermal_service_audit_unserved_service_ratio`
+- `district_thermal_service_audit_outage_unserved_service_ratio`
+- `district_thermal_service_audit_energy_coverage_ratio`
+- `district_equity_audit_coverage_ratio`
+- `district_energy_provenance_pv_useful_building_ratio`
+- `district_energy_provenance_pv_useful_with_mobility_ratio`
+- `district_energy_provenance_pv_stored_kwh`
+- `district_energy_provenance_pv_grid_export_kwh`
+- `district_energy_provenance_external_purchase_emissions_kgco2`
+- `district_energy_provenance_external_purchase_emissions_business_as_usual_kgco2`
+- `district_cost_total_control_eur`
+- `district_cost_total_business_as_usual_eur`
+- `district_cost_total_delta_to_business_as_usual_eur`
+- `district_ev_departure_audit_min_acceptable_service_feasible_ratio`
+- `district_ev_departure_audit_within_tolerance_service_feasible_ratio`
+- `district_ev_departure_audit_target_coverage_ratio`
+- `district_ev_departure_audit_service_coverage_ratio`
+- `district_ev_departure_audit_target_unknown_count`
+- `district_electrical_service_phase_violations_energy_total_kwh`
+- `district_electrical_service_phase_requested_pressure_energy_total_kwh`
+- `district_battery_total_throughput_kwh`
+- `district_battery_total_throughput_business_as_usual_kwh`
+- `district_battery_total_throughput_delta_to_business_as_usual_kwh`
+- `district_ev_total_v2g_export_kwh`
+- `district_ev_total_v2g_export_business_as_usual_kwh`
+- `district_ev_total_v2g_export_delta_to_business_as_usual_kwh`
+- `district_solar_self_consumption_ratio_self_consumption_ratio`
+- `district_solar_self_consumption_ratio_self_consumption_business_as_usual_ratio`
+- `district_solar_self_consumption_ratio_self_consumption_delta_to_business_as_usual_ratio`
+- `district_energy_grid_total_import_control_kwh`
+- `district_energy_grid_total_import_business_as_usual_kwh`
+- `district_energy_grid_total_import_delta_to_business_as_usual_kwh`
+- `district_energy_grid_total_export_control_kwh`
+- `district_energy_grid_total_export_business_as_usual_kwh`
+- `district_energy_grid_total_export_delta_to_business_as_usual_kwh`
+- `district_energy_grid_total_net_exchange_control_kwh`
+- `district_energy_grid_total_net_exchange_business_as_usual_kwh`
+- `district_energy_grid_total_net_exchange_delta_to_business_as_usual_kwh`
+- `district_energy_grid_shape_quality_peak_daily_average_to_business_as_usual_ratio`
+- `district_energy_grid_shape_quality_peak_all_time_average_to_business_as_usual_ratio`
+- `district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_business_as_usual_ratio`
+
+## Building
+
+- `building_cost_total_control_eur`
+- `building_cost_total_business_as_usual_eur`
+- `building_cost_total_delta_to_business_as_usual_eur`
+- `building_ev_departure_audit_min_acceptable_service_feasible_ratio`
+- `building_ev_departure_audit_within_tolerance_service_feasible_ratio`
+- `building_ev_departure_audit_target_coverage_ratio`
+- `building_ev_departure_audit_service_coverage_ratio`
+- `building_ev_departure_audit_target_unknown_count`
+- `building_electrical_service_phase_violations_energy_total_kwh`
+- `building_electrical_service_phase_requested_pressure_energy_total_kwh`
+- `building_battery_total_throughput_kwh`
+- `building_battery_total_throughput_business_as_usual_kwh`
+- `building_battery_total_throughput_delta_to_business_as_usual_kwh`
+- `building_ev_total_v2g_export_kwh`
+- `building_ev_total_v2g_export_business_as_usual_kwh`
+- `building_ev_total_v2g_export_delta_to_business_as_usual_kwh`
+- `building_solar_self_consumption_ratio_self_consumption_ratio`
+- `building_solar_self_consumption_ratio_self_consumption_business_as_usual_ratio`
+- `building_solar_self_consumption_ratio_self_consumption_delta_to_business_as_usual_ratio`
+- `building_energy_grid_total_import_control_kwh`
+- `building_energy_grid_total_import_business_as_usual_kwh`
+- `building_energy_grid_total_import_delta_to_business_as_usual_kwh`
+- `building_energy_grid_total_export_control_kwh`
+- `building_energy_grid_total_export_business_as_usual_kwh`
+- `building_energy_grid_total_export_delta_to_business_as_usual_kwh`
+- `building_energy_grid_total_net_exchange_control_kwh`
+- `building_energy_grid_total_net_exchange_business_as_usual_kwh`
+- `building_energy_grid_total_net_exchange_delta_to_business_as_usual_kwh`

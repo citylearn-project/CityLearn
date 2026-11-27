@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.wrappers module &mdash; CityLearn 3.7.0 documentation</title>
+  <title>citylearn.wrappers module &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -153,7 +153,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -193,20 +193,32 @@ would change what <cite>env.observations</cite> returns for the rest of the time
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>env</strong> (<a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><em>CityLearnEnv</em></a>) – CityLearn environment.</p></li>
 <li><p><strong>bin_sizes</strong> (<em>List</em><em>[</em><em>Mapping</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Then number of bins for each active action in each building.</p></li>
-<li><p><strong>default_bin_size</strong> (<em>int</em><em>, </em><em>default = 10</em>) – The default number of bins if <cite>bin_sizes</cite> is unspecified for any active building action.</p></li>
+<li><p><strong>default_bin_size</strong> (<em>int</em><em>, </em><em>default = 11</em>) – The default number of bins if <cite>bin_sizes</cite> is unspecified for any active building action.</p></li>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Bin <cite>k</cite> of an action with bounds <cite>[low, high]</cite> and <cite>n</cite> bins maps to <cite>np.linspace(low, high, n)[k]</cite>. When
+<cite>low &lt; 0 &lt; high</cite>, the grid point closest to 0 is set to exactly 0, so a discrete agent can always leave a
+battery, a thermal storage or a V2G charger idle; with the default 11 bins on [-1, 1] the grid is
+-1, -0.8, …, 0, …, 0.8, 1.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.wrappers.DiscreteActionWrapper.action">
 <span class="sig-name descname"><span class="pre">action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/wrappers.html#DiscreteActionWrapper.action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.wrappers.DiscreteActionWrapper.action" title="Link to this definition"></a></dt>
 <dd><p>Returns undiscretized actions.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.wrappers.DiscreteActionWrapper.action_grid">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">action_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/citylearn/wrappers.html#DiscreteActionWrapper.action_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.wrappers.DiscreteActionWrapper.action_grid" title="Link to this definition"></a></dt>
+<dd><p>Action values of the <cite>n</cite> bins of an action with bounds <cite>[low, high]</cite>, with 0 included when <cite>low &lt; 0 &lt; high</cite>.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.wrappers.DiscreteActionWrapper.action_space">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">action_space</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">MultiDiscrete</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.wrappers.DiscreteActionWrapper.action_space" title="Link to this definition"></a></dt>
 <dd><p>Returns action space for discretized actions.</p>
+<p>The same spaces are returned while the bins do not change, so seeding them lasts.</p>
 </dd></dl>
 
 </dd></dl>
@@ -277,7 +289,7 @@ would change what <cite>env.observations</cite> returns for the rest of the time
 <li><p><strong>observation_bin_sizes</strong> (<em>List</em><em>[</em><em>Mapping</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Then number of bins for each active observation in each building.</p></li>
 <li><p><strong>action_bin_sizes</strong> (<em>List</em><em>[</em><em>Mapping</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Then number of bins for each active action in each building.</p></li>
 <li><p><strong>default_observation_bin_size</strong> (<em>int</em><em>, </em><em>default = 10</em>) – The default number of bins if <cite>bin_sizes</cite> is unspecified for any active building observation.</p></li>
-<li><p><strong>default_action_bin_size</strong> (<em>int</em><em>, </em><em>default = 10</em>) – The default number of bins if <cite>bin_sizes</cite> is unspecified for any active building action.</p></li>
+<li><p><strong>default_action_bin_size</strong> (<em>int</em><em>, </em><em>default = 11</em>) – The default number of bins if <cite>bin_sizes</cite> is unspecified for any active building action.</p></li>
 </ul>
 </dd>
 </dl>
@@ -304,6 +316,7 @@ would change what <cite>env.observations</cite> returns for the rest of the time
 <dt class="sig sig-object py" id="citylearn.wrappers.NormalizedActionWrapper.action_space">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">action_space</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Box</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.wrappers.NormalizedActionWrapper.action_space" title="Link to this definition"></a></dt>
 <dd><p>Returns action space for normalized actions.</p>
+<p>The same spaces are returned while the action sizes do not change, so seeding them lasts.</p>
 </dd></dl>
 
 </dd></dl>
@@ -646,7 +659,7 @@ Wraps rewards so that it is returned as float value.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>env</strong> (<a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><em>CityLearnEnv</em></a>) – CityLearn environment.</p></li>
 <li><p><strong>bin_sizes</strong> (<em>List</em><em>[</em><em>Mapping</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Then number of bins for each active action in each building.</p></li>
-<li><p><strong>default_bin_size</strong> (<em>int</em><em>, </em><em>default = 10</em>) – The default number of bins if <cite>bin_sizes</cite> is unspecified for any active building action.</p></li>
+<li><p><strong>default_bin_size</strong> (<em>int</em><em>, </em><em>default = 11</em>) – The default number of bins if <cite>bin_sizes</cite> is unspecified for any active building action.</p></li>
 </ul>
 </dd>
 </dl>
@@ -720,7 +733,7 @@ Wraps rewards so that it is returned as float value.</p>
 <li><p><strong>observation_bin_sizes</strong> (<em>List</em><em>[</em><em>Mapping</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Then number of bins for each active observation in each building.</p></li>
 <li><p><strong>action_bin_sizes</strong> (<em>List</em><em>[</em><em>Mapping</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Then number of bins for each active action in each building.</p></li>
 <li><p><strong>default_observation_bin_size</strong> (<em>int</em><em>, </em><em>default = 10</em>) – The default number of bins if <cite>bin_sizes</cite> is unspecified for any active building observation.</p></li>
-<li><p><strong>default_action_bin_size</strong> (<em>int</em><em>, </em><em>default = 10</em>) – The default number of bins if <cite>bin_sizes</cite> is unspecified for any active building action.</p></li>
+<li><p><strong>default_action_bin_size</strong> (<em>int</em><em>, </em><em>default = 11</em>) – The default number of bins if <cite>bin_sizes</cite> is unspecified for any active building action.</p></li>
 </ul>
 </dd>
 </dl>

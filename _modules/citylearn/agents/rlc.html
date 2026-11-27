@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.agents.rlc &mdash; CityLearn 3.7.0 documentation</title>
+  <title>citylearn.agents.rlc &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../../../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -188,7 +188,10 @@
 <span class="sd">    end_exploration_time_step : int, optional</span>
 <span class="sd">        Time step to stop random or RBC-guided exploration. Defaults to the agent's ``episode_time_steps``.</span>
 <span class="sd">    action_scaling_coefficient : float, default: 0.5</span>
-<span class="sd">        Action scaling coefficient.</span>
+<span class="sd">        Factor applied to every action: the policy outputs ``action_scaling_coefficient * [low, high]`` and random</span>
+<span class="sd">        exploration samples ``action_scaling_coefficient * action_space.sample()``. With the default 0.5, SAC and</span>
+<span class="sd">        MARLISA command at most half of each action's range, including HVAC and EV charging actions, where half the</span>
+<span class="sd">        power may not meet the heating load or a departure target. Set it to 1.0 to use the full range.</span>
 <span class="sd">    reward_scaling : float, default: 5.0</span>
 <span class="sd">        Reward scaling.</span>
 <span class="sd">    update_per_time_step : int, default: 2</span>
@@ -300,7 +303,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">action_scaling_coefficient</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Action scaling coefficient."""</span>
+<span class="w">        </span><span class="sd">"""Factor applied to every action of the policy and of random exploration (see the class parameters)."""</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__action_scaling_coefficient</span>
 

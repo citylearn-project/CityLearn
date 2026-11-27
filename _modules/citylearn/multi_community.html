@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.multi_community &mdash; CityLearn 3.7.0 documentation</title>
+  <title>citylearn.multi_community &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -231,8 +231,8 @@
                 <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="k">raise</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_terminated</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">terminated</span> <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_truncated</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">truncated</span> <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_terminated</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_episode_end_flags</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_truncated</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_episode_end_flags</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">community_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -286,14 +286,24 @@
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">terminated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Whether any child environment has terminated."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">done</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether the episode is over in any child environment, whatever the reason."""</span>
 
-        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_terminated</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_terminated</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_truncated</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">terminated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether the episode is over, the same as `done`.</span>
+
+<span class="sd">        Kept with this meaning so that loops such as `while not env.terminated` keep working, as on</span>
+<span class="sd">        :class:`CityLearnEnv`. Like theirs, the `terminated` flag that `step()` returns is always `False`.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">done</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">truncated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Whether any child environment has truncated."""</span>
+<span class="w">        </span><span class="sd">"""Whether any child environment ended its episode at its time limit, as `step()` reports it."""</span>
 
         <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_truncated</span><span class="p">)</span>
 
@@ -346,8 +356,8 @@
             <span class="n">child_infos</span><span class="p">[</span><span class="n">community_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">info</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_reset_synchronization</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_terminated</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">terminated</span> <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_truncated</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">truncated</span> <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_terminated</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_episode_end_flags</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_truncated</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_episode_end_flags</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">observations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_info</span><span class="p">(</span><span class="n">child_infos</span><span class="o">=</span><span class="n">child_infos</span><span class="p">)</span></div>
 
 
@@ -356,7 +366,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">"""Apply one action payload per community and advance all child envs once."""</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">terminated</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">truncated</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">done</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Cannot call step() after termination/truncation. Call reset() first."</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">actions</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
@@ -386,7 +396,7 @@
             <span class="n">terminated_by_community</span><span class="o">=</span><span class="n">terminated_by_community</span><span class="p">,</span>
             <span class="n">truncated_by_community</span><span class="o">=</span><span class="n">truncated_by_community</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">observations</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">terminated</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">truncated</span><span class="p">,</span> <span class="n">info</span></div>
+        <span class="k">return</span> <span class="n">observations</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_terminated</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_truncated</span><span class="p">),</span> <span class="n">info</span></div>
 
 
 <div class="viewcode-block" id="MultiCommunityEnv.evaluate_v2">
@@ -683,6 +693,11 @@
             <span class="s2">"baseline_version"</span><span class="p">,</span>
             <span class="s2">"business_as_usual_ev_charge_target"</span><span class="p">,</span>
             <span class="s2">"ev_soc_carryover"</span><span class="p">,</span>
+            <span class="c1"># The EV departure thresholds set the min-acceptable and within-tolerance counts that the portfolio</span>
+            <span class="c1"># adds up, and a community without the provenance ledger has no provenance rows to add.</span>
+            <span class="s2">"ev_departure_service_tolerance"</span><span class="p">,</span>
+            <span class="s2">"ev_departure_within_tolerance"</span><span class="p">,</span>
+            <span class="s2">"energy_provenance"</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="n">community_id</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">setting</span><span class="p">)</span> <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
@@ -751,11 +766,11 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="n">rewards</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">rewards</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">rewards</span>
         <span class="n">terminated_by_community</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">community_id</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">terminated</span><span class="p">)</span>
+            <span class="n">community_id</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_episode_end_flags</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
             <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">}</span> <span class="k">if</span> <span class="n">terminated_by_community</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">(</span><span class="n">terminated_by_community</span><span class="p">)</span>
         <span class="n">truncated_by_community</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">community_id</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">truncated</span><span class="p">)</span>
+            <span class="n">community_id</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_episode_end_flags</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
             <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">}</span> <span class="k">if</span> <span class="n">truncated_by_community</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">(</span><span class="n">truncated_by_community</span><span class="p">)</span>
         <span class="n">community_rewards_scalar</span> <span class="o">=</span> <span class="p">{</span>

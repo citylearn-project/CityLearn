@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Train and evaluate a reinforcement learning controller &mdash; CityLearn 3.7.0 documentation</title>
+  <title>Train and evaluate a reinforcement learning controller &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -19,7 +19,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -161,7 +161,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -192,7 +192,7 @@
 <h2>1. Dataset, reward and windows<a class="headerlink" href="#1.-Dataset,-reward-and-windows" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code> holds a year of hourly data for 17 buildings with PV, batteries and EV chargers. To keep the example fast, it uses three buildings and a single central agent, which controls all their batteries and chargers.</p>
 <p>The reward is the learning signal, while the KPIs judge the finished episode. This dataset configures version 2 of <code class="docutils literal notranslate"><span class="pre">Electric_Vehicles_Reward_Function</span></code>, the default, which adds the grid-import reward of each building to the EV charging terms and penalises vehicles that leave far below their requested state of charge (see the <a class="reference external" href="../overview/reward_function.html">reward function guide</a>).</p>
-<p>The controller trains on the first week and is evaluated on the second week, which it has not seen during training.</p>
+<p>The controller trains on the first week and is evaluated on the second week, which it has not seen during training. Both environments simulate the same two weeks and each runs only its own week as its episode, because the observation limits that the normalisation uses come from the simulation window: two environments built on different windows would scale the same value differently.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -207,12 +207,15 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">make_env</span><span class="p">(</span><span class="n">window</span><span class="p">):</span>
+    <span class="c1"># Both environments simulate the same two weeks, so the observation limits that</span>
+    <span class="c1"># NormalizedObservationWrapper uses are the same; each one runs only its own week.</span>
     <span class="k">return</span> <span class="n">CityLearnEnv</span><span class="p">(</span>
         <span class="n">DATASET</span><span class="p">,</span>
         <span class="n">buildings</span><span class="o">=</span><span class="n">BUILDINGS</span><span class="p">,</span>
         <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-        <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="n">TRAIN_WINDOW</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">EVALUATION_WINDOW</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">episode_time_steps</span><span class="o">=</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">window</span><span class="p">)],</span>
         <span class="n">random_seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span>
     <span class="p">)</span>
 </pre></div>
@@ -243,8 +246,8 @@
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2026-11-26 12:53:14,361 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
-2026-11-26 12:53:15,817 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-27 02:03:30,535 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-27 02:03:31,864 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -317,9 +320,9 @@ observations: (77,) actions: (7,)
 <div class="highlight"><pre>
 indicator
 Cost, BAU (EUR)                           151.975
-Cost, SAC (EUR)                            39.287
+Cost, SAC (EUR)                            39.267
 Grid import, BAU (kWh)                    985.065
-Grid import, SAC (kWh)                    166.923
+Grid import, SAC (kWh)                    166.726
 EVs leaving with enough charge (ratio)      0.000
 Name: value, dtype: float64
 </pre></div></div>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Running Simulations &mdash; CityLearn 3.7.0 documentation</title>
+  <title>Running Simulations &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -66,7 +66,10 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Running Simulations</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#episode-loop-without-a-controller">Episode Loop Without a Controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#episode-loop-without-a-controller">Episode Loop Without a Controller</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#how-an-episode-ends">How an episode ends</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#entity-interface-example">Entity Interface Example</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#multi-community-example">Multi-Community Example</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citylearnenv-parameters"><code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> Parameters</a></li>
@@ -164,7 +167,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -238,6 +241,14 @@ follows each device’s action contract.</p>
 <span class="n">kpis_v2</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
 </pre></div>
 </div>
+<section id="how-an-episode-ends">
+<h3>How an episode ends<a class="headerlink" href="#how-an-episode-ends" title="Link to this heading"></a></h3>
+<p>A CityLearn episode always ends because its simulation window or episode split ends. That is a time limit: after it, the buildings, batteries and EVs would carry on, and the energy left in a battery still has value. So, as the Gymnasium API defines it, the last step returns <code class="docutils literal notranslate"><span class="pre">terminated=False,</span> <span class="pre">truncated=True</span></code>. A learner should stop bootstrapping only on <code class="docutils literal notranslate"><span class="pre">terminated</span></code>, and reset the environment on <code class="docutils literal notranslate"><span class="pre">terminated</span> <span class="pre">or</span> <span class="pre">truncated</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>target = reward + gamma * (1 - terminated) * next_value  # not (1 - (terminated or truncated))
+</pre></div>
+</div>
+<p>Treating the end of a window as terminal teaches the learner that whatever is stored at the end is worth nothing, which biases the values of the last steps of every episode towards draining the batteries and leaving EVs uncharged. The bundled SAC, MARLISA and Q-learning agents, Stable Baselines3 and RLlib already use the two flags this way. Simulation results and KPIs do not depend on these flags. <code class="docutils literal notranslate"><span class="pre">env.done</span></code> says whether the episode is over, and the <code class="docutils literal notranslate"><span class="pre">env.terminated</span></code> property keeps that meaning, so loops written as <code class="docutils literal notranslate"><span class="pre">while</span> <span class="pre">not</span> <span class="pre">env.terminated:</span></code> keep working.</p>
+</section>
 </section>
 <section id="entity-interface-example">
 <h2>Entity Interface Example<a class="headerlink" href="#entity-interface-example" title="Link to this heading"></a></h2>
@@ -902,7 +913,7 @@ requires the two identities to be equal.</p>
         <span class="n">parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">"battery_action"</span><span class="p">:</span> <span class="n">battery_action</span><span class="p">},</span>
     <span class="p">)</span>
     <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-    <span class="k">while</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">terminated</span><span class="p">:</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">done</span><span class="p">:</span>
         <span class="n">actions</span> <span class="o">=</span> <span class="p">[[</span><span class="n">battery_action</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"electrical_storage"</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">action_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]]]</span>
         <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
     <span class="n">env</span><span class="o">.</span><span class="n">export_final_kpis</span><span class="p">(</span><span class="n">export_business_as_usual_timeseries</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>

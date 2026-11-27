@@ -1,0 +1,589 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dataset catalogue &mdash; CityLearn 3.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Schema Reference" href="schema_reference.html" />
+    <link rel="prev" title="Running Simulations" href="running_simulations.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Dataset catalogue</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#where-to-start">Where to start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#all-public-datasets">All public datasets</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_full_reference.html">Full Reference Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Dataset catalogue</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/guides/dataset_catalogue.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="dataset-catalogue">
+<h1>Dataset catalogue<a class="headerlink" href="#dataset-catalogue" title="Link to this heading"></a></h1>
+<p>This table is generated from the bundled schemas when the documentation is built.
+Pass a name to <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> to download and cache the dataset on first use; the size
+is the download. <em>Default window</em> is the schema’s simulation window, which
+<code class="docutils literal notranslate"><span class="pre">simulation_start_time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">simulation_end_time_step</span></code> and <code class="docutils literal notranslate"><span class="pre">episode_time_steps</span></code> can shorten.
+Parquet datasets need <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[parquet]&quot;</span></code>, and datasets with LSTM thermal
+dynamics need PyTorch; see the <a class="reference internal" href="../installation.html"><span class="std std-doc">installation guide</span></a>.</p>
+<section id="where-to-start">
+<h2>Where to start<a class="headerlink" href="#where-to-start" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>First runs and controller comparisons:</strong> <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>,
+used by the <a class="reference internal" href="../quickstart.html"><span class="std std-doc">quickstart</span></a>.</p></li>
+<li><p><strong>Electrical limits, dynamic topology and sub-minute data:</strong> the <code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_*</span></code>
+demonstrations; see the <a class="reference internal" href="features.html"><span class="std std-doc">features guide</span></a>.</p></li>
+<li><p><strong>Renewable energy communities with a local market:</strong> <code class="docutils literal notranslate"><span class="pre">pt_rec_4</span></code> first, then <code class="docutils literal notranslate"><span class="pre">pt_rec_15</span></code>,
+<code class="docutils literal notranslate"><span class="pre">pt_rec_30</span></code> and <code class="docutils literal notranslate"><span class="pre">pt_rec_100</span></code>.</p></li>
+<li><p><strong>Demand response and robustness:</strong> <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_demand_response</span></code> and
+<code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_robustness</span></code>.</p></li>
+</ul>
+</section>
+<section id="all-public-datasets">
+<h2>All public datasets<a class="headerlink" href="#all-public-datasets" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Dataset</p></th>
+<th class="head"><p>Origin</p></th>
+<th class="head text-right"><p>Buildings</p></th>
+<th class="head text-right"><p>EVs</p></th>
+<th class="head text-right"><p>Step</p></th>
+<th class="head text-right"><p>Default window</p></th>
+<th class="head"><p>Format</p></th>
+<th class="head text-right"><p>Size</p></th>
+<th class="head"><p>Features</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code></p></td>
+<td><p>Neighbourhood</p></td>
+<td class="text-right"><p>4</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>122 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>2 MB</p></td>
+<td><p>thermal storage, LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ca_alameda_county_neighborhood</span></code></p></td>
+<td><p>Neighbourhood</p></td>
+<td class="text-right"><p>100</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>80 MB</p></td>
+<td><p>batteries, thermal storage, LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2020_climate_zone_1</span></code></p></td>
+<td><p>CityLearn Challenge 2020</p></td>
+<td class="text-right"><p>9</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>5 MB</p></td>
+<td><p>batteries, thermal storage</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2020_climate_zone_2</span></code></p></td>
+<td><p>CityLearn Challenge 2020</p></td>
+<td class="text-right"><p>9</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>5 MB</p></td>
+<td><p>batteries, thermal storage</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2020_climate_zone_3</span></code></p></td>
+<td><p>CityLearn Challenge 2020</p></td>
+<td class="text-right"><p>9</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>5 MB</p></td>
+<td><p>batteries, thermal storage</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2020_climate_zone_4</span></code></p></td>
+<td><p>CityLearn Challenge 2020</p></td>
+<td class="text-right"><p>9</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>5 MB</p></td>
+<td><p>batteries, thermal storage</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2021</span></code></p></td>
+<td><p>CityLearn Challenge 2021</p></td>
+<td class="text-right"><p>9</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>1460 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>19 MB</p></td>
+<td><p>batteries, thermal storage</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_1</span></code></p></td>
+<td><p>CityLearn Challenge 2022</p></td>
+<td class="text-right"><p>5</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>3 MB</p></td>
+<td><p>batteries</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_2</span></code></p></td>
+<td><p>CityLearn Challenge 2022</p></td>
+<td class="text-right"><p>5</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>3 MB</p></td>
+<td><p>batteries</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_3</span></code></p></td>
+<td><p>CityLearn Challenge 2022</p></td>
+<td class="text-right"><p>7</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>3 MB</p></td>
+<td><p>batteries</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all</span></code></p></td>
+<td><p>CityLearn Challenge 2022</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>7 MB</p></td>
+<td><p>batteries</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_demand_response</span></code></p></td>
+<td><p>CityLearn Challenge 2022 buildings with demand-response requests</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>7 MB</p></td>
+<td><p>batteries, demand response</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code></p></td>
+<td><p>CityLearn Challenge 2022 buildings with EVs; the quickstart dataset</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>8</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>13 MB</p></td>
+<td><p>EVs, flexible appliances, batteries</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_robustness</span></code></p></td>
+<td><p>CityLearn Challenge 2022 buildings with robustness events</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>7 MB</p></td>
+<td><p>batteries, robustness events</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_1</span></code></p></td>
+<td><p>CityLearn Challenge 2023</p></td>
+<td class="text-right"><p>3</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>30 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>&lt; 1 MB</p></td>
+<td><p>batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_2_local_evaluation</span></code></p></td>
+<td><p>CityLearn Challenge 2023</p></td>
+<td class="text-right"><p>3</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>30 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>&lt; 1 MB</p></td>
+<td><p>batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_2_online_evaluation_1</span></code></p></td>
+<td><p>CityLearn Challenge 2023</p></td>
+<td class="text-right"><p>3</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>92 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>1 MB</p></td>
+<td><p>batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_2_online_evaluation_2</span></code></p></td>
+<td><p>CityLearn Challenge 2023</p></td>
+<td class="text-right"><p>3</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>92 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>1 MB</p></td>
+<td><p>batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_2_online_evaluation_3</span></code></p></td>
+<td><p>CityLearn Challenge 2023</p></td>
+<td class="text-right"><p>3</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>92 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>1 MB</p></td>
+<td><p>batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_3_1</span></code></p></td>
+<td><p>CityLearn Challenge 2023</p></td>
+<td class="text-right"><p>6</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>92 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>2 MB</p></td>
+<td><p>batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_3_2</span></code></p></td>
+<td><p>CityLearn Challenge 2023</p></td>
+<td class="text-right"><p>6</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>92 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>2 MB</p></td>
+<td><p>batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_3_3</span></code></p></td>
+<td><p>CityLearn Challenge 2023</p></td>
+<td class="text-right"><p>6</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>92 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>2 MB</p></td>
+<td><p>batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet</span></code></p></td>
+<td><p>Feature demonstration</p></td>
+<td class="text-right"><p>18</p></td>
+<td class="text-right"><p>9</p></td>
+<td class="text-right"><p>15 s</p></td>
+<td class="text-right"><p>7 days</p></td>
+<td><p>Parquet (pyarrow)</p></td>
+<td class="text-right"><p>&lt; 1 MB</p></td>
+<td><p>EVs, batteries, phase limits, community market, dynamic topology</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_dynamic_assets_only_demo</span></code></p></td>
+<td><p>Feature demonstration</p></td>
+<td class="text-right"><p>18</p></td>
+<td class="text-right"><p>9</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>13 MB</p></td>
+<td><p>EVs, batteries, phase limits, community market, dynamic topology</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_dynamic_assets_only_demo_15s_parquet</span></code></p></td>
+<td><p>Feature demonstration</p></td>
+<td class="text-right"><p>18</p></td>
+<td class="text-right"><p>9</p></td>
+<td class="text-right"><p>15 s</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>Parquet (pyarrow)</p></td>
+<td class="text-right"><p>13 MB</p></td>
+<td><p>EVs, batteries, phase limits, community market, dynamic topology</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_dynamic_topology_demo</span></code></p></td>
+<td><p>Feature demonstration</p></td>
+<td class="text-right"><p>18</p></td>
+<td class="text-right"><p>9</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>13 MB</p></td>
+<td><p>EVs, flexible appliances, batteries, phase limits, community market, dynamic topology</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo</span></code></p></td>
+<td><p>Feature demonstration</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>8</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>13 MB</p></td>
+<td><p>EVs, flexible appliances, batteries, phase limits, community market</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo_15s_parquet</span></code></p></td>
+<td><p>Feature demonstration</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>8</p></td>
+<td class="text-right"><p>15 s</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>Parquet (pyarrow)</p></td>
+<td class="text-right"><p>12 MB</p></td>
+<td><p>EVs, flexible appliances, batteries, phase limits, community market</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_100</span></code></p></td>
+<td><p>Portuguese renewable energy community (<a class="reference internal" href="portugal_rec_datasets.html"><span class="std std-doc">Portugal REC datasets</span></a>)</p></td>
+<td class="text-right"><p>100</p></td>
+<td class="text-right"><p>85</p></td>
+<td class="text-right"><p>15 min</p></td>
+<td class="text-right"><p>731 days</p></td>
+<td><p>Parquet (pyarrow)</p></td>
+<td class="text-right"><p>113 MB</p></td>
+<td><p>EVs, flexible appliances, batteries, phase limits, community market</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_15</span></code></p></td>
+<td><p>Portuguese renewable energy community (<a class="reference internal" href="portugal_rec_datasets.html"><span class="std std-doc">Portugal REC datasets</span></a>)</p></td>
+<td class="text-right"><p>15</p></td>
+<td class="text-right"><p>6</p></td>
+<td class="text-right"><p>15 min</p></td>
+<td class="text-right"><p>731 days</p></td>
+<td><p>Parquet (pyarrow)</p></td>
+<td class="text-right"><p>13 MB</p></td>
+<td><p>EVs, flexible appliances, batteries, phase limits, community market</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_30</span></code></p></td>
+<td><p>Portuguese renewable energy community (<a class="reference internal" href="portugal_rec_datasets.html"><span class="std std-doc">Portugal REC datasets</span></a>)</p></td>
+<td class="text-right"><p>30</p></td>
+<td class="text-right"><p>19</p></td>
+<td class="text-right"><p>15 min</p></td>
+<td class="text-right"><p>731 days</p></td>
+<td><p>Parquet (pyarrow)</p></td>
+<td class="text-right"><p>84 MB</p></td>
+<td><p>EVs, flexible appliances, batteries, phase limits, community market</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_4</span></code></p></td>
+<td><p>Portuguese renewable energy community (<a class="reference internal" href="portugal_rec_datasets.html"><span class="std std-doc">Portugal REC datasets</span></a>)</p></td>
+<td class="text-right"><p>4</p></td>
+<td class="text-right"><p>2</p></td>
+<td class="text-right"><p>15 min</p></td>
+<td class="text-right"><p>731 days</p></td>
+<td><p>Parquet (pyarrow)</p></td>
+<td class="text-right"><p>7 MB</p></td>
+<td><p>EVs, flexible appliances, batteries, phase limits, community market</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_with_demand_response_set_points</span></code></p></td>
+<td><p>Neighbourhood</p></td>
+<td class="text-right"><p>20</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>270 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>330 MB</p></td>
+<td><p>LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_without_demand_response_set_points</span></code></p></td>
+<td><p>Neighbourhood</p></td>
+<td class="text-right"><p>20</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>270 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>330 MB</p></td>
+<td><p>LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tx_travis_county_neighborhood</span></code></p></td>
+<td><p>Neighbourhood</p></td>
+<td class="text-right"><p>100</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>80 MB</p></td>
+<td><p>batteries, thermal storage, LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vt_chittenden_county_neighborhood</span></code></p></td>
+<td><p>Neighbourhood</p></td>
+<td class="text-right"><p>47</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1 h</p></td>
+<td class="text-right"><p>365 days</p></td>
+<td><p>CSV</p></td>
+<td class="text-right"><p>38 MB</p></td>
+<td><p>batteries, thermal storage, LSTM thermal dynamics (PyTorch)</p></td>
+</tr>
+</tbody>
+</table>
+<p>See the <a class="reference internal" href="dataset_reference.html"><span class="std std-doc">dataset reference</span></a> to build your own dataset.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="running_simulations.html" class="btn btn-neutral float-left" title="Running Simulations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="schema_reference.html" class="btn btn-neutral float-right" title="Schema Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -39,6 +39,16 @@ while not (terminated or truncated):
 kpis_v2 = env.evaluate_v2()
 ```
 
+### How an episode ends
+
+A CityLearn episode always ends because its simulation window or episode split ends. That is a time limit: after it, the buildings, batteries and EVs would carry on, and the energy left in a battery still has value. So, as the Gymnasium API defines it, the last step returns `terminated=False, truncated=True`. A learner should stop bootstrapping only on `terminated`, and reset the environment on `terminated or truncated`:
+
+```text
+target = reward + gamma * (1 - terminated) * next_value  # not (1 - (terminated or truncated))
+```
+
+Treating the end of a window as terminal teaches the learner that whatever is stored at the end is worth nothing, which biases the values of the last steps of every episode towards draining the batteries and leaving EVs uncharged. The bundled SAC, MARLISA and Q-learning agents, Stable Baselines3 and RLlib already use the two flags this way. Simulation results and KPIs do not depend on these flags. `env.done` says whether the episode is over, and the `env.terminated` property keeps that meaning, so loops written as `while not env.terminated:` keep working.
+
 ## Entity Interface Example
 
 ```python
@@ -398,7 +408,7 @@ def run(name, battery_action):
         parameters={"battery_action": battery_action},
     )
     env.reset()
-    while not env.terminated:
+    while not env.done:
         actions = [[battery_action if n.startswith("electrical_storage") else 0.0 for n in env.action_names[0]]]
         env.step(actions)
     env.export_final_kpis(export_business_as_usual_timeseries=False)

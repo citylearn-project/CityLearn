@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KPIs Reference &mdash; CityLearn 3.7.0 documentation</title>
+  <title>KPIs Reference &mdash; CityLearn 3.8.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=229cbe3b"></script>
+      <script src="../_static/documentation_options.js?v=948f11bf"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -184,7 +184,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.7.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -557,7 +557,7 @@ penalty   L = mean over windows w of (1 − mean_{t∈w} x_t / max_{t∈w} x_t)
 <li><p>Non-finite steps are left out of each window. A peak window with no finite value is skipped.</p></li>
 <li><p>A load-factor window whose maximum is ≤ 1e-6 has no penalty and is skipped. <code class="docutils literal notranslate"><span class="pre">L</span></code> is undefined when no window is defined. With <code class="docutils literal notranslate"><span class="pre">_signed_net</span></code>, a negative window mean gives a penalty above 1.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">R_avg</span></code> is undefined when there is no finite transition.</p></li>
-<li><p>A net exporter can have a negative peak, so peak ratios can be negative or undefined.</p></li>
+<li><p>A net exporter can have a negative peak. The <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> peak ratios to the baseline and to the BAU therefore use the signed ratio of the <a class="reference internal" href="#cost"><span class="std std-ref">cost section</span></a>, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">+</span> <span class="pre">(control</span> <span class="pre">−</span> <span class="pre">reference)</span> <span class="pre">/</span> <span class="pre">|reference|</span></code> when the reference peak is negative, so a higher control peak never reads as below 1; the legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> rows keep the plain ratio.</p></li>
 </ul>
 <p>Two sets of rows use different series:</p>
 <ul class="simple">
