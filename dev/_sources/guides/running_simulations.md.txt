@@ -135,7 +135,7 @@ All communities must share `seconds_per_time_step`, effective episode length, `i
 | `offline` | bool | `False` | Disable network fallbacks. | Requires local datasets. |
 | `interface` | `flat`/`entity` | schema/flat | Observation/action contract. | Entity returns tables and edges. |
 | `topology_mode` | `static`/`dynamic` | schema/static | Enable dynamic topology events. | Dynamic requires `interface="entity"`. |
-| `start_date` | date/string | schema/2024-01-01 | Base date for render/export timestamps. | Does not change physics. |
+| `start_date` | date/string | schema, else from `month` and `day_type` | Date of global row 0 in render/export timestamps; the time of day comes from the `hour` column (see [Exported timestamps](#exported-timestamps)). | Does not change physics. |
 | `render_mode` | `none`/`during`/`end` | `none` | CSV export policy. | `end` is preferred for performance. |
 | `render_session_name` | string | schema/None | Export session subfolder. | Must be relative. |
 | `export_kpis_on_episode_end` | bool | render flag | Export KPIs at episode end. | Can be enabled without full render. |
@@ -151,6 +151,7 @@ All communities must share `seconds_per_time_step`, effective episode length, `i
 | `check_observation_limits` | bool | schema/False | Validate observations against estimated bounds. |
 | `physics_invariant_checks` | bool | schema/False | Run physical invariant checks at runtime. |
 | `metrics_log_interval` | int | schema/0 | Runtime metric log cadence. |
+| `random_stream_namespace` | string | None | Added to the key of every random stream; `MultiCommunityEnv` sets it to the `community_id`. |
 
 ## Reward Observation Payloads
 
@@ -355,6 +356,38 @@ Normal episode time series are controlled by `render_mode`/`render_enabled`, not
 
 For exact final-episode choices, keep `export_kpis_on_episode_end=False` and call `export_final_kpis()` yourself after the episode terminates.
 
+### Exported timestamps
+
+Every exported time series has a `timestamp` column. With a calendar file (`time_axis.calendar_file`) it is the
+calendar instant converted to `timezone`, unless `start_date` is passed to `CityLearnEnv`. Otherwise it is built
+from the calendar columns of the data, read as the evaluation window and the calendar observations read them:
+
+- The time of day of global row 0 is `hour − 1` hours (hour 1 starts at 00:00), plus `minutes` and `seconds`.
+- Its date is `start_date` (argument or schema key). Without one, the date comes from the `month` and `day_type`
+  columns: if the month changes within 32 days, the first row of the new month is on its first day, otherwise
+  the first row is on the first day of its month; the year is the latest up to 2024 in which that date falls on
+  the weekday of `day_type` (1 Monday to 7 Sunday) and the month changes of the first 400 days fall on first days
+  of the month.
+- Each later row is one `seconds_per_time_step` later. With `timezone`, steps are elapsed time and timestamps are
+  written in that zone with their UTC offset (`2023-06-27T03:00:00+01:00`), so they follow daylight-saving
+  changes. Without it they have no offset.
+
+The bundled datasets start at:
+
+| Datasets | First timestamp | Notes |
+|---|---|---|
+| `citylearn_challenge_2022_*`, `citylearn_three_phase_*` | `2022-07-31T23:00:00` | Row 0 is 23:00 on a Sunday in July (`month=7`, `hour=24`, `day_type=7`). |
+| `citylearn_challenge_2020_climate_zone_*`, `ca_alameda_county_neighborhood`, `tx_travis_county_neighborhood`, `vt_chittenden_county_neighborhood` | `2018-01-01T00:00:00` | A 365-day year that starts on a Monday. |
+| `citylearn_challenge_2021` | `2015-01-01T00:00:00` | Its four years have no 29 February, so from March 2016 the dates run one day ahead of `month` and `day_type`. |
+| `citylearn_challenge_2023_phase_1`, `citylearn_challenge_2023_phase_2_local_evaluation` | `2018-06-01T00:00:00` | |
+| `citylearn_challenge_2023_phase_2_online_evaluation_*`, `citylearn_challenge_2023_phase_3_*` | `2021-06-01T00:00:00` | |
+| `baeda_3dem` | `2020-06-01T00:00:00` | |
+| `quebec_neighborhood_*` | `2018-01-01T00:00:00` | The data repeat one January to March period three times; only the first period matches `month` and `day_type`. |
+| `pt_rec_*` | `2023-01-01T00:00:00+00:00` | Lisbon civil time with its offset. Their `day_type` codes weekends and holidays as 1 and Monday to Friday as 2 to 6. |
+
+To read the local time of day, keep the first 19 characters, which are the same with and without an offset:
+`pd.to_datetime(frame["timestamp"].str[:19])`.
+
 ### Comparing two exported runs
 
 `export_final_kpis()` writes `exported_kpis.manifest.json` next to the KPI file. `compare_exports(left, right)`
@@ -385,7 +418,7 @@ so call it once after creating the environment; it must be set before `export_fi
 automatic export at the end of the episode when `export_kpis_on_episode_end=True`. The rule-based baselines
 declare their own identity through `agent.comparison_identity()`: pass the agent to
 `env.export_final_kpis(model=agent)` and it is recorded for you, with `observation_access='entity_observations'`.
-With `MultiCommunityEnv`, call it on each community in `mc.envs`, whose own exports carry the manifests.
+With `MultiCommunityEnv`, call `mc.set_experiment_identity(...)`, which sets it on every community; `compare_exports()` then pairs two portfolio exports community by community ([multi-community export](multi_community_reference.md#export)).
 `compare_exports(left, right, mode='sharing')` compares one controller with sharing on and off, and also
 requires the two identities to be equal.
 

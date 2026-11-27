@@ -158,6 +158,11 @@
 <span class="sd">    entropy and the purpose, entity and episode as its spawn key, so streams for different purposes,</span>
 <span class="sd">    objects and episodes are independent. Each object keeps one generator per stream.</span>
 
+<span class="sd">An environment built with a ``random_stream_namespace`` adds ``('namespace', &lt;namespace&gt;)`` to the key of</span>
+<span class="sd">every stream it derives from its seed, so two environments with the same seed and the same building and</span>
+<span class="sd">EV names still draw independently. :class:`~citylearn.multi_community.MultiCommunityEnv` gives each</span>
+<span class="sd">community its ``community_id`` as namespace. Without a namespace the keys are unchanged.</span>
+
 <span class="sd">Version ``'v1'``, the derivation of CityLearn 3.6.0, was removed in CityLearn 3.8.1 (#466); CityLearn</span>
 <span class="sd">3.7 reproduces it. The setting accepts ``'v2'``, ``2`` and ``"2"``, as parsed by</span>
 <span class="sd">:py:func:`citylearn.internal.versions.parse_version`.</span>
@@ -235,6 +240,39 @@
     <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">digest</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">4</span><span class="p">],</span> <span class="s1">'big'</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="namespace_parts">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.namespace_parts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">namespace_parts</span><span class="p">(</span><span class="n">namespace</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Key parts that separate the streams of `namespace`: empty without one."""</span>
+
+    <span class="k">return</span> <span class="p">()</span> <span class="k">if</span> <span class="n">namespace</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="s1">'namespace'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">namespace</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="namespaced_key">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.namespaced_key">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">namespaced_key</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">namespace</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""`key` followed by the parts of `namespace`, or `key` itself without one."""</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="o">*</span><span class="n">namespace_parts</span><span class="p">(</span><span class="n">namespace</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="parse_random_stream_namespace">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.parse_random_stream_namespace">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_random_stream_namespace</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'random_stream_namespace'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return `value` as a namespace: None, or a non-empty string without surrounding spaces."""</span>
+
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">''</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1"> must be None or a non-empty string, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
 
 
 

@@ -253,6 +253,11 @@ are generated from that selection when the documentation is built.</p>
 settings for each one, label their KPI tables, and pivot <code class="docutils literal notranslate"><span class="pre">cost_function</span></code> against
 controller name. Use the same random seeds for matched stochastic scenarios.
 Keep missing/not-applicable values as missing, not as zero.</p>
+<p>For a <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> portfolio, <code class="docutils literal notranslate"><span class="pre">mc.scorecard(level=&quot;portfolio&quot;)</span></code> returns
+the same default rows aggregated over the communities (<code class="docutils literal notranslate"><span class="pre">portfolio_*</span></code>), and
+<code class="docutils literal notranslate"><span class="pre">mc.scorecard()</span></code> adds each community’s rows. To leave out legacy and deprecated
+rows when you build your own selection, keep the rows whose <code class="docutils literal notranslate"><span class="pre">status</span></code> is
+<code class="docutils literal notranslate"><span class="pre">current</span></code> or <code class="docutils literal notranslate"><span class="pre">canonical</span></code>; a legacy row names its canonical row in <code class="docutils literal notranslate"><span class="pre">replacement</span></code>.</p>
 </section>
 <section id="two-different-baselines">
 <h2>Two different baselines<a class="headerlink" href="#two-different-baselines" title="Link to this heading"></a></h2>

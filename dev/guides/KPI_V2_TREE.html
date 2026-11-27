@@ -198,6 +198,10 @@ district aggregation and the undefined-value rules of each family are in the
 rows (see <a class="reference internal" href="kpis_reference.html#levels"><span class="std std-ref">Levels</span></a>). In the tables, <code class="docutils literal notranslate"><span class="pre">{a,b}</span></code> stands for each
 alternative and <code class="docutils literal notranslate"><span class="pre">{,_x}</span></code> for an optional part; the full names follow each table.
 Which rows appear depends on the scenario’s assets and services.</p>
+<p>Rows marked <strong>Legacy</strong> keep an older definition so earlier results stay comparable, and rows marked
+<strong>Deprecated</strong> return the same value as another row; both name the canonical row to report instead.
+<code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> gives each row its <code class="docutils literal notranslate"><span class="pre">status</span></code> (<code class="docutils literal notranslate"><span class="pre">current</span></code>, <code class="docutils literal notranslate"><span class="pre">canonical</span></code>, <code class="docutils literal notranslate"><span class="pre">legacy</span></code> or <code class="docutils literal notranslate"><span class="pre">deprecated</span></code>) and
+<code class="docutils literal notranslate"><span class="pre">replacement</span></code>, and export manifests record them in <code class="docutils literal notranslate"><span class="pre">kpi_definitions</span></code>.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Family</p></th>
@@ -799,11 +803,16 @@ district_solar_self_consumption_total_generation_kwh
 <td><p>Canonical local share of demand: <code class="docutils literal notranslate"><span class="pre">local</span> <span class="pre">import</span> <span class="pre">/</span> <span class="pre">(local</span> <span class="pre">import</span> <span class="pre">+</span> <span class="pre">grid</span> <span class="pre">import</span> <span class="pre">after</span> <span class="pre">local)</span></code>, the share of the members’ gross import covered by local trading. Emitted only when the market is enabled and <code class="docutils literal notranslate"><span class="pre">community_market.kpis.community_self_consumption_enabled</span></code> is true.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">solar_self_consumption_community_market_local_share_of_demand_ratio</span></code></p></td>
-<td><p>building, district</p></td>
+<td><p>building</p></td>
 <td><p>ratio</p></td>
-<td><p>Deprecated alias, kept for compatibility: same formula as <code class="docutils literal notranslate"><span class="pre">import_share</span></code> (emitted in every run, undefined only when the denominator is 0). At building level it is the only share of demand.</p></td>
+<td><p>Local import over local import plus grid import after local trading (emitted in every run, undefined only when the denominator is 0); the only share of demand at building level.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">solar_self_consumption_community_market_local_share_of_export_ratio</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">solar_self_consumption_community_market_local_share_of_demand_ratio</span></code></p></td>
+<td><p>district</p></td>
+<td><p>ratio</p></td>
+<td><p><strong>Deprecated</strong> alias of <code class="docutils literal notranslate"><span class="pre">solar_self_consumption_community_market_import_share_ratio</span></code>. Deprecated alias, kept for compatibility: same formula as <code class="docutils literal notranslate"><span class="pre">import_share</span></code> (emitted in every run, undefined only when the denominator is 0).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">solar_self_consumption_community_market_local_share_of_export_ratio</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>ratio</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">local</span> <span class="pre">export</span> <span class="pre">/</span> <span class="pre">(local</span> <span class="pre">export</span> <span class="pre">+</span> <span class="pre">grid</span> <span class="pre">export</span> <span class="pre">after</span> <span class="pre">local)</span></code>: the share of the members’ gross export sold to other members.</p></td>
@@ -1027,22 +1036,22 @@ district_electrical_service_phase_violations_event_count
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ev_events_departure_{met,min_acceptable,within_tolerance}_count</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>count</p></td>
-<td><p>Counted departures whose SOC met the target, the minimum acceptable SOC (target minus the service tolerance) or the symmetric tolerance band around the target.</p></td>
+<td><p><strong>Legacy</strong>; canonical row: <code class="docutils literal notranslate"><span class="pre">ev_departure_audit_{target,min_acceptable,within_tolerance}_service_met_count</span></code>. Counted departures whose SOC met the target, the minimum acceptable SOC (target minus the service tolerance) or the symmetric tolerance band around the target.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_events_departure_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>count</p></td>
-<td><p>Counted departures whose threshold was or was not reachable by charging at maximum power during the connection; legacy rule, in which missing data counts as feasible, so feasible + infeasible equals the departure count.</p></td>
+<td><p><strong>Legacy</strong>; canonical row: <code class="docutils literal notranslate"><span class="pre">ev_departure_audit_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count</span></code>. Counted departures whose threshold was or was not reachable by charging at maximum power during the connection; legacy rule, in which missing data counts as feasible, so feasible + infeasible equals the departure count.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ev_performance_departure_{success,min_acceptable,within_tolerance}_ratio</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>ratio</p></td>
-<td><p>Share of counted departures that met the target, the minimum acceptable SOC or the tolerance band; undefined without departures.</p></td>
+<td><p><strong>Legacy</strong>; canonical row: <code class="docutils literal notranslate"><span class="pre">ev_departure_audit_{target,min_acceptable,within_tolerance}_service_observed_ratio</span></code>. Share of counted departures that met the target, the minimum acceptable SOC or the tolerance band; undefined without departures.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_performance_departure_{success,min_acceptable,within_tolerance}_feasible_ratio</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>ratio</p></td>
-<td><p>The same share over the departures feasible for that threshold under the legacy rule; undefined when none is feasible.</p></td>
+<td><p><strong>Legacy</strong>; canonical row: <code class="docutils literal notranslate"><span class="pre">ev_departure_audit_{target,min_acceptable,within_tolerance}_service_feasible_ratio</span></code>. The same share over the departures feasible for that threshold under the legacy rule; undefined when none is feasible.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ev_performance_departure_{soc_deficit,shortfall_beyond_tolerance,soc_surplus,soc_absolute_error}_mean_ratio</span></code></p></td>
 <td><p>building, district</p></td>
@@ -1385,7 +1394,7 @@ district_ev_departure_audit_within_tolerance_unknown_unsupported_battery_model_c
 </section>
 <section id="flexible-appliances">
 <h2>Flexible appliances<a class="headerlink" href="#flexible-appliances" title="Link to this heading"></a></h2>
-<p>Cycle service of deferrable (flexible) appliances from their cycle states and nominal cycle energies. Every member emits these rows; without appliances, counts and energies are 0 and rates are undefined.</p>
+<p>Cycle service of deferrable (flexible) appliances from their cycle states and nominal cycle energies. Every member emits these rows; without appliances, counts and energies are 0 and rates are undefined. The control counts, service level and energies are legacy rows; the flexible-appliance audit (<code class="docutils literal notranslate"><span class="pre">deferrable_appliance_audit_*</span></code>) is canonical. These rows keep the only comparison with the BAU.</p>
 <p>Equations and rules: <a class="reference internal" href="kpis_reference.html#flexible-appliances"><span class="std std-ref">Flexible appliances</span></a>.</p>
 <table class="docutils align-default">
 <thead>
@@ -1396,37 +1405,62 @@ district_ev_departure_audit_within_tolerance_unknown_unsupported_battery_model_c
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_completed_cycles{,_business_as_usual,_delta_to_business_as_usual}_count</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_completed_cycles_count</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>count</p></td>
+<td><p><strong>Legacy</strong>; canonical row: <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_audit_completed_count</span></code>. Cycles that ran their full profile. Legacy; the audited count is <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_audit_completed_count</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_completed_cycles{_business_as_usual,_delta_to_business_as_usual}_count</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>count</p></td>
 <td><p>Cycles that ran their full profile; <code class="docutils literal notranslate"><span class="pre">_business_as_usual</span></code> and <code class="docutils literal notranslate"><span class="pre">_delta_to_business_as_usual</span></code> as in the shared rules.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_missed_cycles{,_business_as_usual,_delta_to_business_as_usual}_count</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_missed_cycles_count</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>count</p></td>
+<td><p><strong>Legacy</strong>; canonical row: <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_audit_missed_count</span></code>. Cycles not started by their latest start step, plus running cycles interrupted by a power outage. Legacy; the audited count is <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_audit_missed_count</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_missed_cycles{_business_as_usual,_delta_to_business_as_usual}_count</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>count</p></td>
 <td><p>Cycles not started by their latest start step, plus running cycles interrupted by a power outage; BAU variants as in the shared rules.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_service_level{,_business_as_usual,_delta_to_business_as_usual}_ratio</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_service_level_ratio</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>ratio</p></td>
+<td><p><strong>Legacy</strong>; canonical row: <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_audit_resolved_completion_ratio</span></code>. completed / (completed + missed), undefined when both are 0. Legacy; the audited rate is <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_audit_resolved_completion_ratio</span></code>, which also counts cancelled cycles.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_service_level{_business_as_usual,_delta_to_business_as_usual}_ratio</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>ratio</p></td>
 <td><p>completed / (completed + missed), undefined when both are 0; the delta is undefined when either side is.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_served_energy_total{,_business_as_usual,_delta_to_business_as_usual}_kwh</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_served_energy_total_kwh</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>kWh</p></td>
+<td><p><strong>Legacy</strong>; canonical row: <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_audit_served_energy_kwh</span></code>. Nominal energy of the completed cycles, from their requested profiles, not metered. Legacy; the audited, metered energy is <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_audit_served_energy_kwh</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_served_energy_total{_business_as_usual,_delta_to_business_as_usual}_kwh</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>kWh</p></td>
 <td><p>Nominal energy of the completed cycles, from their requested profiles, not metered; BAU variants as in the shared rules.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_unserved_energy_total{,_business_as_usual,_delta_to_business_as_usual}_kwh</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_unserved_energy_total_kwh</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>kWh</p></td>
+<td><p><strong>Legacy</strong>; canonical row: <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_audit_final_unserved_energy_kwh</span></code>. Full nominal energy of the missed cycles, including any part consumed before an interruption. Legacy; the audited energy is <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_audit_final_unserved_energy_kwh</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_unserved_energy_total{_business_as_usual,_delta_to_business_as_usual}_kwh</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>kWh</p></td>
 <td><p>Full nominal energy of the missed cycles, including any part consumed before an interruption; BAU variants as in the shared rules.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_average_start_delay{,_business_as_usual,_delta_to_business_as_usual}_hours</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_service_average_start_delay{,_business_as_usual,_delta_to_business_as_usual}_hours</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>hours</p></td>
 <td><p>Mean over completed cycles of (start − earliest start) in hours; undefined when no cycle completed.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_ratio_to_business_as_usual_{completed_cycles,missed_cycles,service_level,served_energy_total,unserved_energy_total,average_start_delay}_ratio</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_ratio_to_business_as_usual_{completed_cycles,missed_cycles,service_level,served_energy_total,unserved_energy_total,average_start_delay}_ratio</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>ratio</p></td>
 <td><p>Control over BAU value; undefined when its own two totals are zero, even when cycles were due (#305), and when the BAU value is zero or either value is undefined.</p></td>
@@ -1717,25 +1751,30 @@ district_escalator_service_unserved_passengers_total_count
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">comfort_resilience_discomfort_{overall,cold,hot}_ratio</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">comfort_resilience_discomfort_overall_ratio</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>ratio</p></td>
-<td><p>Share of evaluated occupied steps that are too cold (T &lt; T_heat − band), too hot (T &gt; T_cool + band) or either (<code class="docutils literal notranslate"><span class="pre">overall</span></code>); undefined when no occupied step is evaluated. The district value is the mean of the building values; for controller comparison use <code class="docutils literal notranslate"><span class="pre">thermal_service_audit_discomfort_ratio</span></code>.</p></td>
+<td><p><strong>Legacy</strong>; canonical row: <code class="docutils literal notranslate"><span class="pre">thermal_service_audit_discomfort_ratio</span></code>. Share of evaluated occupied steps that are too cold (T &lt; T_heat − band) or too hot (T &gt; T_cool + band); undefined when no occupied step is evaluated. The district value is the mean of the building values; for controller comparison use <code class="docutils literal notranslate"><span class="pre">thermal_service_audit_discomfort_ratio</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">comfort_resilience_discomfort_{cold,hot}_delta_{min,max,average}_c</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">comfort_resilience_discomfort_{cold,hot}_ratio</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>ratio</p></td>
+<td><p>Share of evaluated occupied steps that are too cold (T &lt; T_heat − band) or too hot (T &gt; T_cool + band); undefined when no occupied step is evaluated. The district value is the mean of the building values.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">comfort_resilience_discomfort_{cold,hot}_delta_{min,max,average}_c</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>degC</p></td>
 <td><p>Minimum, maximum and mean distance from the set point over the too-cold (T_heat − T) or too-hot (T − T_cool) steps; always positive and larger than the band, undefined when there is no such step. The district value is the mean of the building values, not a district minimum or maximum.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">comfort_resilience_resilience_one_minus_thermal_ratio</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">comfort_resilience_resilience_one_minus_thermal_ratio</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>ratio</p></td>
-<td><p>Overall discomfort ratio restricted to occupied steps during a power outage; undefined when no occupied outage step is evaluated. Same value per building as <code class="docutils literal notranslate"><span class="pre">thermal_service_audit_outage_discomfort_ratio</span></code>, but a plain mean at district level.</p></td>
+<td><p><strong>Legacy</strong>; canonical row: <code class="docutils literal notranslate"><span class="pre">thermal_service_audit_outage_discomfort_ratio</span></code>. Overall discomfort ratio restricted to occupied steps during a power outage; undefined when no occupied outage step is evaluated. Same value per building as <code class="docutils literal notranslate"><span class="pre">thermal_service_audit_outage_discomfort_ratio</span></code>, but a plain mean at district level.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">comfort_resilience_resilience_unserved_energy_{outage,annual}_normalized_ratio</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">comfort_resilience_resilience_unserved_energy_{outage,annual}_normalized_ratio</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>ratio</p></td>
-<td><p>Unserved service energy (cooling, heating, DHW and non-shiftable load) over expected service energy, over outage steps (<code class="docutils literal notranslate"><span class="pre">outage</span></code>) or all steps (<code class="docutils literal notranslate"><span class="pre">annual</span></code>). Reads 0, not undefined, when the expected energy is zero, so the outage variant is 0 in runs without outages.</p></td>
+<td><p><strong>Legacy</strong>; canonical row: <code class="docutils literal notranslate"><span class="pre">thermal_service_audit_{outage_unserved_service,unserved_service}_ratio</span></code>. Unserved service energy (cooling, heating, DHW and non-shiftable load) over expected service energy, over outage steps (<code class="docutils literal notranslate"><span class="pre">outage</span></code>) or all steps (<code class="docutils literal notranslate"><span class="pre">annual</span></code>). Reads 0, not undefined, when the expected energy is zero, so the outage variant is 0 in runs without outages.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1935,17 +1974,17 @@ district_thermal_service_audit_unserved_service_ratio
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">equity_distribution_gini_benefit_ratio</span></code></p></td>
 <td><p>district</p></td>
 <td><p>ratio</p></td>
-<td><p>Gini coefficient of the building benefits clipped at 0; undefined when no building has a defined benefit or all clipped benefits are 0. Same value as the canonical <code class="docutils literal notranslate"><span class="pre">equity_audit_positive_benefit_gini_ratio</span></code>.</p></td>
+<td><p><strong>Deprecated</strong> alias of <code class="docutils literal notranslate"><span class="pre">equity_audit_positive_benefit_gini_ratio</span></code>. Gini coefficient of the building benefits clipped at 0; undefined when no building has a defined benefit or all clipped benefits are 0. Same value as the canonical <code class="docutils literal notranslate"><span class="pre">equity_audit_positive_benefit_gini_ratio</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">equity_distribution_top20_benefit_ratio</span></code></p></td>
 <td><p>district</p></td>
 <td><p>ratio</p></td>
-<td><p>Share of the summed clipped benefit held by the ceil(20 %) of buildings with the largest benefit (at least one); same undefined rule as the Gini.</p></td>
+<td><p><strong>Deprecated</strong> alias of <code class="docutils literal notranslate"><span class="pre">equity_audit_positive_benefit_top20_ratio</span></code>. Share of the summed clipped benefit held by the ceil(20 %) of buildings with the largest benefit (at least one); same undefined rule as the Gini.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">equity_distribution_losers_percent</span></code></p></td>
 <td><p>district</p></td>
 <td><p>percent</p></td>
-<td><p>Percentage of buildings with a defined benefit whose benefit is negative (cost above the baseline).</p></td>
+<td><p><strong>Deprecated</strong> alias of <code class="docutils literal notranslate"><span class="pre">equity_audit_losers_percent</span></code>. Percentage of buildings with a defined benefit whose benefit is negative (cost above the baseline).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">equity_distribution_bpr_asset_poor_over_rich_ratio</span></code></p></td>
 <td><p>district</p></td>

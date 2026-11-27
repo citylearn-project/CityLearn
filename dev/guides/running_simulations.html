@@ -84,6 +84,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#render-and-export">Render and Export</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#exported-timestamps">Exported timestamps</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#comparing-two-exported-runs">Comparing two exported runs</a></li>
 </ul>
 </li>
@@ -486,8 +487,8 @@ follows each device’s action contract.</p>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">start_date</span></code></p></td>
 <td class="text-right"><p>date/string</p></td>
-<td class="text-right"><p>schema/2024-01-01</p></td>
-<td><p>Base date for render/export timestamps.</p></td>
+<td class="text-right"><p>schema, else from <code class="docutils literal notranslate"><span class="pre">month</span></code> and <code class="docutils literal notranslate"><span class="pre">day_type</span></code></p></td>
+<td><p>Date of global row 0 in render/export timestamps; the time of day comes from the <code class="docutils literal notranslate"><span class="pre">hour</span></code> column (see <a class="reference internal" href="#exported-timestamps"><span class="std std-ref">Exported timestamps</span></a>).</p></td>
 <td><p>Does not change physics.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">render_mode</span></code></p></td>
@@ -556,6 +557,11 @@ follows each device’s action contract.</p>
 <td class="text-right"><p>int</p></td>
 <td class="text-right"><p>schema/0</p></td>
 <td><p>Runtime metric log cadence.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_stream_namespace</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td class="text-right"><p>None</p></td>
+<td><p>Added to the key of every random stream; <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> sets it to the <code class="docutils literal notranslate"><span class="pre">community_id</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -841,6 +847,68 @@ the evaluation, covers the whole simulation window.</p>
 </table>
 <p>Normal episode time series are controlled by <code class="docutils literal notranslate"><span class="pre">render_mode</span></code>/<code class="docutils literal notranslate"><span class="pre">render_enabled</span></code>, not by <code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code>.</p>
 <p>For exact final-episode choices, keep <code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end=False</span></code> and call <code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code> yourself after the episode terminates.</p>
+<section id="exported-timestamps">
+<h3>Exported timestamps<a class="headerlink" href="#exported-timestamps" title="Link to this heading"></a></h3>
+<p>Every exported time series has a <code class="docutils literal notranslate"><span class="pre">timestamp</span></code> column. With a calendar file (<code class="docutils literal notranslate"><span class="pre">time_axis.calendar_file</span></code>) it is the
+calendar instant converted to <code class="docutils literal notranslate"><span class="pre">timezone</span></code>, unless <code class="docutils literal notranslate"><span class="pre">start_date</span></code> is passed to <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>. Otherwise it is built
+from the calendar columns of the data, read as the evaluation window and the calendar observations read them:</p>
+<ul class="simple">
+<li><p>The time of day of global row 0 is <code class="docutils literal notranslate"><span class="pre">hour</span> <span class="pre">−</span> <span class="pre">1</span></code> hours (hour 1 starts at 00:00), plus <code class="docutils literal notranslate"><span class="pre">minutes</span></code> and <code class="docutils literal notranslate"><span class="pre">seconds</span></code>.</p></li>
+<li><p>Its date is <code class="docutils literal notranslate"><span class="pre">start_date</span></code> (argument or schema key). Without one, the date comes from the <code class="docutils literal notranslate"><span class="pre">month</span></code> and <code class="docutils literal notranslate"><span class="pre">day_type</span></code>
+columns: if the month changes within 32 days, the first row of the new month is on its first day, otherwise
+the first row is on the first day of its month; the year is the latest up to 2024 in which that date falls on
+the weekday of <code class="docutils literal notranslate"><span class="pre">day_type</span></code> (1 Monday to 7 Sunday) and the month changes of the first 400 days fall on first days
+of the month.</p></li>
+<li><p>Each later row is one <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> later. With <code class="docutils literal notranslate"><span class="pre">timezone</span></code>, steps are elapsed time and timestamps are
+written in that zone with their UTC offset (<code class="docutils literal notranslate"><span class="pre">2023-06-27T03:00:00+01:00</span></code>), so they follow daylight-saving
+changes. Without it they have no offset.</p></li>
+</ul>
+<p>The bundled datasets start at:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Datasets</p></th>
+<th class="head"><p>First timestamp</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_*</span></code>, <code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_*</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2022-07-31T23:00:00</span></code></p></td>
+<td><p>Row 0 is 23:00 on a Sunday in July (<code class="docutils literal notranslate"><span class="pre">month=7</span></code>, <code class="docutils literal notranslate"><span class="pre">hour=24</span></code>, <code class="docutils literal notranslate"><span class="pre">day_type=7</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2020_climate_zone_*</span></code>, <code class="docutils literal notranslate"><span class="pre">ca_alameda_county_neighborhood</span></code>, <code class="docutils literal notranslate"><span class="pre">tx_travis_county_neighborhood</span></code>, <code class="docutils literal notranslate"><span class="pre">vt_chittenden_county_neighborhood</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2018-01-01T00:00:00</span></code></p></td>
+<td><p>A 365-day year that starts on a Monday.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2021</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2015-01-01T00:00:00</span></code></p></td>
+<td><p>Its four years have no 29 February, so from March 2016 the dates run one day ahead of <code class="docutils literal notranslate"><span class="pre">month</span></code> and <code class="docutils literal notranslate"><span class="pre">day_type</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_1</span></code>, <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_2_local_evaluation</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2018-06-01T00:00:00</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_2_online_evaluation_*</span></code>, <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_3_*</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2021-06-01T00:00:00</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2020-06-01T00:00:00</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_*</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2018-01-01T00:00:00</span></code></p></td>
+<td><p>The data repeat one January to March period three times; only the first period matches <code class="docutils literal notranslate"><span class="pre">month</span></code> and <code class="docutils literal notranslate"><span class="pre">day_type</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2023-01-01T00:00:00+00:00</span></code></p></td>
+<td><p>Lisbon civil time with its offset. Their <code class="docutils literal notranslate"><span class="pre">day_type</span></code> codes weekends and holidays as 1 and Monday to Friday as 2 to 6.</p></td>
+</tr>
+</tbody>
+</table>
+<p>To read the local time of day, keep the first 19 characters, which are the same with and without an offset:
+<code class="docutils literal notranslate"><span class="pre">pd.to_datetime(frame[&quot;timestamp&quot;].str[:19])</span></code>.</p>
+</section>
 <section id="comparing-two-exported-runs">
 <h3>Comparing two exported runs<a class="headerlink" href="#comparing-two-exported-runs" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code> writes <code class="docutils literal notranslate"><span class="pre">exported_kpis.manifest.json</span></code> next to the KPI file. <code class="docutils literal notranslate"><span class="pre">compare_exports(left,</span> <span class="pre">right)</span></code>
@@ -895,7 +963,7 @@ so call it once after creating the environment; it must be set before <code clas
 automatic export at the end of the episode when <code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end=True</span></code>. The rule-based baselines
 declare their own identity through <code class="docutils literal notranslate"><span class="pre">agent.comparison_identity()</span></code>: pass the agent to
 <code class="docutils literal notranslate"><span class="pre">env.export_final_kpis(model=agent)</span></code> and it is recorded for you, with <code class="docutils literal notranslate"><span class="pre">observation_access='entity_observations'</span></code>.
-With <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code>, call it on each community in <code class="docutils literal notranslate"><span class="pre">mc.envs</span></code>, whose own exports carry the manifests.
+With <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code>, call <code class="docutils literal notranslate"><span class="pre">mc.set_experiment_identity(...)</span></code>, which sets it on every community; <code class="docutils literal notranslate"><span class="pre">compare_exports()</span></code> then pairs two portfolio exports community by community (<a class="reference internal" href="multi_community_reference.html#export"><span class="std std-ref">multi-community export</span></a>).
 <code class="docutils literal notranslate"><span class="pre">compare_exports(left,</span> <span class="pre">right,</span> <span class="pre">mode='sharing')</span></code> compares one controller with sharing on and off, and also
 requires the two identities to be equal.</p>
 <p>This example runs one simple controller with two parameter values, exports both runs and compares them:</p>

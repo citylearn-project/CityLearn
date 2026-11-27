@@ -67,8 +67,8 @@ For 15 seconds:
 | Column | Required | Unit | Meaning |
 |---|---:|---:|---|
 | `month` | yes | 1-12 | Month. |
-| `hour` | yes | 1-24 | Hour. |
-| `day_type` | yes | 1-8 | Day of week or special day. |
+| `hour` | yes | 1-24 | Hour; hour 1 starts at 00:00 and hour 24 at 23:00. Exported timestamps, the evaluation window and the calendar observations read it this way ([Exported timestamps](running_simulations.md#exported-timestamps)). |
+| `day_type` | yes | 1-8 | Day of week, 1 Monday to 7 Sunday, or 8 for a special day. |
 | `minutes` | recommended sub-hour | 0-59 | Minute. |
 | `seconds` | recommended sub-minute | 0-59 | Second. |
 | `indoor_dry_bulb_temperature` | yes | C | Indoor temperature. |

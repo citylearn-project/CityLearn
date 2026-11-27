@@ -106,6 +106,10 @@ Begin with a short window: full two-year runs without the BAU reference took
 - **Calendar:** 70,176 interval-start timestamps from 1 January 2023 00:00 UTC to
   31 December 2024 23:45 UTC. Lisbon civil days have 92 or 100 intervals at
   daylight-saving transitions.
+  The `month`, `hour` and `minutes` columns are Lisbon civil time, and exported
+  timestamps are too, with their UTC offset (`2023-06-27T03:00:00+01:00`). The
+  `day_type` column codes weekends and holidays as 1 and Monday to Friday
+  as 2 to 6, not 1 Monday to 7 Sunday.
 - **Units:** demand, PV and programme profiles in kWh per interval (multiply by four
   for average kW); battery capacity in kWh; power limits in kW; prices in EUR/kWh;
   carbon intensity in kg CO2e/kWh; SOC as a fraction. Missing observations use -9999.
