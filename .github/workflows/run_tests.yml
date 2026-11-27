@@ -78,20 +78,12 @@ jobs:
         run: python -m pytest -q --ignore=scripts/manual
 
       - name: Performance smoke check
+        # The thresholds are the script's defaults. The ratios to scripts/ci/perf_baseline.json go to the job summary.
         if: matrix.python-version == '3.10' && matrix.numpy == '2.x'
         run: |
           mkdir -p ${{ runner.temp }}/perf
           python scripts/ci/perf_smoke.py \
-            --episode-steps 600 \
-            --seconds 60 \
-            --none-max-ms 30 \
-            --end-max-ms 45 \
-            --entity-max-ms 50 \
-            --ratio-max 2.0 \
-            --entity-overhead-ratio-max 3.75 \
-            --baseline-file scripts/ci/perf_baseline.json \
-            --baseline-regression-ratio 4.5 \
-            --baseline-slack-ms 15.0 \
+            --require-baseline \
             --metrics-output ${{ runner.temp }}/perf/perf_smoke_report.json
 
       - name: Upload performance smoke report

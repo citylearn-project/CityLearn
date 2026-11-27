@@ -14,7 +14,8 @@ Portuguese version: [pt/publishing.md](pt/publishing.md).
    dataset/schema impact, validation scope and migration instructions.
 3. Update the affected guides and [migration notes](migration.md).
 4. Run the tests and auditors in the [developer guide](developer_guide.md),
-   build the Sphinx site and check its links and examples.
+   build the Sphinx site and check its links and examples. Re-record the
+   performance baseline with `python scripts/ci/perf_smoke.py --write-baseline`.
 5. Build and validate wheel/source distributions, then verify the installed wheel
    outside the checkout. The workflow's installed-export check demonstrates this.
 

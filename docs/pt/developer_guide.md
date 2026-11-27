@@ -111,8 +111,16 @@ Benchmark do tempo de execução:
 Verificação rápida de desempenho do CI:
 
 ```console
-.venv/bin/python scripts/ci/perf_smoke.py --episode-steps 600 --seconds 60 --baseline-file scripts/ci/perf_baseline.json
+.venv/bin/python scripts/ci/perf_smoke.py --require-baseline
 ```
+
+Mede o conjunto de dados `plus_evs` de 2022 (flat, flat com renderização no fim e entity, passo de 60 s sobre
+dados horários), o `pt_rec_4` no seu passo nativo com `time_step_ratio_mode='reject'` e as verificações de
+invariantes físicos ativas, e a construção do conjunto de dados completo de serviço elétrico em Parquet a 15 s. Os
+limites são largos; ficam nos valores por omissão do script e o `scripts/ci/perf_baseline.json` guarda apenas
+medições. O CI escreve no resumo do job a razão de cada métrica face à referência. Gravar de novo a referência uma
+vez por versão com `--write-baseline`; `--cases` limita uma execução (ou uma nova gravação) a alguns casos. A
+construção do conjunto de dados a 15 s precisa de cerca de 6 GB de memória.
 
 Profiling por passo e por componente:
 
