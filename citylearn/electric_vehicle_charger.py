@@ -6,6 +6,7 @@ from citylearn.base import Environment, EpisodeTracker
 from citylearn.electric_vehicle import ElectricVehicle
 from citylearn.data import ChargerSimulation
 from citylearn.data import ZERO_DIVISION_PLACEHOLDER
+from citylearn.energy_model import validate_curve
 from citylearn.internal.units import (
     energy_kwh_to_power_kw,
     normalized_power_action_to_energy_kwh,
@@ -296,14 +297,16 @@ class Charger(Environment):
     @charge_efficiency_curve.setter
     def charge_efficiency_curve(self, charge_efficiency_curve: List[List[float]]):
         if charge_efficiency_curve is not None:
-            self.__charge_efficiency_curve = np.array(charge_efficiency_curve).T
+            self.__charge_efficiency_curve = validate_curve(charge_efficiency_curve, 'charge_efficiency_curve', efficiency=True)
         else:
             self.__charge_efficiency_curve = None
 
     @discharge_efficiency_curve.setter
     def discharge_efficiency_curve(self, discharge_efficiency_curve: List[List[float]]):
         if discharge_efficiency_curve is not None:
-            self.__discharge_efficiency_curve = np.array(discharge_efficiency_curve).T
+            self.__discharge_efficiency_curve = validate_curve(
+                discharge_efficiency_curve, 'discharge_efficiency_curve', efficiency=True
+            )
         else:
             self.__discharge_efficiency_curve = None
 
@@ -460,6 +463,39 @@ class Charger(Environment):
 
         return efficiency, commanded_energy_kwh, battery_energy_kwh
 
+    def _applied_ac_energy(self, battery_energy_kwh: float, commanded_battery_energy_kwh: float, charging: bool,
+                           efficiency: float) -> Tuple[float, float]:
+        """Charger efficiency and AC energy, in control-step kWh, for the energy the EV battery accepted.
+
+        When the battery limits the transfer, the efficiency curve is evaluated at the applied AC power instead
+        of at the commanded power, by fixed-point iteration until the AC energy times the efficiency at its power
+        equals the accepted energy (#424). A constant efficiency, or a transfer the battery does not limit, is
+        unchanged.
+        """
+
+        def to_ac(efficiency: float) -> float:
+            return (
+                battery_energy_kwh / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
+                if battery_energy_kwh >= 0 else battery_energy_kwh * efficiency
+            )
+
+        ac_energy = to_ac(efficiency)
+        curve = self.__charge_efficiency_curve if charging else self.__discharge_efficiency_curve
+        limited = abs(battery_energy_kwh - commanded_battery_energy_kwh) > 1.0e-9*max(1.0, abs(commanded_battery_energy_kwh))
+        if curve is None or not limited:
+            return efficiency, ac_energy
+
+        max_power_kw = self.max_charging_power if charging else self.max_discharging_power
+        for _ in range(50):
+            normalized_power = abs(energy_kwh_to_power_kw(ac_energy, self.seconds_per_time_step))\
+                /max(max_power_kw, ZERO_DIVISION_PLACEHOLDER)
+            efficiency = float(self.get_efficiency(normalized_power, charging))
+            previous, ac_energy = ac_energy, to_ac(efficiency)
+            if abs(ac_energy - previous) <= 1.0e-12*max(1.0, abs(ac_energy)):
+                break
+
+        return efficiency, ac_energy
+
     def preview_power_kw(self, action_value: float) -> float:
         """Signed AC power in [kW] that :py:meth:`update_connected_electric_vehicle_soc` would draw, without applying it.
 
@@ -479,10 +515,7 @@ class Charger(Environment):
         battery_energy = battery.preview_charge(battery_command)
         ratio = 1.0 if ratio in (None, 0) else float(ratio)
         battery_energy *= ratio
-        ac_energy = (
-            battery_energy / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
-            if battery_energy >= 0 else battery_energy * efficiency
-        )
+        _, ac_energy = self._applied_ac_energy(battery_energy, battery_energy_kwh, charging, efficiency)
         return energy_kwh_to_power_kw(ac_energy, self.seconds_per_time_step)
 
     def get_requested_power_kw(self, action_value: float) -> float:
@@ -525,10 +558,7 @@ class Charger(Environment):
                 battery_energy_balance = float(electric_vehicle.battery._last_transfer_energy)
             else:
                 battery_energy_balance = float(electric_vehicle.battery.energy_balance[self.time_step])
-            ac_energy = (
-                battery_energy_balance / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
-                if battery_energy_balance >= 0 else battery_energy_balance * efficiency
-            )
+            _, ac_energy = self._applied_ac_energy(battery_energy_balance, battery_energy_kwh, charging, efficiency)
             # Add in float64 before storing, as NumPy 1 did; NEP 50 would add a Python float in float32.
             self.__electricity_consumption[self.time_step] = float(self.__electricity_consumption[self.time_step]) + ac_energy
             self.__gross_energy_charge[self.time_step] = float(self.__gross_energy_charge[self.time_step]) + max(float(ac_energy), 0.0)

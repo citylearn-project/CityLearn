@@ -227,21 +227,37 @@ def fill_charger_rows(entity: "CityLearnEntityInterfaceService", context: Observ
             else -1.0
         )
 
+        # AC-side conversion from the charger terminals to stored EV energy and back: the charger efficiency
+        # times the EV battery's one-way efficiency, both at full charger power (#421).
+        charge_conversion = charge_efficiency_at_max
+        discharge_conversion = discharge_efficiency_at_max
         if connected:
             connected_ev = charger.connected_electric_vehicle
             current_soc = entity._safe_scalar(connected_ev.battery.soc[connected_ev.observation_soc_index(endogenous_t)], -0.1)
             battery_capacity = entity._safe_scalar(connected_ev.battery.capacity, -1.0)
             hours_until_departure = departure_steps * step_hours if departure_steps >= 0.0 else -1.0
+            charge_conversion = max(charge_efficiency_at_max * entity._battery_one_way_efficiency(
+                connected_ev.battery, max_charging_power * charge_efficiency_at_max
+            ), 1.0e-6)
+            discharge_conversion = max(discharge_efficiency_at_max * entity._battery_one_way_efficiency(
+                connected_ev.battery, max_discharging_power / max(discharge_efficiency_at_max, 1.0e-6), charging=False
+            ), 1.0e-6)
             if core_bundle_enabled:
                 energy_to_required_soc = max((required_soc - current_soc) * max(battery_capacity, 0.0), 0.0)
-                required_average_power = energy_to_required_soc / max(hours_until_departure, 1.0e-6) if energy_to_required_soc > 0.0 else 0.0
+                # AC power at the charger that stores `energy_to_required_soc` by departure.
+                required_average_power = (
+                    energy_to_required_soc / (max(hours_until_departure, 1.0e-6) * charge_conversion)
+                    if energy_to_required_soc > 0.0 else 0.0
+                )
                 avg_power_to_departure = required_average_power
                 charging_slack = max_charging_power - required_average_power
                 if hours_until_departure == 0.0 and energy_to_required_soc > 0.0:
                     # Departing now with energy missing: the division above reached ~1e7 kW, far outside the
                     # observation bound. Saturate within the bound and keep the meaning "not deliverable in time":
                     # the required power is at least the charger's and the slack is negative.
-                    required_average_power = max(max(battery_capacity, 0.0) / max(step_hours, 1.0e-6), max_charging_power)
+                    required_average_power = max(
+                        max(battery_capacity, 0.0) / (max(step_hours, 1.0e-6) * charge_conversion), max_charging_power
+                    )
                     avg_power_to_departure = required_average_power
                     charging_slack = -required_average_power
                 if hours_until_departure < 0.0:
@@ -307,8 +323,8 @@ def fill_charger_rows(entity: "CityLearnEntityInterfaceService", context: Observ
                 hours_until_departure=hours_until_departure,
                 max_charging_power=max_charging_power,
                 max_discharging_power=max_discharging_power,
-                charge_efficiency_at_max=charge_efficiency_at_max,
-                discharge_efficiency_at_max=discharge_efficiency_at_max,
+                charge_conversion=charge_conversion,
+                discharge_conversion=discharge_conversion,
                 step_hours=step_hours,
                 current_power_kw=applied_energy / step_hours,
             )
@@ -449,7 +465,10 @@ def fill_storage_rows(entity: "CityLearnEntityInterfaceService", context: Observ
                 energy_available=energy_available,
                 max_charge_power=max_charge_power,
                 max_discharge_power=max_discharge_power,
-                efficiency=entity._safe_scalar(getattr(storage, "efficiency", base_efficiency), base_efficiency),
+                one_way_efficiency=entity._safe_scalar(
+                    getattr(storage, "one_way_efficiency", None),
+                    entity._safe_scalar(getattr(storage, "efficiency", base_efficiency), base_efficiency) ** 0.5,
+                ),
                 step_hours=step_hours,
                 include_headroom=True,
                 current_power_kw=entity._safe_scalar(

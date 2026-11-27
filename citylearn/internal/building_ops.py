@@ -1084,10 +1084,23 @@ class BuildingOpsService:
         devices (#229). They precede the devices, the non-shiftable load and the other electric loads,
         which draw on them through `downward_electrical_flexibility`. The battery discharges before the
         vehicles.
+
+        Charging thermal storages move after the non-shiftable load, so they take only the supply that the
+        heating, cooling and DHW devices and the non-shiftable load leave, as the charging battery does (#420).
         """
 
         def discharging(key: str) -> bool:
             return key in actions and self._safe_scalar(actions[key][1][0], 0.0) < 0.0
+
+        def charging(key: str) -> bool:
+            return key in actions and self._safe_scalar(actions[key][1][0], 0.0) > 0.0
+
+        thermal_storages = ('cooling_storage', 'heating_storage', 'dhw_storage')
+        charging_thermal = [key for key in priority_list if key in thermal_storages and charging(key)]
+        if charging_thermal and 'non_shiftable_load' in priority_list:
+            rest = [key for key in priority_list if key not in charging_thermal]
+            index = rest.index('non_shiftable_load') + 1
+            priority_list = rest[:index] + charging_thermal + rest[index:]
 
         battery = ['electrical_storage'] if discharging('electrical_storage') else []
         vehicles = [
@@ -1097,11 +1110,11 @@ class BuildingOpsService:
         if not battery and not vehicles:
             return priority_list
 
-        thermal_storages = ('cooling_storage', 'heating_storage', 'dhw_storage')
         lead = {'cooling_demand', 'heating_demand', *(key for key in thermal_storages if discharging(key))}
         supplies = set(battery + vehicles)
         others = [key for key in priority_list if key not in supplies]
         return [key for key in others if key in lead] + battery + vehicles + [key for key in others if key not in lead]
+
     def _suspend_running_deferrable_load(self) -> List[Tuple[object, float]]:
         """Set aside the energy that running deferrable cycles booked for an outage step.
 

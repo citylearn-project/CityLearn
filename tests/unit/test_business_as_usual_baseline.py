@@ -163,8 +163,12 @@ def test_bau_battery_covers_accepted_ev_energy_instead_of_exporting_nominal_requ
         assert actions[-1] == 1.0
         assert soc == pytest.approx(1.0, abs=1e-6)
         assert net >= -1.0e-5
-    # Without the bundle, the estimate leads to the decision the observation gives.
-    np.testing.assert_allclose(results[False][0], results[True][0], rtol=0.0, atol=1.0e-6)
+    # Without the bundle, the estimate leads to the EV decision the observation gives. The observation is AC-side
+    # and includes the EV battery's own efficiency (#421), which the estimate cannot observe, so the estimate
+    # reserves slightly less home-battery discharge for the EV.
+    np.testing.assert_allclose(results[False][0][1:], results[True][0][1:], rtol=0.0, atol=1.0e-6)
+    assert results[True][0][0] <= results[False][0][0] + 1.0e-9
+    assert results[True][0][0] == pytest.approx(results[False][0][0], abs=1.0e-3)
 
 
 @pytest.mark.parametrize("seconds", [900, 3600])

@@ -11,12 +11,13 @@ import importlib
 import inspect
 import os
 import warnings
+from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 import pandas as pd
 
 from citylearn.data import ChargerSimulation, LogisticRegressionOccupantParameters
-from citylearn.energy_model import PV, Battery
+from citylearn.energy_model import PV, Battery, CurveValueError
 from citylearn.utilities import parse_bool
 
 if TYPE_CHECKING:
@@ -210,15 +211,26 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
             charger_attributes['episode_tracker'] = episode_tracker
             # Chargers draw no random values, but an unseeded one draws its seed from Python's global `random`.
             charger_attributes.setdefault('random_seed', schema['random_seed'])
-            charger_object = charger_class(
-                charger_simulation=charger_simulation,
-                charger_id=charger_name,
-                **charger_attributes,
-                seconds_per_time_step=schema['seconds_per_time_step'],
-                time_step_ratio=time_step_ratio,
-            )
+            with curve_path(f'{charger_path}.attributes'):
+                charger_object = charger_class(
+                    charger_simulation=charger_simulation,
+                    charger_id=charger_name,
+                    **charger_attributes,
+                    seconds_per_time_step=schema['seconds_per_time_step'],
+                    time_step_ratio=time_step_ratio,
+                )
             chargers_list.append(charger_object)
     return chargers_list
+
+
+@contextmanager
+def curve_path(path: str):
+    """Prefix an invalid battery or charger curve error with the schema path of its attributes."""
+
+    try:
+        yield
+    except CurveValueError as error:
+        raise ValueError(f'{path}.{error}') from None
 
 
 _CHARGER_KEYS = ('type', 'charger_simulation', 'attributes', 'autosize', 'noise_std', 'soc_unit')
@@ -341,7 +353,8 @@ def configure_devices(building, building_name, building_type, building_schema, s
                     () if attributes.get('random_seed', None) is not None else ('building', building_name, device_name),
                 ),
             }
-            device = constructor(**attributes)
+            with curve_path(f'buildings.{building_name}.{device_name}.attributes'):
+                device = constructor(**attributes)
             autosize = parse_bool(
                 building_schema[device_name].get('autosize', False),
                 default=False,

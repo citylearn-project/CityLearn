@@ -166,8 +166,10 @@ bateria e dos VE já liquidadas no passo anterior
 A bateria do BAU serve apenas a potência que o VE ainda consegue aceitar: a
 observação `available_charge_power_kw` do grupo `entity_core_electrical` ou, sem
 esse grupo, uma estimativa a partir do SOC observado, da capacidade da bateria,
-da potência e da eficiência do carregador e da duração do passo, calculada como o
-simulador calcula essa observação. Nenhuma das duas inclui a curva
+da potência e da eficiência do carregador e da duração do passo. A observação
+divide também pela eficiência num sentido da bateria do VE, que não é observável
+sem o grupo, pelo que a estimativa reserva um pouco menos de potência do que a
+observação. Nenhuma das duas inclui a curva
 capacidade-potência da bateria do VE, pelo que, em passos de poucos segundos
 perto de 100% de SOC, a bateria ainda pode descarregar mais do que o VE recebe.
 A estimativa omite também o limite de importação do serviço elétrico, que o
@@ -230,7 +232,7 @@ membros, ficheiros, janelas, sementes e condições de mercado que o candidato.
 | `RBCSmartPolicy` | Usa previsões de preço e o excedente FV local previsto para agendar o carregamento dos VE e os arranques dos aparelhos. A bateria combina autoconsumo, arbitragem de preços e uma reserva de serviço. Usa apenas observações locais do edifício e públicas. |
 | `RBCCommunityPolicy` | Acrescenta a energia partilhável entre membros da comunidade. Com o mercado comunitário ativo, as baterias podem apoiar os períodos caros quando a importação da comunidade atinge `community_import_threshold_kw` (15 kW por omissão). Este valor desencadeia uma ação; o pico observado pode excedê-lo. Sem mercado comunitário, não partilha energia e segue as regras económicas da Smart mas, ao contrário da Smart, não está restrita a observações locais do edifício. |
 
-Os três param de carregar um VE 0,001 de SOC abaixo do alvo. No último intervalo antes da partida podem pedir até mais 25% de energia AC do que a energia em falta do lado da bateria (`EV_LAST_INTERVAL_LOSS_ALLOWANCE`), para cobrir as perdas do carregador e da bateria que não observam, e pelo menos a potência mínima do carregador.
+Os três param de carregar um VE 0,001 de SOC abaixo do alvo. No último intervalo antes da partida podem pedir até mais 25% de energia AC do que a energia em falta do lado da bateria (`EV_LAST_INTERVAL_LOSS_ALLOWANCE`), para cobrir as perdas do carregador e da bateria que não observam, e pelo menos a potência mínima do carregador. A sua própria taxa de carregamento necessária é do lado da bateria, com uma folga de prazo e uma margem de serviço para essas perdas; com as observações de `entity_core_electrical` usam também `min_required_action_normalized`, do lado AC, que já inclui as perdas à potência máxima do carregador, e usam a maior das duas sem lhe somar a margem.
 
 ### AVAC das referências baseadas em regras
 

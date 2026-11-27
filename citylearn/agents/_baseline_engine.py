@@ -22,7 +22,10 @@ from citylearn.agents._rule_engine import ChargerInfo, RulePolicyBase, StorageIn
 EV_CHARGE_STOP_SOC_TOLERANCE = 0.001
 
 # In the last interval before departure the engines may draw this much more AC energy than the
-# battery-side SOC gap, to cover charger and battery losses they cannot observe.
+# battery-side SOC gap, to cover charger and battery losses they cannot observe. The AC-side
+# `min_required_action_normalized` (#421) covers those losses at full charger power when the
+# observation is available; the allowance stays for runs without it and for the lower efficiency
+# of a charger or battery curve at the part-load power of a last interval.
 EV_LAST_INTERVAL_LOSS_ALLOWANCE = 1.25
 
 # Fixed reference tariff: Core30 2023 OMIE terciles, rounded to 4 decimals.
@@ -1543,10 +1546,15 @@ class _OperationalBaselinePolicy(RulePolicyBase):
             float(ctx["hours_to_departure"]) - self._effective_ev_deadline_buffer_hours(),
             self.step_hours,
         )
-        required_rate = service_gap * float(ctx["capacity"]) / (hours * float(ctx["max_power"]))
+        # The engine's own rate is battery-side: the deadline buffer and the service margin cover the charger and
+        # battery losses it cannot observe. `min_required_action_normalized` is AC-side and already includes them
+        # (#421), so the margin is added to the engine's rate only.
+        required_rate = (
+            service_gap * float(ctx["capacity"]) / (hours * float(ctx["max_power"])) + max(0.0, margin_rate)
+        )
         if not math.isnan(simulator_required):
             required_rate = max(required_rate, simulator_required)
-        return float(np.clip(required_rate + max(0.0, margin_rate), 0.0, 1.0))
+        return float(np.clip(required_rate, 0.0, 1.0))
 
     def _ev_departure_is_infeasible(self, ctx: Mapping[str, float | bool | None]) -> bool:
         departure_margin = self._ctx_float(ctx, "departure_margin")
@@ -1960,10 +1968,10 @@ class NormalPolicy(_OperationalBaselinePolicy):
             # CityLearn: available_charge_power_kw is published only with the
             # entity_core_electrical bundle. Without it, estimate the power the
             # EV can accept from the observed SOC, battery capacity, charger
-            # power and charger efficiency, as the Simulator computes that
-            # observation. The estimate omits the service import limit, the
-            # efficiency curve and capacity fade, which are not observable
-            # without the bundle; the observation stops at the degraded capacity.
+            # power and charger efficiency. The estimate omits the service import
+            # limit, the EV battery's own efficiency and capacity fade, which are
+            # not observable without the bundle; the observation divides by that
+            # efficiency and stops at the degraded capacity.
             efficiency = self._get_ev_value(
                 obs,
                 obs_map,

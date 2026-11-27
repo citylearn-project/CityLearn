@@ -38,6 +38,6 @@ def test_same_elapsed_time_has_same_standby_loss(storage_type, seconds, hourly_l
 @pytest.mark.parametrize("seconds", [15, 900, 3600, 7200])
 def test_standby_loss_ignores_dataset_to_control_ratio(seconds):
     losses = [StorageDevice(loss_coefficient=0.01, seconds_per_time_step=seconds,
-                            time_step_ratio=ratio).loss_coefficient
+                            time_step_ratio=ratio).step_loss_fraction
               for ratio in [0.25, 1.0, 2.0]]
     assert losses == pytest.approx([1.0 - 0.99**(seconds/3600.0)] * 3)

@@ -617,7 +617,7 @@ the step energy of the cooling and heating demand with kW, a one-hour cap).
 |---|---|---|---|
 | `capacity` | `0` | kWh thermal | Storage size. |
 | `efficiency` | drawn in [0.90, 0.98] | round trip | Each direction keeps its square root. |
-| `loss_coefficient` | drawn in [0.001, 0.009] | per hour | Standby loss, compounded per step: `1 - (1 - loss) ** (seconds_per_time_step / 3600)`. |
+| `loss_coefficient` | drawn in [0.001, 0.009] | per hour | Standby loss, compounded per step: `1 - (1 - loss) ** (seconds_per_time_step / 3600)`. The attribute and `get_metadata()` give this hourly value; `step_loss_fraction` gives the compounded loss per control step. |
 | `initial_soc` | `0` | fraction | SOC at the start of an episode. |
 | `max_input_power`, `max_output_power` | `null` (unlimited) | kW | Charging and discharging power limits. |
 
@@ -654,7 +654,7 @@ building side of the battery. The state of charge (SOC) is a fraction of `capaci
 | `depth_of_discharge` | ratio | 1.0 | Fraction of `capacity` that may be discharged. |
 | `initial_soc` | ratio | `1 - depth_of_discharge` | SOC at the start of the episode, in [0, 1]. |
 | `capacity_loss_coefficient` | ratio | drawn in [1e-5, 1e-4] | Fraction of `capacity` lost per equivalent full cycle. |
-| `loss_coefficient` | ratio per hour | drawn in [0.001, 0.009] | Standby loss of the stored energy, compounded per step as for thermal storage. |
+| `loss_coefficient` | ratio per hour | drawn in [0.001, 0.009] | Standby loss of the stored energy, compounded per step as for thermal storage. The attribute reads back the configured hourly value; `step_loss_fraction` gives the loss per control step. |
 | `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | `L1` (single-phase service), `all_phases` (three-phase) | Phase of the battery under an [electrical service](#electrical-service). |
 
 A default shown as "drawn" is taken from the environment's random stream when the attribute is
@@ -671,6 +671,13 @@ omit both curves, so each seed gets different curves. Set the attributes explici
 - **Power curves.** `capacity_power_curve` and `discharge_power_curve` are evaluated at the SOC
   at the start of the step, and their values are multiplied by `nominal_power`. Between points
   the curves are interpolated linearly.
+- **Curve rules.** Each curve needs at least two `[x, y]` points with `x` strictly increasing
+  within [0, 1]. Efficiencies must be in (0, 1] and power fractions must be >= 0. An invalid
+  curve fails at construction with a `ValueError` that names the attribute path, for example
+  `buildings.Building_1.electrical_storage.attributes.power_efficiency_curve`. Outside its first
+  and last `x` a curve keeps its end values, as `np.interp` does: a curve that starts at
+  `x = 0.2` gives its first value at a SOC of 0.1. Until CityLearn 3.8.0 the battery curves were
+  extrapolated linearly, which could give an efficiency above 1.
 - **Depth of discharge.** Discharging stops at a SOC of `1 - depth_of_discharge`, a floor
   measured on the rated `capacity`. Charging stops at the degraded capacity.
 - **Capacity fade.** After each charge or discharge the capacity falls by
@@ -884,7 +891,7 @@ Another key gives a `UserWarning` that suggests the closest key and is ignored.
 | `max_discharging_power` | kW | **0** (no V2G) with a warning | Power for an action of -1.0. With 0 the action range is [0, 1]. |
 | `min_discharging_power` | kW | 0 | Minimum discharge power, as for charging. |
 | `efficiency` | ratio, (0, 1] | 1.0, with a warning when used | Charging stores `AC × efficiency` in the EV; discharging delivers `battery energy × efficiency`. Used in a direction without a curve. |
-| `charge_efficiency_curve` | `[[power fraction, efficiency], ...]` | none | Efficiency against charging power / `max_charging_power`, interpolated linearly. |
+| `charge_efficiency_curve` | `[[power fraction, efficiency], ...]` | none | Efficiency against the applied AC charging power / `max_charging_power`, interpolated linearly and held at its end values. When the EV battery accepts less than the command, the efficiency is read at the power actually applied. At least two points, power fractions strictly increasing within [0, 1], efficiencies in (0, 1]; otherwise construction fails with a `ValueError` that names the attribute path. |
 | `discharge_efficiency_curve` | same | none | Same for discharging, against `max_discharging_power`. |
 | `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | `L1` / `all_phases` | Phase under an [electrical service](#electrical-service); not used by `charging_constraints`. |
 | `charger_type` | any | none | Label only (for example 0 for AC, 1 for DC). |
@@ -1034,6 +1041,12 @@ During an outage the building is islanded: it is supplied by PV, the battery, th
 `vehicle_to_building`) EVs; unserved energy is reported as `power_outage_unserved_energy`. The
 battery and EVs discharge after the thermal storage and before the loads are served; see
 [What each version changes](#what-each-version-changes).
+
+Charging takes only the supply that the loads leave. The cooling, heating and DHW devices serve
+their demand and the non-shiftable load is served first; then the thermal storages charge, then the
+battery, the EVs and the deferrable appliances, each from what is left. Until CityLearn 3.8.0 a
+charging thermal storage ran before the heating and DHW devices and the non-shiftable load, and
+could leave them unserved.
 
 ## Community market and settlement
 
@@ -1312,7 +1325,16 @@ first one is activated).
 | `target_asset_id` | charger and deferrable operations | Target asset. Not used for `pv` and `electrical_storage` (one per building). |
 | `source_member_id` | no | Building to clone from; defaults to the target member for asset operations. |
 | `source_asset_id` | no | Asset to clone; defaults to `target_asset_id`. |
-| `overrides` | no | Attributes set on the cloned object; each must exist on it. Ignored for remove operations. |
+| `overrides` | no | Attributes set on the cloned object; each must exist on it. Ignored for remove operations. An `efficiency` override of `electrical_storage` sets the battery's rated efficiency and rescales a generated `power_efficiency_curve`; when the source battery has a `power_efficiency_curve` from its schema, override `power_efficiency_curve` as well, or construction fails. |
+
+The events that can fire in the simulation window (up to `simulation_end_time_step`) are checked at
+construction, in order, and an invalid event raises `ValueError` there instead of when it fires. Member ids must
+name a loaded member or one that an earlier `add_member` cloned: a member declared in the schema but left out
+with `buildings=[...]` is not loaded. Asset events must target an active member. A removed charger or deferrable
+appliance must exist on the target member at that time, an added one must have a new id, and the source asset an
+`add_asset` copies (`source_asset_id`, else `target_asset_id`) must exist on the source member. Override keys are
+checked on that source asset and override values are applied to a copy. Until CityLearn 3.8.0 these events were
+accepted and failed, or did nothing, when they fired.
 
 Adding PV or storage replaces the building's current one. Removing a deferrable appliance cancels pending/running
 cycles and clears future consumption. Removing PV creates a zero PV. Removing storage creates a zero BESS. What a

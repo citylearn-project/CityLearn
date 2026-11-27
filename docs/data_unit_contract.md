@@ -158,20 +158,27 @@ Do not repeat `load_profile` per timestep in the dataset. Temporal repetition be
 
 ## EV Flexibility Features
 
-In the entity interface, EV flexibility should preferably be consumed through physical/normalized derived features:
+In the entity interface, EV flexibility should preferably be consumed through physical/normalized derived features.
+Energies are stored EV battery energy; powers are AC-side, at the charger terminals. The conversion between them is
+`eta = charger efficiency × EV battery one-way efficiency`, both read at full charger power: the charger
+`charge_efficiency_curve` (or `efficiency`) at 1.0, and the square root of the EV battery's round-trip
+`power_efficiency_curve` at the battery power that full charger power delivers.
 
 | Feature | Meaning |
 |---|---|
 | `hours_until_departure` | Physical time until departure. |
 | `time_until_departure_ratio` | `hours_until_departure / 24`, clipped to `[0, 1]`. |
-| `energy_to_required_soc_kwh` | Energy still required to reach target SOC. |
-| `required_average_power_kw` | Average power required until departure. |
-| `charging_slack_kw` | Margin between charger max power and required average power. |
-| `charging_priority_ratio` | Urgency in `[0, 1]`, derived from required average power versus charger max power. |
-| `max_deliverable_energy_until_departure_kwh` | Energy that can still be delivered by departure under current feasible charge power. |
+| `energy_to_required_soc_kwh` | Stored energy still required to reach target SOC. |
+| `required_average_power_kw` | Average AC charger power required until departure: `energy_to_required_soc_kwh / (hours_until_departure × eta)`. |
+| `charging_slack_kw` | Charger max power minus `required_average_power_kw`. |
+| `charging_priority_ratio` | Urgency in `[0, 1]`: `required_average_power_kw` divided by charger max power. |
+| `max_deliverable_energy_until_departure_kwh` | Stored energy that can still be delivered by departure: current feasible AC charge power × `hours_until_departure` × `eta`, at most the energy to full. |
 | `departure_energy_margin_kwh` | `max_deliverable_energy_until_departure_kwh - energy_to_required_soc_kwh`; negative means the target is currently infeasible. |
 | `departure_feasibility_ratio` | `energy_to_required_soc_kwh / max_deliverable_energy_until_departure_kwh`; values above `1` indicate infeasibility under current limits. |
-| `min_required_action_normalized` | Required average charger power divided by charger max charging power; values above `1` indicate a power deadline conflict. |
+| `min_required_action_normalized` | `required_average_power_kw` divided by charger max charging power; values above `1` indicate a power deadline conflict. |
+
+Until CityLearn 3.8.0 `required_average_power_kw` was the stored energy per hour, compared with the AC charger power
+without any efficiency, and `max_deliverable_energy_until_departure_kwh` used the charger efficiency only.
 
 ## PV
 

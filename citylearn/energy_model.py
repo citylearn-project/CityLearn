@@ -46,6 +46,61 @@ def _require_finite_energy(energy: float, device) -> None:
         raise ValueError(f'{type(device).__name__}.charge() received non-finite energy {energy!r}.')
 
 
+class CurveValueError(ValueError):
+    """An invalid battery or charger curve. The schema loaders prefix the message with the attribute path."""
+
+
+def validate_curve(curve: Any, name: str, *, efficiency: bool) -> np.ndarray:
+    """Check a ``[[x, y], ...]`` curve and return it as a 2 x N float array.
+
+    The x points must be strictly increasing within [0, 1]. Efficiency values must be in (0, 1] and power
+    fractions must be >= 0. Outside its first and last x points a curve keeps its end values.
+
+    Raises
+    ------
+    CurveValueError
+        If the curve does not satisfy these rules. The message starts with `name`.
+    """
+
+    try:
+        points = np.array(curve, dtype=float)
+    except (TypeError, ValueError):
+        raise CurveValueError(f'{name} must be a list of [x, y] points, got {curve!r}.') from None
+
+    if points.ndim != 2 or points.shape[1] != 2 or points.shape[0] < 2:
+        raise CurveValueError(f'{name} must be a list of at least two [x, y] points, got {curve!r}.')
+
+    if not np.all(np.isfinite(points)):
+        raise CurveValueError(f'{name} must contain finite numbers, got {curve!r}.')
+
+    x, y = points[:, 0], points[:, 1]
+
+    if np.any(np.diff(x) <= 0.0):
+        raise CurveValueError(f'{name} x points must be strictly increasing, got {x.tolist()}.')
+
+    if x[0] < 0.0 or x[-1] > 1.0:
+        raise CurveValueError(f'{name} x points must be within [0, 1], got {x.tolist()}.')
+
+    if efficiency and (np.any(y <= 0.0) or np.any(y > 1.0)):
+        raise CurveValueError(f'{name} efficiencies must be in (0, 1], got {y.tolist()}.')
+
+    if not efficiency and np.any(y < 0.0):
+        raise CurveValueError(f'{name} power fractions must be >= 0, got {y.tolist()}.')
+
+    return points.T
+
+
+def _interpolate_clamped(curve: np.ndarray, x: float) -> float:
+    """Linear interpolation of a 2 x N curve, held at its end values outside its x range, as `np.interp` does."""
+
+    curve_x = curve[0]
+    curve_y = curve[1]
+    x = min(max(x, float(curve_x[0])), float(curve_x[-1]))
+    idx = min(len(curve_x) - 2, max(0, int(np.searchsorted(curve_x, x, side='left')) - 1))
+
+    return curve_y[idx] + (curve_y[idx + 1] - curve_y[idx])*(x - curve_x[idx])/(curve_x[idx + 1] - curve_x[idx])
+
+
 def _remaining_step_budget(budget: float, used: float, other_budget: Optional[float], other_used: float) -> float:
     """Terminal energy a storage device can still move in one direction in the current control step.
 
@@ -854,7 +909,16 @@ class StorageDevice(Device):
 
     @property
     def loss_coefficient(self) -> float:
-        r"""Effective step loss, compounded from the configured hourly fraction."""
+        r"""Standby loss as a fraction of the stored energy per hour, as configured in the schema."""
+
+        return self.__loss_coefficient
+
+    @property
+    def step_loss_fraction(self) -> float:
+        r"""Standby loss as a fraction of the stored energy per control step, compounded from `loss_coefficient`.
+
+        ``1 - (1 - loss_coefficient)**(seconds_per_time_step/3600)``.
+        """
 
         step_hours = max(float(self.seconds_per_time_step) / 3600.0, 0.0)
         return 1.0 - (1.0 - self.__loss_coefficient)**step_hours
@@ -979,7 +1043,7 @@ class StorageDevice(Device):
         super().next_time_step()
 
         if np.isfinite(previous_soc) and self.time_step < len(self.__soc):
-            next_soc = clip_scalar(previous_soc * (1.0 - self.loss_coefficient), 0.0, 1.0)
+            next_soc = clip_scalar(previous_soc * (1.0 - self.step_loss_fraction), 0.0, 1.0)
             self.__soc[self.time_step] = next_soc
             self.__soc_initialized[self.time_step] = True
             self._record_energy_event('standby', previous_soc*as_float(self.capacity),
@@ -990,6 +1054,7 @@ class StorageDevice(Device):
             **super().get_metadata(),
             'capacity': self.capacity,
             'loss_coefficient': self.loss_coefficient,
+            'step_loss_fraction': self.step_loss_fraction,
             'initial_soc': self.initial_soc,
             'one_way_efficiency': self.one_way_efficiency,
         }
@@ -1464,7 +1529,7 @@ class Battery(StorageDevice, ElectricDevice):
         if discharge_power_curve is None:
             discharge_power_curve = [[0.0, 1.0], [1.0, 1.0]]
 
-        self.__discharge_power_curve = np.array(discharge_power_curve, dtype=float).T
+        self.__discharge_power_curve = validate_curve(discharge_power_curve, 'discharge_power_curve', efficiency=False)
 
     @property
     def time_step_ratio(self) -> float:
@@ -1549,7 +1614,7 @@ class Battery(StorageDevice, ElectricDevice):
         else:
             pass
 
-        self.__power_efficiency_curve = np.array(power_efficiency_curve).T
+        self.__power_efficiency_curve = validate_curve(power_efficiency_curve, 'power_efficiency_curve', efficiency=True)
 
     @capacity_power_curve.setter
     def capacity_power_curve(self, capacity_power_curve: List[List[float]]):
@@ -1562,7 +1627,7 @@ class Battery(StorageDevice, ElectricDevice):
         else:
             pass
 
-        self.__capacity_power_curve = np.array(capacity_power_curve).T
+        self.__capacity_power_curve = validate_curve(capacity_power_curve, 'capacity_power_curve', efficiency=False)
 
     @StorageDevice.initial_soc.setter
     def initial_soc(self, initial_soc: float):
@@ -1773,22 +1838,16 @@ class Battery(StorageDevice, ElectricDevice):
         return self._curve_power_kw(self.capacity_power_curve, energy_init)
 
     def _curve_power_kw(self, curve: np.ndarray, energy_init: float) -> float:
-        """`nominal_power` times `curve` interpolated at the state of charge of `energy_init`, in [kW]."""
+        """`nominal_power` times `curve` interpolated at the state of charge of `energy_init`, in [kW].
+
+        Outside its x range the curve keeps its end values.
+        """
 
         soc = energy_init/max(self.capacity, ZERO_DIVISION_PLACEHOLDER)
-        curve_x = curve[0]
-        curve_y = curve[1]
         if not np.isfinite(soc):
             return np.nan
 
-        idx = min(len(curve_x) - 2, max(0, int(np.searchsorted(curve_x, soc, side='left')) - 1))
-        max_power = self.nominal_power*(
-            curve_y[idx]
-            + (curve_y[idx+1] - curve_y[idx])*(soc - curve_x[idx])
-            /(curve_x[idx+1] - curve_x[idx])
-        )
-
-        return max_power
+        return self.nominal_power*_interpolate_clamped(curve, soc)
 
     def get_current_efficiency(self, power: float) -> float:
         r"""Get technical efficiency while considering `power_efficiency_curve` limitations.
@@ -1800,18 +1859,12 @@ class Battery(StorageDevice, ElectricDevice):
         """
 
         # Efficiency curves are defined on normalized average power, not kWh per step.
+        # Outside its x range the curve keeps its end values.
         power_normalized = min(max(abs(float(power))/max(self.nominal_power, ZERO_DIVISION_PLACEHOLDER), 0.0), 1.0)
-        curve_x = self.power_efficiency_curve[0]
-        curve_y = self.power_efficiency_curve[1]
         if not np.isfinite(power_normalized):
             return np.nan
-        idx = min(len(curve_x) - 2, max(0, int(np.searchsorted(curve_x, power_normalized, side='left')) - 1))
-        efficiency = curve_y[idx]\
-            + (power_normalized - curve_x[idx]
-            )*(curve_y[idx + 1] - curve_y[idx]
-            )/(curve_x[idx + 1] - curve_x[idx])
 
-        return efficiency
+        return _interpolate_clamped(self.power_efficiency_curve, power_normalized)
 
     def degrade(self, energy_balance: float = None) -> float:
         r"""Get amount of capacity degradation.

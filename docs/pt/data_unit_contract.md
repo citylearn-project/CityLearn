@@ -158,20 +158,29 @@ Não repita o `load_profile` em cada passo de tempo do dataset. A repetição te
 
 ## Variáveis de flexibilidade dos VE
 
-Na interface entity, a flexibilidade dos VE deve, de preferência, ser consumida através de variáveis derivadas físicas/normalizadas:
+Na interface entity, a flexibilidade dos VE deve, de preferência, ser consumida através de variáveis derivadas físicas/normalizadas.
+As energias são energia armazenada na bateria do VE; as potências são do lado AC, nos terminais do carregador. A
+conversão entre elas é `eta = eficiência do carregador × eficiência num sentido da bateria do VE`, ambas lidas à
+potência máxima do carregador: a `charge_efficiency_curve` (ou `efficiency`) do carregador em 1,0, e a raiz quadrada
+da `power_efficiency_curve` de ida e volta da bateria do VE à potência de bateria que a potência máxima do
+carregador entrega.
 
 | Variável | Significado |
 |---|---|
 | `hours_until_departure` | Tempo físico até à partida. |
 | `time_until_departure_ratio` | `hours_until_departure / 24`, limitado a `[0, 1]`. |
-| `energy_to_required_soc_kwh` | Energia ainda necessária para atingir o SOC alvo. |
-| `required_average_power_kw` | Potência média necessária até à partida. |
-| `charging_slack_kw` | Margem entre a potência máxima do carregador e a potência média necessária. |
-| `charging_priority_ratio` | Urgência em `[0, 1]`, derivada da potência média necessária face à potência máxima do carregador. |
-| `max_deliverable_energy_until_departure_kwh` | Energia que ainda pode ser entregue até à partida com a potência de carregamento atualmente viável. |
+| `energy_to_required_soc_kwh` | Energia armazenada ainda necessária para atingir o SOC alvo. |
+| `required_average_power_kw` | Potência média AC do carregador necessária até à partida: `energy_to_required_soc_kwh / (hours_until_departure × eta)`. |
+| `charging_slack_kw` | Potência máxima do carregador menos `required_average_power_kw`. |
+| `charging_priority_ratio` | Urgência em `[0, 1]`: `required_average_power_kw` dividida pela potência máxima do carregador. |
+| `max_deliverable_energy_until_departure_kwh` | Energia armazenada que ainda pode ser entregue até à partida: potência AC de carregamento atualmente viável × `hours_until_departure` × `eta`, no máximo a energia até à carga completa. |
 | `departure_energy_margin_kwh` | `max_deliverable_energy_until_departure_kwh - energy_to_required_soc_kwh`; um valor negativo significa que o alvo é atualmente inviável. |
 | `departure_feasibility_ratio` | `energy_to_required_soc_kwh / max_deliverable_energy_until_departure_kwh`; valores acima de `1` indicam inviabilidade com os limites atuais. |
-| `min_required_action_normalized` | Potência média necessária do carregador dividida pela sua potência máxima de carregamento; valores acima de `1` indicam um conflito entre potência e prazo. |
+| `min_required_action_normalized` | `required_average_power_kw` dividida pela potência máxima de carregamento do carregador; valores acima de `1` indicam um conflito entre potência e prazo. |
+
+Até ao CityLearn 3.8.0, `required_average_power_kw` era a energia armazenada por hora, comparada com a potência AC
+do carregador sem qualquer eficiência, e `max_deliverable_energy_until_departure_kwh` usava apenas a eficiência do
+carregador.
 
 ## FV
 

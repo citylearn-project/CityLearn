@@ -161,7 +161,9 @@ The BAU battery serves only the EV power the
 EV can still accept: the `available_charge_power_kw` observation of the
 `entity_core_electrical` bundle, or, without that bundle, an estimate from the
 observed SOC, battery capacity, charger power and charger efficiency and the
-step length, computed as the simulator computes that observation. Neither
+step length. The observation also divides by the EV battery's one-way
+efficiency, which is not observable without the bundle, so the estimate
+reserves slightly less power than the observation. Neither
 includes the EV battery's capacity-power curve, so at steps of a few seconds
 near 100% SOC the battery can still discharge more than the EV takes. The
 estimate also omits the electrical-service import limit, which the bundle
@@ -221,7 +223,7 @@ windows, seeds and market conditions as the candidate.
 | `RBCSmartPolicy` | Uses price forecasts and the forecast local PV surplus to schedule EV charging and appliance starts. The battery combines self-consumption, price arbitrage and a service reserve. It uses only building-local and public observations. |
 | `RBCCommunityPolicy` | Adds energy shareable between community members. When the community market is enabled, the batteries can support expensive periods once community import reaches `community_import_threshold_kw` (15 kW by default). This value triggers an action; the observed peak can exceed it. Without a community market it shares no energy and follows Smart's economic rules, but, unlike Smart, it is not restricted to building-local observations. |
 
-All three stop charging an EV 0.001 SOC below its target. In the last interval before departure they may draw up to 25% more AC energy than the battery-side gap (`EV_LAST_INTERVAL_LOSS_ALLOWANCE`), to cover the charger and battery losses they cannot observe, and at least the charger's minimum power.
+All three stop charging an EV 0.001 SOC below its target. In the last interval before departure they may draw up to 25% more AC energy than the battery-side gap (`EV_LAST_INTERVAL_LOSS_ALLOWANCE`), to cover the charger and battery losses they cannot observe, and at least the charger's minimum power. Their own required charging rate is battery-side, with a deadline buffer and a service margin for those losses; with the `entity_core_electrical` observations they also take the AC-side `min_required_action_normalized`, which already includes the losses at full charger power, and use the larger of the two without adding the margin to it.
 
 ### HVAC of the rule-based baselines
 

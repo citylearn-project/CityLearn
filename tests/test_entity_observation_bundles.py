@@ -208,11 +208,16 @@ def test_core_bundle_adds_ev_charging_flexibility_features():
         capacity = value("connected_ev_battery_capacity_kwh")
         max_charging_power = value("max_charging_power_kw")
         charge_efficiency = value("charge_efficiency_at_max_ratio")
+        # Powers are AC-side: stored energy divided by the charger efficiency times the EV battery's one-way
+        # efficiency at full charger power (#421).
+        ref = env._entity_service._charger_refs[row]
+        battery = env.buildings[ref.building_index]._charger_lookup[ref.charger_id].connected_electric_vehicle.battery
+        conversion = charge_efficiency * battery.get_current_efficiency(max_charging_power * charge_efficiency) ** 0.5
         expected_energy = max((required_soc - current_soc) * max(capacity, 0.0), 0.0)
-        expected_required_power = expected_energy / max(hours, 1.0e-6) if expected_energy > 0.0 else 0.0
+        expected_required_power = expected_energy / (max(hours, 1.0e-6) * conversion) if expected_energy > 0.0 else 0.0
         expected_energy_to_full = max((1.0 - current_soc) * max(capacity, 0.0), 0.0)
         expected_max_deliverable = min(
-            value("available_charge_power_kw") * max(hours, 0.0) * max(charge_efficiency, 1.0e-6),
+            value("available_charge_power_kw") * max(hours, 0.0) * conversion,
             expected_energy_to_full,
         )
         if expected_energy <= 0.0:
@@ -530,7 +535,7 @@ def test_storage_available_energy_scales_with_step_seconds(seconds_per_time_step
         energy_available=10.0,
         max_charge_power=4.0,
         max_discharge_power=4.0,
-        efficiency=1.0,
+        one_way_efficiency=1.0,
         step_hours=step_hours,
         include_headroom=False,
     )

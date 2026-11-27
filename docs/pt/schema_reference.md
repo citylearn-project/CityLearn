@@ -625,7 +625,7 @@ uma hora).
 |---|---|---|---|
 | `capacity` | `0` | kWh térmicos | Dimensão do armazenamento. |
 | `efficiency` | sorteada em [0,90, 0,98] | ida e volta | Cada sentido usa a raiz quadrada. |
-| `loss_coefficient` | sorteado em [0,001, 0,009] | por hora | Perda em repouso, composta por passo: `1 - (1 - loss) ** (seconds_per_time_step / 3600)`. |
+| `loss_coefficient` | sorteado em [0,001, 0,009] | por hora | Perda em repouso, composta por passo: `1 - (1 - loss) ** (seconds_per_time_step / 3600)`. O atributo e `get_metadata()` dão este valor por hora; `step_loss_fraction` dá a perda composta por passo de controlo. |
 | `initial_soc` | `0` | fração | SOC no início de um episódio. |
 | `max_input_power`, `max_output_power` | `null` (sem limite) | kW | Limites de potência de carga e de descarga. |
 
@@ -662,7 +662,7 @@ da bateria, do lado do edifício. O estado de carga (SOC) é uma fração de `ca
 | `depth_of_discharge` | rácio | 1,0 | Fração de `capacity` que pode ser descarregada. |
 | `initial_soc` | rácio | `1 - depth_of_discharge` | SOC no início do episódio, em [0, 1]. |
 | `capacity_loss_coefficient` | rácio | sorteado em [1e-5, 1e-4] | Fração de `capacity` perdida por ciclo completo equivalente. |
-| `loss_coefficient` | rácio por hora | sorteado em [0,001, 0,009] | Perda em repouso da energia armazenada, composta por passo como no armazenamento térmico. |
+| `loss_coefficient` | rácio por hora | sorteado em [0,001, 0,009] | Perda em repouso da energia armazenada, composta por passo como no armazenamento térmico. O atributo devolve o valor por hora configurado; `step_loss_fraction` dá a perda por passo de controlo. |
 | `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | `L1` (serviço monofásico), `all_phases` (trifásico) | Fase da bateria sob um [serviço elétrico](#serviço-elétrico). |
 
 Uma predefinição indicada como "sorteada" é tirada do fluxo aleatório do ambiente quando o
@@ -680,6 +680,14 @@ atributos explicitamente para as fixar.
 - **Curvas de potência.** `capacity_power_curve` e `discharge_power_curve` são avaliadas no SOC
   do início do passo, e os seus valores são multiplicados por `nominal_power`. Entre pontos,
   as curvas são interpoladas linearmente.
+- **Regras das curvas.** Cada curva precisa de pelo menos dois pontos `[x, y]` com `x`
+  estritamente crescente dentro de [0, 1]. As eficiências têm de estar em (0, 1] e as frações de
+  potência têm de ser >= 0. Uma curva inválida falha na construção com um `ValueError` que indica
+  o caminho do atributo, por exemplo
+  `buildings.Building_1.electrical_storage.attributes.power_efficiency_curve`. Fora do seu
+  primeiro e último `x`, uma curva mantém os valores das pontas, como faz `np.interp`: uma curva
+  que começa em `x = 0,2` dá o seu primeiro valor com um SOC de 0,1. Até ao CityLearn 3.8.0, as
+  curvas da bateria eram extrapoladas linearmente, o que podia dar uma eficiência acima de 1.
 - **Profundidade de descarga.** A descarga para num SOC de `1 - depth_of_discharge`, um
   mínimo medido sobre a `capacity` nominal. O carregamento para na capacidade degradada.
 - **Degradação da capacidade.** Depois de cada carga ou descarga, a capacidade desce
@@ -894,7 +902,7 @@ Outra chave dá um `UserWarning` que sugere a chave mais próxima e é ignorada.
 | `max_discharging_power` | kW | **0** (sem V2G) com aviso | Potência para uma ação de -1,0. Com 0, o intervalo da ação é [0, 1]. |
 | `min_discharging_power` | kW | 0 | Potência mínima de descarga, como no carregamento. |
 | `efficiency` | rácio, (0, 1] | 1,0, com aviso quando é usada | O carregamento armazena `AC × efficiency` no VE; a descarga entrega `energia da bateria × efficiency`. Usada no sentido sem curva. |
-| `charge_efficiency_curve` | `[[fração de potência, eficiência], ...]` | nenhuma | Eficiência em função da potência de carga / `max_charging_power`, interpolada linearmente. |
+| `charge_efficiency_curve` | `[[fração de potência, eficiência], ...]` | nenhuma | Eficiência em função da potência AC de carga aplicada / `max_charging_power`, interpolada linearmente e mantida nos valores das pontas. Quando a bateria do VE aceita menos do que o comando, a eficiência é lida à potência efetivamente aplicada. Pelo menos dois pontos, frações de potência estritamente crescentes dentro de [0, 1], eficiências em (0, 1]; caso contrário a construção falha com um `ValueError` que indica o caminho do atributo. |
 | `discharge_efficiency_curve` | igual | nenhuma | O mesmo para a descarga, em relação a `max_discharging_power`. |
 | `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | `L1` / `all_phases` | Fase sob um [serviço elétrico](#serviço-elétrico); não é usada por `charging_constraints`. |
 | `charger_type` | qualquer | nenhuma | Só uma etiqueta (por exemplo 0 para AC, 1 para DC). |
@@ -1046,6 +1054,12 @@ Durante uma falha o edifício fica em ilha: é alimentado pela FV, pela bateria,
 `vehicle_to_building`) pelos VE; a energia não servida é indicada em `power_outage_unserved_energy`. A
 bateria e os VE descarregam depois do armazenamento térmico e antes de as cargas serem servidas; consulte
 [O que cada versão altera](#o-que-cada-versão-altera).
+
+O carregamento usa apenas a alimentação que as cargas deixam. Primeiro, os equipamentos de arrefecimento,
+aquecimento e AQS servem a sua procura e é servida a carga não deslocável; depois carregam os armazenamentos
+térmicos, a seguir a bateria, os VE e os aparelhos diferíveis, cada um com o que sobra. Até ao CityLearn 3.8.0, um
+armazenamento térmico a carregar corria antes dos equipamentos de aquecimento e AQS e da carga não deslocável, e
+podia deixá-los por servir.
 
 ## Mercado comunitário e liquidação
 
@@ -1323,7 +1337,16 @@ inativos, o primeiro é ativado).
 | `target_asset_id` | operações de carregadores e aparelhos diferíveis | Ativo alvo. Não é usado para `pv` e `electrical_storage` (um por edifício). |
 | `source_member_id` | não | Edifício de onde se clona; predefinição: o membro alvo nas operações de ativos. |
 | `source_asset_id` | não | Ativo a clonar; predefinição `target_asset_id`. |
-| `overrides` | não | Atributos definidos no objeto clonado; cada um tem de existir nele. Ignorado nas operações de remoção. |
+| `overrides` | não | Atributos definidos no objeto clonado; cada um tem de existir nele. Ignorado nas operações de remoção. Um override de `efficiency` em `electrical_storage` define a eficiência nominal da bateria e reescala uma `power_efficiency_curve` gerada; quando a bateria de origem tem uma `power_efficiency_curve` do seu schema, faça também override de `power_efficiency_curve`, ou a construção falha. |
+
+Os eventos que podem ocorrer na janela de simulação (até `simulation_end_time_step`) são verificados na construção,
+por ordem, e um evento inválido lança `ValueError` nesse momento em vez de quando ocorre. Os ids de membros têm de
+indicar um membro carregado ou um que um `add_member` anterior clonou: um membro declarado no schema mas deixado de
+fora com `buildings=[...]` não está carregado. Os eventos de ativos têm de visar um membro ativo. Um carregador ou
+aparelho diferível removido tem de existir no membro alvo nesse momento, um acrescentado tem de ter um id novo, e o
+ativo de origem que um `add_asset` copia (`source_asset_id`, senão `target_asset_id`) tem de existir no membro de
+origem. As chaves dos overrides são verificadas nesse ativo de origem e os valores são aplicados a uma cópia. Até ao
+CityLearn 3.8.0, estes eventos eram aceites e falhavam, ou não faziam nada, quando ocorriam.
 
 Acrescentar FV ou armazenamento substitui o que o edifício já tem. Remover um aparelho diferível cancela os ciclos
 pendentes/em curso e limpa o consumo futuro. Remover a FV cria uma FV nula. Remover o armazenamento cria uma BESS nula.
