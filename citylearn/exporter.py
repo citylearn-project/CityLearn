@@ -164,13 +164,15 @@ class EpisodeExporter:
         include_business_as_usual: bool = True,
         export_business_as_usual_timeseries: bool = True,
         kpi_round_decimals: Optional[int] = None,
+        include_battery_health_audit: bool = False,
         *,
         evaluated_kpis: Optional[pd.DataFrame] = None,
-    ):
-        """Export episode KPIs to csv.
+    ) -> Mapping[str, Any]:
+        """Export episode KPIs to csv or parquet, with a manifest; return the manifest.
 
-        `evaluated_kpis` is this env's `evaluate_v2(include_business_as_usual=include_business_as_usual)`
-        table when the caller already has it, so it is not evaluated twice.
+        `evaluated_kpis` is this env's `evaluate_v2(include_business_as_usual=include_business_as_usual,
+        include_battery_health_audit=include_battery_health_audit)` table when the caller already has it, so it
+        is not evaluated twice. The manifest records these three export settings under `kpi_export`.
         """
 
         env = self.env
@@ -184,13 +186,19 @@ class EpisodeExporter:
             kpis = evaluated_kpis
             export_env = env
         elif model is not None and getattr(model, 'env', None) is not None:
-            kpis = model.env.evaluate_v2(include_business_as_usual=include_business_as_usual)
+            kpis = model.env.evaluate_v2(
+                include_business_as_usual=include_business_as_usual,
+                include_battery_health_audit=include_battery_health_audit,
+            )
             export_env = model.env.unwrapped
             identity = getattr(model, 'comparison_identity', None)
             if callable(identity):
                 export_env.set_experiment_identity(**identity())
         else:
-            kpis = env.evaluate_v2(include_business_as_usual=include_business_as_usual)
+            kpis = env.evaluate_v2(
+                include_business_as_usual=include_business_as_usual,
+                include_battery_health_audit=include_battery_health_audit,
+            )
             export_env = env
 
         from citylearn.internal.kpi_catalogue import kpi_definitions
@@ -212,6 +220,12 @@ class EpisodeExporter:
         from citylearn.utils.file_handler import FileHandler
         manifest = experiment_manifest(export_env)
         manifest['kpi_definitions'] = definitions
+        # Settings that change which rows the KPI file holds and how its values are written.
+        manifest['kpi_export'] = dict(
+            include_business_as_usual=bool(include_business_as_usual),
+            include_battery_health_audit=bool(include_battery_health_audit),
+            kpi_round_decimals=kpi_round_decimals,
+        )
         FileHandler.write_json(str(Path(file_path).with_suffix('.manifest.json')), manifest)
         FileHandler.write_json(str(Path(file_path).with_suffix('.deferrable_service.json')),
                                export_env.get_deferrable_service_audit())
@@ -219,6 +233,7 @@ class EpisodeExporter:
             FileHandler.write_json(str(Path(file_path).with_suffix('.robustness.json')),
                                    export_env.get_robustness_audit())
         env._final_kpis_exported = True
+        return manifest
 
     def export_business_as_usual_timeseries(self, source_env: "CityLearnEnv" = None):
         """Export a compact time-series audit for the business-as-usual baseline."""

@@ -12,6 +12,11 @@ rows (see [Levels](kpis_reference.md#levels)). In the tables, `{a,b}` stands for
 alternative and `{,_x}` for an optional part; the full names follow each table.
 Which rows appear depends on the scenario's assets and services.
 
+Rows marked **Legacy** keep an older definition so earlier results stay comparable, and rows marked
+**Deprecated** return the same value as another row; both name the canonical row to report instead.
+`evaluate_v2()` gives each row its `status` (`current`, `canonical`, `legacy` or `deprecated`) and
+`replacement`, and export manifests record them in `kpi_definitions`.
+
 | Family | Names |
 |---|---:|
 | [Cost](#cost) | 24 |
@@ -379,7 +384,8 @@ Equations and rules: [Community market](kpis_reference.md#community-market).
 | `cost_community_market_savings_{total,daily_average}_eur` | building, district | EUR | Counterfactual cost minus settled cost; positive when local trading lowered the cost. |
 | `cost_community_market_operator_balance_total_eur` | district | EUR | Money the market keeps (positive) or pays (negative): importers' local payments minus exporters' local revenue. It is zero when all members share one local price at each step. |
 | `solar_self_consumption_community_market_import_share_ratio` | district | ratio | Canonical local share of demand: `local import / (local import + grid import after local)`, the share of the members' gross import covered by local trading. Emitted only when the market is enabled and `community_market.kpis.community_self_consumption_enabled` is true. |
-| `solar_self_consumption_community_market_local_share_of_demand_ratio` | building, district | ratio | Deprecated alias, kept for compatibility: same formula as `import_share` (emitted in every run, undefined only when the denominator is 0). At building level it is the only share of demand. |
+| `solar_self_consumption_community_market_local_share_of_demand_ratio` | building | ratio | Local import over local import plus grid import after local trading (emitted in every run, undefined only when the denominator is 0); the only share of demand at building level. |
+| `solar_self_consumption_community_market_local_share_of_demand_ratio` | district | ratio | **Deprecated** alias of `solar_self_consumption_community_market_import_share_ratio`. Deprecated alias, kept for compatibility: same formula as `import_share` (emitted in every run, undefined only when the denominator is 0). |
 | `solar_self_consumption_community_market_local_share_of_export_ratio` | building, district | ratio | `local export / (local export + grid export after local)`: the share of the members' gross export sold to other members. |
 
 <details>
@@ -541,10 +547,10 @@ Equations and rules: [Electric vehicles](kpis_reference.md#electric-vehicles).
 | Names | Levels | Unit | Meaning |
 |---|---|---|---|
 | `ev_events_departure_count` | building, district | count | Departures with a connected EV and battery, a valid target SOC and a finite departure SOC; the denominator of the `ev_performance` rates and means. |
-| `ev_events_departure_{met,min_acceptable,within_tolerance}_count` | building, district | count | Counted departures whose SOC met the target, the minimum acceptable SOC (target minus the service tolerance) or the symmetric tolerance band around the target. |
-| `ev_events_departure_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count` | building, district | count | Counted departures whose threshold was or was not reachable by charging at maximum power during the connection; legacy rule, in which missing data counts as feasible, so feasible + infeasible equals the departure count. |
-| `ev_performance_departure_{success,min_acceptable,within_tolerance}_ratio` | building, district | ratio | Share of counted departures that met the target, the minimum acceptable SOC or the tolerance band; undefined without departures. |
-| `ev_performance_departure_{success,min_acceptable,within_tolerance}_feasible_ratio` | building, district | ratio | The same share over the departures feasible for that threshold under the legacy rule; undefined when none is feasible. |
+| `ev_events_departure_{met,min_acceptable,within_tolerance}_count` | building, district | count | **Legacy**; canonical row: `ev_departure_audit_{target,min_acceptable,within_tolerance}_service_met_count`. Counted departures whose SOC met the target, the minimum acceptable SOC (target minus the service tolerance) or the symmetric tolerance band around the target. |
+| `ev_events_departure_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count` | building, district | count | **Legacy**; canonical row: `ev_departure_audit_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count`. Counted departures whose threshold was or was not reachable by charging at maximum power during the connection; legacy rule, in which missing data counts as feasible, so feasible + infeasible equals the departure count. |
+| `ev_performance_departure_{success,min_acceptable,within_tolerance}_ratio` | building, district | ratio | **Legacy**; canonical row: `ev_departure_audit_{target,min_acceptable,within_tolerance}_service_observed_ratio`. Share of counted departures that met the target, the minimum acceptable SOC or the tolerance band; undefined without departures. |
+| `ev_performance_departure_{success,min_acceptable,within_tolerance}_feasible_ratio` | building, district | ratio | **Legacy**; canonical row: `ev_departure_audit_{target,min_acceptable,within_tolerance}_service_feasible_ratio`. The same share over the departures feasible for that threshold under the legacy rule; undefined when none is feasible. |
 | `ev_performance_departure_{soc_deficit,shortfall_beyond_tolerance,soc_surplus,soc_absolute_error}_mean_ratio` | building, district | ratio | Mean over counted departures, in SOC fraction, of max(target − SOC, 0), max(target − tolerance − SOC, 0), max(SOC − target, 0) or \|SOC − target\|; undefined without departures. |
 | `ev_performance_departure_tolerance_ratio` | building, district | ratio | Configuration echo: the `ev_departure_service_tolerance` setting (default 0.05), not a measurement. |
 | `ev_total_charge{,_business_as_usual,_delta_to_business_as_usual}_kwh` | building, district | kWh | Gross AC energy drawn by the chargers to charge EVs, including charger losses; `_business_as_usual` and `_delta_to_business_as_usual` as in the shared rules. |
@@ -795,17 +801,22 @@ district_ev_departure_audit_within_tolerance_unknown_unsupported_battery_model_c
 
 ## Flexible appliances
 
-Cycle service of deferrable (flexible) appliances from their cycle states and nominal cycle energies. Every member emits these rows; without appliances, counts and energies are 0 and rates are undefined.
+Cycle service of deferrable (flexible) appliances from their cycle states and nominal cycle energies. Every member emits these rows; without appliances, counts and energies are 0 and rates are undefined. The control counts, service level and energies are legacy rows; the flexible-appliance audit (`deferrable_appliance_audit_*`) is canonical. These rows keep the only comparison with the BAU.
 
 Equations and rules: [Flexible appliances](kpis_reference.md#flexible-appliances).
 
 | Names | Levels | Unit | Meaning |
 |---|---|---|---|
-| `deferrable_appliance_service_completed_cycles{,_business_as_usual,_delta_to_business_as_usual}_count` | building, district | count | Cycles that ran their full profile; `_business_as_usual` and `_delta_to_business_as_usual` as in the shared rules. |
-| `deferrable_appliance_service_missed_cycles{,_business_as_usual,_delta_to_business_as_usual}_count` | building, district | count | Cycles not started by their latest start step, plus running cycles interrupted by a power outage; BAU variants as in the shared rules. |
-| `deferrable_appliance_service_service_level{,_business_as_usual,_delta_to_business_as_usual}_ratio` | building, district | ratio | completed / (completed + missed), undefined when both are 0; the delta is undefined when either side is. |
-| `deferrable_appliance_service_served_energy_total{,_business_as_usual,_delta_to_business_as_usual}_kwh` | building, district | kWh | Nominal energy of the completed cycles, from their requested profiles, not metered; BAU variants as in the shared rules. |
-| `deferrable_appliance_service_unserved_energy_total{,_business_as_usual,_delta_to_business_as_usual}_kwh` | building, district | kWh | Full nominal energy of the missed cycles, including any part consumed before an interruption; BAU variants as in the shared rules. |
+| `deferrable_appliance_service_completed_cycles_count` | building, district | count | **Legacy**; canonical row: `deferrable_appliance_audit_completed_count`. Cycles that ran their full profile. Legacy; the audited count is `deferrable_appliance_audit_completed_count`. |
+| `deferrable_appliance_service_completed_cycles{_business_as_usual,_delta_to_business_as_usual}_count` | building, district | count | Cycles that ran their full profile; `_business_as_usual` and `_delta_to_business_as_usual` as in the shared rules. |
+| `deferrable_appliance_service_missed_cycles_count` | building, district | count | **Legacy**; canonical row: `deferrable_appliance_audit_missed_count`. Cycles not started by their latest start step, plus running cycles interrupted by a power outage. Legacy; the audited count is `deferrable_appliance_audit_missed_count`. |
+| `deferrable_appliance_service_missed_cycles{_business_as_usual,_delta_to_business_as_usual}_count` | building, district | count | Cycles not started by their latest start step, plus running cycles interrupted by a power outage; BAU variants as in the shared rules. |
+| `deferrable_appliance_service_service_level_ratio` | building, district | ratio | **Legacy**; canonical row: `deferrable_appliance_audit_resolved_completion_ratio`. completed / (completed + missed), undefined when both are 0. Legacy; the audited rate is `deferrable_appliance_audit_resolved_completion_ratio`, which also counts cancelled cycles. |
+| `deferrable_appliance_service_service_level{_business_as_usual,_delta_to_business_as_usual}_ratio` | building, district | ratio | completed / (completed + missed), undefined when both are 0; the delta is undefined when either side is. |
+| `deferrable_appliance_service_served_energy_total_kwh` | building, district | kWh | **Legacy**; canonical row: `deferrable_appliance_audit_served_energy_kwh`. Nominal energy of the completed cycles, from their requested profiles, not metered. Legacy; the audited, metered energy is `deferrable_appliance_audit_served_energy_kwh`. |
+| `deferrable_appliance_service_served_energy_total{_business_as_usual,_delta_to_business_as_usual}_kwh` | building, district | kWh | Nominal energy of the completed cycles, from their requested profiles, not metered; BAU variants as in the shared rules. |
+| `deferrable_appliance_service_unserved_energy_total_kwh` | building, district | kWh | **Legacy**; canonical row: `deferrable_appliance_audit_final_unserved_energy_kwh`. Full nominal energy of the missed cycles, including any part consumed before an interruption. Legacy; the audited energy is `deferrable_appliance_audit_final_unserved_energy_kwh`. |
+| `deferrable_appliance_service_unserved_energy_total{_business_as_usual,_delta_to_business_as_usual}_kwh` | building, district | kWh | Full nominal energy of the missed cycles, including any part consumed before an interruption; BAU variants as in the shared rules. |
 | `deferrable_appliance_service_average_start_delay{,_business_as_usual,_delta_to_business_as_usual}_hours` | building, district | hours | Mean over completed cycles of (start − earliest start) in hours; undefined when no cycle completed. |
 | `deferrable_appliance_ratio_to_business_as_usual_{completed_cycles,missed_cycles,service_level,served_energy_total,unserved_energy_total,average_start_delay}_ratio` | building, district | ratio | Control over BAU value; undefined when its own two totals are zero, even when cycles were due (#305), and when the BAU value is zero or either value is undefined. |
 
@@ -1006,10 +1017,11 @@ Equations and rules: [Comfort and resilience](kpis_reference.md#comfort-and-resi
 
 | Names | Levels | Unit | Meaning |
 |---|---|---|---|
-| `comfort_resilience_discomfort_{overall,cold,hot}_ratio` | building, district | ratio | Share of evaluated occupied steps that are too cold (T < T_heat − band), too hot (T > T_cool + band) or either (`overall`); undefined when no occupied step is evaluated. The district value is the mean of the building values; for controller comparison use `thermal_service_audit_discomfort_ratio`. |
+| `comfort_resilience_discomfort_overall_ratio` | building, district | ratio | **Legacy**; canonical row: `thermal_service_audit_discomfort_ratio`. Share of evaluated occupied steps that are too cold (T < T_heat − band) or too hot (T > T_cool + band); undefined when no occupied step is evaluated. The district value is the mean of the building values; for controller comparison use `thermal_service_audit_discomfort_ratio`. |
+| `comfort_resilience_discomfort_{cold,hot}_ratio` | building, district | ratio | Share of evaluated occupied steps that are too cold (T < T_heat − band) or too hot (T > T_cool + band); undefined when no occupied step is evaluated. The district value is the mean of the building values. |
 | `comfort_resilience_discomfort_{cold,hot}_delta_{min,max,average}_c` | building, district | degC | Minimum, maximum and mean distance from the set point over the too-cold (T_heat − T) or too-hot (T − T_cool) steps; always positive and larger than the band, undefined when there is no such step. The district value is the mean of the building values, not a district minimum or maximum. |
-| `comfort_resilience_resilience_one_minus_thermal_ratio` | building, district | ratio | Overall discomfort ratio restricted to occupied steps during a power outage; undefined when no occupied outage step is evaluated. Same value per building as `thermal_service_audit_outage_discomfort_ratio`, but a plain mean at district level. |
-| `comfort_resilience_resilience_unserved_energy_{outage,annual}_normalized_ratio` | building, district | ratio | Unserved service energy (cooling, heating, DHW and non-shiftable load) over expected service energy, over outage steps (`outage`) or all steps (`annual`). Reads 0, not undefined, when the expected energy is zero, so the outage variant is 0 in runs without outages. |
+| `comfort_resilience_resilience_one_minus_thermal_ratio` | building, district | ratio | **Legacy**; canonical row: `thermal_service_audit_outage_discomfort_ratio`. Overall discomfort ratio restricted to occupied steps during a power outage; undefined when no occupied outage step is evaluated. Same value per building as `thermal_service_audit_outage_discomfort_ratio`, but a plain mean at district level. |
+| `comfort_resilience_resilience_unserved_energy_{outage,annual}_normalized_ratio` | building, district | ratio | **Legacy**; canonical row: `thermal_service_audit_{outage_unserved_service,unserved_service}_ratio`. Unserved service energy (cooling, heating, DHW and non-shiftable load) over expected service energy, over outage steps (`outage`) or all steps (`annual`). Reads 0, not undefined, when the expected energy is zero, so the outage variant is 0 in runs without outages. |
 
 <details>
 <summary>All 24 names</summary>
@@ -1145,9 +1157,9 @@ Equations and rules: [Equity](kpis_reference.md#equity).
 | Names | Levels | Unit | Meaning |
 |---|---|---|---|
 | `equity_benefit_relative_percent` | building | percent | 100 · (B − C) / B, with C and B the building's unclipped cost totals under control and under the conventional baseline condition (not BAU), market-settled when the community market is enabled; positive is a saving, undefined when B ≤ 0. Building level only. |
-| `equity_distribution_gini_benefit_ratio` | district | ratio | Gini coefficient of the building benefits clipped at 0; undefined when no building has a defined benefit or all clipped benefits are 0. Same value as the canonical `equity_audit_positive_benefit_gini_ratio`. |
-| `equity_distribution_top20_benefit_ratio` | district | ratio | Share of the summed clipped benefit held by the ceil(20 %) of buildings with the largest benefit (at least one); same undefined rule as the Gini. |
-| `equity_distribution_losers_percent` | district | percent | Percentage of buildings with a defined benefit whose benefit is negative (cost above the baseline). |
+| `equity_distribution_gini_benefit_ratio` | district | ratio | **Deprecated** alias of `equity_audit_positive_benefit_gini_ratio`. Gini coefficient of the building benefits clipped at 0; undefined when no building has a defined benefit or all clipped benefits are 0. Same value as the canonical `equity_audit_positive_benefit_gini_ratio`. |
+| `equity_distribution_top20_benefit_ratio` | district | ratio | **Deprecated** alias of `equity_audit_positive_benefit_top20_ratio`. Share of the summed clipped benefit held by the ceil(20 %) of buildings with the largest benefit (at least one); same undefined rule as the Gini. |
+| `equity_distribution_losers_percent` | district | percent | **Deprecated** alias of `equity_audit_losers_percent`. Percentage of buildings with a defined benefit whose benefit is negative (cost above the baseline). |
 | `equity_distribution_bpr_asset_poor_over_rich_ratio` | district | ratio | Mean clipped benefit of `asset_poor` buildings over that of `asset_rich` buildings; undefined unless every building has `equity_group` set to one of these two tags, both groups have a defined benefit and the `asset_rich` mean is positive. |
 
 <details>

@@ -71,7 +71,8 @@ portefólio substitui o prefixo `district_` por `portfolio_`. Cada KPI de distri
    entre o numerador e o denominador agregados. As secções de cada família
    indicam cada linha agregada e o seu peso; os deltas e ratios ao BAU das linhas
    agregadas são calculados entre os valores agregados.
-3. **Nomes terminados em `_kwh`, `_eur`, `_kgco2` ou `_count`** são somados.
+3. **Nomes terminados em `_kwh`, `_eur`, `_kgco2` ou `_count`** são somados, exceto
+   os diagnósticos `*_max_residual_kwh` do registo, que tomam o maior valor das comunidades.
 4. **Os restantes `_ratio` e `_percent`** são médias ponderadas pelo `weight` da
    comunidade.
 5. **Tudo o resto** (`_kw`, `_c`, `_hours` e outros valores pontuais) não tem
@@ -81,7 +82,8 @@ portefólio substitui o prefixo `district_` por `portfolio_`. Cada KPI de distri
 
 Uma taxa agregada mantém a linha de portefólio qualquer que seja a unidade, pelo
 que o atraso de arranque agregado dos equipamentos flexíveis (`_hours`) tem uma.
-A [referência multi-comunidade](multi_community_reference.md#agregação-dos-kpis) explica o
+A `description` de uma linha de portefólio indica a sua regra antes da definição do
+distrito. A [referência multi-comunidade](multi_community_reference.md#agregação-dos-kpis) explica o
 portefólio.
 
 ## Contrato de nomes
@@ -565,7 +567,7 @@ EFC_distrito   = Σ_b T_b / (2 · Σ_b capacidade_b)
 perda_distrito = Σ_b max(capacidade_b − capacidade_deg_b, 0) / Σ_b capacidade_b
 ```
 
-**Portefólio.** A carga, a descarga e a energia movimentada são somadas, e os seus rácios à execução BAU são rácios dos totais somados. Os ciclos completos equivalentes obtêm-se dividindo a energia movimentada total pelo dobro da capacidade nominal total das baterias, separadamente para o controlo e para a execução BAU. O resultado é indefinido quando a capacidade nominal total é zero. A diferença e o rácio face à execução BAU comparam esses dois valores do portefólio. A perda de capacidade e o seu rácio à execução BAU são médias ponderadas pelo `weight` de cada comunidade.
+**Portefólio.** A carga, a descarga e a energia movimentada são somadas, e os seus rácios à execução BAU são rácios dos totais somados. Os ciclos completos equivalentes obtêm-se dividindo a energia movimentada total pelo dobro da capacidade nominal total das baterias, separadamente para o controlo e para a execução BAU. O resultado é indefinido quando a capacidade nominal total é zero. A diferença e o rácio face à execução BAU comparam esses dois valores do portefólio. A perda de capacidade, do controlo e BAU, agrega-se da mesma forma: a média dos valores das comunidades ponderada pela sua capacidade nominal, que é a capacidade perdida sobre a capacidade nominal total; a sua diferença e o seu rácio face à execução BAU comparam os dois valores agregados.
 
 **Que KPI usar.** Use a energia movimentada para medir a energia que passou pelas baterias e os ciclos completos equivalentes para medir a atividade das baterias em relação à capacidade nominal. Apresente a atividade das baterias juntamente com o custo e o serviço.
 
@@ -870,8 +872,7 @@ service_feasible_ratio  = feasible_service_met / feasible_service_observed
 
 **Portfolio:**
 - as contagens somam-se;
-- os ratios são médias dos ratios dos distritos ponderadas pelo `weight` de cada comunidade;
-- os ratios não são agregados a partir das contagens, embora os seus denominadores sejam contagens.
+- os ratios são agregados a partir das contagens somadas (#428): os ratios de cobertura sobre `departures_count`, as linhas `service_observed_ratio` sobre `service_observed_count` e as linhas `service_feasible_ratio` sobre o `feasible_service_observed_count` do limiar. Os pesos das comunidades não são usados.
 
 ### Que KPI usar
 
@@ -885,7 +886,6 @@ Reporte sempre com elas `ev_departure_audit_service_coverage_ratio`, o `coverage
 
 - Cada partida é simulada isoladamente, sem os outros VE que partilham os mesmos limites, pelo que a viabilidade conjunta não é testada.
 - A margem usa a carga de base da própria execução, pelo que, com limites elétricos, a população viável pode diferir entre controladores no mesmo cenário.
-- Os ratios do portefólio são ponderados pelo `weight` das comunidades e não agregados a partir das contagens.
 
 ## Equipamentos flexíveis
 
@@ -1013,8 +1013,7 @@ service_balance_residual  = requested - served - final_unserved - outstanding
 
 **Portfolio:**
 - as contagens e as energias somam-se;
-- os ratios são médias dos ratios dos distritos ponderadas pelo `weight` de cada comunidade;
-- os ratios não são agregados a partir das contagens.
+- os ratios são agregados a partir das contagens somadas (#428): a conclusão observada e a cobertura resolvida sobre `offered_count`, a conclusão resolvida sobre `resolved_count`.
 
 ### Que KPI usar
 
@@ -1027,7 +1026,6 @@ As linhas de serviço de [Equipamentos flexíveis](#equipamentos-flexíveis) con
 ### Limitações conhecidas
 
 - A energia do passo terminal não é registada: a observação terminal não é um intervalo executado.
-- Os ratios do portefólio são ponderados pelo `weight` das comunidades e não agregados a partir das contagens.
 
 ## Escadas rolantes
 
@@ -1242,11 +1240,9 @@ discomfort_ratio do distrito = soma_b intervalos com desconforto_b / soma_b inte
 ```
 
 É uma taxa ponderada pela exposição ocupada. No portefólio, as linhas `_count` e `_kwh` são somadas entre
-comunidades. As linhas `_hours` e `_degree_hours` não passam ao portefólio. As razões são médias das razões
-das comunidades ponderadas pelo peso (`weight`) de cada comunidade; não são recalculadas a partir das
-contagens somadas do portefólio. Obtém-se uma taxa agregada do portefólio dividindo as contagens somadas,
-por exemplo
-`portfolio_thermal_service_audit_discomfort_intervals_count / portfolio_thermal_service_audit_evaluated_occupied_intervals_count`.
+comunidades. As linhas `_hours` e `_degree_hours` não passam ao portefólio. As razões são recalculadas da
+mesma forma a partir das contagens e energias somadas do portefólio (#428), por exemplo
+`portfolio_thermal_service_audit_discomfort_ratio = portfolio_thermal_service_audit_discomfort_intervals_count / portfolio_thermal_service_audit_evaluated_occupied_intervals_count`.
 
 **Escolha canónica.** `district_thermal_service_audit_discomfort_ratio` é o KPI de desconforto canónico
 para comparar controladores, por quatro razões:
@@ -1260,7 +1256,6 @@ e de calor para a severidade. Pelos mesmos motivos, prefira `outage_discomfort_r
 `resilience_one_minus_thermal_ratio`, e `unserved_service_ratio` às razões legadas de energia não servida.
 
 Limitações conhecidas:
-- As razões do portefólio são médias ponderadas pelo peso das razões das comunidades, e não razões das contagens somadas do portefólio.
 - Os graus-hora e as condições de conforto não consideram se havia aquecimento ou arrefecimento disponível (modo AVAC).
 
 ## Equidade
@@ -1347,8 +1342,10 @@ igual à fórmula por pares de [Equidade](#equidade). O coeficiente de Gini e a 
 indefinidos quando a soma de x é 0. As condições de avaliação usadas em cada edifício ficam guardadas nos
 metadados `kpi_family_audit` da tabela devolvida.
 
-**Portefólio.** As linhas `_count` são somadas entre comunidades. A razão e a percentagem são médias
-ponderadas pelo peso (`weight`) de cada comunidade; não são recalculadas a partir das contagens somadas.
+**Portefólio.** As linhas `_count` são somadas entre comunidades. A razão de cobertura é agregada sobre
+`population_members_count` e a percentagem de perdedores sobre `eligible_members_count`, pelo que ambas são as
+das contagens somadas (#428). O Gini e a quota dos 20 % de topo são distribuições sobre os membros e continuam
+a ser médias ponderadas pelo peso (`weight`) de cada comunidade.
 
 **Escolha canónica.** `district_equity_audit_positive_benefit_gini_ratio` é o KPI de Gini canónico para
 comparar controladores. Tem o mesmo valor que `equity_distribution_gini_benefit_ratio`. O seu nome indica
@@ -1358,7 +1355,7 @@ reconhece um Gini calculado sobre poucos edifícios. Reporte-o com `losers_perce
 
 Limitações conhecidas:
 - Os custos de passo não finitos são somados como 0, pelo que `excluded_unknown_cost_count` é sempre 0.
-- A cobertura e o Gini do portefólio são médias ponderadas pelo peso dos valores das comunidades.
+- O Gini e a quota dos 20 % de topo do portefólio são médias ponderadas pelo peso dos valores das comunidades, e não a distribuição de todos os membros do portefólio.
 
 ## Demand response
 
@@ -1672,8 +1669,8 @@ As linhas abaixo existem **apenas ao nível do distrito**. Verificam ou resumem 
 **Portefólio.**
 
 - As linhas `_kwh` e `_kgco2`, incluindo as suas linhas BAU e delta, são somadas sobre as comunidades.
-- Os rácios `pv_useful_*`, com as suas linhas BAU e delta, são a **média ponderada pelo `weight` de cada comunidade**, sobre as comunidades com valor definido. Não são recalculados a partir dos totais somados de `pv_load`, `pv_mobility` e `pv_generated`.
-- `bus_max_residual_kwh` e `storage_max_residual_kwh` são **somados** sobre as comunidades, como qualquer linha `_kwh`. São, portanto, uma soma de máximos das comunidades, e não um máximo.
+- Os rácios `pv_useful_*`, do controlo e BAU, são agregados sobre `pv_generated_kwh` (#428), pelo que igualam o `pv_load` somado (mais `pv_mobility`) sobre o `pv_generated` somado; o delta é a diferença entre os dois valores agregados.
+- `bus_max_residual_kwh` e `storage_max_residual_kwh`, do controlo e BAU, são o **maior** valor das comunidades, e o seu delta é a diferença entre os dois máximos do portefólio.
 
 ### Leitura das linhas do scorecard por omissão
 
@@ -1701,7 +1698,6 @@ O scorecard por omissão inclui seis linhas de proveniência:
 - A energia de um VE no momento da ligação, e qualquer estado de carga imposto, é desconhecida e sem carbono no registo. As linhas `carbon_*` ficam, por isso, por defeito; as linhas `carbon_unknown_*` mostram em quanta energia.
 - As linhas dos edifícios são contadas pelo membro que recebe e não fecham por membro. Só o distrito fecha.
 - O registo não tem janela de avaliação: abrange todos os intervalos simulados desde o reset.
-- Ao nível do portefólio, os rácios `pv_useful_*` são médias ponderadas pelo `weight` das comunidades, e os dois diagnósticos de resíduo máximo são somas dos máximos das comunidades.
 
 ## Topologia dinâmica
 
@@ -1740,6 +1736,8 @@ A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_
 | Taxas e medias EV de departure, service levels dos deferrable appliances e das escadas rolantes, start delay e self-consumption solar do portefólio (`MultiCommunityEnv`) | Agregadas a partir dos seus denominadores aditivos. | nenhum |
 | Shares locais do mercado comunitário, compliance de demand response e ratios de cobertura das auditorias de demand response do portefólio (`MultiCommunityEnv`, #285) | Agregados a partir da energia local mais a da rede, da energia pedida válida, da energia pedida e dos intervalos ativos. | nenhum |
 | Ciclos completos equivalentes das baterias estacionárias do portefólio e comparações com a execução BAU (`MultiCommunityEnv`, #330) | Energia movimentada total sobre o dobro da capacidade nominal total. A diferença e o rácio face à execução BAU usam os dois valores do portefólio. | nenhum |
+| Ratios das auditorias das partidas dos VE, do serviço térmico e dos equipamentos flexíveis, cobertura e percentagem de perdedores da auditoria de equidade, ratios de FV útil e perda de capacidade das baterias estacionárias do portefólio, com as comparações BAU (`MultiCommunityEnv`, #428) | Agregados a partir das contagens, energias e capacidades nominais que as auditorias reportam, em vez de médias ponderadas pelo `weight` das comunidades. | nenhum |
+| `energy_provenance_{storage,bus}_max_residual_kwh` do portefólio e as suas linhas BAU e delta (`MultiCommunityEnv`, #428) | Maior valor das comunidades em vez da soma. | nenhum |
 | Nos datasets com carregadores de VE: todas as linhas `*_baseline_*`, `*_delta_*` (exceto `*_delta_to_business_as_usual_*`) e `*_ratio_to_baseline_*`, os KPIs de equidade calculados a partir delas, e toda a tabela legacy de `evaluate()` (#365) | A baseline carrega os VE como o BAU nativo com o alvo `'full'`, em vez de nao os carregar (`baseline_version=2`). | nenhum (a `baseline_version=1` foi removida na 3.8.1) |
 | Nos datasets com ações de AVAC: todas as linhas `*_business_as_usual` e todos os valores `*_delta_to_business_as_usual_*` e `*_ratio_to_business_as_usual_*` (#362) | O BAU nativo fornece a procura de aquecimento e de arrefecimento do dataset, em vez de enviar zero às ações de AVAC (`baseline_version=2`). | nenhum (a `baseline_version=1` foi removida na 3.8.1) |
 
@@ -1770,12 +1768,20 @@ Um evento de corte de um edificio e uma sequencia maxima de timesteps executados
 | Com render | `render_mode="end"` ou `render_mode="during"` |
 
 A tabela em formato longo começa por `cost_function`, `value`, `name` e
-`level`, seguidos de `unit` e de uma breve `description` em inglês, ambas
-retiradas do catálogo de KPIs.
+`level`, seguidos de `unit`, de uma breve `description` em inglês, de `status` e de
+`replacement`, retirados do catálogo de KPIs. `status` é `canonical` para a linha a
+reportar para a sua pergunta, `legacy` para uma definição anterior mantida para que
+resultados antigos continuem comparáveis, `deprecated` para um alias que devolve o
+valor da sua linha canónica, e `current` nos restantes casos; as linhas legadas e
+obsoletas indicam a sua linha canónica em `replacement` (#433). O
+[catálogo de KPIs](KPI_V2_TREE.md) marca as mesmas linhas.
 
 O CSV de várias comunidades em formato longo inclui as colunas de metadados. Na exportação
 de uma só comunidade em CSV ou Parquet em formato largo, o ficheiro adjacente
-`exported_kpis.manifest.json` contém `kpi_definitions` por nome de KPI.
+`exported_kpis.manifest.json` contém `kpi_definitions` por nome de KPI, com a unidade, a
+descrição, o estado e a substituta, e `kpi_export`, que regista `include_business_as_usual`,
+`include_battery_health_audit` e `kpi_round_decimals`. `export_final_kpis(include_battery_health_audit=True)`
+acrescenta as linhas opcionais de saúde das baterias dos VE.
 O ficheiro de KPIs continua a ter uma coluna numérica por âmbito.
 
 Um KPI novo tem de ser acrescentado a `citylearn/misc/kpi_catalogue.yml`, que gera o [catálogo de KPIs](KPI_V2_TREE.md) (`python scripts/docs/kpi_catalogue.py`), e as suas equações à secção da família nesta página; `tests/test_kpi_catalogue.py` falha enquanto um nome emitido faltar no catálogo. As alterações de definição ficam registadas em [releases.md](releases.md).

@@ -2304,6 +2304,39 @@ class CityLearnKPIService:
             components[f'{audit}_compliance_ratio'] = (f'{audit}_valid_requested_kwh',)
             components[f'{audit}_requested_energy_coverage_ratio'] = (f'{audit}_requested_kwh',)
             components[f'{audit}_baseline_coverage_ratio'] = (f'{audit}_active_intervals_count',)
+        # Audit rates over the counts and energies the audits report (#428).
+        audit = f'{level}_ev_departure_audit'
+        components[f'{audit}_service_coverage_ratio'] = (f'{audit}_departures_count',)
+        for threshold in ('target', 'min_acceptable', 'within_tolerance'):
+            components[f'{audit}_{threshold}_coverage_ratio'] = (f'{audit}_departures_count',)
+            components[f'{audit}_{threshold}_service_observed_ratio'] = (f'{audit}_service_observed_count',)
+            components[f'{audit}_{threshold}_service_feasible_ratio'] = (
+                f'{audit}_{threshold}_feasible_service_observed_count',
+            )
+        audit = f'{level}_thermal_service_audit'
+        for ratio, denominator in (
+            ('discomfort', 'evaluated_occupied_intervals_count'),
+            ('thermal_coverage', 'occupied_intervals_count'),
+            ('occupancy_coverage', 'executed_intervals_count'),
+            ('outage_discomfort', 'evaluated_outage_occupied_intervals_count'),
+            ('outage_thermal_coverage', 'outage_occupied_intervals_count'),
+            ('energy_coverage', 'executed_intervals_count'),
+            ('unserved_service', 'expected_service_energy_kwh'),
+            ('outage_unserved_service', 'outage_expected_service_energy_kwh'),
+        ):
+            components[f'{audit}_{ratio}_ratio'] = (f'{audit}_{denominator}',)
+        audit = f'{level}_deferrable_appliance_audit'
+        components[f'{audit}_observed_completion_ratio'] = (f'{audit}_offered_count',)
+        components[f'{audit}_resolved_completion_ratio'] = (f'{audit}_resolved_count',)
+        components[f'{audit}_resolved_coverage_ratio'] = (f'{audit}_offered_count',)
+        audit = f'{level}_equity_audit'
+        components[f'{audit}_coverage_ratio'] = (f'{audit}_population_members_count',)
+        components[f'{audit}_losers_percent'] = (f'{audit}_eligible_members_count',)
+        for variant in ('', '_business_as_usual'):
+            for useful in ('building', 'with_mobility'):
+                components[f'{level}_energy_provenance_pv_useful_{useful}{variant}_ratio'] = (
+                    f'{level}_energy_provenance_pv_generated{variant}_kwh',
+                )
         return components
 
     @classmethod
@@ -2320,11 +2353,18 @@ class CityLearnKPIService:
             ('deferrable_appliance', 'service', 'average_start_delay', 'hours'),
             ('solar_self_consumption', 'ratio', 'self_consumption', 'ratio'),
             ('battery', 'health', 'equivalent_full_cycles', 'count'),
+            ('battery', 'health', 'capacity_fade', 'ratio'),
         ):
             control = v2(level, family, subfamily, metric, None, unit)
             reference = v2(level, family, subfamily, metric, 'business_as_usual', unit)
             comparisons[v2(level, family, subfamily, metric, 'delta_to_business_as_usual', unit)] = (control, reference, 'delta')
             comparisons[v2(level, family, 'ratio_to_business_as_usual', metric, None, 'ratio')] = (control, reference, 'ratio')
+        for useful in ('building', 'with_mobility'):
+            control = f'{level}_energy_provenance_pv_useful_{useful}_ratio'
+            reference = f'{level}_energy_provenance_pv_useful_{useful}_business_as_usual_ratio'
+            comparisons[f'{level}_energy_provenance_pv_useful_{useful}_delta_to_business_as_usual_ratio'] = (
+                control, reference, 'delta',
+            )
         return comparisons
 
     def evaluate_legacy(

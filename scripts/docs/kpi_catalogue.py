@@ -36,7 +36,14 @@ TEXT = {
             "rows (see [Levels](kpis_reference.md#levels)). In the tables, `{a,b}` stands for each",
             "alternative and `{,_x}` for an optional part; the full names follow each table.",
             "Which rows appear depends on the scenario's assets and services.",
+            "",
+            "Rows marked **Legacy** keep an older definition so earlier results stay comparable, and rows marked",
+            "**Deprecated** return the same value as another row; both name the canonical row to report instead.",
+            "`evaluate_v2()` gives each row its `status` (`current`, `canonical`, `legacy` or `deprecated`) and",
+            "`replacement`, and export manifests record them in `kpi_definitions`.",
         ],
+        "legacy": "**Legacy**; canonical row: `{replacement}`.",
+        "deprecated": "**Deprecated** alias of `{replacement}`.",
         "family": "Family",
         "names": "Names",
         "levels": "Levels",
@@ -60,7 +67,14 @@ TEXT = {
             "partir das linhas de distrito (ver [Níveis](kpis_reference.md#níveis)). Nas tabelas, `{a,b}`",
             "representa cada alternativa e `{,_x}` uma parte opcional; os nomes completos seguem cada tabela.",
             "As linhas presentes dependem dos equipamentos e serviços do cenário.",
+            "",
+            "As linhas marcadas **Legada** mantêm uma definição anterior para que resultados antigos continuem",
+            "comparáveis, e as marcadas **Obsoleta** devolvem o mesmo valor que outra linha; ambas indicam a linha",
+            "canónica a reportar. `evaluate_v2()` dá a cada linha o seu `status` (`current`, `canonical`, `legacy`",
+            "ou `deprecated`) e `replacement`, e os manifestos das exportações registam-nos em `kpi_definitions`.",
         ],
+        "legacy": "**Legada**; linha canónica: `{replacement}`.",
+        "deprecated": "**Obsoleta**, alias de `{replacement}`.",
         "family": "Família",
         "names": "Nomes",
         "levels": "Níveis",
@@ -107,8 +121,11 @@ def render(families, language):
             "|---|---|---|---|",
         ]
         for kpi in family["kpis"]:
+            meaning = _cell(kpi[language])
+            if kpi.get("status"):
+                meaning = text[kpi["status"]].format(replacement=kpi["replacement"]) + " " + meaning
             lines.append(
-                f"| `{kpi['names']}` | {', '.join(kpi['levels'])} | {kpi['unit']} | {_cell(kpi[language])} |"
+                f"| `{kpi['names']}` | {', '.join(kpi['levels'])} | {kpi['unit']} | {meaning} |"
             )
         full = sorted(name for name, family_id in names.items() if family_id == family["id"])
         lines += [

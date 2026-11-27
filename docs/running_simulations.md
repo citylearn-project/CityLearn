@@ -420,7 +420,7 @@ so call it once after creating the environment; it must be set before `export_fi
 automatic export at the end of the episode when `export_kpis_on_episode_end=True`. The rule-based baselines
 declare their own identity through `agent.comparison_identity()`: pass the agent to
 `env.export_final_kpis(model=agent)` and it is recorded for you, with `observation_access='entity_observations'`.
-With `MultiCommunityEnv`, call it on each community in `mc.envs`, whose own exports carry the manifests.
+With `MultiCommunityEnv`, call `mc.set_experiment_identity(...)`, which sets it on every community; `compare_exports()` then pairs two portfolio exports community by community ([multi-community export](multi_community_reference.md#export)).
 `compare_exports(left, right, mode='sharing')` compares one controller with sharing on and off, and also
 requires the two identities to be equal.
 

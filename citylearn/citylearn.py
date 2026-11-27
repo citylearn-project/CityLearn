@@ -2018,6 +2018,10 @@ class CityLearnEnv(Environment, Env):
             * ``name`` (str): the building name for building rows, ``'District'`` for district rows.
             * ``level`` (str): ``'building'`` or ``'district'``.
             * ``unit`` (str) and ``description`` (str): the unit and English description from the KPI catalogue.
+            * ``status`` (str): ``'canonical'`` for the row to report for its question, ``'legacy'`` for an older
+              definition kept for comparison with earlier results, ``'deprecated'`` for an alias that returns the
+              value of its canonical row, ``'current'`` otherwise.
+            * ``replacement`` (str): for ``'legacy'`` and ``'deprecated'`` rows, the name of the canonical row.
 
             Which KPIs appear depends on the scenario's assets and services. :py:meth:`scorecard` selects the
             default subset. The KPI catalogue lists every name and the KPI reference guide defines every family.
@@ -2121,8 +2125,14 @@ class CityLearnEnv(Environment, Env):
         include_business_as_usual: bool = True,
         export_business_as_usual_timeseries: bool = True,
         kpi_round_decimals: int = None,
+        include_battery_health_audit: bool = False,
     ):
-        """Export episode KPIs to csv."""
+        """Export episode KPIs to csv (or parquet with `render_file_format='parquet'`) and their manifest.
+
+        `include_battery_health_audit` adds the opt-in EV battery-health rows of :py:meth:`evaluate_v2`. The
+        manifest (``exported_kpis.manifest.json``) records it with `include_business_as_usual` and
+        `kpi_round_decimals` under ``kpi_export``. Returns the manifest.
+        """
 
         return self._episode_exporter.export_final_kpis(
             model=model,
@@ -2130,6 +2140,7 @@ class CityLearnEnv(Environment, Env):
             include_business_as_usual=include_business_as_usual,
             export_business_as_usual_timeseries=export_business_as_usual_timeseries,
             kpi_round_decimals=kpi_round_decimals,
+            include_battery_health_audit=include_battery_health_audit,
         )
 
     def plan_final_episode_exports(self, episodes: int = None):

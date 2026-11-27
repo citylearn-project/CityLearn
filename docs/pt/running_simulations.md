@@ -423,8 +423,9 @@ pelo que basta chamá-la uma vez depois de criar o ambiente; tem de estar defini
 correr, incluindo a exportação automática no fim do episódio quando `export_kpis_on_episode_end=True`. As
 referências baseadas em regras declaram a sua própria identidade através de `agent.comparison_identity()`:
 passe o agente a `env.export_final_kpis(model=agent)` e ela fica registada, com
-`observation_access='entity_observations'`. Com `MultiCommunityEnv`, chame-a em cada comunidade de `mc.envs`,
-cujas exportações próprias contêm os manifestos. `compare_exports(left, right, mode='sharing')` compara o mesmo
+`observation_access='entity_observations'`. Com `MultiCommunityEnv`, chame `mc.set_experiment_identity(...)`,
+que a define em todas as comunidades; `compare_exports()` emparelha então duas exportações de portefólio comunidade
+a comunidade ([exportação multicomunidade](multi_community_reference.md#exportação)). `compare_exports(left, right, mode='sharing')` compara o mesmo
 controlador com a partilha ativa e desativa, e exige também que as duas identidades sejam iguais.
 
 Este exemplo corre um controlador simples com dois valores de parâmetro, exporta as duas execuções e compara-as:

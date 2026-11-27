@@ -70,7 +70,8 @@ aggregated by the first rule that applies:
    pooled numerator and denominator. The family sections name each pooled row
    and its weight; the BAU deltas and ratios of pooled rows are taken between the
    pooled values.
-3. **Names ending in `_kwh`, `_eur`, `_kgco2` or `_count`** are summed.
+3. **Names ending in `_kwh`, `_eur`, `_kgco2` or `_count`** are summed, except the
+   ledger's `*_max_residual_kwh` diagnostics, which take the largest community value.
 4. **Other `_ratio` and `_percent` names** are means weighted by the community
    `weight`.
 5. **Everything else** (`_kw`, `_c`, `_hours` and other point values) has no
@@ -78,7 +79,8 @@ aggregated by the first rule that applies:
    synchronized community window averages when `evaluation_window` is enabled.
 
 A pooled rate keeps its portfolio row whatever its unit, so the pooled
-flexible-appliance start delay (`_hours`) has one. The
+flexible-appliance start delay (`_hours`) has one. The `description` of a
+portfolio row states its rule before the district definition. The
 [multi-community reference](multi_community_reference.md#kpi-aggregation) explains the
 portfolio itself.
 
@@ -558,7 +560,7 @@ EFC_district  = Σ_b T_b / (2 · Σ_b capacity_b)
 fade_district = Σ_b max(capacity_b − capacity_deg_b, 0) / Σ_b capacity_b
 ```
 
-**Portfolio.** Charge, discharge and throughput are summed, and their ratios to the BAU are ratios of the summed totals. Equivalent full cycles are total throughput divided by twice the total nominal battery capacity, independently for the control and BAU runs. The result is undefined when the total nominal capacity is zero. The BAU delta and ratio compare these two portfolio values. Capacity fade and its ratio to the BAU are means weighted by community `weight`.
+**Portfolio.** Charge, discharge and throughput are summed, and their ratios to the BAU are ratios of the summed totals. Equivalent full cycles are total throughput divided by twice the total nominal battery capacity, independently for the control and BAU runs. The result is undefined when the total nominal capacity is zero. The BAU delta and ratio compare these two portfolio values. Capacity fade, control and BAU, is pooled the same way: the mean of the community values weighted by their nominal capacity, which is the capacity lost over the total nominal capacity; its BAU delta and ratio compare the two pooled values.
 
 **Which KPI.** Use throughput for energy moved and equivalent full cycles for battery activity relative to nominal capacity. Report battery activity alongside cost and service.
 
@@ -862,8 +864,7 @@ service_feasible_ratio  = feasible_service_met / feasible_service_observed
 
 **Portfolio:**
 - counts are summed;
-- the ratios are means of the district ratios weighted by community `weight`;
-- the ratios are not pooled from the counts, even though their denominators are counts.
+- the ratios are pooled from the summed counts (#428): the coverage ratios over `departures_count`, the `service_observed_ratio` rows over `service_observed_count` and the `service_feasible_ratio` rows over the threshold's `feasible_service_observed_count`. Community weights are not used.
 
 ### Which KPI to use
 
@@ -877,7 +878,6 @@ Always report `ev_departure_audit_service_coverage_ratio`, the threshold's `cove
 
 - Each departure is replayed on its own, without the other EVs that share the same limits, so joint feasibility is not tested.
 - The headroom uses the run's own base load, so with electrical limits the feasible population can differ between controllers on the same scenario.
-- The portfolio ratios are weighted by community `weight`, not pooled from the counts.
 
 ## Flexible appliances
 
@@ -1005,8 +1005,7 @@ service_balance_residual  = requested - served - final_unserved - outstanding
 
 **Portfolio:**
 - counts and energies are summed;
-- the ratios are means of the district ratios weighted by community `weight`;
-- the ratios are not pooled from the counts.
+- the ratios are pooled from the summed counts (#428): observed completion and resolved coverage over `offered_count`, resolved completion over `resolved_count`.
 
 ### Which KPI to use
 
@@ -1019,7 +1018,6 @@ The service rows of [Flexible appliances](kpis_reference.md#flexible-appliances)
 ### Known limits
 
 - Terminal-step energy is not recorded: the terminal observation is not an executed interval.
-- The portfolio ratios are weighted by community `weight`, not pooled from the counts.
 
 ## Escalators
 
@@ -1230,10 +1228,9 @@ district discomfort_ratio = sum_b discomfort intervals_b / sum_b evaluated occup
 ```
 
 This is a rate weighted by occupied exposure. In the portfolio, `_count` and `_kwh` rows are summed over
-communities. The `_hours` and `_degree_hours` rows are not carried over. The ratios are means of the
-community ratios weighted by the community `weight`; they are not recomputed from the summed portfolio
-counts. A pooled portfolio rate can be obtained by dividing the summed counts, for example
-`portfolio_thermal_service_audit_discomfort_intervals_count / portfolio_thermal_service_audit_evaluated_occupied_intervals_count`.
+communities. The `_hours` and `_degree_hours` rows are not carried over. The ratios are recomputed from the
+summed portfolio counts and energies in the same way (#428), for example
+`portfolio_thermal_service_audit_discomfort_ratio = portfolio_thermal_service_audit_discomfort_intervals_count / portfolio_thermal_service_audit_evaluated_occupied_intervals_count`.
 
 **Canonical choice.** `district_thermal_service_audit_discomfort_ratio` is the canonical discomfort KPI for
 comparing controllers, for four reasons:
@@ -1247,7 +1244,6 @@ degree-hours for severity. For the same reasons, `outage_discomfort_ratio` is pr
 `resilience_one_minus_thermal_ratio`, and `unserved_service_ratio` to the legacy unserved-energy ratios.
 
 Known limits:
-- Portfolio ratios are weight-means of community ratios, not ratios of the summed portfolio counts.
 - Degree-hours and comfort conditions do not consider whether heating or cooling was available (HVAC mode).
 
 ## Equity
@@ -1331,8 +1327,10 @@ pairwise formula of [Equity](kpis_reference.md#equity). The Gini coefficient and
 sum of x is 0. The evaluation conditions used for each building are stored in the `kpi_family_audit`
 metadata of the returned table.
 
-**Portfolio.** The `_count` rows are summed over communities. The ratio and the percentage are means
-weighted by the community `weight`; they are not recomputed from the summed counts.
+**Portfolio.** The `_count` rows are summed over communities. The coverage ratio is pooled over
+`population_members_count` and the losers percentage over `eligible_members_count`, so both are those of the
+summed counts (#428). The Gini and top-20 % share are distributions over the members and stay means weighted by
+the community `weight`.
 
 **Canonical choice.** `district_equity_audit_positive_benefit_gini_ratio` is the canonical Gini KPI for
 comparing controllers. It has the same value as `equity_distribution_gini_benefit_ratio`. Its name states
@@ -1342,7 +1340,7 @@ buildings can be recognised. Report it with `losers_percent`, `eligible_members_
 
 Known limits:
 - Step costs that are not finite are summed as 0, so `excluded_unknown_cost_count` is always 0.
-- Portfolio coverage and Gini are weight-means of community values.
+- The portfolio Gini and top-20 % share are weight-means of community values, not the distribution of all members of the portfolio.
 
 ## Demand response
 
@@ -1656,8 +1654,8 @@ The rows below exist **only at district level**. They check or summarise the who
 **Portfolio.**
 
 - The `_kwh` and `_kgco2` rows, including their BAU and delta rows, are summed over communities.
-- The `pv_useful_*` ratios, with their BAU and delta rows, are the **mean weighted by community `weight`** over communities with a defined value. They are not rebuilt from the summed `pv_load`, `pv_mobility` and `pv_generated`.
-- `bus_max_residual_kwh` and `storage_max_residual_kwh` are **summed** over communities like any `_kwh` row. They are therefore a sum of community maxima, not a maximum.
+- The `pv_useful_*` ratios, control and BAU, are pooled over `pv_generated_kwh` (#428), so they equal the summed `pv_load` (plus `pv_mobility`) over the summed `pv_generated`; the delta is the difference of the two pooled values.
+- `bus_max_residual_kwh` and `storage_max_residual_kwh`, control and BAU, are the **largest** community value, and their delta is the difference of the two portfolio maxima.
 
 ### Reading the default scorecard rows
 
@@ -1685,7 +1683,6 @@ The default scorecard includes six provenance rows:
 - The energy of an EV at connection, and any imposed state of charge, is unknown and carbon-free in the ledger. The `carbon_*` rows therefore undercount; the `carbon_unknown_*` rows show by how much energy.
 - Building rows are counted by the receiving member and do not balance per member. Only the district balances.
 - The ledger has no evaluation window: it covers every interval simulated since reset.
-- At portfolio level, the `pv_useful_*` ratios are community-weight means, and the two max-residual diagnostics are sums of community maxima.
 
 ## Dynamic topology
 
@@ -1729,6 +1726,8 @@ datasets with EV chargers (the EV charger row).
 | Portfolio EV departure rates and means, deferrable and escalator service levels, start delay and solar self-consumption (`MultiCommunityEnv`) | Pooled from their additive denominators. | none |
 | Portfolio community-market local shares, demand-response compliance and demand-response audit coverage ratios (`MultiCommunityEnv`, #285) | Pooled from local plus grid energy, valid requested energy, requested energy and active intervals. | none |
 | Portfolio stationary-battery equivalent full cycles and their BAU comparisons (`MultiCommunityEnv`, #330) | Total throughput over twice the total nominal capacity, with BAU delta and ratio derived from the two portfolio values. | none |
+| Portfolio EV departure audit, thermal-service audit and flexible-appliance audit ratios, equity audit coverage and losers percentage, useful PV ratios and stationary-battery capacity fade, with their BAU comparisons (`MultiCommunityEnv`, #428) | Pooled from the counts, energies and nominal capacities the audits report, instead of means weighted by community `weight`. | none |
+| Portfolio `energy_provenance_{storage,bus}_max_residual_kwh` and their BAU and delta rows (`MultiCommunityEnv`, #428) | Largest community value instead of the sum. | none |
 | On datasets with EV chargers: every `*_baseline_*`, `*_delta_*` (not `*_delta_to_business_as_usual_*`) and `*_ratio_to_baseline_*` row, the equity KPIs built on them, and the whole legacy `evaluate()` table (#365) | The baseline charges the EVs as the native BAU with the `'full'` target does, instead of not charging them (`baseline_version=2`). | none (`baseline_version=1` was removed in 3.8.1) |
 | On datasets with HVAC actions: every `*_business_as_usual` row and every `*_delta_to_business_as_usual_*` and `*_ratio_to_business_as_usual_*` value (#362) | The native BAU delivers the dataset heating and cooling demand instead of sending zero to the HVAC actions (`baseline_version=2`). | none (`baseline_version=1` was removed in 3.8.1) |
 
@@ -1761,10 +1760,18 @@ A building outage event is a maximal run of consecutive executed timesteps where
 | With render | `render_mode="end"` or `render_mode="during"` |
 
 The long table starts with `cost_function`, `value`, `name` and `level`, followed
-by `unit` and a short English `description` from the KPI catalogue.
+by `unit`, a short English `description`, `status` and `replacement` from the KPI
+catalogue. `status` is `canonical` for the row to report for its question, `legacy`
+for an older definition kept so earlier results stay comparable, `deprecated` for an
+alias that returns the value of its canonical row, and `current` otherwise; legacy and
+deprecated rows name their canonical row in `replacement` (#433). The
+[KPI catalogue](KPI_V2_TREE.md) marks the same rows.
 
 The long multi-community CSV includes the metadata columns. For a wide single-community
 export in CSV or Parquet, the adjacent `exported_kpis.manifest.json` holds
-`kpi_definitions` keyed by KPI name. The KPI file continues to contain one numeric column per scope.
+`kpi_definitions` keyed by KPI name, with the unit, description, status and replacement,
+and `kpi_export`, which records `include_business_as_usual`, `include_battery_health_audit`
+and `kpi_round_decimals`. `export_final_kpis(include_battery_health_audit=True)` adds the
+opt-in EV battery-health rows. The KPI file continues to contain one numeric column per scope.
 
 A new KPI must be added to `citylearn/misc/kpi_catalogue.yml`, which generates the [KPI catalogue](KPI_V2_TREE.md) (`python scripts/docs/kpi_catalogue.py`), and its equations to the family section of this page; `tests/test_kpi_catalogue.py` fails while an emitted name is missing from the catalogue. Changes of definition are recorded in [releases.md](releases.md).
