@@ -277,7 +277,8 @@ def axis_metadata(env):
         ),
         render_origin_override=bool(getattr(env, "_render_origin_overridden", False)),
         data_noise_generator="owned_indexed_stream_v1",
-        storage_loss_coefficient="fraction_per_control_step",
+        storage_loss_coefficient="fraction_per_hour",
+        storage_step_loss_fraction="fraction_per_control_step",
     )
 
 

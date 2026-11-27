@@ -452,8 +452,11 @@ def test_storage_loss_coefficient_compounds_with_physical_step_hours():
         )
 
         expected_step_loss = 1.0 - (1.0 - hourly_loss)**(seconds_per_time_step / 3600.0)
-        assert battery.loss_coefficient == pytest.approx(expected_step_loss)
-        assert tank.loss_coefficient == pytest.approx(expected_step_loss)
+        assert battery.step_loss_fraction == pytest.approx(expected_step_loss)
+        assert tank.step_loss_fraction == pytest.approx(expected_step_loss)
+        # The getter returns the configured hourly value (#426).
+        assert battery.loss_coefficient == pytest.approx(hourly_loss)
+        assert tank.loss_coefficient == pytest.approx(hourly_loss)
 
 
 def test_storage_tank_constructor_preserves_time_step_ratio():
@@ -646,6 +649,7 @@ def test_ev_loader_defaults_missing_loss_coefficient_to_zero_for_subhour(tmp_pat
         assert env.time_step_ratio == pytest.approx(1.0)
         assert env.electric_vehicles[0].battery.time_step_ratio == pytest.approx(1.0)
         assert env.electric_vehicles[0].battery.loss_coefficient == pytest.approx(0.0)
+        assert env.electric_vehicles[0].battery.step_loss_fraction == pytest.approx(0.0)
     finally:
         env.close()
 
@@ -659,7 +663,8 @@ def test_ev_loader_scales_explicit_hourly_loss_for_native_15_second_schema(tmp_p
         expected_step_loss = 1.0 - (1.0 - hourly_loss)**(15 / 3600.0)
 
         assert env.time_step_ratio == pytest.approx(1.0)
-        assert env.electric_vehicles[0].battery.loss_coefficient == pytest.approx(expected_step_loss)
+        assert env.electric_vehicles[0].battery.step_loss_fraction == pytest.approx(expected_step_loss)
+        assert env.electric_vehicles[0].battery.loss_coefficient == pytest.approx(hourly_loss)
     finally:
         env.close()
 

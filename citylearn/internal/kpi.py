@@ -783,7 +783,11 @@ class CityLearnKPIService:
                 # Compatibility for legacy battery adapters without a physical
                 # charge method; never used for native Battery/InventoryBattery.
                 if offset:
-                    soc *= 1.0 - float(getattr(battery, 'loss_coefficient', 0.0))
+                    # `loss_coefficient` is per hour; the standby loss of a step is compounded from it.
+                    step_loss = getattr(battery, 'step_loss_fraction', None)
+                    if step_loss is None:
+                        step_loss = 1.0 - (1.0 - float(getattr(battery, 'loss_coefficient', 0.0)))**step_hours
+                    soc *= 1.0 - float(step_loss)
                 battery_power = self._ev_battery_max_input_power_kw(
                     battery, power_kw * charger_efficiency, soc,
                 )

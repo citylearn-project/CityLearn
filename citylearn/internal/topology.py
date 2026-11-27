@@ -1432,6 +1432,22 @@ class CityLearnTopologyService:
         for key, value in overrides.items():
             if not hasattr(obj, key):
                 raise ValueError(f"Unknown override '{key}' for {type(obj).__name__}{context}.")
+            if isinstance(obj, Battery) and key == 'efficiency':
+                # Assigning `efficiency` only appends to the efficiency history, which `reset()` truncates, and
+                # the simulation reads `power_efficiency_curve` (#425).
+                if getattr(obj, '_curve_reference_efficiency', None) is None and 'power_efficiency_curve' not in overrides:
+                    raise ValueError(
+                        f"Override efficiency={value!r} for {type(obj).__name__}{context} has no effect: the battery "
+                        "has a power_efficiency_curve from its schema, which sets its efficiency at every step. "
+                        "Override power_efficiency_curve instead."
+                    )
+                try:
+                    obj.set_rated_efficiency(value)
+                except Exception as error:
+                    raise ValueError(
+                        f"Invalid override {key}={value!r} for {type(obj).__name__}{context}: {error}"
+                    ) from error
+                continue
             try:
                 setattr(obj, key, value)
             except Exception as error:
@@ -1451,51 +1467,141 @@ class CityLearnTopologyService:
         )
 
     def _validate_events(self):
-        """Check every scheduled event at construction instead of when it fires.
+        """Check every event that can fire in the simulation at construction instead of when it fires (#461).
 
-        Member ids are checked in event order (``add_member`` with a source creates a member), and
-        override keys must exist on the object they target. Values are applied, and checked, when
-        the event fires.
+        The events are replayed in order on the loaded members: member ids must name a loaded member (or one
+        an earlier ``add_member`` cloned), asset events must target an active member, a removed charger or
+        deferrable appliance must exist, an added one must be new, and the source asset an ``add_asset`` copies
+        must exist, resolved with the same default as the event (``source_asset_id``, else
+        ``target_asset_id``). Override keys must exist on the object they target, and override values are
+        applied to a copy. Events after `simulation_end_time_step` never fire and are not checked.
         """
 
-        # Members declared in the schema count as known even when the caller loaded a subset (buildings=...):
-        # their events never fire in that run, and they used to be accepted.
-        schema_buildings = self.env.schema.get('buildings', {}) if isinstance(getattr(self.env, 'schema', None), Mapping) else {}
-        known = set(self._member_pool) | set(schema_buildings or {})
+        schema = self.env.schema if isinstance(getattr(self.env, 'schema', None), Mapping) else {}
+        schema_buildings = schema.get('buildings', {}) or {}
+        pool = self._member_pool
+        # The members carry the episode tracker; the env sets its own after the topology is initialized.
+        tracker = next((getattr(b, 'episode_tracker', None) for b in pool.values()), None) \
+            or getattr(self.env, 'episode_tracker', None)
+        simulation_end = getattr(tracker, 'simulation_end_time_step', None)
+
+        known = set(pool)
+        include_flags = self._initial_member_include_flags()
+        active = {member_id for member_id in self._member_order if include_flags.get(member_id, True)}
+        if not active and self._member_order:
+            active = {self._member_order[0]}
+
+        # Asset ids per member as the events change them; None where they cannot be known before the run
+        # (the chargers of a cloned member are renamed when it is created).
+        chargers = {m: {c.charger_id for c in b.electric_vehicle_chargers or []} for m, b in pool.items()}
+        appliances = {m: {a.name for a in b.deferrable_appliances or []} for m, b in pool.items()}
+        # A source asset can also be one the member had at the start, as in a remove -> reinstall sequence.
+        source_chargers = {m: set(ids) for m, ids in chargers.items()}
+        source_appliances = {m: set(ids) for m, ids in appliances.items()}
+        asset_sets = {'charger': (chargers, source_chargers), 'deferrable_appliance': (appliances, source_appliances)}
 
         def require_member(member_id, event, role):
             if member_id is None:
                 raise ValueError(f"{event.operation} in topology event '{event.event_id}' requires {role}.")
             if member_id not in known:
-                raise ValueError(f"Unknown {role} '{member_id}' in topology event '{event.event_id}'.")
+                hint = (
+                    ' The member is declared in the schema but was not loaded (buildings=...); the event fires at '
+                    f'time step {event.time_step}, inside the simulation.'
+                    if member_id in schema_buildings else ''
+                )
+                raise ValueError(f"Unknown {role} '{member_id}' in topology event '{event.event_id}'.{hint}")
 
         for event in self._events:
+            if simulation_end is not None and event.time_step > int(simulation_end):
+                break
+
             if event.operation == 'add_member':
-                if event.target_member_id is None:
+                target = event.target_member_id
+                if target is None:
                     raise ValueError(f"add_member in topology event '{event.event_id}' requires target_member_id.")
-                if event.target_member_id not in known:
+                if target not in known and event.source_member_id is None:
+                    # Without a source the member must be loaded; report it as the unknown member.
+                    require_member(target, event, 'target_member_id')
+                if target not in known:
                     require_member(event.source_member_id, event, 'source_member_id')
-                    known.add(event.target_member_id)
-                if event.overrides and event.target_member_id in self._member_pool:
+                    known.add(target)
+                    source = event.source_member_id
+                    chargers[target] = None
+                    appliances[target] = None if appliances.get(source) is None else set(appliances[source])
+                    source_chargers[target] = None
+                    source_appliances[target] = None if appliances[target] is None else set(appliances[target])
+                active.add(target)
+                if event.overrides and target in pool:
                     self._check_override_keys(
-                        self._member_pool[event.target_member_id],
+                        pool[target],
                         {k: v for k, v in event.overrides.items() if k not in self._STRUCTURAL_BUILDING_KEYS},
                         event,
                     )
-            elif event.operation == 'remove_member':
-                require_member(event.target_member_id, event, 'target_member_id')
-            else:
-                require_member(event.target_member_id, event, 'target_member_id')
-                if event.operation == 'add_asset':
-                    source_id = event.source_member_id or event.target_member_id
-                    require_member(source_id, event, 'source_member_id')
-                    if event.overrides and source_id in self._member_pool:
-                        source = self._initial_override_target(self._member_pool[source_id], event)
-                        if source is not None:
-                            # Apply to a copy now, so an invalid key or value fails at construction instead of
-                            # leaving the env half-changed when the event fires.
-                            self._check_override_keys(source, event.overrides, event)
-                            self._apply_object_overrides(deepcopy(source), event.overrides, event)
+                continue
+
+            require_member(event.target_member_id, event, 'target_member_id')
+            if event.operation == 'remove_member':
+                active.discard(event.target_member_id)
+                continue
+
+            target = event.target_member_id
+            if target not in active:
+                raise ValueError(
+                    f"target_member_id '{target}' of topology event '{event.event_id}' is inactive at time step "
+                    f"{event.time_step}. Activate the member before changing its assets."
+                )
+
+            asset_type = event.target_asset_type
+            if asset_type in asset_sets:
+                current, sources = asset_sets[asset_type]
+                asset_id = event.target_asset_id
+                if asset_id is None:
+                    raise ValueError(
+                        f"{event.operation} for {asset_type} in topology event '{event.event_id}' requires "
+                        'target_asset_id.'
+                    )
+
+                if event.operation == 'remove_asset':
+                    if current[target] is not None and asset_id not in current[target]:
+                        raise ValueError(
+                            f"Topology event '{event.event_id}' removes {asset_type} '{asset_id}' from member "
+                            f"'{target}', which has no such {asset_type} at time step {event.time_step}. "
+                            f"Its {asset_type} ids are {sorted(current[target])}."
+                        )
+                    if current[target] is not None:
+                        current[target].discard(asset_id)
+                    continue
+
+                if current[target] is not None and asset_id in current[target]:
+                    raise ValueError(
+                        f"Topology event '{event.event_id}' adds {asset_type} '{asset_id}' to member '{target}', "
+                        f'which already has one with that id at time step {event.time_step}.'
+                    )
+                source_member = event.source_member_id or target
+                require_member(source_member, event, 'source_member_id')
+                source_asset = event.source_asset_id if event.source_asset_id is not None else asset_id
+                if sources[source_member] is not None and source_asset not in sources[source_member]:
+                    raise ValueError(
+                        f"Topology event '{event.event_id}' copies {asset_type} '{source_asset}' from member "
+                        f"'{source_member}', which has no such {asset_type}. Set source_asset_id to one of "
+                        f"{sorted(sources[source_member])}."
+                    )
+                if current[target] is not None:
+                    current[target].add(asset_id)
+                if sources[target] is not None:
+                    sources[target].add(asset_id)
+            elif event.operation == 'add_asset':
+                require_member(event.source_member_id or target, event, 'source_member_id')
+
+            if event.operation == 'add_asset' and event.overrides:
+                source_id = event.source_member_id or target
+                if source_id in pool:
+                    source = self._initial_override_target(pool[source_id], event)
+                    if source is not None:
+                        # Apply to a copy now, so an invalid key or value fails at construction instead of
+                        # leaving the env half-changed when the event fires.
+                        self._check_override_keys(source, event.overrides, event)
+                        self._apply_object_overrides(deepcopy(source), event.overrides, event)
 
     def _initial_override_target(self, source_building: Building, event: TopologyEvent):
         """The source asset an add_asset event copies, if it exists before any event fires."""
@@ -1505,10 +1611,12 @@ class CityLearnTopologyService:
                 return self._resolve_source_pv(source_building)
             if event.target_asset_type == 'electrical_storage':
                 return self._resolve_source_storage(source_building)
+            # The same default as the event itself: the target id when no source id is given (#461).
+            source_asset_id = event.source_asset_id if event.source_asset_id is not None else event.target_asset_id
             if event.target_asset_type == 'charger':
-                return self._resolve_source_charger(source_building, event.source_asset_id)
+                return self._resolve_source_charger(source_building, source_asset_id)
             if event.target_asset_type == 'deferrable_appliance':
-                return self._resolve_source_deferrable_appliance(source_building, event.source_asset_id)
+                return self._resolve_source_deferrable_appliance(source_building, source_asset_id)
         except ValueError:
             return None  # created by an earlier event; checked when this event fires
 

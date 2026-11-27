@@ -1316,11 +1316,16 @@ class CityLearnEntityInterfaceService:
         hours_until_departure: float,
         max_charging_power: float,
         max_discharging_power: float,
-        charge_efficiency_at_max: float,
-        discharge_efficiency_at_max: float,
+        charge_conversion: float,
+        discharge_conversion: float,
         step_hours: float,
         current_power_kw: float = 0.0,
     ) -> Mapping[str, float]:
+        """Charger feasibility features. Powers are AC-side, at the charger; energies are stored EV energy.
+
+        `charge_conversion` and `discharge_conversion` take AC energy to stored energy and back: the charger
+        efficiency times the EV battery's one-way efficiency (#421).
+        """
         if not connected or battery_capacity <= 0.0 or current_soc < 0.0:
             return {
                 "connected_ev_soc_min_ratio": -1.0,
@@ -1350,8 +1355,8 @@ class CityLearnEntityInterfaceService:
         )
         outage = bool(getattr(building, "power_outage", False))
 
-        charge_efficiency = max(self._safe_scalar(charge_efficiency_at_max, 1.0), 1.0e-6)
-        discharge_efficiency = max(self._safe_scalar(discharge_efficiency_at_max, 1.0), 1.0e-6)
+        charge_efficiency = max(self._safe_scalar(charge_conversion, 1.0), 1.0e-6)
+        discharge_efficiency = max(self._safe_scalar(discharge_conversion, 1.0), 1.0e-6)
         charge_power_by_soc = energy_to_full / max(charge_efficiency * step_hours, 1.0e-6)
         discharge_power_by_soc = energy_available * discharge_efficiency / max(step_hours, 1.0e-6)
 
@@ -1446,15 +1451,23 @@ class CityLearnEntityInterfaceService:
         energy_available: float,
         max_charge_power: float,
         max_discharge_power: float,
-        efficiency: float,
+        one_way_efficiency: float,
         step_hours: float,
         include_headroom: bool = True,
         current_power_kw: float = 0.0,
         soc_max: float = 1.0,
     ) -> Mapping[str, float]:
-        efficiency = max(self._safe_scalar(efficiency, 1.0), 1.0e-6)
-        charge_power_by_soc = energy_to_full / max(efficiency * step_hours, 1.0e-6)
-        discharge_power_by_soc = energy_available * efficiency / max(step_hours, 1.0e-6)
+        # Each conversion keeps the one-way efficiency, the square root of the round-trip efficiency, read from
+        # the battery's curve at the power it applies (#421).
+        one_way_efficiency = max(self._safe_scalar(one_way_efficiency, 1.0), 1.0e-6)
+        charge_efficiency = self._storage_limit_one_way_efficiency(
+            storage, max_charge_power, energy_to_full, step_hours, charging=True, fallback=one_way_efficiency,
+        )
+        discharge_efficiency = self._storage_limit_one_way_efficiency(
+            storage, max_discharge_power, energy_available, step_hours, charging=False, fallback=one_way_efficiency,
+        )
+        charge_power_by_soc = energy_to_full / max(charge_efficiency * step_hours, 1.0e-6)
+        discharge_power_by_soc = energy_available * discharge_efficiency / max(step_hours, 1.0e-6)
 
         charge_candidates = [max(max_charge_power, 0.0), charge_power_by_soc]
         discharge_candidates = [max(max_discharge_power, 0.0), discharge_power_by_soc]
@@ -1548,7 +1561,10 @@ class CityLearnEntityInterfaceService:
                 energy_available=storage_energy_available,
                 max_charge_power=max_charge_power,
                 max_discharge_power=max_discharge_power,
-                efficiency=self._safe_scalar(getattr(storage, "efficiency", 1.0), 1.0),
+                one_way_efficiency=self._safe_scalar(
+                    getattr(storage, "one_way_efficiency", None),
+                    self._safe_scalar(getattr(storage, "efficiency", 1.0), 1.0) ** 0.5,
+                ),
                 step_hours=step_hours,
                 include_headroom=False,
                 soc_max=soc_max,
@@ -2726,7 +2742,10 @@ class CityLearnEntityInterfaceService:
         max_min_discharge_kw = max(min_discharging_limits + [0.0])
         max_abs_power_kw = max(max_charge_kw, max_discharge_kw, 1.0)
         max_energy_step = max_abs_power_kw * step_hours
-        max_theoretical_avg_power = max(max_capacity / max(step_hours, 1.0e-6), max_abs_power_kw, 1.0)
+        # The required powers are AC-side, so the bound divides by the lowest charging conversion (#421).
+        max_theoretical_avg_power = max(
+            max_capacity / (max(step_hours, 1.0e-6) * self._lowest_charge_conversion()), max_abs_power_kw, 1.0
+        )
 
         bounds = {
             "connected_state": (0.0, 1.0),
@@ -3027,6 +3046,79 @@ class CityLearnEntityInterfaceService:
         """Upper SOC limit: InventoryBattery declares `max_soc`; a Battery charges to 1."""
 
         return self._safe_scalar(getattr(battery, "max_soc", 1.0), 1.0)
+
+    def _lowest_charge_conversion(self) -> float:
+        """Lowest charger efficiency times lowest EV battery one-way efficiency in the environment."""
+
+        def lowest(value: float, curve) -> float:
+            values = [self._safe_scalar(value, 1.0)]
+            if curve is not None and np.size(curve) > 0:
+                values.append(float(np.nanmin(np.asarray(curve, dtype=float)[1])))
+            return float(np.clip(min(values), 1.0e-6, 1.0))
+
+        chargers = [
+            lowest(getattr(charger, "efficiency", 1.0), getattr(charger, "charge_efficiency_curve", None))
+            for building in self.env.buildings
+            for charger in (building.electric_vehicle_chargers or [])
+        ]
+        batteries = [
+            lowest(getattr(ev.battery, "efficiency", 1.0), getattr(ev.battery, "power_efficiency_curve", None)) ** 0.5
+            for ev in self.env.electric_vehicles
+        ]
+        return min(chargers + [1.0]) * min(batteries + [1.0])
+
+    def _storage_limit_one_way_efficiency(
+        self, storage, max_power_kw: float, energy_kwh: float, step_hours: float, *, charging: bool, fallback: float,
+    ) -> float:
+        """One-way efficiency of `storage` at the power it applies to a full-power request.
+
+        The request is limited by `max_power_kw` and by the stored `energy_kwh` it can take (charging) or give
+        (discharging). As :py:meth:`citylearn.energy_model.Battery.charge` does, the efficiency curve is read
+        twice: at the power limit, then at the limited power. Storage without a curve keeps `fallback`.
+        """
+
+        declared = self._declared_one_way_efficiency(storage, charging)
+        if declared is not None:
+            return declared
+        if not callable(getattr(storage, "get_current_efficiency", None)):
+            return fallback
+
+        step_hours = max(self._safe_scalar(step_hours, 1.0), 1.0e-12)
+        max_energy = max(self._safe_scalar(max_power_kw, 0.0), 0.0) * step_hours
+        energy_kwh = max(self._safe_scalar(energy_kwh, 0.0), 0.0)
+        limited = max_energy
+        one_way = fallback
+        for _ in range(2):
+            efficiency = self._safe_scalar(storage.get_current_efficiency(limited / step_hours), np.nan)
+            if not np.isfinite(efficiency) or efficiency <= 0.0:
+                return fallback
+            one_way = float(np.clip(efficiency, 1.0e-6, 1.0) ** 0.5)
+            limited = min(max_energy, energy_kwh / one_way if charging else energy_kwh * one_way)
+        return one_way
+
+    def _declared_one_way_efficiency(self, battery, charging: bool) -> Optional[float]:
+        """The one-way efficiency a battery declares per direction (`InventoryBattery`), else None."""
+
+        value = getattr(battery, "charging_efficiency" if charging else "discharging_efficiency", None)
+        if value is None:
+            return None
+        value = self._safe_scalar(value, np.nan)
+        return float(np.clip(value, 1.0e-6, 1.0)) if np.isfinite(value) and value > 0.0 else None
+
+    def _battery_one_way_efficiency(self, battery, power_kw: float, charging: bool = True) -> float:
+        """One-way efficiency of `battery` at terminal power `power_kw`: the square root of its round-trip curve."""
+
+        declared = self._declared_one_way_efficiency(battery, charging)
+        if declared is not None:
+            return declared
+        fallback = self._safe_scalar(getattr(battery, "one_way_efficiency", 1.0), 1.0)
+        get_current_efficiency = getattr(battery, "get_current_efficiency", None)
+        if not callable(get_current_efficiency):
+            return float(np.clip(fallback, 1.0e-6, 1.0))
+        efficiency = self._safe_scalar(get_current_efficiency(max(self._safe_scalar(power_kw, 0.0), 0.0)), np.nan)
+        if not np.isfinite(efficiency) or efficiency <= 0.0:
+            return float(np.clip(fallback, 1.0e-6, 1.0))
+        return float(np.clip(efficiency, 1.0e-6, 1.0) ** 0.5)
 
     def _energy_to_full_kwh(self, battery, soc: float, capacity: float, energy_to_full: float) -> float:
         """Cap the nominal `energy_to_full` at the energy `battery` still accepts after capacity fade.

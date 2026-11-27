@@ -130,7 +130,7 @@ def _away_ev_soc(tmp_path: Path, monkeypatch) -> tuple[np.ndarray, float]:
         env.step([np.zeros(env.action_space[0].shape, dtype='float32').tolist()])
 
     # The terminal index is not simulated; compare the executed steps.
-    return np.asarray(ev.battery.soc, dtype='float64')[:-1], ev.battery.loss_coefficient
+    return np.asarray(ev.battery.soc, dtype='float64')[:-1], ev.battery.step_loss_fraction
 
 
 def test_issue_236_away_ev_keeps_its_standby_loss(tmp_path, monkeypatch):

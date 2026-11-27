@@ -771,7 +771,8 @@ class CityLearnLoadingService:
         if 'nominal_power' in attrs or not issubclass(battery_constructor, InventoryBattery):
             battery_kwargs['nominal_power'] = attrs['nominal_power']
 
-        battery = battery_constructor(**battery_kwargs)
+        with loading_components.curve_path(f'electric_vehicles_def.{electric_vehicle_name}.battery.attributes'):
+            battery = battery_constructor(**battery_kwargs)
 
         electric_vehicle_type = 'citylearn.citylearn.ElectricVehicle' if electric_vehicle_schema.get('type', None) is None else electric_vehicle_schema['type']
         electric_vehicle_type_module = '.'.join(electric_vehicle_type.split('.')[0:-1])
