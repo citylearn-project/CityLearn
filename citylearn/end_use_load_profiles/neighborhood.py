@@ -364,11 +364,15 @@ class Neighborhood:
             lstm_error_data: List[pd.DataFrame] = []
 
             for b in env.buildings:
+                # The last row of an episode is only its terminal observation, so the simulated series is one
+                # row shorter than the dataset window; compare the rows that were simulated.
+                predicted = b.indoor_dry_bulb_temperature
+                simulated = len(predicted)
                 lstm_prediction_data.append(pd.DataFrame({
-                    'hour': b.energy_simulation.hour,
-                    'month': b.energy_simulation.month,
-                    'indoor_dry_bulb_temperature': b.energy_simulation.indoor_dry_bulb_temperature_without_control,
-                    'indoor_dry_bulb_temperature_predicted': b.indoor_dry_bulb_temperature,
+                    'hour': b.energy_simulation.hour[:simulated],
+                    'month': b.energy_simulation.month[:simulated],
+                    'indoor_dry_bulb_temperature': b.energy_simulation.indoor_dry_bulb_temperature_without_control[:simulated],
+                    'indoor_dry_bulb_temperature_predicted': predicted,
                 }))
                 
                 rmse_data = lstm_prediction_data[-1].groupby(['month'])[['indoor_dry_bulb_temperature','indoor_dry_bulb_temperature_predicted']].apply(
