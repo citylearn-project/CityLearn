@@ -270,11 +270,11 @@ class MultiCommunityEnv(Env):
         diagnostics take the largest community value; other ``_kwh``/``_eur``/``_kgco2``/``_count`` rows are
         summed; other ratios and percentages are means weighted by the community ``weight``; and other rows
         (``_kw``, ``_c``, ``_hours``) have no portfolio row. Each portfolio ``description`` states its rule, and
-        ``table.attrs['portfolio_aggregation']`` lists the rule of every portfolio row. When some communities have a community market and others do
-        not, a community without a market enters the portfolio community-market rows with its plain grid
-        settlement: no local trade, its members' grid import and export, and its control cost as settled and
-        counterfactual cost. Its own district rows are unchanged. The KPI reference guide gives the rule of each
-        family.
+        the table attribute ``portfolio_aggregation`` lists the rule of every portfolio row. When some
+        communities have a community market and others do not, a community without a market enters the
+        portfolio community-market rows with its plain grid settlement: no local trade, its members' grid
+        import and export, and its control cost as settled and counterfactual cost. Its own district rows are
+        unchanged. The KPI reference guide gives the rule of each family.
         """
 
         return self._combine_community_kpis({
