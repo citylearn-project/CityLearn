@@ -173,7 +173,8 @@ dependencies from <code class="docutils literal notranslate"><span class="pre">r
 dataset/schema impact, validation scope and migration instructions.</p></li>
 <li><p>Update the affected guides and <a class="reference internal" href="migration.html"><span class="std std-doc">migration notes</span></a>.</p></li>
 <li><p>Run the tests and auditors in the <a class="reference internal" href="developer_guide.html"><span class="std std-doc">developer guide</span></a>,
-build the Sphinx site and check its links and examples.</p></li>
+build the Sphinx site and check its links and examples. Re-record the
+performance baseline with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">scripts/ci/perf_smoke.py</span> <span class="pre">--write-baseline</span></code>.</p></li>
 <li><p>Build and validate wheel/source distributions, then verify the installed wheel
 outside the checkout. The workflow’s installed-export check demonstrates this.</p></li>
 </ol>

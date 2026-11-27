@@ -300,9 +300,15 @@ the comparison reports <code class="docutils literal notranslate"><span class="p
 </pre></div>
 </div>
 <p>CI performance smoke check:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">.venv/bin/python scripts/ci/perf_smoke.py --episode-steps 600 --seconds 60 --baseline-file scripts/ci/perf_baseline.json</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">.venv/bin/python scripts/ci/perf_smoke.py --require-baseline</span>
 </pre></div>
 </div>
+<p>It times the 2022 <code class="docutils literal notranslate"><span class="pre">plus_evs</span></code> dataset (flat, flat with end rendering and entity, 60 s step on hourly data),
+<code class="docutils literal notranslate"><span class="pre">pt_rec_4</span></code> at its native step with <code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode='reject'</span></code> and the physics invariant checks on, and the
+construction of the whole 15 s Parquet electrical-service dataset. The gates are loose; the thresholds are the
+script’s defaults and <code class="docutils literal notranslate"><span class="pre">scripts/ci/perf_baseline.json</span></code> stores only measurements. CI writes the ratio of every
+metric to its baseline to the job summary. Re-record the baseline once per release with <code class="docutils literal notranslate"><span class="pre">--write-baseline</span></code>;
+<code class="docutils literal notranslate"><span class="pre">--cases</span></code> limits a run (or a re-recording) to some cases. Constructing the 15 s dataset needs about 6 GB of memory.</p>
 <p>Step/component profiling:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">.venv/bin/python scripts/audit/profile_step_breakdown.py --episode-steps 300 --seconds 60 --agent rbc --interface flat --render-mode none --no-write --table-limit 14</span>
 </pre></div>
