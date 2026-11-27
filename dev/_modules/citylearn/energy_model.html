@@ -704,10 +704,10 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    nominal_power : float, default: (0.9, 0.99)</span>
+<span class="sd">    nominal_power : float, default: 0.0</span>
 <span class="sd">        Maximum amount of electric power that the electric heater can consume from the power grid.</span>
-<span class="sd">    efficiency : Union[float, Tuple[float, float]], default: 0.9</span>
-<span class="sd">        Technical efficiency.</span>
+<span class="sd">    efficiency : Union[float, Tuple[float, float]], default: (0.9, 0.99)</span>
+<span class="sd">        Technical efficiency; a tuple draws it uniformly in that range.</span>
 
 <span class="sd">    Other Parameters</span>
 <span class="sd">    ----------------</span>

@@ -14,4 +14,3 @@ Submodules
 
    citylearn.utils.file_handler
    citylearn.utils.noise
-   citylearn.utils.paths

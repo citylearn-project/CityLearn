@@ -872,7 +872,7 @@ district_solar_self_consumption_community_market_local_share_of_export_ratio
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">battery_health_equivalent_full_cycles{,_business_as_usual,_delta_to_business_as_usual}_count</span></code></p></td>
 <td><p>building, district</p></td>
-<td><p>count</p></td>
+<td><p>cycles</p></td>
 <td><p>Equivalent full cycles, throughput / (2 · nominal capacity), pooled over capacity at district and portfolio levels. <code class="docutils literal notranslate"><span class="pre">_business_as_usual</span></code> and <code class="docutils literal notranslate"><span class="pre">_delta_to_business_as_usual</span></code> as in the shared rules.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">battery_health_capacity_fade{,_business_as_usual,_delta_to_business_as_usual}_ratio</span></code></p></td>
@@ -1101,7 +1101,7 @@ district_electrical_service_phase_violations_event_count
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_battery_health_equivalent_full_cycles_count</span></code></p></td>
 <td><p>building, district</p></td>
-<td><p>count</p></td>
+<td><p>cycles</p></td>
 <td><p>Opt-in equivalent full cycles of EV batteries from accepted gross battery-terminal throughput over (2 · nominal capacity) (<code class="docutils literal notranslate"><span class="pre">include_battery_health_audit=True</span></code>), attributed to executed transfers over realized connected EV capacity at building level and pooled over unique eligible fleet EV nominal capacity at district and portfolio levels; undefined when nominal capacity ≤ 0 (whereas <code class="docutils literal notranslate"><span class="pre">Battery.equivalent_full_cycles</span></code> returns <code class="docutils literal notranslate"><span class="pre">0.0</span></code>).</p></td>
 </tr>
 </tbody>
@@ -1809,7 +1809,7 @@ district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">thermal_service_audit_{cold,hot}_degree_hours</span></code></p></td>
 <td><p>building, district</p></td>
-<td><p>hours</p></td>
+<td><p>degC_h</p></td>
 <td><p>Degree-hours (°C·h) of discomfort: the sum over too-cold intervals of (T_heat − T), or over too-hot intervals of (T − T_cool), times the step length in hours; measured from the set point, not the band edge. Not carried to the portfolio.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">thermal_service_audit_{expected,served,unserved,outage_expected,outage_unserved}_service_energy_kwh</span></code></p></td>

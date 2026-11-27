@@ -219,7 +219,7 @@ weighted score. Keep the full KPI export so each headline result can be traced.<
 </tr>
 <tr class="row-even"><td><p>How demanding was the import profile?</p></td>
 <td><p>Peak and load-factor-penalty ratios to BAU</p></td>
-<td><p>Below 1 is lower than BAU and above 1 is higher. Load-factor penalties use import power; peaks use signed net power, so a community that exports at every step has a zero or negative peak (see <a class="reference internal" href="kpis_reference.html#grid-energy-and-load-shape"><span class="std std-ref">grid energy and load shape</span></a>).</p></td>
+<td><p>Below 1 is lower than BAU and above 1 is higher. Load-factor penalties use import power; peaks use signed net power, so a community that exports at every step has a zero or negative peak; the peak ratios use the signed rule, so a higher control peak never reads as below 1 (see <a class="reference internal" href="kpis_reference.html#grid-energy-and-load-shape"><span class="std std-ref">grid energy and load shape</span></a>).</p></td>
 </tr>
 </tbody>
 </table>
@@ -236,8 +236,8 @@ are generated from that selection when the documentation is built.</p>
     <span class="s2">"district_cost_total_control_eur"</span><span class="p">,</span>
     <span class="s2">"district_cost_total_business_as_usual_eur"</span><span class="p">,</span>
     <span class="s2">"district_energy_grid_total_import_control_kwh"</span><span class="p">,</span>
-    <span class="s2">"district_ev_performance_departure_min_acceptable_feasible_ratio"</span><span class="p">,</span>
-    <span class="s2">"district_ev_performance_departure_within_tolerance_feasible_ratio"</span><span class="p">,</span>
+    <span class="s2">"district_ev_departure_audit_min_acceptable_service_feasible_ratio"</span><span class="p">,</span>
+    <span class="s2">"district_ev_departure_audit_within_tolerance_service_feasible_ratio"</span><span class="p">,</span>
     <span class="s2">"district_electrical_service_phase_violations_energy_total_kwh"</span><span class="p">,</span>
     <span class="s2">"district_electrical_service_phase_requested_pressure_energy_total_kwh"</span><span class="p">,</span>
 <span class="p">]</span>
@@ -267,12 +267,11 @@ charge by default, starts ready flexible loads and operates stationary storage
 for PV self-consumption. <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> runs or reuses that comparison unless
 <code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code>.</p>
 <p>Do not mix <code class="docutils literal notranslate"><span class="pre">ratio_to_baseline</span></code> and <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> columns in a
-comparison without identifying the reference. A ratio is dimensionless.
-For a zero denominator the safe division rule returns 1 when both values are
-effectively zero, and a missing value when the numerator is non-zero. The
-flexible-appliance ratios to the BAU are the exception: they are missing when
-both of their totals are zero (see
-<a class="reference internal" href="kpis_reference.html#shared-rules"><span class="std std-ref">shared rules</span></a>).</p>
+comparison without identifying the reference. A ratio is dimensionless. When
+its reference is zero or negligible a ratio can be 1 or missing: the
+<a class="reference internal" href="kpis_reference.html#shared-rules"><span class="std std-ref">shared rules</span></a> give the zero-over-zero rule,
+its exceptions for cost, emissions and flexible appliances, and the rule for
+references below 1% of a typical member.</p>
 </section>
 <section id="ev-service-versus-target-accuracy">
 <h2>EV service versus target accuracy<a class="headerlink" href="#ev-service-versus-target-accuracy" title="Link to this heading"></a></h2>

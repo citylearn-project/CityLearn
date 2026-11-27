@@ -1887,8 +1887,9 @@ raises <code class="docutils literal notranslate"><span class="pre">TypeError</s
 </tr>
 </tbody>
 </table>
-<p>On <code class="docutils literal notranslate"><span class="pre">citylearn.building.Building</span></code> the devices serve the dataset demand. Under physics version 2 the energy limit of a
-device is its power times the step duration; version 1 compares step energy with kW (a one-hour cap).</p>
+<p>On <code class="docutils literal notranslate"><span class="pre">citylearn.building.Building</span></code> the devices serve the dataset demand, and the energy limit of a device is its power
+times the step duration in both physics versions. On LSTM dynamics buildings, version 1 compares the step energy of the
+cooling and heating demand with kW (a one-hour cap); version 2 uses power × step duration there too.</p>
 </section>
 <section id="thermal-storage">
 <h3>Thermal storage<a class="headerlink" href="#thermal-storage" title="Link to this heading"></a></h3>
@@ -3358,7 +3359,7 @@ replaced by those of the wrapper. See the <a class="reference internal" href="mu
 <td><p>limited by <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code></p></td>
 <td><p>limited by <code class="docutils literal notranslate"><span class="pre">discharge_power_curve</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>HVAC device limit</p></td>
+<tr class="row-odd"><td><p>HVAC device limit on LSTM dynamics buildings</p></td>
 <td><p>step energy compared with kW (one-hour cap)</p></td>
 <td><p>power × step duration</p></td>
 </tr>
@@ -3405,6 +3406,14 @@ replaced by those of the wrapper. See the <a class="reference internal" href="mu
 <tr class="row-even"><td><p>Entity energy-to-full features</p></td>
 <td><p>nominal capacity</p></td>
 <td><p>degraded capacity</p></td>
+</tr>
+<tr class="row-odd"><td><p>Out-of-range flat actions</p></td>
+<td><p>applied as given</p></td>
+<td><p>clipped to the action space</p></td>
+</tr>
+<tr class="row-even"><td><p>Flat deferrable <code class="docutils literal notranslate"><span class="pre">*_kwh</span></code> observation bounds</p></td>
+<td><p>fixed</p></td>
+<td><p>from the appliance’s cycles</p></td>
 </tr>
 </tbody>
 </table>

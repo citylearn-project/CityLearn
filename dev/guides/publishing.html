@@ -196,7 +196,7 @@ the relevant CI to pass.</p></li>
 <ul class="simple">
 <li><p><strong>PyPI publication:</strong> A tag push by itself does not publish to PyPI. The
 <a class="reference external" href="https://github.com/citylearn-project/CityLearn/blob/master/.github/workflows/pypi_deploy.yml">publication workflow</a>
-runs when a GitHub Release is published or when explicitly dispatched; choose one
+runs when a GitHub Release is published or when explicitly dispatched from the release tag, and its build job fails unless that tag is <code class="docutils literal notranslate"><span class="pre">v</span></code> + <code class="docutils literal notranslate"><span class="pre">__version__</span></code>; choose one
 trigger per release. Confirm the build, installed-export check and <code class="docutils literal notranslate"><span class="pre">pypi</span></code> publish
 jobs succeeded for the intended commit, then verify the pinned package from PyPI
 in a clean environment.</p></li>

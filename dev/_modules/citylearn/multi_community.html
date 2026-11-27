@@ -695,6 +695,11 @@
             <span class="s2">"baseline_version"</span><span class="p">,</span>
             <span class="s2">"business_as_usual_ev_charge_target"</span><span class="p">,</span>
             <span class="s2">"ev_soc_carryover"</span><span class="p">,</span>
+            <span class="c1"># The EV departure thresholds set the min-acceptable and within-tolerance counts that the portfolio</span>
+            <span class="c1"># adds up, and a community without the provenance ledger has no provenance rows to add.</span>
+            <span class="s2">"ev_departure_service_tolerance"</span><span class="p">,</span>
+            <span class="s2">"ev_departure_within_tolerance"</span><span class="p">,</span>
+            <span class="s2">"energy_provenance"</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="n">community_id</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">setting</span><span class="p">)</span> <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>

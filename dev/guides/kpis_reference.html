@@ -559,7 +559,7 @@ penalty   L = mean over windows w of (1 − mean_{t∈w} x_t / max_{t∈w} x_t)
 <li><p>Non-finite steps are left out of each window. A peak window with no finite value is skipped.</p></li>
 <li><p>A load-factor window whose maximum is ≤ 1e-6 has no penalty and is skipped. <code class="docutils literal notranslate"><span class="pre">L</span></code> is undefined when no window is defined. With <code class="docutils literal notranslate"><span class="pre">_signed_net</span></code>, a negative window mean gives a penalty above 1.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">R_avg</span></code> is undefined when there is no finite transition.</p></li>
-<li><p>A net exporter can have a negative peak, so peak ratios can be negative or undefined.</p></li>
+<li><p>A net exporter can have a negative peak. The <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> peak ratios to the baseline and to the BAU therefore use the signed ratio of the <a class="reference internal" href="#cost"><span class="std std-ref">cost section</span></a>, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">+</span> <span class="pre">(control</span> <span class="pre">−</span> <span class="pre">reference)</span> <span class="pre">/</span> <span class="pre">|reference|</span></code> when the reference peak is negative, so a higher control peak never reads as below 1; the legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> rows keep the plain ratio.</p></li>
 </ul>
 <p>Two sets of rows use different series:</p>
 <ul class="simple">

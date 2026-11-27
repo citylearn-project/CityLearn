@@ -770,8 +770,8 @@ allow electricity discharge thus, cause negative electricity consumption.</p></l
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>nominal_power</strong> (<em>float</em><em>, </em><em>default:</em><em> (</em><em>0.9</em><em>, </em><em>0.99</em><em>)</em>) – Maximum amount of electric power that the electric heater can consume from the power grid.</p></li>
-<li><p><strong>efficiency</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default: 0.9</em>) – Technical efficiency.</p></li>
+<li><p><strong>nominal_power</strong> (<em>float</em><em>, </em><em>default: 0.0</em>) – Maximum amount of electric power that the electric heater can consume from the power grid.</p></li>
+<li><p><strong>efficiency</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default:</em><em> (</em><em>0.9</em><em>, </em><em>0.99</em><em>)</em>) – Technical efficiency; a tuple draws it uniformly in that range.</p></li>
 <li><p><strong>**kwargs</strong> (<em>Any</em>) – Other keyword arguments used to initialize super class.</p></li>
 </ul>
 </dd>
