@@ -221,12 +221,12 @@ Estas chaves descrevem o relógio do dataset. Mudam a forma como os instantes e 
 
 | Chave | Tipo | Predefinição | Efeito | Desde |
 |---|---|---|---|---|
-| `time_axis.calendar_file` | caminho | nenhuma | Calendário com as colunas `time_step` (exatamente `0..n-1`) e `timestamp_utc` (legível, estritamente crescente, regular, com pelo menos 2 linhas) e, opcionalmente, `timestamp_local` (os mesmos instantes). O seu espaçamento passa a ser o passo do dataset de todos os edifícios, e os instantes exportados vêm dele, salvo se `start_date` for passado a `CityLearnEnv`. Lido como Parquet quando o nome termina em `.parquet` ou `.pq` (minúsculas); caso contrário, como CSV. | 3.1.0 |
-| `timezone` | string | nenhuma | Nome IANA, por exemplo `Europe/Lisbon`. Converte os instantes do calendário a partir de UTC; um nome desconhecido lança erro no carregamento. Sem calendário, só é registado. | 3.1.0 |
+| `time_axis.calendar_file` | caminho | nenhuma | Calendário com as colunas `time_step` (exatamente `0..n-1`) e `timestamp_utc` (legível, estritamente crescente, regular, com pelo menos 2 linhas) e, opcionalmente, `timestamp_local`: com desvio UTC (`2023-07-01T01:00:00+01:00`) tem de ser os mesmos instantes; sem desvio é a hora de relógio em `timezone`, que passa a ser obrigatório. O seu espaçamento passa a ser o passo do dataset de todos os edifícios, e os instantes exportados vêm dele, salvo se `start_date` for passado a `CityLearnEnv`. Lido como Parquet quando o nome termina em `.parquet`, `.pq` ou `.parq` (maiúsculas ou minúsculas); caso contrário, como CSV. Verificado no carregamento: precisa de uma linha por cada linha global até `simulation_end_time_step` (com `terminal_observation_padding` a última pode faltar) e, convertido para `timezone`, tem de dar o `month`, a `hour` (a hora 1 é 00:00), os `minutes` e os `seconds` do `energy_simulation` do primeiro edifício; caso contrário, um `ValueError` indica a primeira linha diferente. Um `day_type` de 1 a 7 que não seja o dia da semana (1 segunda-feira) dá apenas um aviso. | 3.1.0 |
+| `timezone` | string | nenhuma | Nome IANA, por exemplo `Europe/Lisbon`. Converte os instantes do calendário a partir de UTC; um nome desconhecido lança erro no carregamento. Sem calendário, os instantes exportados são escritos nesta zona com o seu desvio UTC, e as linhas distam passos inteiros de tempo decorrido, pelo que seguem as mudanças da hora de verão. | 3.1.0 |
 | `dataset_seconds_per_time_step` | número | inferida | Passo declarado do dataset em segundos, finito e positivo. Tem de concordar com o calendário quando ele existe. | 3.1.0 |
 | `dataset_contract_version` | string | nenhuma | Um valor começado por `portugal-native` faz de `shared/calendar.parquet` o calendário quando `time_axis` está ausente e esse ficheiro existe. Caso contrário, é um metadado. | 3.1.0 |
 | `terminal_observation_padding` | bool | `false` | Permite que cada ficheiro de séries temporais termine exatamente uma linha antes da janela: a última linha é repetida apenas como observação terminal (os campos de calendário avançam um passo e um VE ligado que parte aparece como já saído). Nunca é simulada. Um ficheiro com mais do que uma linha em falta continua a lançar `ValueError`. | 3.0.0 |
-| `start_date` | `YYYY-MM-DD` | `2024-01-01` | Data da linha global 0 nos instantes de render e de exportação quando não há calendário. Não altera a simulação. | 2.5.0 |
+| `start_date` | `YYYY-MM-DD` | de `month` e `day_type` | Data da linha global 0 nos instantes de render e de exportação quando não há calendário; a hora do dia vem das colunas `hour`, `minutes` e `seconds`. Sem ela, a data é deduzida das colunas de calendário, como em [Instantes exportados](running_simulations.md#instantes-exportados). Não altera a simulação. | 2.5.0 |
 
 ### Versões
 
@@ -374,7 +374,9 @@ fora desse hash.
 
 Opções só do construtor, sem chave no schema: `offline` (ou a variável de ambiente `CITYLEARN_OFFLINE`),
 `solar_generation` (`false`, ou um bool por edifício, retira a FV), `time_step_ratio`, `render_directory`,
-`render_directory_name`. O argumento `electric_vehicles` é aceite mas não escolhe VE: use
+`render_directory_name`, `random_stream_namespace` (uma string não vazia acrescentada à chave de todos os fluxos
+aleatórios, para que dois ambientes com a mesma semente e os mesmos nomes de edifícios e VE sorteiem valores
+independentes; `MultiCommunityEnv` define-a como o `community_id`). O argumento `electric_vehicles` é aceite mas não escolhe VE: use
 `electric_vehicles_def.<ev>.include`.
 
 ## Observações e ações

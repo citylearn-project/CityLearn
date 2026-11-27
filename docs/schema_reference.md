@@ -219,12 +219,12 @@ These keys describe the dataset clock. They change how timestamps and the datase
 
 | Key | Type | Default | Effect | Since |
 |---|---|---|---|---|
-| `time_axis.calendar_file` | path | none | Calendar with the columns `time_step` (exactly `0..n-1`) and `timestamp_utc` (parseable, strictly increasing, regular, at least 2 rows), and optionally `timestamp_local` (the same instants). Its spacing becomes the dataset step of every building, and exported timestamps come from it unless `start_date` is passed to `CityLearnEnv`. Read as Parquet when the name ends in `.parquet` or `.pq` (lower case), otherwise as CSV. | 3.1.0 |
-| `timezone` | string | none | IANA name, for example `Europe/Lisbon`. Converts calendar timestamps from UTC; an unknown name raises at load. Without a calendar it is only recorded. | 3.1.0 |
+| `time_axis.calendar_file` | path | none | Calendar with the columns `time_step` (exactly `0..n-1`) and `timestamp_utc` (parseable, strictly increasing, regular, at least 2 rows), and optionally `timestamp_local`: with a UTC offset (`2023-07-01T01:00:00+01:00`) it must be the same instants; without one it is the wall-clock time in `timezone`, which is then required. Its spacing becomes the dataset step of every building, and exported timestamps come from it unless `start_date` is passed to `CityLearnEnv`. Read as Parquet when the name ends in `.parquet`, `.pq` or `.parq` (any case), otherwise as CSV. Checked at load: it needs a row for every global row up to `simulation_end_time_step` (the last one may be missing with `terminal_observation_padding`), and, converted to `timezone`, it must give the `month`, `hour` (hour 1 is 00:00), `minutes` and `seconds` of the first building's `energy_simulation`, or a `ValueError` names the first row that differs. A `day_type` from 1 to 7 that is not the weekday (1 Monday) gives a warning only. | 3.1.0 |
+| `timezone` | string | none | IANA name, for example `Europe/Lisbon`. Converts calendar timestamps from UTC; an unknown name raises at load. Without a calendar, exported timestamps are written in this zone with their UTC offset, and rows are whole steps of elapsed time apart, so they follow its daylight-saving changes. | 3.1.0 |
 | `dataset_seconds_per_time_step` | number | inferred | Declared dataset step in seconds, finite and positive. It must agree with the calendar when there is one. | 3.1.0 |
 | `dataset_contract_version` | string | none | A value starting with `portugal-native` makes `shared/calendar.parquet` the calendar when `time_axis` is absent and that file exists. Otherwise metadata. | 3.1.0 |
 | `terminal_observation_padding` | bool | `false` | Lets every time-series file stop exactly one row short of the window: the last row is repeated as the terminal observation only (its calendar fields advance by one step, and a connected EV that departs is shown as gone). It is never simulated. A file short by more than one row still raises `ValueError`. | 3.0.0 |
-| `start_date` | `YYYY-MM-DD` | `2024-01-01` | Date of global row 0 in rendered and exported timestamps when there is no calendar. It does not change the simulation. | 2.5.0 |
+| `start_date` | `YYYY-MM-DD` | from `month` and `day_type` | Date of global row 0 in rendered and exported timestamps when there is no calendar; the time of day comes from the `hour`, `minutes` and `seconds` columns. Without it, the date is derived from the calendar columns, as in [Exported timestamps](running_simulations.md#exported-timestamps). It does not change the simulation. | 2.5.0 |
 
 ### Versions
 
@@ -370,7 +370,9 @@ reported as incompatible. Start the name of a comment or note key with `_` to ke
 
 Constructor-only options, which have no schema key: `offline` (or the `CITYLEARN_OFFLINE` environment variable),
 `solar_generation` (`false`, or one bool per building, removes the PV), `time_step_ratio`, `render_directory`,
-`render_directory_name`. The `electric_vehicles` argument is accepted but does not select EVs: use
+`render_directory_name`, `random_stream_namespace` (a non-empty string added to the key of every random stream,
+so two environments with the same seed and the same building and EV names draw independent values;
+`MultiCommunityEnv` sets it to the `community_id`). The `electric_vehicles` argument is accepted but does not select EVs: use
 `electric_vehicles_def.<ev>.include`.
 
 ## Observations and actions

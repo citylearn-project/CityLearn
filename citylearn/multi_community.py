@@ -73,6 +73,8 @@ class MultiCommunityEnv(Env):
                     child_kwargs["evaluation_window"] = evaluation_window
                 child_kwargs["render_directory"] = self.render_output_root
                 child_kwargs["render_session_name"] = str(Path(self.render_session_name) / config.community_id)
+                # Communities with the same seed and the same member or EV names draw independent values (#462).
+                child_kwargs.setdefault("random_stream_namespace", config.community_id)
                 env = CityLearnEnv(config.schema, **child_kwargs)
                 self.envs[config.community_id] = env
                 created_envs.append(env)

@@ -22,6 +22,7 @@ from citylearn.data import (
 from citylearn.electric_vehicle import ElectricVehicle
 from citylearn.energy_model import Battery, DeferrableAppliance, Escalator
 from citylearn.reward_function import MultiBuildingRewardFunction, RewardFunction
+from citylearn.random_streams import namespaced_key
 from citylearn.utilities import parse_bool
 from citylearn.internal import grid_availability, loading_inputs, loading_components
 from citylearn.internal.baseline import BaselineEVChargingSource
@@ -135,6 +136,8 @@ class CityLearnLoadingService:
             schema['random_seed'] = self.env.random_seed
         # Resolved by the environment from its constructor argument or the schema.
         schema['random_stream_version'] = self.env.random_stream_version
+        # The constructor option `random_stream_namespace` (not a schema key) extends every stream key below.
+        schema['random_stream_namespace'] = getattr(self.env, 'random_stream_namespace', None)
         from citylearn.internal.temporal import TimeAxis, snapshot_inputs
         self.env._initialization_seed = schema['random_seed']
         self.env._input_snapshot = snapshot_inputs(schema)
@@ -325,6 +328,8 @@ class CityLearnLoadingService:
             buildings.append(self.load_building(i, building_name, schema, episode_tracker, pv_sizing_data, battery_sizing_data, **kwargs))
 
         self._validate_unique_charger_ids(buildings)
+        # A calendar that is too short or describes another clock than the calendar columns fails here (#464).
+        self.env._time_axis.validate(schema, buildings[0] if buildings else None)
 
         if not dynamic_mode:
             self._validate_static_action_asset_consistency(buildings)
@@ -527,9 +532,11 @@ class CityLearnLoadingService:
             observation_metadata=observation_metadata, action_metadata=action_metadata,
             carbon_intensity=inputs.carbon_intensity, pricing=inputs.pricing, name=building_name,
             seconds_per_time_step=schema['seconds_per_time_step'], random_seed=schema['random_seed'],
-            random_stream_version=schema['random_stream_version'], random_stream_key=('building', building_name),
+            random_stream_version=schema['random_stream_version'],
+            random_stream_key=namespaced_key(('building', building_name), schema.get('random_stream_namespace')),
             episode_tracker=episode_tracker, **outage, **options,
         )
+        building.random_stream_namespace = schema.get('random_stream_namespace')
         building._declared_inactive_actions = set(inactive_actions)
         building.physics_version = getattr(self.env, 'physics_version', schema.get('physics_version'))
         building.baseline_version = getattr(self.env, 'baseline_version', schema.get('baseline_version'))
@@ -716,6 +723,8 @@ class CityLearnLoadingService:
         initial_soc = attrs.get('initial_soc')
         if initial_soc is None:
             seed_source = f"{schema['random_seed']}:{electric_vehicle_name}:initial_soc"
+            if schema.get('random_stream_namespace') is not None:
+                seed_source += f":{schema['random_stream_namespace']}"
             deterministic_seed = int(hashlib.md5(seed_source.encode('utf-8')).hexdigest()[:8], 16)
             # Draw within the declared SOC limits; InventoryBattery rejects an initial SOC outside them.
             initial_soc = float(np.random.RandomState(deterministic_seed).uniform(
@@ -746,7 +755,9 @@ class CityLearnLoadingService:
             'time_step_ratio': time_step_ratio,
             'random_seed': battery_random_seed,
             'random_stream_version': schema['random_stream_version'],
-            'random_stream_key': () if attrs.get('random_seed') is not None else ('electric_vehicle', electric_vehicle_name, 'battery'),
+            'random_stream_key': () if attrs.get('random_seed') is not None else namespaced_key(
+                ('electric_vehicle', electric_vehicle_name, 'battery'), schema.get('random_stream_namespace'),
+            ),
             'episode_tracker': episode_tracker,
             'depth_of_discharge': depth_of_discharge,
         }
@@ -821,7 +832,9 @@ class CityLearnLoadingService:
         appliance_class = getattr(importlib.import_module(appliance_module), appliance_class_name)
         attributes = dict(appliance_schema.get('attributes', {}) or {})
         attributes.setdefault('random_stream_version', schema['random_stream_version'])
-        attributes.setdefault('random_stream_key', ('building', building_name, 'deferrable_appliance', appliance_name))
+        attributes.setdefault('random_stream_key', namespaced_key(
+            ('building', building_name, 'deferrable_appliance', appliance_name), schema.get('random_stream_namespace'),
+        ))
 
         appliance = appliance_class(
             deferrable_appliance_simulation=simulation,
@@ -869,7 +882,9 @@ class CityLearnLoadingService:
         constructor = getattr(importlib.import_module(module_name), class_name)
         attributes = dict(escalator_schema.get('attributes', {}) or {})
         attributes.setdefault('random_stream_version', schema['random_stream_version'])
-        attributes.setdefault('random_stream_key', ('building', building_name, 'escalator', escalator_name))
+        attributes.setdefault('random_stream_key', namespaced_key(
+            ('building', building_name, 'escalator', escalator_name), schema.get('random_stream_namespace'),
+        ))
         return constructor(
             escalator_simulation=simulation,
             episode_tracker=episode_tracker,
@@ -1177,7 +1192,8 @@ class CityLearnLoadingService:
 
     @staticmethod
     def _noise_seed(schema, label):
-        payload = f"{schema.get('random_seed',0)}:{label}".encode()
+        namespace = schema.get('random_stream_namespace')
+        payload = (f"{schema.get('random_seed',0)}:{label}" + ('' if namespace is None else f":{namespace}")).encode()
         return int.from_bytes(hashlib.sha256(payload).digest()[:4], 'big')
 
     def _read_dataframe(self, filepath: Union[str, os.PathLike]) -> pd.DataFrame:

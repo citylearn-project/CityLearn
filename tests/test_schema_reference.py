@@ -143,13 +143,14 @@ NOT_SCHEMA_KEYS = {
     "method",  # older name of derived_forecasts.load_pv_method
     "env", "episode_index", "episode_tracker", "filepath", "load", "net", "path", "period_seconds", "parameters",
     "random_stream_key", "sha", "schema", "time_step_ratio", "id",
+    "random_stream_namespace",  # the constructor option, copied into the loader's schema
 }
 
 # Constructor arguments with no schema key (documented as such).
 CONSTRUCTOR_ONLY = {"offline", "solar_generation", "time_step_ratio", "render_directory", "render_directory_name",
                     "electric_vehicles", "buildings", "reward_function_kwargs", "shared_observations",
                     "active_observations", "inactive_observations", "active_actions", "inactive_actions",
-                    "simulate_power_outage"}
+                    "simulate_power_outage", "random_stream_namespace"}
 
 LOADER_FILES = (
     "citylearn.py", "building.py", "data.py", "community_dataset.py", "multi_community.py",

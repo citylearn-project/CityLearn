@@ -204,6 +204,7 @@ def context(env, data_files):
                 completed_intervals=env._provenance_service.steps,
                 seconds_per_time_step=env.seconds_per_time_step, time_step_ratio=env.time_step_ratio,
                 random_seed=env.random_seed, ev_drift_seed=getattr(env, '_ev_drift_seed', None),
+                random_stream_namespace=getattr(env, 'random_stream_namespace', None),
                 initial_inventory=getattr(env, '_comparison_initial_inventory', None),
                 service_tolerances=dict(ev_within=env.ev_departure_within_tolerance,
                                         ev_service=env.ev_departure_service_tolerance),
@@ -315,6 +316,10 @@ def compare_manifests(left, right, mode='controller'):
         # Exports from before the setting existed ran without it.
         if bool(a.get('ev_soc_carryover', False)) != bool(b.get('ev_soc_carryover', False)):
             mismatches.append('ev_soc_carryover')
+        # Two stream namespaces draw different random values from the same seed; exports from before
+        # the option existed had none.
+        if a.get('random_stream_namespace') != b.get('random_stream_namespace'):
+            mismatches.append('random_stream_namespace')
     for manifest in (left, right):
         identity = manifest.get('controller_identity') or {}
         if not identity.get('implementation') or not identity.get('version') or identity.get('parameters') is None or not identity.get('observation_access'):

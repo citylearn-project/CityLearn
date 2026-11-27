@@ -362,7 +362,7 @@ energy_grid_window_average_power_delta_to_business_as_usual_kw = control − bus
 
 `τ_t` é a sobreposição em segundos entre o passo executado `[s_t, s_t + Δt)` em hora local e a janela diária configurada (`16:00:00` a `19:00:00` quando ativada sem limites explícitos). Com um calendário canónico `time_axis`, `s_t` é convertido de `timestamp_utc` para `evaluation_window.timezone`; sem ficheiro de calendário, a coluna `hour` do conjunto de dados varia de `1` a `24` e `s_t` usa `(hour − 1) mod 24` (`hour = 1, minutes = 0` começa às `00:00:00`), coincidindo com as variáveis temporais da interface de entidades. Janelas com `start > end` atravessam a meia-noite em `[start, 24:00)` e `[00:00, end)`. Os passos que intersetam uma fronteira recebem peso parcial `0 < w_t < 1`. Quando `H_W = 0`, todas as linhas da janela ficam indefinidas (`NaN`). Com `evaluate_v2(include_business_as_usual=False)`, apenas `_control_kw` é emitido.
 
-Para explorar outras janelas após a simulação sem voltar a correr o episódio, pondere as séries temporais exportadas de uma sessão renderizada (`exported_data_community_ep0.csv` escreve `timestamp` a partir de `time_axis`, ou a partir de `start_date` `00:00:00` quando o episódio começa à meia-noite):
+Para explorar outras janelas após a simulação sem voltar a correr o episódio, pondere as séries temporais exportadas de uma sessão renderizada (`exported_data_community_ep0.csv` escreve `timestamp` a partir de `time_axis`, ou a partir das colunas `hour`, `minutes` e `seconds` do conjunto de dados tal como a janela as lê; ver [Instantes exportados](running_simulations.md#instantes-exportados)):
 
 ```python
 from pathlib import Path
@@ -381,7 +381,7 @@ manifest = json.loads((export_dir / "exported_kpis.manifest.json").read_text(enc
 dt = float(manifest["effective_schema"]["seconds_per_time_step"])
 
 community = pd.read_csv(export_dir / "exported_data_community_ep0.csv")
-ts = pd.to_datetime(community["timestamp"])
+ts = pd.to_datetime(community["timestamp"].str[:19])  # hora local do dia, com ou sem desvio
 sec_of_day = (ts.dt.hour * 3600 + ts.dt.minute * 60 + ts.dt.second).to_numpy(dtype=float)
 
 start_s, end_s = 16 * 3600, 19 * 3600

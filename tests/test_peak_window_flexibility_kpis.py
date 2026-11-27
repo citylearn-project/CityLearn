@@ -649,10 +649,11 @@ def test_steps_straddling_window_boundaries_and_utc_time_axis_timezone(tmp_path:
         env.close()
 
     # Canonical UTC TimeAxis on 2024-07-01T15:00:00Z (16:00:00 in Europe/Lisbon WEST = UTC+1).
+    # The calendar columns of the data are Lisbon civil time, as the calendar converted to the timezone (#464).
     schema_tz = _write_synthetic_scenario(
         tmp_path / "tz_lisbon",
         step_seconds=3600,
-        start_clock_seconds=15 * 3600,
+        start_clock_seconds=16 * 3600,
         num_steps=4,
         loads_kwh=[9.0, 3.0, 3.0, 20.0],  # UTC 15,16,17,18 -> Lisbon 16,17,18,19
         include_battery=False,

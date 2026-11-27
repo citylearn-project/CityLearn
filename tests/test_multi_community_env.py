@@ -738,3 +738,56 @@ def test_mixed_portfolio_changes_only_portfolio_market_rows(monkeypatch):
         assert changed.str.contains("_community_market_").all()
     finally:
         env.close()
+
+
+def test_communities_with_the_same_seed_and_names_draw_independent_streams():
+    # Both communities load the same dataset (same building and EV names) with the same seed (#462).
+    env = MultiCommunityEnv(communities=[_community("community_a"), _community("community_b")])
+
+    try:
+        env.reset(seed=0)
+        a, b = env.envs["community_a"], env.envs["community_b"]
+        assert a.random_stream_namespace == "community_a" and b.random_stream_namespace == "community_b"
+        # The episode split still follows the shared seed, so the windows stay synchronised.
+        assert a.episode_tracker.episode_start_time_step == b.episode_tracker.episode_start_time_step
+
+        def draws(child):
+            building = child.buildings[0]
+            return (
+                building.random_generator("test").random(4).tolist(),
+                building.electrical_storage.random_generator("test").random(4).tolist(),
+                child._runtime_service.ev_drift_generator("Electric_Vehicle_1", "test").random(4).tolist(),
+                child._ev_drift_seed,
+            )
+
+        for left, right in zip(draws(a), draws(b)):
+            assert left != right
+        assert a.get_metadata()["random_stream_namespace"] == "community_a"
+    finally:
+        env.close()
+
+
+def test_a_single_environment_keeps_its_stream_keys():
+    env = CityLearnEnv(str(MINUTE_SCHEMA), central_agent=True, episode_time_steps=2, render_mode="none", random_seed=0)
+    named = CityLearnEnv(
+        str(MINUTE_SCHEMA), central_agent=True, episode_time_steps=2, render_mode="none", random_seed=0,
+        random_stream_namespace="community_a",
+    )
+
+    try:
+        assert env.random_stream_namespace is None
+        assert env.buildings[0].random_stream_key == ("building", "Building_1")
+        assert named.buildings[0].random_stream_key == ("building", "Building_1", "namespace", "community_a")
+        # The BAU reference is rebuilt with the namespace, so it simulates the same drawn devices.
+        named.reset(seed=0)
+        sidecar = named._business_as_usual_baseline_service._new_sidecar_env()
+        try:
+            assert sidecar.random_stream_namespace == "community_a"
+        finally:
+            sidecar.close()
+    finally:
+        env.close()
+        named.close()
+
+    with pytest.raises(ValueError, match="random_stream_namespace"):
+        CityLearnEnv(str(MINUTE_SCHEMA), render_mode="none", random_stream_namespace="  ")

@@ -18,6 +18,7 @@ import pandas as pd
 
 from citylearn.data import ChargerSimulation, LogisticRegressionOccupantParameters
 from citylearn.energy_model import PV, Battery, CurveValueError
+from citylearn.random_streams import namespaced_key
 from citylearn.utilities import parse_bool
 
 if TYPE_CHECKING:
@@ -85,7 +86,9 @@ def add_model_options(building_kwargs, building_name, building_schema, schema, e
         attributes['episode_tracker'] = episode_tracker
         attributes['random_seed'] = schema['random_seed']
         attributes['random_stream_version'] = schema['random_stream_version']
-        attributes['random_stream_key'] = ('building', building_name, 'occupant')
+        attributes['random_stream_key'] = namespaced_key(
+            ('building', building_name, 'occupant'), schema.get('random_stream_namespace'),
+        )
 
         for key in ['increase', 'decrease']:
             attributes[f'setpoint_{key}_model_filepath'] = os.path.join(schema['root_directory'], attributes[f'setpoint_{key}_model_filename'])
@@ -350,7 +353,9 @@ def configure_devices(building, building_name, building_type, building_schema, s
                 # environment seed is keyed by building and device so devices draw independently.
                 'random_stream_key': attributes.get(
                     'random_stream_key',
-                    () if attributes.get('random_seed', None) is not None else ('building', building_name, device_name),
+                    () if attributes.get('random_seed', None) is not None else namespaced_key(
+                        ('building', building_name, device_name), schema.get('random_stream_namespace'),
+                    ),
                 ),
             }
             with curve_path(f'buildings.{building_name}.{device_name}.attributes'):

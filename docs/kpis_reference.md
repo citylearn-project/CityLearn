@@ -355,7 +355,7 @@ energy_grid_window_average_power_delta_to_business_as_usual_kw = control − bus
 
 `τ_t` is the overlap in seconds between executed step `[s_t, s_t + Δt)` in local time and the configured daily window (`16:00:00` to `19:00:00` when enabled without explicit bounds). With a canonical `time_axis` calendar, `s_t` is converted from `timestamp_utc` to `evaluation_window.timezone`; without a calendar file, dataset `hour` runs from `1` to `24` and `s_t` uses `(hour − 1) mod 24` (`hour = 1, minutes = 0` starts at `00:00:00`), matching the entity temporal features. Windows with `start > end` wrap across midnight into `[start, 24:00)` and `[00:00, end)`. Steps straddling a boundary receive partial weight `0 < w_t < 1`. When `H_W = 0`, all window rows are undefined (`NaN`). When `evaluate_v2(include_business_as_usual=False)` is called, only `_control_kw` is emitted.
 
-To inspect additional post-run windows without rerunning the simulation, weight the exported step series from a rendered session (`exported_data_community_ep0.csv` writes `timestamp` from `time_axis`, or from `start_date` `00:00:00` when the episode starts at midnight):
+To inspect additional post-run windows without rerunning the simulation, weight the exported step series from a rendered session (`exported_data_community_ep0.csv` writes `timestamp` from `time_axis`, or from the dataset's `hour`, `minutes` and `seconds` columns as the window reads them; see [Exported timestamps](running_simulations.md#exported-timestamps)):
 
 ```python
 from pathlib import Path
@@ -374,7 +374,7 @@ manifest = json.loads((export_dir / "exported_kpis.manifest.json").read_text(enc
 dt = float(manifest["effective_schema"]["seconds_per_time_step"])
 
 community = pd.read_csv(export_dir / "exported_data_community_ep0.csv")
-ts = pd.to_datetime(community["timestamp"])
+ts = pd.to_datetime(community["timestamp"].str[:19])  # local time of day, with or without an offset
 sec_of_day = (ts.dt.hour * 3600 + ts.dt.minute * 60 + ts.dt.second).to_numpy(dtype=float)
 
 start_s, end_s = 16 * 3600, 19 * 3600
