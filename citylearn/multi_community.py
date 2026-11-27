@@ -147,7 +147,7 @@ class MultiCommunityEnv(Env):
         """Whether the episode is over, the same as `done`.
 
         Kept with this meaning so that loops such as `while not env.terminated` keep working, as on
-        :class:`CityLearnEnv`. The `terminated` flag that `step()` returns follows the children's `episode_end`.
+        :class:`CityLearnEnv`. Like theirs, the `terminated` flag that `step()` returns is always `False`.
         """
 
         return self.done
@@ -523,7 +523,6 @@ class MultiCommunityEnv(Env):
             "baseline_version",
             "business_as_usual_ev_charge_target",
             "ev_soc_carryover",
-            "episode_end",
         ):
             values = {community_id: getattr(env, setting) for community_id, env in self.envs.items()}
             if len(set(values.values())) != 1:
