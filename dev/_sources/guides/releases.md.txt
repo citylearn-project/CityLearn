@@ -6,7 +6,11 @@ CityLearn release. Older notes are retained in the [release archive](releases_ar
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
-## Unreleased
+## v3.8.1 - 2026-11-28
+
+### What's new
+
+3.8.1 closes the remaining problems found in the audit of 3.7.0. It removes the settings that existed only to reproduce CityLearn 3.6.0 (`physics_version`, `baseline_version` and `random_stream_version` now accept only their current value, reward version 1 and the old agent and attribute names are gone, and CityLearn 3.7 remains the release that reproduces 3.6.0), so every fix now applies to one definition. It also corrects several physics details (outage supply order, the efficiencies behind the entity feasibility features, charger efficiency at the applied power, curve validation, topology efficiency overrides, storage loss units), pools the portfolio audit rates, writes a manifest for portfolio exports and marks the legacy KPI rows, builds exported timestamps from the calendar columns, gives each community of a `MultiCommunityEnv` its own random streams, validates calendars and topology events at construction, and writes the real weekday in the `day_type` column of the Portuguese REC datasets. The rule-based baselines cost the same as in 3.8.0 on `pt_rec_4` and `pt_rec_15` and within 0.01% on `citylearn_challenge_2022_phase_all_plus_evs`; the changes that alter observations, exported times or portfolio rows are described below.
 
 ### Changed
 
@@ -38,6 +42,16 @@ For package publication, version policy and the release checklist, see the
 - **Performance check.** The CI performance check timed only `plus_evs` with a 60 s step on hourly data and allowed about four times its baseline step time, so a 20 % step slowdown of the `pt_rec` datasets and a 4 s longer construction of the 15 s datasets passed. It now also times `pt_rec_4` under the entity interface at its native 900 s step with `time_step_ratio_mode='reject'` and the physics invariant checks on, and the construction of the whole 15 s Parquet electrical-service dataset, which is gated at three times its baseline plus 5 s. The thresholds are the defaults of `scripts/ci/perf_smoke.py`; `scripts/ci/perf_baseline.json` no longer stores thresholds of its own, which no longer matched the ones CI used, and its measurements were recorded again for this release. The gates stay loose for shared runners, and the job summary shows the ratio of every metric to its baseline and marks a case that moved 1.2 times or more against the others. A missing baseline for a case fails the check ([#468](https://github.com/citylearn-project/CityLearn/issues/468)).
 - **Windows tests.** A Windows job (`windows-2025`, Python 3.12) runs `tests/test_portable_pairing_evidence.py`, which includes `test_windows_spellings_of_one_data_file_pair` and the checkout-attribute checks that only matter on Windows, and four short core test files on every pull request. It fails when the Windows-only tests skip ([#471](https://github.com/citylearn-project/CityLearn/issues/471)).
 - **End-use load profile pipeline.** A weekly workflow, also started by hand, installs the `end_use_load_profiles` extra and runs the pipeline tests: the module imports and `Neighborhood.test_citylearn_simulation` on one building of `citylearn_challenge_2023_phase_1`, without EnergyPlus. It reports in the job summary when the extra cannot be installed or the modules do not import, and fails when the tests skip ([#471](https://github.com/citylearn-project/CityLearn/issues/471)).
+
+### Validation
+
+On the release pull request, the full test suite passed on every CI job (Python 3.10 to 3.14 with NumPy 2, Python 3.10 with NumPy 1, and the new Windows job), together with the runtime audits, the example notebooks, the documentation build and the install smoke on macOS and Windows. Before the release, the independent checks of the 3.7.0 audit were run again on the release candidate: 31 runs on `pt_rec_4`, `pt_rec_15`, `citylearn_challenge_2022_phase_all_plus_evs`, the three-phase demo and Quebec recomputed the EV physics and departure KPIs, the BAU and the KPI baseline, the household, PV and outage balances and the KPI families from the raw series, with no mismatch against the documented definitions; the portfolio rows that now pool their counts differ from the former weighted means as intended. The ladder from the BAU to `RBCCommunityPolicy` on `pt_rec_4` and `pt_rec_15` is identical to 3.8.0, with every EV departure met. The Gymnasium environment checker passes on the Stable Baselines3 and RLlib wrappers of three datasets, and two environments with the same seed give the same observations, random actions and trajectories.
+
+### Contributors
+
+- **Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)): the fixes from the audit of 3.7.0 in [#479](https://github.com/citylearn-project/CityLearn/pull/479), [#480](https://github.com/citylearn-project/CityLearn/pull/480), [#481](https://github.com/citylearn-project/CityLearn/pull/481), [#482](https://github.com/citylearn-project/CityLearn/pull/482) and [#483](https://github.com/citylearn-project/CityLearn/pull/483).
+
+[Full changelog](https://github.com/citylearn-project/CityLearn/compare/v3.8.0...v3.8.1)
 
 ## v3.8.0 - 2026-11-27
 
