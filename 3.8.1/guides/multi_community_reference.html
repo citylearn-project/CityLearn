@@ -1,0 +1,631 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-Community Reference &mdash; CityLearn 3.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Robustness Reference" href="robustness_reference.html" />
+    <link rel="prev" title="Actions Reference" href="actions_reference.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_full_reference.html">Full Reference Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Multi-Community Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#quickstart">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#constructor">Constructor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reset-and-step">Reset And Step</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#synchronization-contract">Synchronization Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demand-response">Demand Response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kpi-aggregation">KPI Aggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scorecard">Scorecard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#export">Export</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Multi-Community Reference</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/multi_community_reference.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="multi-community-reference">
+<h1>Multi-Community Reference<a class="headerlink" href="#multi-community-reference" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> orchestrates several independent <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> instances with one child environment per community. V1 is synchronization and portfolio reporting only: there is no global physics layer, inter-community market, global DSO/TSO coordination or building mixing across communities.</p>
+<section id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.multi_community</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiCommunityEnv</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">MultiCommunityEnv</span><span class="p">(</span>
+    <span class="n">communities</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"community_id"</span><span class="p">:</span> <span class="s2">"community_a"</span><span class="p">,</span>
+            <span class="s2">"schema"</span><span class="p">:</span> <span class="s2">"citylearn_challenge_2022_phase_all_plus_evs"</span><span class="p">,</span>
+            <span class="s2">"env_kwargs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"interface"</span><span class="p">:</span> <span class="s2">"entity"</span><span class="p">,</span> <span class="s2">"episode_time_steps"</span><span class="p">:</span> <span class="mi">48</span><span class="p">},</span>
+            <span class="s2">"weight"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="s2">"community_id"</span><span class="p">:</span> <span class="s2">"community_b"</span><span class="p">,</span>
+            <span class="s2">"schema"</span><span class="p">:</span> <span class="s2">"citylearn_challenge_2022_phase_all"</span><span class="p">,</span>
+            <span class="s2">"env_kwargs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"interface"</span><span class="p">:</span> <span class="s2">"entity"</span><span class="p">,</span> <span class="s2">"episode_time_steps"</span><span class="p">:</span> <span class="mi">48</span><span class="p">},</span>
+            <span class="s2">"weight"</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">],</span>
+    <span class="n">render_directory</span><span class="o">=</span><span class="s2">"outputs/runs"</span><span class="p">,</span>
+    <span class="n">render_session_name</span><span class="o">=</span><span class="s2">"portfolio_001"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">observations</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">terminated</span> <span class="o">=</span> <span class="n">truncated</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="k">while</span> <span class="ow">not</span> <span class="p">(</span><span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">):</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">community_id</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"tables"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">table</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float32"</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">table</span><span class="p">,</span> <span class="n">space</span> <span class="ow">in</span> <span class="n">child</span><span class="o">.</span><span class="n">action_space</span><span class="p">[</span><span class="s2">"tables"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="n">observations</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="n">include_business_as_usual</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">kpis</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">kpis</span><span class="p">[</span><span class="s2">"level"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"portfolio"</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+<span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="constructor">
+<h2>Constructor<a class="headerlink" href="#constructor" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">MultiCommunityEnv</span><span class="p">(</span>
+    <span class="n">communities</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"community_id"</span><span class="p">:</span> <span class="s2">"community_a"</span><span class="p">,</span>
+            <span class="s2">"schema"</span><span class="p">:</span> <span class="s2">"path/or/dataset/name/schema.json"</span><span class="p">,</span>
+            <span class="s2">"env_kwargs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"interface"</span><span class="p">:</span> <span class="s2">"entity"</span><span class="p">,</span> <span class="s2">"episode_time_steps"</span><span class="p">:</span> <span class="mi">48</span><span class="p">},</span>
+            <span class="s2">"weight"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="n">render_directory</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">render_session_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">community_id</span></code> must be unique, non-empty and safe as a relative path component. It may contain only letters, numbers, <code class="docutils literal notranslate"><span class="pre">_</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code> and <code class="docutils literal notranslate"><span class="pre">.</span></code>. <code class="docutils literal notranslate"><span class="pre">weight</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>, must be finite and non-negative, and at least one community must have a positive weight. Only <code class="docutils literal notranslate"><span class="pre">community_id</span></code>, <code class="docutils literal notranslate"><span class="pre">schema</span></code>, <code class="docutils literal notranslate"><span class="pre">env_kwargs</span></code> and <code class="docutils literal notranslate"><span class="pre">weight</span></code> are accepted in an entry: any other key raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that names it, and <code class="docutils literal notranslate"><span class="pre">weight</span></code> must be a number: a boolean or a string such as <code class="docutils literal notranslate"><span class="pre">'2'</span></code> raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">env_kwargs</span></code> are passed to the child <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>. The wrapper sets each child export session to <code class="docutils literal notranslate"><span class="pre">&lt;render_session_name&gt;/&lt;community_id&gt;</span></code> so render and KPI files are separated by community.</p>
+</section>
+<section id="reset-and-step">
+<h2>Reset And Step<a class="headerlink" href="#reset-and-step" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">reset()</span></code> returns child observations by community plus wrapper info:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">observations</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"community_a"</span><span class="p">:</span> <span class="n">child_observations</span><span class="p">,</span> <span class="s2">"community_b"</span><span class="p">:</span> <span class="n">child_observations</span><span class="p">}</span>
+<span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"communities"</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span> <span class="s2">"time_step"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">reset(seed=...,</span> <span class="pre">options=...)</span></code> passes <code class="docutils literal notranslate"><span class="pre">seed</span></code> to every child. <code class="docutils literal notranslate"><span class="pre">options</span></code> can hold one
+mapping per community, keyed by <code class="docutils literal notranslate"><span class="pre">community_id</span></code>; a community without its own entry
+receives the whole <code class="docutils literal notranslate"><span class="pre">options</span></code> mapping:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># community_a replays episode 2. community_b has no entry, so it receives the</span>
+<span class="c1"># whole mapping and replays episode 0.</span>
+<span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"community_a"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"episode_index"</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span> <span class="s2">"episode_index"</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+
+<span class="c1"># The same options for every child.</span>
+<span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"episode_index"</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">step(actions)</span></code> expects one child action payload per community:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">actions</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"community_a"</span><span class="p">:</span> <span class="n">child_actions</span><span class="p">,</span> <span class="s2">"community_b"</span><span class="p">:</span> <span class="n">child_actions</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>It returns:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">observations_by_community</span><span class="p">,</span>
+<span class="n">rewards_by_community</span><span class="p">,</span>
+<span class="n">terminated</span><span class="p">,</span>
+<span class="n">truncated</span><span class="p">,</span>
+<span class="n">info</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">info</span></code> includes:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">community_rewards_scalar</span></code></p></td>
+<td><p>Finite sum of each child reward payload.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reward_total</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sum(weight</span> <span class="pre">*</span> <span class="pre">community_reward_scalar)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reward_mean_weighted</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">reward_total</span> <span class="pre">/</span> <span class="pre">sum(weights)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">terminated_by_community</span></code></p></td>
+<td><p>Child termination flags.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">truncated_by_community</span></code></p></td>
+<td><p>Child truncation flags.</p></td>
+</tr>
+</tbody>
+</table>
+<p>If any child terminates or truncates, the wrapper terminates or truncates too. This prevents the communities from drifting into different episode positions.</p>
+</section>
+<section id="synchronization-contract">
+<h2>Synchronization Contract<a class="headerlink" href="#synchronization-contract" title="Link to this heading"></a></h2>
+<p>All child environments must use:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Requirement</p></th>
+<th class="head"><p>Reason</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Same <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code></p></td>
+<td><p>Keeps step time aligned.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Same effective episode length</p></td>
+<td><p>Keeps training batches rectangular.</p></td>
+</tr>
+<tr class="row-even"><td><p>Same <code class="docutils literal notranslate"><span class="pre">interface</span></code></p></td>
+<td><p>Keeps observation/action payload contracts stable.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Same <code class="docutils literal notranslate"><span class="pre">central_agent</span></code> mode</p></td>
+<td><p>Avoids mixing centralized and decentralized reward/action semantics.</p></td>
+</tr>
+<tr class="row-even"><td><p>Same <code class="docutils literal notranslate"><span class="pre">physics_version</span></code></p></td>
+<td><p>Portfolio totals add up district values, so every community must simulate the same physics.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Same <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code></p></td>
+<td><p>Randomly drawn defaults (battery curves, efficiencies, noise) must come from the same stream definition for the totals to be comparable.</p></td>
+</tr>
+<tr class="row-even"><td><p>Same <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code></p></td>
+<td><p>Portfolio baseline KPIs add up district baselines, so the baseline definition must match.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Same <code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target</span></code></p></td>
+<td><p>Portfolio BAU totals and ratios to the BAU add up the district BAU runs, so every community must charge its EVs in the BAU to the same target (<code class="docutils literal notranslate"><span class="pre">full</span></code> or <code class="docutils literal notranslate"><span class="pre">requested</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p>Same <code class="docutils literal notranslate"><span class="pre">ev_soc_carryover</span></code></p></td>
+<td><p>It changes the EV state at the start of each episode in the controlled and BAU runs, so portfolio totals would otherwise mix two EV definitions.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Same <code class="docutils literal notranslate"><span class="pre">ev_departure_service_tolerance</span></code> and <code class="docutils literal notranslate"><span class="pre">ev_departure_within_tolerance</span></code></p></td>
+<td><p>They set the min-acceptable and within-tolerance thresholds of the EV departure counts that the portfolio adds up.</p></td>
+</tr>
+<tr class="row-even"><td><p>Same <code class="docutils literal notranslate"><span class="pre">energy_provenance</span></code></p></td>
+<td><p>A community with the provenance ledger off has no provenance rows, so the portfolio provenance totals would cover only the other communities.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Same <code class="docutils literal notranslate"><span class="pre">evaluation_window</span></code> when enabled</p></td>
+<td><p>Keeps recurring window KPIs aligned across communities.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The wrapper validates these conditions at construction and again after reset, and
+raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that names the setting, for example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ValueError: MultiCommunityEnv requires all communities to share business_as_usual_ev_charge_target, got {'A': 'full', 'B': 'requested'}.
+</pre></div>
+</div>
+<p>Each community draws its own random values. The wrapper passes its <code class="docutils literal notranslate"><span class="pre">community_id</span></code> to the child as
+<code class="docutils literal notranslate"><span class="pre">random_stream_namespace</span></code>, which is added to the key of every random stream (drawn device parameters, EV
+drift and initial SOC, occupant interactions, stochastic outages, data and robustness noise). Two communities
+with the same seed and the same building or EV names, such as <code class="docutils literal notranslate"><span class="pre">pt_rec_4</span></code> and <code class="docutils literal notranslate"><span class="pre">pt_rec_15</span></code>, therefore draw
+independent values, while the shared seed still selects the same episode windows. A community’s draws differ
+from those of the same dataset run alone as a <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>; pass the same <code class="docutils literal notranslate"><span class="pre">random_stream_namespace</span></code> in
+<code class="docutils literal notranslate"><span class="pre">env_kwargs</span></code> to the standalone environment to reproduce them. <code class="docutils literal notranslate"><span class="pre">compare_manifests()</span></code> reports two runs with
+different namespaces as incompatible (<code class="docutils literal notranslate"><span class="pre">random_stream_namespace</span></code>)
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/462">#462</a>).</p>
+<p>Calendar windows are not part of the contract. Each child selects its episode
+split from its own simulation window, <code class="docutils literal notranslate"><span class="pre">random_episode_split</span></code> setting and
+<code class="docutils literal notranslate"><span class="pre">random_seed</span></code>, so communities can simulate different dates at the same step.
+To share windows, give the children the same window settings and the same
+<code class="docutils literal notranslate"><span class="pre">random_seed</span></code>, or pass a seed to <code class="docutils literal notranslate"><span class="pre">reset(seed=...)</span></code>, which reaches every child.</p>
+</section>
+<section id="demand-response">
+<h2>Demand Response<a class="headerlink" href="#demand-response" title="Link to this heading"></a></h2>
+<p>Demand response remains local to each community. If a child schema has <code class="docutils literal notranslate"><span class="pre">demand_response.enabled=true</span></code>, that child loads its own <code class="docutils literal notranslate"><span class="pre">requests_file</span></code>, exposes its own request metadata in entity observations, and computes local settlement/KPIs. <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> does not coordinate DSO/TSO requests across communities in v1.</p>
+</section>
+<section id="kpi-aggregation">
+<h2>KPI Aggregation<a class="headerlink" href="#kpi-aggregation" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> concatenates the child KPI tables and adds a <code class="docutils literal notranslate"><span class="pre">community_id</span></code> column. It also adds portfolio rows:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>level = "portfolio"
+name = "Portfolio"
+community_id = "__portfolio__"
+</pre></div>
+</div>
+<p>Only district-level child KPIs are aggregated:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>KPI suffix</p></th>
+<th class="head"><p>Portfolio rule</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">_eur</span></code>, <code class="docutils literal notranslate"><span class="pre">_kgco2</span></code>, other <code class="docutils literal notranslate"><span class="pre">_count</span></code></p></td>
+<td><p>Sum across communities.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">_ratio</span></code> of a control total to a reference total</p></td>
+<td><p>Ratio of the summed totals, e.g. <code class="docutils literal notranslate"><span class="pre">portfolio_cost_total_control_eur</span> <span class="pre">/</span> <span class="pre">portfolio_cost_total_baseline_eur</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Rates and means with additive denominators</p></td>
+<td><p>Pooled: mean weighted by the denominator, e.g. <code class="docutils literal notranslate"><span class="pre">portfolio_ev_events_departure_met_count</span> <span class="pre">/</span> <span class="pre">portfolio_ev_events_departure_count</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">energy_provenance_{storage,bus}_max_residual_kwh</span></code> and their BAU values</p></td>
+<td><p>Largest community value; the delta to the BAU is the difference of the two portfolio maxima.</p></td>
+</tr>
+<tr class="row-even"><td><p>Other <code class="docutils literal notranslate"><span class="pre">_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">_percent</span></code></p></td>
+<td><p>Weighted mean using community <code class="docutils literal notranslate"><span class="pre">weight</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">energy_grid_window_average_power_*_kw</span></code></p></td>
+<td><p>Signed sum across communities sharing <code class="docutils literal notranslate"><span class="pre">evaluation_window</span></code> (<code class="docutils literal notranslate"><span class="pre">NaN</span></code> if any community value is undefined).</p></td>
+</tr>
+<tr class="row-even"><td><p>Other <code class="docutils literal notranslate"><span class="pre">_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">_c</span></code>, other <code class="docutils literal notranslate"><span class="pre">_hours</span></code> and other point metrics</p></td>
+<td><p>Not aggregated in v1.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Ratios rebuilt from summed totals are the <code class="docutils literal notranslate"><span class="pre">ratio_to_baseline</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> ratios of cost, emissions, grid import, export and
+net exchange, and the <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> ratios of solar generation
+and export, EV charge and V2G export, battery charge, discharge and throughput,
+and deferrable-appliance cycle and energy counts. They use only communities that
+report both totals, ignore <code class="docutils literal notranslate"><span class="pre">weight</span></code> like the summed totals, and keep the
+lower-is-better rule of the <a class="reference internal" href="kpis_reference.html#shared-rules"><span class="std std-ref">KPI reference</span></a>
+for negative net-exchange and cost totals. A one-community portfolio ratio
+equals the district ratio.</p>
+<p>Pooled rates and means are weighted by their additive denominators, so they
+equal the ratio of the pooled numerator and denominator and ignore <code class="docutils literal notranslate"><span class="pre">weight</span></code>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Rate or mean</p></th>
+<th class="head"><p>Weight</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>EV departure success, minimum-acceptable and within-tolerance rates; SOC deficit, shortfall, surplus and absolute-error means</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ev_events_departure_count</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>EV <code class="docutils literal notranslate"><span class="pre">*_feasible</span></code> departure rates</p></td>
+<td><p>The matching <code class="docutils literal notranslate"><span class="pre">ev_events_departure_*_feasible_count</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Deferrable-appliance service level (control and BAU)</p></td>
+<td><p>Completed plus missed cycles</p></td>
+</tr>
+<tr class="row-odd"><td><p>Deferrable-appliance average start delay (control and BAU)</p></td>
+<td><p>Completed cycles</p></td>
+</tr>
+<tr class="row-even"><td><p>Escalator service level</p></td>
+<td><p>Requested passengers</p></td>
+</tr>
+<tr class="row-odd"><td><p>Solar self-consumption (control and BAU)</p></td>
+<td><p>Solar generation</p></td>
+</tr>
+<tr class="row-even"><td><p>Community-market local share of demand (<code class="docutils literal notranslate"><span class="pre">*_local_share_of_demand_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">*_import_share_ratio</span></code>)</p></td>
+<td><p>Local import plus grid import after local trading</p></td>
+</tr>
+<tr class="row-odd"><td><p>Community-market local share of export</p></td>
+<td><p>Local export plus grid export after local trading</p></td>
+</tr>
+<tr class="row-even"><td><p>Demand-response compliance</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">demand_response_valid_requested_total_kwh</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Demand-response audit compliance, requested-energy coverage and baseline coverage, per purpose</p></td>
+<td><p>The audit’s valid requested energy, requested energy and active intervals</p></td>
+</tr>
+<tr class="row-even"><td><p>Stationary-battery equivalent full cycles and capacity fade (control and BAU)</p></td>
+<td><p>Nominal stationary-battery capacity</p></td>
+</tr>
+<tr class="row-odd"><td><p>EV departure audit: service coverage and threshold coverage (<code class="docutils literal notranslate"><span class="pre">ev_departure_audit_*coverage_ratio</span></code>)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ev_departure_audit_departures_count</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>EV departure audit: <code class="docutils literal notranslate"><span class="pre">*_service_observed_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ev_departure_audit_service_observed_count</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>EV departure audit: <code class="docutils literal notranslate"><span class="pre">*_service_feasible_ratio</span></code></p></td>
+<td><p>The matching <code class="docutils literal notranslate"><span class="pre">ev_departure_audit_*_feasible_service_observed_count</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Thermal-service audit: discomfort, thermal coverage and their outage variants</p></td>
+<td><p>Evaluated occupied, occupied, evaluated outage occupied and outage occupied intervals</p></td>
+</tr>
+<tr class="row-odd"><td><p>Thermal-service audit: occupancy and energy coverage</p></td>
+<td><p>Executed intervals</p></td>
+</tr>
+<tr class="row-even"><td><p>Thermal-service audit: unserved service ratio and its outage variant</p></td>
+<td><p>Expected service energy, over all intervals or outage intervals</p></td>
+</tr>
+<tr class="row-odd"><td><p>Flexible-appliance audit: observed completion and resolved coverage; resolved completion</p></td>
+<td><p>Offered requests; resolved requests</p></td>
+</tr>
+<tr class="row-even"><td><p>Equity audit: coverage ratio; losers percentage</p></td>
+<td><p>Population members; eligible members</p></td>
+</tr>
+<tr class="row-odd"><td><p>Useful PV (<code class="docutils literal notranslate"><span class="pre">energy_provenance_pv_useful_{building,with_mobility}_ratio</span></code>, control and BAU)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">energy_provenance_pv_generated_kwh</span></code> (control or BAU)</p></td>
+</tr>
+</tbody>
+</table>
+<p>The BAU deltas and ratios of the pooled deferrable service level, start delay,
+self-consumption, equivalent full cycles, capacity fade and useful PV compare the
+pooled control and BAU values. Communities whose value is undefined carry no weight.
+Communities with weight 0 still count in these rows, as in the summed totals: a
+pooled rate is the rate of the portfolio’s own counts
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/428">#428</a>).</p>
+<p>For stationary batteries, the portfolio cycle count is total throughput divided
+by twice the total nominal capacity, and the capacity fade is the capacity lost
+over the total nominal capacity. Installed batteries contribute their capacity
+even if they are idle. The result is undefined when the total capacity is zero.</p>
+<p>Ratios without additive totals stay means weighted by the community <code class="docutils literal notranslate"><span class="pre">weight</span></code>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Rows</p></th>
+<th class="head"><p>Why they are not pooled</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Grid-shape ratios (peaks, ramping and load-factor penalties)</p></td>
+<td><p>A portfolio peak or load factor needs the summed time series, which the district rows do not hold.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Equity Gini, top-20 % share and asset-poor over asset-rich ratio</p></td>
+<td><p>Distributions over the members; they cannot be rebuilt from district counts.</p></td>
+</tr>
+<tr class="row-even"><td><p>Legacy comfort and resilience rows (<code class="docutils literal notranslate"><span class="pre">comfort_resilience_*</span></code>) and the legacy equity losers percentage</p></td>
+<td><p>Their district values are plain means of the buildings; the pooled canonical rows are the thermal-service and equity audits.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">*_building_mean_ratio</span></code> rows</p></td>
+<td><p>Means of member ratios by definition.</p></td>
+</tr>
+<tr class="row-even"><td><p>Phase imbalance and the EV departure tolerance</p></td>
+<td><p>A time average of imbalance, and a setting that every community shares.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Each portfolio row has its own <code class="docutils literal notranslate"><span class="pre">description</span></code>, which states its rule and then the
+district definition, for example <code class="docutils literal notranslate"><span class="pre">Portfolio:</span> <span class="pre">pooled</span> <span class="pre">over</span> <span class="pre">the</span> <span class="pre">communities:</span> <span class="pre">their</span> <span class="pre">values</span> <span class="pre">weighted</span> <span class="pre">by</span> <span class="pre">portfolio_ev_departure_audit_departures_count,</span> <span class="pre">...</span></code>. The export
+manifest lists the rule of every row under <code class="docutils literal notranslate"><span class="pre">portfolio_aggregation</span></code>.</p>
+<p>Communities without a community market report zeros in their market rows. In a
+portfolio where some communities have a market and others do not, a community
+without a market enters the portfolio market rows
+(<code class="docutils literal notranslate"><span class="pre">portfolio_energy_grid_community_market_*</span></code>, <code class="docutils literal notranslate"><span class="pre">portfolio_cost_community_market_*</span></code>
+and <code class="docutils literal notranslate"><span class="pre">portfolio_solar_self_consumption_community_market_*</span></code>) with its plain grid
+settlement: no local trade, its members’ grid import and export as grid import
+and export after local trading, its <code class="docutils literal notranslate"><span class="pre">cost_total_control_eur</span></code> as settled and
+counterfactual cost, and zero savings and operator balance. The portfolio
+market rows then cover every community, and the shares are those of the whole
+portfolio. The community’s own district rows do not change, and neither do
+portfolios where every community has a market or none has
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/373">#373</a>).</p>
+<p>Portfolio KPI names replace a leading <code class="docutils literal notranslate"><span class="pre">district_</span></code> prefix with <code class="docutils literal notranslate"><span class="pre">portfolio_</span></code>, for example <code class="docutils literal notranslate"><span class="pre">district_demand_response_revenue_total_eur</span></code> becomes <code class="docutils literal notranslate"><span class="pre">portfolio_demand_response_revenue_total_eur</span></code>.</p>
+</section>
+<section id="scorecard">
+<h2>Scorecard<a class="headerlink" href="#scorecard" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">scorecard(kpis=None,</span> <span class="pre">level=None,</span> <span class="pre">**evaluate_kwargs)</span></code> returns the rows of
+<code class="docutils literal notranslate"><span class="pre">CityLearnEnv.SCORECARD_DEFAULT_KPIS</span></code> for every community and, with <code class="docutils literal notranslate"><span class="pre">portfolio_</span></code>
+in place of <code class="docutils literal notranslate"><span class="pre">district_</span></code>, for the portfolio. Rows follow that list, then the
+communities in order, with the portfolio last. <code class="docutils literal notranslate"><span class="pre">level</span></code> keeps only <code class="docutils literal notranslate"><span class="pre">'portfolio'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'district'</span></code> or <code class="docutils literal notranslate"><span class="pre">'building'</span></code> rows.</p>
+</section>
+<section id="export">
+<h2>Export<a class="headerlink" href="#export" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code> writes each child export in its own subfolder and writes the portfolio table and its manifest in the wrapper session folder:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;render_directory&gt;/&lt;render_session_name&gt;/
+  exported_kpis_multi_community.csv
+  exported_kpis_multi_community.manifest.json
+  community_a/exported_kpis.csv
+  community_a/exported_kpis.manifest.json
+  community_b/exported_kpis.csv
+  community_b/exported_kpis.manifest.json
+</pre></div>
+</div>
+<p>The portfolio table keeps the long <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> format with local and portfolio
+rows and the <code class="docutils literal notranslate"><span class="pre">unit</span></code>, <code class="docutils literal notranslate"><span class="pre">description</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code> and <code class="docutils literal notranslate"><span class="pre">replacement</span></code> columns. It is
+written as <code class="docutils literal notranslate"><span class="pre">exported_kpis_multi_community.parquet</span></code> when every community uses
+<code class="docutils literal notranslate"><span class="pre">render_file_format=&quot;parquet&quot;</span></code>. Each child keeps its wide numeric table and stores
+its KPI definitions in <code class="docutils literal notranslate"><span class="pre">exported_kpis.manifest.json</span></code>.
+<code class="docutils literal notranslate"><span class="pre">include_battery_health_audit=True</span></code> adds the opt-in EV battery-health rows to every
+table, as in <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>.</p>
+<p>The portfolio manifest records:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Content</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kind</span></code>, <code class="docutils literal notranslate"><span class="pre">definition_version</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;multi_community&quot;</span></code> and the manifest version.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">community_ids</span></code>, <code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
+<td><p>The communities in order and their weights.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">shared_settings</span></code></p></td>
+<td><p>The settings every community shares (interface, step, episode length, evaluation window, physics, random-stream and baseline versions, BAU EV target, EV tolerances, SOC carry-over, energy provenance).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kpi_export</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">include_business_as_usual</span></code>, <code class="docutils literal notranslate"><span class="pre">include_battery_health_audit</span></code>, <code class="docutils literal notranslate"><span class="pre">kpi_round_decimals</span></code>, whether the community tables were written, and the file format.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">controller_identity</span></code></p></td>
+<td><p>The identity set with <code class="docutils literal notranslate"><span class="pre">set_experiment_identity()</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">portfolio_aggregation</span></code></p></td>
+<td><p>The rule of each portfolio row and the rows it is built from.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kpi_definitions</span></code></p></td>
+<td><p>Unit, description, status and replacement of every KPI in the table, portfolio rows included.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">communities</span></code></p></td>
+<td><p>For each community: its weight, random-stream namespace, the path of its manifest relative to the session folder, and the evidence that <code class="docutils literal notranslate"><span class="pre">compare_manifests()</span></code> reads.</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">set_experiment_identity(implementation,</span> <span class="pre">version,</span> <span class="pre">parameters,</span> <span class="pre">observation_access)</span></code>
+declares the controller of every community at once. <code class="docutils literal notranslate"><span class="pre">compare_exports()</span></code> on two
+portfolio tables reads their manifests: the portfolios pair when they have the
+same communities, weights and portfolio rules and each community pairs with its
+namesake; a community’s mismatches and missing evidence are listed as
+<code class="docutils literal notranslate"><span class="pre">&lt;community_id&gt;:&lt;item&gt;</span></code>, for example <code class="docutils literal notranslate"><span class="pre">community_a:controller_identity</span></code>
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/429">#429</a>).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="actions_reference.html" class="btn btn-neutral float-left" title="Actions Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="robustness_reference.html" class="btn btn-neutral float-right" title="Robustness Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

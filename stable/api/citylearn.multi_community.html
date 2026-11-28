@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.multi_community module &mdash; CityLearn 3.8.0 documentation</title>
+  <title>citylearn.multi_community module &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -153,7 +153,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -170,6 +170,11 @@
 <p>V1 is an orchestration layer only: every child environment keeps its own
 physics, demand response state, reward and KPIs. The wrapper coordinates
 reset/step calls and adds portfolio-level KPI rows from district totals.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.multi_community.MultiCommunityEnv.MANIFEST_DEFINITION_VERSION">
+<span class="sig-name descname"><span class="pre">MANIFEST_DEFINITION_VERSION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'multi-community-export-v1'</span></em><a class="headerlink" href="#citylearn.multi_community.MultiCommunityEnv.MANIFEST_DEFINITION_VERSION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="citylearn.multi_community.MultiCommunityEnv.PORTFOLIO_COMMUNITY_ID">
 <span class="sig-name descname"><span class="pre">PORTFOLIO_COMMUNITY_ID</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'__portfolio__'</span></em><a class="headerlink" href="#citylearn.multi_community.MultiCommunityEnv.PORTFOLIO_COMMUNITY_ID" title="Link to this definition"></a></dt>
@@ -229,21 +234,31 @@ reset/step calls and adds portfolio-level KPI rows from district totals.</p>
 <p>The table has the columns of <a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.evaluate_v2" title="citylearn.citylearn.CityLearnEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">citylearn.citylearn.CityLearnEnv.evaluate_v2()</span></code></a> and a
 <code class="docutils literal notranslate"><span class="pre">community_id</span></code> column. Each community contributes its <code class="docutils literal notranslate"><span class="pre">'building'</span></code> and <code class="docutils literal notranslate"><span class="pre">'district'</span></code> rows under its
 own <code class="docutils literal notranslate"><span class="pre">community_id</span></code>. The <code class="docutils literal notranslate"><span class="pre">'portfolio'</span></code> rows (<code class="docutils literal notranslate"><span class="pre">community_id</span></code> <code class="docutils literal notranslate"><span class="pre">'__portfolio__'</span></code>, names starting
-<code class="docutils literal notranslate"><span class="pre">portfolio_</span></code>) aggregate the district rows: ratios of totals are recomputed from the summed totals,
-rates, EV battery health ratios, and battery equivalent full cycles are pooled by their denominators,
-other <code class="docutils literal notranslate"><span class="pre">_kwh</span></code>/<code class="docutils literal notranslate"><span class="pre">_eur</span></code>/<code class="docutils literal notranslate"><span class="pre">_kgco2</span></code>/<code class="docutils literal notranslate"><span class="pre">_count</span></code> rows are summed,
-other ratios and percentages are means weighted by the community <code class="docutils literal notranslate"><span class="pre">weight</span></code>, and other rows (<code class="docutils literal notranslate"><span class="pre">_kw</span></code>,
-<code class="docutils literal notranslate"><span class="pre">_c</span></code>, <code class="docutils literal notranslate"><span class="pre">_hours</span></code>) have no portfolio row. When some communities have a community market and others do
-not, a community without a market enters the portfolio community-market rows with its plain grid
-settlement: no local trade, its members’ grid import and export, and its control cost as settled and
-counterfactual cost. Its own district rows are unchanged. The KPI reference guide gives the rule of each
-family.</p>
+<code class="docutils literal notranslate"><span class="pre">portfolio_</span></code>) aggregate the district rows: ratios of totals are recomputed from the summed totals;
+rates, including the EV departure, thermal-service, flexible-appliance and equity audit rates and the
+useful-PV ratios, are pooled by their count or energy denominators; battery equivalent full cycles,
+capacity fade and EV battery health ratios are pooled by nominal capacity; the ledger’s max-residual
+diagnostics take the largest community value; other <code class="docutils literal notranslate"><span class="pre">_kwh</span></code>/<code class="docutils literal notranslate"><span class="pre">_eur</span></code>/<code class="docutils literal notranslate"><span class="pre">_kgco2</span></code>/<code class="docutils literal notranslate"><span class="pre">_count</span></code> rows are
+summed; other ratios and percentages are means weighted by the community <code class="docutils literal notranslate"><span class="pre">weight</span></code>; and other rows
+(<code class="docutils literal notranslate"><span class="pre">_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">_c</span></code>, <code class="docutils literal notranslate"><span class="pre">_hours</span></code>) have no portfolio row. Each portfolio <code class="docutils literal notranslate"><span class="pre">description</span></code> states its rule, and
+the table attribute <code class="docutils literal notranslate"><span class="pre">portfolio_aggregation</span></code> lists the rule of every portfolio row. When some
+communities have a community market and others do not, a community without a market enters the
+portfolio community-market rows with its plain grid settlement: no local trade, its members’ grid
+import and export, and its control cost as settled and counterfactual cost. Its own district rows are
+unchanged. The KPI reference guide gives the rule of each family.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.multi_community.MultiCommunityEnv.export_final_kpis">
-<span class="sig-name descname"><span class="pre">export_final_kpis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'exported_kpis_multi_community.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_business_as_usual</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_business_as_usual_timeseries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kpi_round_decimals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_community_kpis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">community_filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'exported_kpis.csv'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/multi_community.html#MultiCommunityEnv.export_final_kpis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.multi_community.MultiCommunityEnv.export_final_kpis" title="Link to this definition"></a></dt>
-<dd><p>Export child KPIs to child folders and global multi-community KPIs.</p>
+<span class="sig-name descname"><span class="pre">export_final_kpis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'exported_kpis_multi_community.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_business_as_usual</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_business_as_usual_timeseries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kpi_round_decimals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_community_kpis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">community_filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'exported_kpis.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_battery_health_audit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/multi_community.html#MultiCommunityEnv.export_final_kpis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.multi_community.MultiCommunityEnv.export_final_kpis" title="Link to this definition"></a></dt>
+<dd><p>Export each community’s KPIs to its folder and the portfolio table with its manifest.</p>
+<p>The portfolio table has the long <a class="reference internal" href="#citylearn.multi_community.MultiCommunityEnv.evaluate_v2" title="citylearn.multi_community.MultiCommunityEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_v2()</span></code></a> format. It is Parquet (<code class="docutils literal notranslate"><span class="pre">.parquet</span></code>) when every
+community uses <code class="docutils literal notranslate"><span class="pre">render_file_format='parquet'</span></code>, otherwise CSV. Next to it,
+<code class="docutils literal notranslate"><span class="pre">&lt;name&gt;.manifest.json</span></code> records the community ids and weights, the settings the communities share, the
+export settings, the rule of each portfolio row, the KPI definitions and, for each community, its
+manifest path and the evidence that <code class="xref py py-func docutils literal notranslate"><span class="pre">citylearn.internal.comparison.compare_manifests()</span></code> reads, so
+<code class="xref py py-func docutils literal notranslate"><span class="pre">citylearn.internal.comparison.compare_exports()</span></code> can pair two portfolio exports. Returns the
+manifest.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -288,10 +303,35 @@ family.</p>
 <dd><p>Child reward histories keyed by community id.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.multi_community.MultiCommunityEnv.scorecard">
+<span class="sig-name descname"><span class="pre">scorecard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kpis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">evaluate_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../_modules/citylearn/multi_community.html#MultiCommunityEnv.scorecard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.multi_community.MultiCommunityEnv.scorecard" title="Link to this definition"></a></dt>
+<dd><p>Return the default scorecard rows of <a class="reference internal" href="#citylearn.multi_community.MultiCommunityEnv.evaluate_v2" title="citylearn.multi_community.MultiCommunityEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_v2()</span></code></a> for every community and the portfolio.</p>
+<p>The rows are those of <cite>CityLearnEnv.SCORECARD_DEFAULT_KPIS</cite>, with <code class="docutils literal notranslate"><span class="pre">portfolio_</span></code> in place of <code class="docutils literal notranslate"><span class="pre">district_</span></code>
+for the portfolio rows, in that order, then communities in order with the portfolio last.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kpis</strong> (<em>pandas.DataFrame</em><em>, </em><em>optional</em>) – A table returned by <a class="reference internal" href="#citylearn.multi_community.MultiCommunityEnv.evaluate_v2" title="citylearn.multi_community.MultiCommunityEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_v2()</span></code></a>. When omitted, <a class="reference internal" href="#citylearn.multi_community.MultiCommunityEnv.evaluate_v2" title="citylearn.multi_community.MultiCommunityEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_v2()</span></code></a> is called with
+<cite>evaluate_kwargs</cite>.</p></li>
+<li><p><strong>level</strong> (<em>str</em><em>, </em><em>optional</em>) – Keep only <code class="docutils literal notranslate"><span class="pre">'portfolio'</span></code>, <code class="docutils literal notranslate"><span class="pre">'district'</span></code> or <code class="docutils literal notranslate"><span class="pre">'building'</span></code> rows.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.multi_community.MultiCommunityEnv.seconds_per_time_step">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">seconds_per_time_step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.multi_community.MultiCommunityEnv.seconds_per_time_step" title="Link to this definition"></a></dt>
 <dd><p>Common step duration in seconds.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.multi_community.MultiCommunityEnv.set_experiment_identity">
+<span class="sig-name descname"><span class="pre">set_experiment_identity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">implementation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observation_access</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'agent_payload'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/multi_community.html#MultiCommunityEnv.set_experiment_identity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.multi_community.MultiCommunityEnv.set_experiment_identity" title="Link to this definition"></a></dt>
+<dd><p>Declare the controller of every community for exported paired comparisons.</p>
+<p>Calls <a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.set_experiment_identity" title="citylearn.citylearn.CityLearnEnv.set_experiment_identity"><code class="xref py py-meth docutils literal notranslate"><span class="pre">citylearn.citylearn.CityLearnEnv.set_experiment_identity()</span></code></a> on each community with the same
+arguments, so each community export and the portfolio manifest record it as <code class="docutils literal notranslate"><span class="pre">controller_identity</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">

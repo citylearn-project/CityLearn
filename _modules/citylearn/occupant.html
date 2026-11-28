@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.occupant &mdash; CityLearn 3.8.0 documentation</title>
+  <title>citylearn.occupant &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -227,13 +227,7 @@
         <span class="n">interaction_input</span> <span class="o">=</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="n">interaction_input</span><span class="p">)</span>  <span class="c1"># float32 parameters x Python input: float64, as in NumPy 1</span>
         <span class="n">increase_setpoint_probability</span> <span class="o">=</span> <span class="n">interaction_probability</span><span class="p">(</span><span class="n">numpy1_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">a_increase</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]),</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">b_increase</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]),</span> <span class="n">interaction_input</span><span class="p">)</span>
         <span class="n">decrease_setpoint_probability</span> <span class="o">=</span> <span class="n">interaction_probability</span><span class="p">(</span><span class="n">numpy1_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">a_decrease</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]),</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">b_decrease</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]),</span> <span class="n">interaction_input</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">==</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
-            <span class="c1"># CityLearn 3.6.0: the same draw for every occupant and episode at a given time step.</span>
-            <span class="n">random_seed</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span>
-            <span class="n">nprs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">random_seed</span><span class="p">)</span>
-            <span class="n">random_probability</span> <span class="o">=</span> <span class="n">nprs</span><span class="o">.</span><span class="n">uniform</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">random_probability</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interaction_draws</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">])</span>
+        <span class="n">random_probability</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interaction_draws</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">])</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">__probabilities</span><span class="p">[</span><span class="s1">'increase_setpoint'</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="n">increase_setpoint_probability</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__probabilities</span><span class="p">[</span><span class="s1">'decrease_setpoint'</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="n">decrease_setpoint_probability</span>
@@ -261,15 +255,12 @@
 <a class="viewcode-back" href="../../api/citylearn.occupant.html#citylearn.occupant.LogisticRegressionOccupant.reset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_interaction_draws</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">!=</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
-            <span class="c1"># One stream per occupant and episode, drawn once per time step, so a draw does not</span>
-            <span class="c1"># depend on how often `predict` is called.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_interaction_draws</span> <span class="o">=</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">generator</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">OCCUPANT_SETPOINT_INTERACTION</span><span class="p">,</span>
-                <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">random_stream_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">random_stream_episode</span><span class="p">,</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">)</span>
+        <span class="c1"># One stream per occupant and episode, drawn once per time step, so a draw does not</span>
+        <span class="c1"># depend on how often `predict` is called.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interaction_draws</span> <span class="o">=</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">generator</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">OCCUPANT_SETPOINT_INTERACTION</span><span class="p">,</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">random_stream_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">random_stream_episode</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">__probabilities</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">'increase_setpoint'</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">),</span>

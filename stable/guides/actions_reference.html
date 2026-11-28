@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Actions Reference &mdash; CityLearn 3.8.0 documentation</title>
+  <title>Actions Reference &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -151,7 +151,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -268,8 +268,8 @@ clipped to the nearest bound before it reaches the device. This holds for flat
 action vectors, flat vectors sent to an entity environment, and entity <code class="docutils literal notranslate"><span class="pre">tables</span></code>
 and <code class="docutils literal notranslate"><span class="pre">map</span></code> payloads. An action inside the bounds is applied as sent, bit for bit.
 <code class="docutils literal notranslate"><span class="pre">NaN</span></code> and infinite actions are not clipped: <code class="docutils literal notranslate"><span class="pre">step()</span></code> rejects them with a
-<code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. Under <code class="docutils literal notranslate"><span class="pre">physics_version=1</span></code> flat actions are applied as given, as in
-CityLearn 3.6.0, and only entity tables and maps are clipped.</p>
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. CityLearn 3.6.0 applied flat actions as given and clipped only
+entity tables and maps.</p>
 <p>For example, with <code class="docutils literal notranslate"><span class="pre">cooling_storage</span></code> bounded by <code class="docutils literal notranslate"><span class="pre">[-0.25,</span> <span class="pre">0.25]</span></code>, an action of
 <code class="docutils literal notranslate"><span class="pre">0.75</span></code> charges the tank as <code class="docutils literal notranslate"><span class="pre">0.25</span></code> does. The device limits (power, capacity, SOC)
 then apply as usual.</p>
@@ -387,11 +387,12 @@ charger and deferrable appliance ids are <code class="docutils literal notransla
 <li><p>Update net balance, rewards, KPIs and observations.</p></li>
 </ol>
 <p>When <code class="docutils literal notranslate"><span class="pre">electrical_storage_action</span> <span class="pre">&lt;</span> <span class="pre">0</span></code>, BESS discharge is prioritized before other electrical consumption.</p>
-<p>This is the order of physics version 1. Under version 2 (the default), the electrical-service allocation shares the
+<p>This is the order of CityLearn 3.6.0. Now the electrical-service allocation shares the
 headroom after the thermal and non-shiftable updates, among the powers the assets can actually take, and during an
 outage the battery and the EVs discharge after the thermal demand and the thermal storage discharges, up to the load
 that PV leaves.</p>
 <p>During a power outage, EV charger actions are limited to local supply, and a negative (discharge) action is set to zero unless the building’s <code class="docutils literal notranslate"><span class="pre">power_outage.vehicle_to_building</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>. With that option, a connected EV may discharge to the building. The discharge is limited to the non-shiftable load plus the electricity the cooling, heating and DHW devices need for the demand left after storage discharge, less the PV and battery output already available, so nothing is exported to the failed grid. It is applied after the thermal and battery discharges and before those loads; deferrable appliances still start only on supply that the loads leave.</p>
+<p>During a power outage a charging thermal storage (a positive <code class="docutils literal notranslate"><span class="pre">cooling_storage</span></code>, <code class="docutils literal notranslate"><span class="pre">heating_storage</span></code> or <code class="docutils literal notranslate"><span class="pre">dhw_storage</span></code> action) is applied after the non-shiftable load, so, like the charging battery, it takes only the supply that the cooling, heating and DHW devices and the non-shiftable load leave. Until CityLearn 3.8.0 it ran right after its own device, before the other devices and the non-shiftable load.</p>
 </section>
 </section>
 

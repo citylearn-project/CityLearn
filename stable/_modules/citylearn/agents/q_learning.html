@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.agents.q_learning &mdash; CityLearn 3.8.0 documentation</title>
+  <title>citylearn.agents.q_learning &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../../../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -252,13 +252,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">__exploration_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Uniform draw that decides between exploration and exploitation at this time step.</span>
 
-<span class="sd">        With ``random_stream_version='v1'`` it is the first value of ``RandomState(random_seed + time_step)``, as in</span>
-<span class="sd">        CityLearn 3.6.0, so seed ``s`` at time step ``t + 1`` repeats seed ``s + 1`` at time step ``t``. With ``'v2'``</span>
-<span class="sd">        it is the next value of one generator per episode, derived from :py:attr:`random_seed` and the episode.</span>
+<span class="sd">        It is the next value of one generator per episode, derived from :py:attr:`random_seed` and the episode.</span>
 <span class="sd">        """</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">==</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_random_generator</span><span class="p">(</span><span class="n">random_streams</span><span class="o">.</span><span class="n">AGENT_EXPLORATION</span><span class="p">)</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
 

@@ -1,0 +1,501 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; CityLearn 3.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=30f795a6"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Your first simulation" href="quickstart.html" />
+    <link rel="prev" title="CityLearn" href="index.html" />
+ 
+<script src="_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#optional-dependencies">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#datasets-cache-and-offline-use">Datasets, cache and offline use</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#existing-projects-and-development">Existing projects and development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reproducibility-and-older-releases">Reproducibility and older releases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#version-compatibility">Version compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#troubleshooting-installation">Troubleshooting installation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/schema_full_reference.html">Full Reference Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/installation.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="installation">
+<span id="installation-page"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<p>CityLearn v3 is distributed as <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> on PyPI and requires Python 3.10 or
+newer. The core installation runs every simulation that needs neither LSTM
+thermal dynamics nor the bundled reinforcement learning controllers, and takes
+about 200 MB with its dependencies.</p>
+<p>Use a virtual environment to keep its dependencies separate.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m venv .venv</span>
+</pre></div>
+</div>
+<p>Activate it on Linux or macOS:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">source .venv/bin/activate</span>
+</pre></div>
+</div>
+<p>On Windows PowerShell:</p>
+<div class="highlight-powershell notranslate"><div class="highlight"><pre><span></span><span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">Activate</span><span class="p">.</span><span class="n">ps1</span>
+</pre></div>
+</div>
+<p>Install and check the package:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install --upgrade pip</span>
+<span class="go">python -m pip install citylearn</span>
+<span class="go">python -c "from citylearn import __version__; print(__version__)"</span>
+</pre></div>
+</div>
+<p>Continue with <a class="reference internal" href="quickstart.html"><span class="doc">Your first simulation</span></a>. Both the package and Python import name are
+<code class="docutils literal notranslate"><span class="pre">citylearn</span></code>.</p>
+<section id="optional-dependencies">
+<h2>Optional dependencies<a class="headerlink" href="#optional-dependencies" title="Link to this heading"></a></h2>
+<p>Extras add the dependencies of features that not every study needs. Install
+several at once by separating them with commas, for example
+<code class="docutils literal notranslate"><span class="pre">&quot;citylearn[rl,parquet]&quot;</span></code>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Extra</p></th>
+<th class="head"><p>Adds</p></th>
+<th class="head"><p>Needed for</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dynamics</span></code></p></td>
+<td><p>PyTorch</p></td>
+<td><p>LSTM thermal dynamics, used by the 2023 challenge, Quebec, <code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code> and
+EULP neighbourhood datasets</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rl</span></code></p></td>
+<td><p>PyTorch and scikit-learn</p></td>
+<td><p>the bundled <code class="docutils literal notranslate"><span class="pre">SAC</span></code> and <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code> controllers, and LSTM thermal dynamics</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">parquet</span></code></p></td>
+<td><p>pyarrow</p></td>
+<td><p>Parquet datasets (for example <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> and the 15 s demos) and Parquet exports</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pysam</span></code></p></td>
+<td><p>NREL-PySAM</p></td>
+<td><p>PV autosizing from EPW weather</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">end_use_load_profiles</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">doe_xstock</span></code>, OpenStudio, eppy, PyTorch and scikit-learn</p></td>
+<td><p>building new datasets with <code class="docutils literal notranslate"><span class="pre">citylearn.end_use_load_profiles</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install "citylearn[rl]"</span>
+</pre></div>
+</div>
+<p>The default PyTorch wheels for Linux include the CUDA libraries, about 5 GB in
+all. Without a GPU, install the CPU-only PyTorch first, then the extra, which
+then keeps that PyTorch:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install torch --index-url https://download.pytorch.org/whl/cpu</span>
+<span class="go">python -m pip install "citylearn[rl]"</span>
+</pre></div>
+</div>
+<p>A dataset or controller that needs a missing extra raises an <code class="docutils literal notranslate"><span class="pre">ImportError</span></code>
+that names the command to install it. Stable Baselines3 and RLlib are not
+extras: install Stable Baselines3 2.4 or newer to use
+<code class="docutils literal notranslate"><span class="pre">StableBaselines3Wrapper</span></code> (see <a class="reference internal" href="usage/rl_training.html"><span class="doc">Train and evaluate a reinforcement learning controller</span></a>), and <code class="docutils literal notranslate"><span class="pre">ray[rllib]</span></code> to
+use the RLlib wrappers (see <a class="reference internal" href="usage/rllib_training.html"><span class="doc">Train a controller with RLlib</span></a>). The RLlib wrappers are
+tested with Ray 2.60.0 (requiring a checkout of <code class="docutils literal notranslate"><span class="pre">master</span></code> or a release newer than
+3.6.0), which supports Python 3.10 to 3.14 and pins gymnasium
+1.2.2; other Ray releases pin other gymnasium versions.</p>
+</section>
+<section id="datasets-cache-and-offline-use">
+<h2>Datasets, cache and offline use<a class="headerlink" href="#datasets-cache-and-offline-use" title="Link to this heading"></a></h2>
+<p>Public datasets are downloaded from the official repository on first use and
+cached locally, so the first download needs internet access. List the available
+names in Python, or with <code class="docutils literal notranslate"><span class="pre">citylearn</span> <span class="pre">list_datasets</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataSet</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">DataSet</span><span class="p">()</span><span class="o">.</span><span class="n">get_dataset_names</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The cache is a <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> folder in the user cache directory, with one
+subfolder per dataset release, for example <code class="docutils literal notranslate"><span class="pre">~/.cache/citylearn/v3.6.0</span></code> on
+Linux; <code class="docutils literal notranslate"><span class="pre">DataSet().cache_directory</span></code> returns it and <code class="docutils literal notranslate"><span class="pre">DataSet().clear_cache()</span></code>
+empties it. Downloads go to its <code class="docutils literal notranslate"><span class="pre">datasets</span></code> folder. A complete local copy of a
+dataset, such as <code class="docutils literal notranslate"><span class="pre">data/datasets</span></code> in a repository checkout, is copied to
+<code class="docutils literal notranslate"><span class="pre">datasets_by_content/&lt;key&gt;/&lt;dataset&gt;</span></code>, where the key is a digest of its
+files, so checkouts with different data never share a copy. For your own data, pass a local <code class="docutils literal notranslate"><span class="pre">schema.json</span></code> path instead of a
+dataset name. See <a class="reference internal" href="guides/dataset_reference.html"><span class="doc">Dataset Reference</span></a> for files and units.</p>
+<p>These environment variables change where CityLearn looks for data:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Effect</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CITYLEARN_OFFLINE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> makes offline mode the default: nothing is downloaded, and data
+must be in the cache or in a local root.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CITYLEARN_LOCAL_DATASETS_PATH</span></code></p></td>
+<td><p>Folders (separated by <code class="docutils literal notranslate"><span class="pre">:</span></code>, or <code class="docutils literal notranslate"><span class="pre">;</span></code> on Windows) searched for dataset
+folders before downloading; each dataset folder holds its
+<code class="docutils literal notranslate"><span class="pre">schema.json</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CITYLEARN_LOCAL_MISC_PATH</span></code></p></td>
+<td><p>Folders searched for the shared files (such as sizing data) before
+downloading.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CITYLEARN_DATASET_GITHUB_ACCOUNT</span></code>, <code class="docutils literal notranslate"><span class="pre">CITYLEARN_DATASET_REPOSITORY</span></code>, <code class="docutils literal notranslate"><span class="pre">CITYLEARN_DATASET_TAG</span></code></p></td>
+<td><p>Repository and tag that datasets are downloaded from; the tag also names
+the cache subfolder.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CITYLEARN_GITHUB_TOKEN</span></code> (or <code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code>)</p></td>
+<td><p>GitHub token that raises the anonymous limit of 60 API requests per hour.</p></td>
+</tr>
+</tbody>
+</table>
+<p>To work offline, run once online so that the cache holds the datasets you need,
+or point <code class="docutils literal notranslate"><span class="pre">CITYLEARN_LOCAL_DATASETS_PATH</span></code> at a folder of dataset folders, then
+set <code class="docutils literal notranslate"><span class="pre">CITYLEARN_OFFLINE=1</span></code> or pass <code class="docutils literal notranslate"><span class="pre">offline=True</span></code> to <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>.</p>
+</section>
+<section id="existing-projects-and-development">
+<h2>Existing projects and development<a class="headerlink" href="#existing-projects-and-development" title="Link to this heading"></a></h2>
+<p>Record the installed version with the command above and pin that version
+in your project dependencies. Read <a class="reference internal" href="guides/migration.html"><span class="doc">Moving an existing project to CityLearn v3</span></a> when updating a project.
+To work on CityLearn itself, follow <a class="reference internal" href="guides/developer_guide.html"><span class="doc">Developer Guide</span></a>.</p>
+</section>
+<section id="reproducibility-and-older-releases">
+<h2>Reproducibility and older releases<a class="headerlink" href="#reproducibility-and-older-releases" title="Link to this heading"></a></h2>
+<p>CityLearn supports NumPy 1.x and 2.x: observations, rewards and simulated time
+series are bit-identical on both. KPIs can differ in the last binary digits
+(relative differences of order 1e-15), for two reasons. NumPy 2.3 and later add
+up more than 8,192 values in a different order, which affects totals over
+episodes longer than 8,192 time steps, such as a full year of hourly steps, and
+the district Gini ratio of more than 90 members. The equity audit’s Gini ratio
+uses a BLAS dot product, whose last digit depends on the BLAS build and the
+CPU, and NumPy 1 and 2 wheels ship different OpenBLAS releases.</p>
+<section id="version-compatibility">
+<h3>Version compatibility<a class="headerlink" href="#version-compatibility" title="Link to this heading"></a></h3>
+<p>The base requirements of each release, from its <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> and
+<code class="docutils literal notranslate"><span class="pre">python_requires</span></code>; “any” means the release does not constrain the version.
+The first row is the latest release; changes on <code class="docutils literal notranslate"><span class="pre">master</span></code> since then are listed
+under “Unreleased” in the release notes.
+The last column gives the Python versions for which the pinned requirements
+publish wheels on PyPI. It is derived from those pins, not tested, and names
+the pin that sets the limit. CityLearn 2.4.0 to 2.4.2 were withdrawn from PyPI.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>CityLearn</p></th>
+<th class="head"><p>Tag date</p></th>
+<th class="head"><p>Python</p></th>
+<th class="head"><p>NumPy</p></th>
+<th class="head"><p>Gym / Gymnasium</p></th>
+<th class="head"><p>scikit-learn</p></th>
+<th class="head"><p>PyTorch</p></th>
+<th class="head"><p>Other pins</p></th>
+<th class="head"><p>Installable Python (derived)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>3.8.0 - 3.8.1</p></td>
+<td><p>2026-11-27 - 2026-11-28</p></td>
+<td><p>&gt;=3.10</p></td>
+<td><p>&lt;3.0.0</p></td>
+<td><p>gymnasium&gt;=0.28.1,&lt;2.0.0</p></td>
+<td><p>any</p></td>
+<td><p>any</p></td>
+<td><p>pandas&gt;=2.2</p></td>
+<td><p>3.10 - 3.14 in CI; 3.15 lacks wheels for pandas, scikit-learn and PyYAML on some platforms</p></td>
+</tr>
+<tr class="row-odd"><td><p>3.7.0</p></td>
+<td><p>2026-11-26</p></td>
+<td><p>&gt;=3.10</p></td>
+<td><p>&lt;3.0.0</p></td>
+<td><p>gymnasium&gt;=0.28.1,&lt;2.0.0</p></td>
+<td><p>any</p></td>
+<td><p>any</p></td>
+<td><p>none; PyTorch and scikit-learn moved to the dynamics and rl extras</p></td>
+<td><p>3.10 - 3.14 in CI; 3.15 lacks wheels for pandas, scikit-learn and PyYAML on some platforms</p></td>
+</tr>
+<tr class="row-even"><td><p>3.6.0</p></td>
+<td><p>2026-11-19</p></td>
+<td><p>&gt;=3.10</p></td>
+<td><p>&lt;3.0.0</p></td>
+<td><p>gymnasium&gt;=0.28.1,&lt;2.0.0</p></td>
+<td><p>any</p></td>
+<td><p>any</p></td>
+<td><p>none</p></td>
+<td><p>3.10 - 3.14 in CI; 3.15 lacks wheels for pandas, scikit-learn and PyYAML on some platforms</p></td>
+</tr>
+<tr class="row-odd"><td><p>3.3.0 - 3.5.0</p></td>
+<td><p>2026-11-13 - 2026-11-17</p></td>
+<td><p>&gt;=3.9</p></td>
+<td><p>&lt;3.0.0</p></td>
+<td><p>gymnasium&gt;=0.28.1,&lt;2.0.0</p></td>
+<td><p>any</p></td>
+<td><p>any</p></td>
+<td><p>none</p></td>
+<td><p>No pin limits Python; see the CI coverage below</p></td>
+</tr>
+<tr class="row-even"><td><p>3.2.0</p></td>
+<td><p>2026-11-06</p></td>
+<td><p>&gt;=3.9</p></td>
+<td><p>&lt;2.0.0</p></td>
+<td><p>gymnasium&gt;=0.28.1,&lt;2.0.0</p></td>
+<td><p>&lt;=1.2.2</p></td>
+<td><p>any</p></td>
+<td><p>none; OpenStudio and doe_xstock moved to the end_use_load_profiles extra</p></td>
+<td><p>3.9 - 3.11 (scikit-learn 1.2.2)</p></td>
+</tr>
+<tr class="row-odd"><td><p>3.0.0 - 3.1.1</p></td>
+<td><p>2026-09-09 - 2026-11-04</p></td>
+<td><p>&gt;=3.9</p></td>
+<td><p>&lt;2.0.0</p></td>
+<td><p>gymnasium&lt;=0.28.1</p></td>
+<td><p>&lt;=1.2.2</p></td>
+<td><p>any (with torchvision)</p></td>
+<td><p>doe_xstock&gt;=2.0.0, openstudio&lt;=3.10.0</p></td>
+<td><p>3.9 - 3.11 (scikit-learn 1.2.2), where OpenStudio &lt;=3.10.0 has a wheel</p></td>
+</tr>
+<tr class="row-even"><td><p>2.5.0</p></td>
+<td><p>2025-10-30</p></td>
+<td><p>&gt;=3.7.7</p></td>
+<td><p>&lt;2.0.0</p></td>
+<td><p>gymnasium&lt;=0.28.1</p></td>
+<td><p>&lt;=1.2.2</p></td>
+<td><p>any (with torchvision)</p></td>
+<td><p>doe_xstock&gt;=1.1.0, openstudio&lt;=3.3.0, nrel-pysam</p></td>
+<td><p>Where OpenStudio &lt;=3.3.0 has a wheel; reported to install on 3.9 and to fail on 3.10 and 3.11</p></td>
+</tr>
+<tr class="row-odd"><td><p>2.2.0 - 2.4.2</p></td>
+<td><p>2024-11-06 - 2025-08-10</p></td>
+<td><p>&gt;=3.7.7</p></td>
+<td><p>&lt;2.0.0</p></td>
+<td><p>gymnasium (any)</p></td>
+<td><p>&lt;=1.2.2</p></td>
+<td><p>any (with torchvision)</p></td>
+<td><p>doe_xstock&gt;=1.0.0 (2.2.0) or &gt;=1.1.0, openstudio&lt;=3.3.0, nrel-pysam</p></td>
+<td><p>Where OpenStudio &lt;=3.3.0 has a wheel; reported to install on 3.9 and to fail on 3.10 and 3.11</p></td>
+</tr>
+<tr class="row-even"><td><p>2.0.0 - 2.1.2</p></td>
+<td><p>2023-09-10 - 2024-02-25</p></td>
+<td><p>&gt;=3.7</p></td>
+<td><p>&gt;=1.21.6</p></td>
+<td><p>gym&gt;=0.21.0</p></td>
+<td><p>==1.0.2</p></td>
+<td><p>&gt;=1.12.0 (with torchvision&gt;=0.13.0)</p></td>
+<td><p>pandas==1.3.5</p></td>
+<td><p>3.7 - 3.10 (pandas 1.3.5, scikit-learn 1.0.2)</p></td>
+</tr>
+<tr class="row-odd"><td><p>1.5.0 - 1.8.0</p></td>
+<td><p>2023-01-28 - 2023-04-06</p></td>
+<td><p>&gt;=3.7</p></td>
+<td><p>==1.21.6</p></td>
+<td><p>gym==0.25.1 (1.8.0: gym&gt;=0.21.0)</p></td>
+<td><p>==1.0.2</p></td>
+<td><p>==1.12.0 (with torchvision==0.13.0)</p></td>
+<td><p>pandas==1.3.5</p></td>
+<td><p>3.7 - 3.10 (NumPy 1.21.6, PyTorch 1.12.0)</p></td>
+</tr>
+</tbody>
+</table>
+<p>Continuous integration runs the test suite on Linux with Python 3.10, 3.11,
+3.12, 3.13 and 3.14 (NumPy 2, and NumPy 1 on Python 3.10). It also installs the
+built package with <code class="docutils literal notranslate"><span class="pre">pip</span></code> and runs a simulation on macOS (Apple Silicon) and
+Windows with Python 3.10 and 3.14. Python 3.10 reached its upstream end of life
+in October 2026; CityLearn keeps it as the minimum while downstream users still
+run it.</p>
+</section>
+<section id="troubleshooting-installation">
+<h3>Troubleshooting installation<a class="headerlink" href="#troubleshooting-installation" title="Link to this heading"></a></h3>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">No</span> <span class="pre">matching</span> <span class="pre">distribution</span> <span class="pre">found</span> <span class="pre">for</span> <span class="pre">openstudio&lt;=3.3.0</span></code></dt><dd><p>CityLearn 2.2.0 to 2.5.0 required OpenStudio 3.3.0 or older, which PyPI does
+not provide for recent Python versions (reported for 3.10 and 3.11). Install
+CityLearn 3.2.0 or newer: OpenStudio and <code class="docutils literal notranslate"><span class="pre">doe_xstock</span></code> are then needed only
+for <code class="docutils literal notranslate"><span class="pre">citylearn.end_use_load_profiles</span></code> and come with the
+<code class="docutils literal notranslate"><span class="pre">end_use_load_profiles</span></code> extra.</p>
+</dd>
+<dt>scikit-learn fails to compile, for example with an OpenMP error on macOS</dt><dd><p>CityLearn 2.2.0 to 3.2.0 pinned <code class="docutils literal notranslate"><span class="pre">scikit-learn&lt;=1.2.2</span></code>, which has no wheels
+for Python 3.12 or newer, so <code class="docutils literal notranslate"><span class="pre">pip</span></code> tries to build it from source. Install
+CityLearn 3.3.0 or newer, or use Python 3.11 or older for those releases.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">TypeError:</span> <span class="pre">'staticmethod'</span> <span class="pre">object</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">callable</span></code> when importing CityLearn</dt><dd><p>Reported for CityLearn 2.3.0 on Python 3.9. Install a current release.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">ImportError</span></code> naming <code class="docutils literal notranslate"><span class="pre">citylearn[dynamics]</span></code> or <code class="docutils literal notranslate"><span class="pre">citylearn[rl]</span></code></dt><dd><p>Since the release after 3.6.0, PyTorch and scikit-learn are optional. Install
+the extra that the message names; see <a class="reference internal" href="#optional-dependencies">Optional dependencies</a>.</p>
+</dd>
+<dt>An old release is required to reproduce earlier results</dt><dd><p>Install it without dependencies and then the dependencies that the table
+above lists for it, with versions available for your Python:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install --no-deps citylearn==2.3.1</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="CityLearn" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="quickstart.html" class="btn btn-neutral float-right" title="Your first simulation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

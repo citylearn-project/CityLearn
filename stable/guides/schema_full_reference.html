@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Full Reference Schema &mdash; CityLearn 3.8.0 documentation</title>
+  <title>Full Reference Schema &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -166,7 +166,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -229,17 +229,17 @@ written out with <code class="docutils literal notranslate"><span class="pre">en
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;v2&quot;</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;v2&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;v1&quot;</span></code> reproduces the random draws of CityLearn 3.6.0.</p></td>
+<td><p>The only version; see <a class="reference internal" href="schema_reference.html#versions"><span class="std std-ref">Versions</span></a>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">physics_version</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> reproduces the physics of 3.6.0; see <a class="reference internal" href="schema_reference.html#what-each-version-changes"><span class="std std-ref">What each version changes</span></a>.</p></td>
+<td><p>The only version; see <a class="reference internal" href="schema_reference.html#what-each-version-changes"><span class="std std-ref">What each version changes</span></a>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">baseline_version</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code>: the KPI baseline adds no EV charging back, and the BAU sends zero to the HVAC actions, as in 3.6.0. This dataset has no HVAC actions, so its BAU is the same under both versions.</p></td>
+<td><p>The only version: the KPI baseline adds back the BAU EV charging. This dataset has no HVAC actions, so its BAU sends no HVAC action.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1024,7 +1024,7 @@ size them or use <code class="docutils literal notranslate"><span class="pre">&q
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">discharge_power_curve</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[[0,</span> <span class="pre">1],</span> <span class="pre">[1,</span> <span class="pre">1]]</span></code></p></td>
-<td><p>Physics version 1 uses <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> for discharge too.</p></td>
+<td><p>Limits discharge only; <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> limits charging.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phase_connection</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">null</span></code></p></td>
@@ -1876,31 +1876,28 @@ size them or use <code class="docutils literal notranslate"><span class="pre">&q
 <tr class="row-even"><td><p>Train on random one-week episodes</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;episode_time_steps&quot;:</span> <span class="pre">169</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;random_episode_split&quot;:</span> <span class="pre">true</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>Reproduce CityLearn 3.6.0</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;physics_version&quot;:</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;baseline_version&quot;:</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;random_stream_version&quot;:</span> <span class="pre">&quot;v1&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;episode_split_boundary&quot;:</span> <span class="pre">&quot;disjoint&quot;</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p>Control both buildings with one agent</p></td>
+<tr class="row-odd"><td><p>Control both buildings with one agent</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;central_agent&quot;:</span> <span class="pre">true</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>Use entity tables</p></td>
+<tr class="row-even"><td><p>Use entity tables</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;interface&quot;:</span> <span class="pre">&quot;entity&quot;</span></code> and the <code class="docutils literal notranslate"><span class="pre">observation_bundles</span></code> you need</p></td>
 </tr>
-<tr class="row-even"><td><p>Settle energy locally and pay exports</p></td>
+<tr class="row-odd"><td><p>Settle energy locally and pay exports</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">community_market</span></code>: <code class="docutils literal notranslate"><span class="pre">&quot;enabled&quot;:</span> <span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;settlement_version&quot;:</span> <span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;grid_export_price&quot;:</span> <span class="pre">0.05</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>Limit the grid connection of <code class="docutils literal notranslate"><span class="pre">Building_1</span></code></p></td>
+<tr class="row-even"><td><p>Limit the grid connection of <code class="docutils literal notranslate"><span class="pre">Building_1</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">electrical_service.limits.total.import_kw</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>Allow V2G on <code class="docutils literal notranslate"><span class="pre">charger_4_1</span></code> only</p></td>
+<tr class="row-odd"><td><p>Allow V2G on <code class="docutils literal notranslate"><span class="pre">charger_4_1</span></code> only</p></td>
 <td><p>set <code class="docutils literal notranslate"><span class="pre">max_discharging_power</span></code> to <code class="docutils literal notranslate"><span class="pre">0.0</span></code> on <code class="docutils literal notranslate"><span class="pre">charger_1_1</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>Simulate realistic outages</p></td>
+<tr class="row-even"><td><p>Simulate realistic outages</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;simulate_power_outage&quot;:</span> <span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;stochastic_power_outage&quot;:</span> <span class="pre">true</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>Export time series at the end of each episode</p></td>
+<tr class="row-odd"><td><p>Export time series at the end of each episode</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;render_mode&quot;:</span> <span class="pre">&quot;end&quot;</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>Check energy balances every step</p></td>
+<tr class="row-even"><td><p>Check energy balances every step</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;physics_invariant_checks&quot;:</span> <span class="pre">true</span></code></p></td>
 </tr>
 </tbody>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dataset Reference &mdash; CityLearn 3.8.0 documentation</title>
+  <title>Dataset Reference &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -164,7 +164,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -293,12 +293,12 @@ kW = kWh_per_step * 3600 / seconds_per_time_step
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hour</span></code></p></td>
 <td class="text-right"><p>yes</p></td>
 <td class="text-right"><p>1-24</p></td>
-<td><p>Hour.</p></td>
+<td><p>Hour; hour 1 starts at 00:00 and hour 24 at 23:00. Exported timestamps, the evaluation window and the calendar observations read it this way (<a class="reference internal" href="running_simulations.html#exported-timestamps"><span class="std std-ref">Exported timestamps</span></a>).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">day_type</span></code></p></td>
 <td class="text-right"><p>yes</p></td>
 <td class="text-right"><p>1-8</p></td>
-<td><p>Day of week or special day.</p></td>
+<td><p>Day of week, 1 Monday to 7 Sunday, or 8 for a holiday or special day.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">minutes</span></code></p></td>
 <td class="text-right"><p>recommended sub-hour</p></td>
@@ -470,9 +470,8 @@ may be in ratio while the targets are in percent. A column whose values are all 
 read as ratio; declare <code class="docutils literal notranslate"><span class="pre">&quot;soc_unit&quot;:</span> <span class="pre">&quot;percent&quot;</span></code> on the charger in the schema if such a file is in
 percent (the declared unit applies to all its SOC columns). A column read as percent that also
 holds values between 0 and 1 gives a warning, since one stray value above 1 in a ratio column would
-turn 0.3 into 0.3 %. Physics version 1
-keeps the rule of CityLearn 3.6.0, value by value: a value in [0, 1] is a ratio and a value above 1 a
-percentage, so 1 (1 %) in a percent file was read as 100 %, unless the charger declares <code class="docutils literal notranslate"><span class="pre">soc_unit</span></code>
+turn 0.3 into 0.3 %. CityLearn 3.6.0 decided the unit value by value: a value in [0, 1] was a ratio and
+a value above 1 a percentage, so 1 (1 %) in a percent file was read as 100 %
 (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/368">#368</a>).</p>
 </section>
 </section>

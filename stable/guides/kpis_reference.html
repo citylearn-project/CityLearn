@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KPIs Reference &mdash; CityLearn 3.8.0 documentation</title>
+  <title>KPIs Reference &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -184,7 +184,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -312,7 +312,8 @@ community values weighted by that denominator, which equals the ratio of the
 pooled numerator and denominator. The family sections name each pooled row
 and its weight; the BAU deltas and ratios of pooled rows are taken between the
 pooled values.</p></li>
-<li><p><strong>Names ending in <code class="docutils literal notranslate"><span class="pre">_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">_eur</span></code>, <code class="docutils literal notranslate"><span class="pre">_kgco2</span></code> or <code class="docutils literal notranslate"><span class="pre">_count</span></code></strong> are summed.</p></li>
+<li><p><strong>Names ending in <code class="docutils literal notranslate"><span class="pre">_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">_eur</span></code>, <code class="docutils literal notranslate"><span class="pre">_kgco2</span></code> or <code class="docutils literal notranslate"><span class="pre">_count</span></code></strong> are summed, except the
+ledger’s <code class="docutils literal notranslate"><span class="pre">*_max_residual_kwh</span></code> diagnostics, which take the largest community value.</p></li>
 <li><p><strong>Other <code class="docutils literal notranslate"><span class="pre">_ratio</span></code> and <code class="docutils literal notranslate"><span class="pre">_percent</span></code> names</strong> are means weighted by the community
 <code class="docutils literal notranslate"><span class="pre">weight</span></code>.</p></li>
 <li><p><strong>Everything else</strong> (<code class="docutils literal notranslate"><span class="pre">_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">_c</span></code>, <code class="docutils literal notranslate"><span class="pre">_hours</span></code> and other point values) has no
@@ -320,7 +321,8 @@ portfolio row, except <code class="docutils literal notranslate"><span class="pr
 synchronized community window averages when <code class="docutils literal notranslate"><span class="pre">evaluation_window</span></code> is enabled.</p></li>
 </ol>
 <p>A pooled rate keeps its portfolio row whatever its unit, so the pooled
-flexible-appliance start delay (<code class="docutils literal notranslate"><span class="pre">_hours</span></code>) has one. The
+flexible-appliance start delay (<code class="docutils literal notranslate"><span class="pre">_hours</span></code>) has one. The <code class="docutils literal notranslate"><span class="pre">description</span></code> of a
+portfolio row states its rule before the district definition. The
 <a class="reference internal" href="multi_community_reference.html#kpi-aggregation"><span class="std std-ref">multi-community reference</span></a> explains the
 portfolio itself.</p>
 </section>
@@ -415,10 +417,10 @@ a step. With dynamic topology a member counts only while it is active.</p>
 <td><p>The run being evaluated.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">baseline</span></code></p></td>
-<td><p>The conventional counterfactual of the same run: the members without their battery and thermal storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator’s own series. The EV charging of the run is replaced by that of the native BAU with the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target (charged on arrival until full, no V2G), the same for every controller; the deferrable appliances stay as the controller ran them, and so does the HVAC except in buildings with LSTM dynamics, which use the dataset’s ideal-load heating and cooling demand. <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> adds no EV charging back, as in CityLearn 3.6.0. <code class="docutils literal notranslate"><span class="pre">evaluate_v2(baseline_condition=...)</span></code> selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run.</p></td>
+<td><p>The conventional counterfactual of the same run: the members without their battery and thermal storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator’s own series. The EV charging of the run is replaced by that of the native BAU with the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target (charged on arrival until full, no V2G), the same for every controller; the deferrable appliances stay as the controller ran them, and so does the HVAC except in buildings with LSTM dynamics, which use the dataset’s ideal-load heating and cooling demand. CityLearn 3.6.0 added no EV charging back. <code class="docutils literal notranslate"><span class="pre">evaluate_v2(baseline_condition=...)</span></code> selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">business_as_usual</span></code></p></td>
-<td><p>The native business-as-usual rollout of the same scenario and window (see <a class="reference internal" href="baselines.html"><span class="std std-doc">Baselines</span></a>). Under <code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code> (default) its HVAC delivers the dataset heating and cooling demand; under <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> it requests zero, as in CityLearn 3.6.0 (<a class="reference internal" href="baselines.html#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>).</p></td>
+<td><p>The native business-as-usual rollout of the same scenario and window (see <a class="reference internal" href="baselines.html"><span class="std std-doc">Baselines</span></a>). Its HVAC delivers the dataset heating and cooling demand; in CityLearn 3.6.0 it requested zero (<a class="reference internal" href="baselines.html#hvac-and-the-baseline-version"><span class="std std-ref">HVAC and the baseline version</span></a>).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">delta</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">control</span> <span class="pre">-</span> <span class="pre">baseline</span></code>.</p></td>
@@ -608,7 +610,7 @@ energy_grid_window_average_power_delta_to_business_as_usual_kw = control − bus
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">τ_t</span></code> is the overlap in seconds between executed step <code class="docutils literal notranslate"><span class="pre">[s_t,</span> <span class="pre">s_t</span> <span class="pre">+</span> <span class="pre">Δt)</span></code> in local time and the configured daily window (<code class="docutils literal notranslate"><span class="pre">16:00:00</span></code> to <code class="docutils literal notranslate"><span class="pre">19:00:00</span></code> when enabled without explicit bounds). With a canonical <code class="docutils literal notranslate"><span class="pre">time_axis</span></code> calendar, <code class="docutils literal notranslate"><span class="pre">s_t</span></code> is converted from <code class="docutils literal notranslate"><span class="pre">timestamp_utc</span></code> to <code class="docutils literal notranslate"><span class="pre">evaluation_window.timezone</span></code>; without a calendar file, dataset <code class="docutils literal notranslate"><span class="pre">hour</span></code> runs from <code class="docutils literal notranslate"><span class="pre">1</span></code> to <code class="docutils literal notranslate"><span class="pre">24</span></code> and <code class="docutils literal notranslate"><span class="pre">s_t</span></code> uses <code class="docutils literal notranslate"><span class="pre">(hour</span> <span class="pre">−</span> <span class="pre">1)</span> <span class="pre">mod</span> <span class="pre">24</span></code> (<code class="docutils literal notranslate"><span class="pre">hour</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">minutes</span> <span class="pre">=</span> <span class="pre">0</span></code> starts at <code class="docutils literal notranslate"><span class="pre">00:00:00</span></code>), matching the entity temporal features. Windows with <code class="docutils literal notranslate"><span class="pre">start</span> <span class="pre">&gt;</span> <span class="pre">end</span></code> wrap across midnight into <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">24:00)</span></code> and <code class="docutils literal notranslate"><span class="pre">[00:00,</span> <span class="pre">end)</span></code>. Steps straddling a boundary receive partial weight <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;</span> <span class="pre">w_t</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>. When <code class="docutils literal notranslate"><span class="pre">H_W</span> <span class="pre">=</span> <span class="pre">0</span></code>, all window rows are undefined (<code class="docutils literal notranslate"><span class="pre">NaN</span></code>). When <code class="docutils literal notranslate"><span class="pre">evaluate_v2(include_business_as_usual=False)</span></code> is called, only <code class="docutils literal notranslate"><span class="pre">_control_kw</span></code> is emitted.</p>
-<p>To inspect additional post-run windows without rerunning the simulation, weight the exported step series from a rendered session (<code class="docutils literal notranslate"><span class="pre">exported_data_community_ep0.csv</span></code> writes <code class="docutils literal notranslate"><span class="pre">timestamp</span></code> from <code class="docutils literal notranslate"><span class="pre">time_axis</span></code>, or from <code class="docutils literal notranslate"><span class="pre">start_date</span></code> <code class="docutils literal notranslate"><span class="pre">00:00:00</span></code> when the episode starts at midnight):</p>
+<p>To inspect additional post-run windows without rerunning the simulation, weight the exported step series from a rendered session (<code class="docutils literal notranslate"><span class="pre">exported_data_community_ep0.csv</span></code> writes <code class="docutils literal notranslate"><span class="pre">timestamp</span></code> from <code class="docutils literal notranslate"><span class="pre">time_axis</span></code>, or from the dataset’s <code class="docutils literal notranslate"><span class="pre">hour</span></code>, <code class="docutils literal notranslate"><span class="pre">minutes</span></code> and <code class="docutils literal notranslate"><span class="pre">seconds</span></code> columns as the window reads them; see <a class="reference internal" href="running_simulations.html#exported-timestamps"><span class="std std-ref">Exported timestamps</span></a>):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -625,7 +627,7 @@ energy_grid_window_average_power_delta_to_business_as_usual_kw = control − bus
 <span class="n">dt</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">manifest</span><span class="p">[</span><span class="s2">"effective_schema"</span><span class="p">][</span><span class="s2">"seconds_per_time_step"</span><span class="p">])</span>
 
 <span class="n">community</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">export_dir</span> <span class="o">/</span> <span class="s2">"exported_data_community_ep0.csv"</span><span class="p">)</span>
-<span class="n">ts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">community</span><span class="p">[</span><span class="s2">"timestamp"</span><span class="p">])</span>
+<span class="n">ts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">community</span><span class="p">[</span><span class="s2">"timestamp"</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="p">[:</span><span class="mi">19</span><span class="p">])</span>  <span class="c1"># local time of day, with or without an offset</span>
 <span class="n">sec_of_day</span> <span class="o">=</span> <span class="p">(</span><span class="n">ts</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">hour</span> <span class="o">*</span> <span class="mi">3600</span> <span class="o">+</span> <span class="n">ts</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">minute</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">+</span> <span class="n">ts</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">second</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
 <span class="n">start_s</span><span class="p">,</span> <span class="n">end_s</span> <span class="o">=</span> <span class="mi">16</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">,</span> <span class="mi">19</span> <span class="o">*</span> <span class="mi">3600</span>
@@ -792,7 +794,7 @@ capacity_deg  = degraded capacity at the time of evaluation
 fade_district = Σ_b max(capacity_b − capacity_deg_b, 0) / Σ_b capacity_b
 </pre></div>
 </div>
-<p><strong>Portfolio.</strong> Charge, discharge and throughput are summed, and their ratios to the BAU are ratios of the summed totals. Equivalent full cycles are total throughput divided by twice the total nominal battery capacity, independently for the control and BAU runs. The result is undefined when the total nominal capacity is zero. The BAU delta and ratio compare these two portfolio values. Capacity fade and its ratio to the BAU are means weighted by community <code class="docutils literal notranslate"><span class="pre">weight</span></code>.</p>
+<p><strong>Portfolio.</strong> Charge, discharge and throughput are summed, and their ratios to the BAU are ratios of the summed totals. Equivalent full cycles are total throughput divided by twice the total nominal battery capacity, independently for the control and BAU runs. The result is undefined when the total nominal capacity is zero. The BAU delta and ratio compare these two portfolio values. Capacity fade, control and BAU, is pooled the same way: the mean of the community values weighted by their nominal capacity, which is the capacity lost over the total nominal capacity; its BAU delta and ratio compare the two pooled values.</p>
 <p><strong>Which KPI.</strong> Use throughput for energy moved and equivalent full cycles for battery activity relative to nominal capacity. Report battery activity alongside cost and service.</p>
 <p><strong>Known limits.</strong></p>
 <ul class="simple">
@@ -1106,8 +1108,7 @@ service_feasible_ratio  = feasible_service_met / feasible_service_observed
 <p><strong>Portfolio:</strong></p>
 <ul class="simple">
 <li><p>counts are summed;</p></li>
-<li><p>the ratios are means of the district ratios weighted by community <code class="docutils literal notranslate"><span class="pre">weight</span></code>;</p></li>
-<li><p>the ratios are not pooled from the counts, even though their denominators are counts.</p></li>
+<li><p>the ratios are pooled from the summed counts (#428): the coverage ratios over <code class="docutils literal notranslate"><span class="pre">departures_count</span></code>, the <code class="docutils literal notranslate"><span class="pre">service_observed_ratio</span></code> rows over <code class="docutils literal notranslate"><span class="pre">service_observed_count</span></code> and the <code class="docutils literal notranslate"><span class="pre">service_feasible_ratio</span></code> rows over the threshold’s <code class="docutils literal notranslate"><span class="pre">feasible_service_observed_count</span></code>. Community weights are not used.</p></li>
 </ul>
 </section>
 <section id="id2">
@@ -1124,7 +1125,6 @@ service_feasible_ratio  = feasible_service_met / feasible_service_observed
 <ul class="simple">
 <li><p>Each departure is replayed on its own, without the other EVs that share the same limits, so joint feasibility is not tested.</p></li>
 <li><p>The headroom uses the run’s own base load, so with electrical limits the feasible population can differ between controllers on the same scenario.</p></li>
-<li><p>The portfolio ratios are weighted by community <code class="docutils literal notranslate"><span class="pre">weight</span></code>, not pooled from the counts.</p></li>
 </ul>
 </section>
 </section>
@@ -1259,8 +1259,7 @@ service_balance_residual  = requested - served - final_unserved - outstanding
 <p><strong>Portfolio:</strong></p>
 <ul class="simple">
 <li><p>counts and energies are summed;</p></li>
-<li><p>the ratios are means of the district ratios weighted by community <code class="docutils literal notranslate"><span class="pre">weight</span></code>;</p></li>
-<li><p>the ratios are not pooled from the counts.</p></li>
+<li><p>the ratios are pooled from the summed counts (#428): observed completion and resolved coverage over <code class="docutils literal notranslate"><span class="pre">offered_count</span></code>, resolved completion over <code class="docutils literal notranslate"><span class="pre">resolved_count</span></code>.</p></li>
 </ul>
 </section>
 <section id="id10">
@@ -1276,7 +1275,6 @@ service_balance_residual  = requested - served - final_unserved - outstanding
 <span id="known-limits-3"></span><h3>Known limits<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Terminal-step energy is not recorded: the terminal observation is not an executed interval.</p></li>
-<li><p>The portfolio ratios are weighted by community <code class="docutils literal notranslate"><span class="pre">weight</span></code>, not pooled from the counts.</p></li>
 </ul>
 </section>
 </section>
@@ -1462,10 +1460,9 @@ each ratio from the sums. For example:</p>
 </pre></div>
 </div>
 <p>This is a rate weighted by occupied exposure. In the portfolio, <code class="docutils literal notranslate"><span class="pre">_count</span></code> and <code class="docutils literal notranslate"><span class="pre">_kwh</span></code> rows are summed over
-communities. The <code class="docutils literal notranslate"><span class="pre">_hours</span></code> and <code class="docutils literal notranslate"><span class="pre">_degree_hours</span></code> rows are not carried over. The ratios are means of the
-community ratios weighted by the community <code class="docutils literal notranslate"><span class="pre">weight</span></code>; they are not recomputed from the summed portfolio
-counts. A pooled portfolio rate can be obtained by dividing the summed counts, for example
-<code class="docutils literal notranslate"><span class="pre">portfolio_thermal_service_audit_discomfort_intervals_count</span> <span class="pre">/</span> <span class="pre">portfolio_thermal_service_audit_evaluated_occupied_intervals_count</span></code>.</p>
+communities. The <code class="docutils literal notranslate"><span class="pre">_hours</span></code> and <code class="docutils literal notranslate"><span class="pre">_degree_hours</span></code> rows are not carried over. The ratios are recomputed from the
+summed portfolio counts and energies in the same way (#428), for example
+<code class="docutils literal notranslate"><span class="pre">portfolio_thermal_service_audit_discomfort_ratio</span> <span class="pre">=</span> <span class="pre">portfolio_thermal_service_audit_discomfort_intervals_count</span> <span class="pre">/</span> <span class="pre">portfolio_thermal_service_audit_evaluated_occupied_intervals_count</span></code>.</p>
 <p><strong>Canonical choice.</strong> <code class="docutils literal notranslate"><span class="pre">district_thermal_service_audit_discomfort_ratio</span></code> is the canonical discomfort KPI for
 comparing controllers, for four reasons:</p>
 <ul class="simple">
@@ -1479,7 +1476,6 @@ degree-hours for severity. For the same reasons, <code class="docutils literal n
 <code class="docutils literal notranslate"><span class="pre">resilience_one_minus_thermal_ratio</span></code>, and <code class="docutils literal notranslate"><span class="pre">unserved_service_ratio</span></code> to the legacy unserved-energy ratios.</p>
 <p>Known limits:</p>
 <ul class="simple">
-<li><p>Portfolio ratios are weight-means of community ratios, not ratios of the summed portfolio counts.</p></li>
 <li><p>Degree-hours and comfort conditions do not consider whether heating or cooling was available (HVAC mode).</p></li>
 </ul>
 </section>
@@ -1551,8 +1547,10 @@ positive_benefit_top20_ratio        = (sum of the k largest x) / sum x,  k = max
 pairwise formula of <a class="reference internal" href="#equity"><span class="std std-ref">Equity</span></a>. The Gini coefficient and the top-20 % share are undefined when the
 sum of x is 0. The evaluation conditions used for each building are stored in the <code class="docutils literal notranslate"><span class="pre">kpi_family_audit</span></code>
 metadata of the returned table.</p>
-<p><strong>Portfolio.</strong> The <code class="docutils literal notranslate"><span class="pre">_count</span></code> rows are summed over communities. The ratio and the percentage are means
-weighted by the community <code class="docutils literal notranslate"><span class="pre">weight</span></code>; they are not recomputed from the summed counts.</p>
+<p><strong>Portfolio.</strong> The <code class="docutils literal notranslate"><span class="pre">_count</span></code> rows are summed over communities. The coverage ratio is pooled over
+<code class="docutils literal notranslate"><span class="pre">population_members_count</span></code> and the losers percentage over <code class="docutils literal notranslate"><span class="pre">eligible_members_count</span></code>, so both are those of the
+summed counts (#428). The Gini and top-20 % share are distributions over the members and stay means weighted by
+the community <code class="docutils literal notranslate"><span class="pre">weight</span></code>.</p>
 <p><strong>Canonical choice.</strong> <code class="docutils literal notranslate"><span class="pre">district_equity_audit_positive_benefit_gini_ratio</span></code> is the canonical Gini KPI for
 comparing controllers. It has the same value as <code class="docutils literal notranslate"><span class="pre">equity_distribution_gini_benefit_ratio</span></code>. Its name states
 that losses are clipped at 0, and its eligibility counts are published with it, so a Gini computed on few
@@ -1561,7 +1559,7 @@ buildings can be recognised. Report it with <code class="docutils literal notran
 <p>Known limits:</p>
 <ul class="simple">
 <li><p>Step costs that are not finite are summed as 0, so <code class="docutils literal notranslate"><span class="pre">excluded_unknown_cost_count</span></code> is always 0.</p></li>
-<li><p>Portfolio coverage and Gini are weight-means of community values.</p></li>
+<li><p>The portfolio Gini and top-20 % share are weight-means of community values, not the distribution of all members of the portfolio.</p></li>
 </ul>
 </section>
 <section id="demand-response">
@@ -1888,8 +1886,8 @@ storage_max_residual = max over stocks and intervals of |stock in the ledger - s
 <p><strong>Portfolio.</strong></p>
 <ul class="simple">
 <li><p>The <code class="docutils literal notranslate"><span class="pre">_kwh</span></code> and <code class="docutils literal notranslate"><span class="pre">_kgco2</span></code> rows, including their BAU and delta rows, are summed over communities.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">pv_useful_*</span></code> ratios, with their BAU and delta rows, are the <strong>mean weighted by community <code class="docutils literal notranslate"><span class="pre">weight</span></code></strong> over communities with a defined value. They are not rebuilt from the summed <code class="docutils literal notranslate"><span class="pre">pv_load</span></code>, <code class="docutils literal notranslate"><span class="pre">pv_mobility</span></code> and <code class="docutils literal notranslate"><span class="pre">pv_generated</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">bus_max_residual_kwh</span></code> and <code class="docutils literal notranslate"><span class="pre">storage_max_residual_kwh</span></code> are <strong>summed</strong> over communities like any <code class="docutils literal notranslate"><span class="pre">_kwh</span></code> row. They are therefore a sum of community maxima, not a maximum.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">pv_useful_*</span></code> ratios, control and BAU, are pooled over <code class="docutils literal notranslate"><span class="pre">pv_generated_kwh</span></code> (#428), so they equal the summed <code class="docutils literal notranslate"><span class="pre">pv_load</span></code> (plus <code class="docutils literal notranslate"><span class="pre">pv_mobility</span></code>) over the summed <code class="docutils literal notranslate"><span class="pre">pv_generated</span></code>; the delta is the difference of the two pooled values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bus_max_residual_kwh</span></code> and <code class="docutils literal notranslate"><span class="pre">storage_max_residual_kwh</span></code>, control and BAU, are the <strong>largest</strong> community value, and their delta is the difference of the two portfolio maxima.</p></li>
 </ul>
 </section>
 <section id="reading-the-default-scorecard-rows">
@@ -1939,7 +1937,6 @@ storage_max_residual = max over stocks and intervals of |stock in the ledger - s
 <li><p>The energy of an EV at connection, and any imposed state of charge, is unknown and carbon-free in the ledger. The <code class="docutils literal notranslate"><span class="pre">carbon_*</span></code> rows therefore undercount; the <code class="docutils literal notranslate"><span class="pre">carbon_unknown_*</span></code> rows show by how much energy.</p></li>
 <li><p>Building rows are counted by the receiving member and do not balance per member. Only the district balances.</p></li>
 <li><p>The ledger has no evaluation window: it covers every interval simulated since reset.</p></li>
-<li><p>At portfolio level, the <code class="docutils literal notranslate"><span class="pre">pv_useful_*</span></code> ratios are community-weight means, and the two max-residual diagnostics are sums of community maxima.</p></li>
 </ul>
 </section>
 </section>
@@ -1962,7 +1959,7 @@ storage_max_residual = max over stocks and intervals of |stock in the ledger - s
 <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> changed definition. Where a 3.6.0 value may have been used in
 published comparisons, it is kept under a distinct name, and the legacy
 <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> rows keep their own 3.6.0 definitions, apart from the baseline of
-datasets with EV chargers (the EV charger row), which <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> restores.</p>
+datasets with EV chargers (the EV charger row).</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>KPI</p></th>
@@ -2043,13 +2040,21 @@ datasets with EV chargers (the EV charger row), which <code class="docutils lite
 <td><p>Total throughput over twice the total nominal capacity, with BAU delta and ratio derived from the two portfolio values.</p></td>
 <td><p>none</p></td>
 </tr>
+<tr class="row-even"><td><p>Portfolio EV departure audit, thermal-service audit and flexible-appliance audit ratios, equity audit coverage and losers percentage, useful PV ratios and stationary-battery capacity fade, with their BAU comparisons (<code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code>, #428)</p></td>
+<td><p>Pooled from the counts, energies and nominal capacities the audits report, instead of means weighted by community <code class="docutils literal notranslate"><span class="pre">weight</span></code>.</p></td>
+<td><p>none</p></td>
+</tr>
+<tr class="row-odd"><td><p>Portfolio <code class="docutils literal notranslate"><span class="pre">energy_provenance_{storage,bus}_max_residual_kwh</span></code> and their BAU and delta rows (<code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code>, #428)</p></td>
+<td><p>Largest community value instead of the sum.</p></td>
+<td><p>none</p></td>
+</tr>
 <tr class="row-even"><td><p>On datasets with EV chargers: every <code class="docutils literal notranslate"><span class="pre">*_baseline_*</span></code>, <code class="docutils literal notranslate"><span class="pre">*_delta_*</span></code> (not <code class="docutils literal notranslate"><span class="pre">*_delta_to_business_as_usual_*</span></code>) and <code class="docutils literal notranslate"><span class="pre">*_ratio_to_baseline_*</span></code> row, the equity KPIs built on them, and the whole legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> table (#365)</p></td>
 <td><p>The baseline charges the EVs as the native BAU with the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target does, instead of not charging them (<code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code>).</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code></p></td>
+<td><p>none (<code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> was removed in 3.8.1)</p></td>
 </tr>
 <tr class="row-odd"><td><p>On datasets with HVAC actions: every <code class="docutils literal notranslate"><span class="pre">*_business_as_usual</span></code> row and every <code class="docutils literal notranslate"><span class="pre">*_delta_to_business_as_usual_*</span></code> and <code class="docutils literal notranslate"><span class="pre">*_ratio_to_business_as_usual_*</span></code> value (#362)</p></td>
 <td><p>The native BAU delivers the dataset heating and cooling demand instead of sending zero to the HVAC actions (<code class="docutils literal notranslate"><span class="pre">baseline_version=2</span></code>).</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code></p></td>
+<td><p>none (<code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> was removed in 3.8.1)</p></td>
 </tr>
 </tbody>
 </table>
@@ -2129,10 +2134,18 @@ division reported as a perfect 0.</p>
 </tbody>
 </table>
 <p>The long table starts with <code class="docutils literal notranslate"><span class="pre">cost_function</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code> and <code class="docutils literal notranslate"><span class="pre">level</span></code>, followed
-by <code class="docutils literal notranslate"><span class="pre">unit</span></code> and a short English <code class="docutils literal notranslate"><span class="pre">description</span></code> from the KPI catalogue.</p>
+by <code class="docutils literal notranslate"><span class="pre">unit</span></code>, a short English <code class="docutils literal notranslate"><span class="pre">description</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code> and <code class="docutils literal notranslate"><span class="pre">replacement</span></code> from the KPI
+catalogue. <code class="docutils literal notranslate"><span class="pre">status</span></code> is <code class="docutils literal notranslate"><span class="pre">canonical</span></code> for the row to report for its question, <code class="docutils literal notranslate"><span class="pre">legacy</span></code>
+for an older definition kept so earlier results stay comparable, <code class="docutils literal notranslate"><span class="pre">deprecated</span></code> for an
+alias that returns the value of its canonical row, and <code class="docutils literal notranslate"><span class="pre">current</span></code> otherwise; legacy and
+deprecated rows name their canonical row in <code class="docutils literal notranslate"><span class="pre">replacement</span></code> (#433). The
+<a class="reference internal" href="KPI_V2_TREE.html"><span class="std std-doc">KPI catalogue</span></a> marks the same rows.</p>
 <p>The long multi-community CSV includes the metadata columns. For a wide single-community
 export in CSV or Parquet, the adjacent <code class="docutils literal notranslate"><span class="pre">exported_kpis.manifest.json</span></code> holds
-<code class="docutils literal notranslate"><span class="pre">kpi_definitions</span></code> keyed by KPI name. The KPI file continues to contain one numeric column per scope.</p>
+<code class="docutils literal notranslate"><span class="pre">kpi_definitions</span></code> keyed by KPI name, with the unit, description, status and replacement,
+and <code class="docutils literal notranslate"><span class="pre">kpi_export</span></code>, which records <code class="docutils literal notranslate"><span class="pre">include_business_as_usual</span></code>, <code class="docutils literal notranslate"><span class="pre">include_battery_health_audit</span></code>
+and <code class="docutils literal notranslate"><span class="pre">kpi_round_decimals</span></code>. <code class="docutils literal notranslate"><span class="pre">export_final_kpis(include_battery_health_audit=True)</span></code> adds the
+opt-in EV battery-health rows. The KPI file continues to contain one numeric column per scope.</p>
 <p>A new KPI must be added to <code class="docutils literal notranslate"><span class="pre">citylearn/misc/kpi_catalogue.yml</span></code>, which generates the <a class="reference internal" href="KPI_V2_TREE.html"><span class="std std-doc">KPI catalogue</span></a> (<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">scripts/docs/kpi_catalogue.py</span></code>), and its equations to the family section of this page; <code class="docutils literal notranslate"><span class="pre">tests/test_kpi_catalogue.py</span></code> fails while an emitted name is missing from the catalogue. Changes of definition are recorded in <a class="reference internal" href="releases.html"><span class="std std-doc">releases.md</span></a>.</p>
 </section>
 </section>

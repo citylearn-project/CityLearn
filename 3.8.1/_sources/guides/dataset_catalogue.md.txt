@@ -1,0 +1,62 @@
+# Dataset catalogue
+
+This table is generated from the bundled schemas when the documentation is built.
+Pass a name to `CityLearnEnv` to download and cache the dataset on first use; the size
+is the download. *Default window* is the schema's simulation window, which
+`simulation_start_time_step`, `simulation_end_time_step` and `episode_time_steps` can shorten.
+Parquet datasets need `pip install "citylearn[parquet]"`, and datasets with LSTM thermal
+dynamics need PyTorch; see the [installation guide](../installation.rst).
+
+## Where to start
+
+- **First runs and controller comparisons:** `citylearn_challenge_2022_phase_all_plus_evs`,
+  used by the [quickstart](../quickstart.rst).
+- **Electrical limits, dynamic topology and sub-minute data:** the `citylearn_three_phase_*`
+  demonstrations; see the [features guide](features.md).
+- **Renewable energy communities with a local market:** `pt_rec_4` first, then `pt_rec_15`,
+  `pt_rec_30` and `pt_rec_100`.
+- **Demand response and robustness:** `citylearn_challenge_2022_phase_all_demand_response` and
+  `citylearn_challenge_2022_phase_all_robustness`.
+
+## All public datasets
+
+| Dataset | Origin | Buildings | EVs | Step | Default window | Format | Size | Features |
+|---|---|---:|---:|---:|---:|---|---:|---|
+| `baeda_3dem` | Neighbourhood | 4 | 0 | 1 h | 122 days | CSV | 2 MB | thermal storage, LSTM thermal dynamics (PyTorch) |
+| `ca_alameda_county_neighborhood` | Neighbourhood | 100 | 0 | 1 h | 365 days | CSV | 80 MB | batteries, thermal storage, LSTM thermal dynamics (PyTorch) |
+| `citylearn_challenge_2020_climate_zone_1` | CityLearn Challenge 2020 | 9 | 0 | 1 h | 365 days | CSV | 5 MB | batteries, thermal storage |
+| `citylearn_challenge_2020_climate_zone_2` | CityLearn Challenge 2020 | 9 | 0 | 1 h | 365 days | CSV | 5 MB | batteries, thermal storage |
+| `citylearn_challenge_2020_climate_zone_3` | CityLearn Challenge 2020 | 9 | 0 | 1 h | 365 days | CSV | 5 MB | batteries, thermal storage |
+| `citylearn_challenge_2020_climate_zone_4` | CityLearn Challenge 2020 | 9 | 0 | 1 h | 365 days | CSV | 5 MB | batteries, thermal storage |
+| `citylearn_challenge_2021` | CityLearn Challenge 2021 | 9 | 0 | 1 h | 1460 days | CSV | 19 MB | batteries, thermal storage |
+| `citylearn_challenge_2022_phase_1` | CityLearn Challenge 2022 | 5 | 0 | 1 h | 365 days | CSV | 3 MB | batteries |
+| `citylearn_challenge_2022_phase_2` | CityLearn Challenge 2022 | 5 | 0 | 1 h | 365 days | CSV | 3 MB | batteries |
+| `citylearn_challenge_2022_phase_3` | CityLearn Challenge 2022 | 7 | 0 | 1 h | 365 days | CSV | 3 MB | batteries |
+| `citylearn_challenge_2022_phase_all` | CityLearn Challenge 2022 | 17 | 0 | 1 h | 365 days | CSV | 7 MB | batteries |
+| `citylearn_challenge_2022_phase_all_demand_response` | CityLearn Challenge 2022 buildings with demand-response requests | 17 | 0 | 1 h | 365 days | CSV | 7 MB | batteries, demand response |
+| `citylearn_challenge_2022_phase_all_plus_evs` | CityLearn Challenge 2022 buildings with EVs; the quickstart dataset | 17 | 8 | 1 h | 365 days | CSV | 13 MB | EVs, flexible appliances, batteries |
+| `citylearn_challenge_2022_phase_all_robustness` | CityLearn Challenge 2022 buildings with robustness events | 17 | 0 | 1 h | 365 days | CSV | 7 MB | batteries, robustness events |
+| `citylearn_challenge_2023_phase_1` | CityLearn Challenge 2023 | 3 | 0 | 1 h | 30 days | CSV | < 1 MB | batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch) |
+| `citylearn_challenge_2023_phase_2_local_evaluation` | CityLearn Challenge 2023 | 3 | 0 | 1 h | 30 days | CSV | < 1 MB | batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch) |
+| `citylearn_challenge_2023_phase_2_online_evaluation_1` | CityLearn Challenge 2023 | 3 | 0 | 1 h | 92 days | CSV | 1 MB | batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch) |
+| `citylearn_challenge_2023_phase_2_online_evaluation_2` | CityLearn Challenge 2023 | 3 | 0 | 1 h | 92 days | CSV | 1 MB | batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch) |
+| `citylearn_challenge_2023_phase_2_online_evaluation_3` | CityLearn Challenge 2023 | 3 | 0 | 1 h | 92 days | CSV | 1 MB | batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch) |
+| `citylearn_challenge_2023_phase_3_1` | CityLearn Challenge 2023 | 6 | 0 | 1 h | 92 days | CSV | 2 MB | batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch) |
+| `citylearn_challenge_2023_phase_3_2` | CityLearn Challenge 2023 | 6 | 0 | 1 h | 92 days | CSV | 2 MB | batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch) |
+| `citylearn_challenge_2023_phase_3_3` | CityLearn Challenge 2023 | 6 | 0 | 1 h | 92 days | CSV | 2 MB | batteries, thermal storage, power outages, LSTM thermal dynamics (PyTorch) |
+| `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` | Feature demonstration | 18 | 9 | 15 s | 7 days | Parquet (pyarrow) | < 1 MB | EVs, batteries, phase limits, community market, dynamic topology |
+| `citylearn_three_phase_dynamic_assets_only_demo` | Feature demonstration | 18 | 9 | 1 h | 365 days | CSV | 13 MB | EVs, batteries, phase limits, community market, dynamic topology |
+| `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` | Feature demonstration | 18 | 9 | 15 s | 365 days | Parquet (pyarrow) | 13 MB | EVs, batteries, phase limits, community market, dynamic topology |
+| `citylearn_three_phase_dynamic_topology_demo` | Feature demonstration | 18 | 9 | 1 h | 365 days | CSV | 13 MB | EVs, flexible appliances, batteries, phase limits, community market, dynamic topology |
+| `citylearn_three_phase_electrical_service_demo` | Feature demonstration | 17 | 8 | 1 h | 365 days | CSV | 13 MB | EVs, flexible appliances, batteries, phase limits, community market |
+| `citylearn_three_phase_electrical_service_demo_15s_parquet` | Feature demonstration | 17 | 8 | 15 s | 365 days | Parquet (pyarrow) | 12 MB | EVs, flexible appliances, batteries, phase limits, community market |
+| `pt_rec_100` | Portuguese renewable energy community ([Portugal REC datasets](portugal_rec_datasets.md)) | 100 | 85 | 15 min | 731 days | Parquet (pyarrow) | 113 MB | EVs, flexible appliances, batteries, phase limits, community market |
+| `pt_rec_15` | Portuguese renewable energy community ([Portugal REC datasets](portugal_rec_datasets.md)) | 15 | 6 | 15 min | 731 days | Parquet (pyarrow) | 13 MB | EVs, flexible appliances, batteries, phase limits, community market |
+| `pt_rec_30` | Portuguese renewable energy community ([Portugal REC datasets](portugal_rec_datasets.md)) | 30 | 19 | 15 min | 731 days | Parquet (pyarrow) | 84 MB | EVs, flexible appliances, batteries, phase limits, community market |
+| `pt_rec_4` | Portuguese renewable energy community ([Portugal REC datasets](portugal_rec_datasets.md)) | 4 | 2 | 15 min | 731 days | Parquet (pyarrow) | 7 MB | EVs, flexible appliances, batteries, phase limits, community market |
+| `quebec_neighborhood_with_demand_response_set_points` | Neighbourhood | 20 | 0 | 1 h | 270 days | CSV | 330 MB | LSTM thermal dynamics (PyTorch) |
+| `quebec_neighborhood_without_demand_response_set_points` | Neighbourhood | 20 | 0 | 1 h | 270 days | CSV | 330 MB | LSTM thermal dynamics (PyTorch) |
+| `tx_travis_county_neighborhood` | Neighbourhood | 100 | 0 | 1 h | 365 days | CSV | 80 MB | batteries, thermal storage, LSTM thermal dynamics (PyTorch) |
+| `vt_chittenden_county_neighborhood` | Neighbourhood | 47 | 0 | 1 h | 365 days | CSV | 38 MB | batteries, thermal storage, LSTM thermal dynamics (PyTorch) |
+
+See the [dataset reference](dataset_reference.md) to build your own dataset.

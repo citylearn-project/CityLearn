@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; CityLearn 3.8.0 documentation</title>
+  <title>Index &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=948f11bf"></script>
+      <script src="_static/documentation_options.js?v=30f795a6"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -848,6 +848,8 @@
 </li>
       <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.Battery.current_state_of_health">current_state_of_health (citylearn.energy_model.Battery property)</a>
 </li>
+      <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.CurveValueError">CurveValueError</a>
+</li>
       <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.DeferrableAppliance.cycle_state">cycle_state (citylearn.energy_model.DeferrableAppliance property)</a>
 </li>
   </ul></td>
@@ -867,8 +869,6 @@
       <li><a href="api/citylearn.data.html#citylearn.data.DataSet.datasets_path">datasets_path (citylearn.data.DataSet property)</a>
 </li>
       <li><a href="api/citylearn.data.html#citylearn.data.WashingMachineSimulation.day_type">day_type (citylearn.data.WashingMachineSimulation attribute)</a>
-</li>
-      <li><a href="api/citylearn.data.html#citylearn.data.DataSet.DEFAULT_CACHE_DIRECTORY">DEFAULT_CACHE_DIRECTORY (citylearn.data.DataSet attribute)</a>
 </li>
       <li><a href="api/citylearn.building.html#citylearn.building.LogisticRegressionOccupantInteractionBuilding.DEFAULT_OCCUPANT_SET_POINT_LIMITS">DEFAULT_OCCUPANT_SET_POINT_LIMITS (citylearn.building.LogisticRegressionOccupantInteractionBuilding attribute)</a>
 </li>
@@ -916,10 +916,10 @@
 </li>
       <li><a href="api/citylearn.occupant.html#citylearn.occupant.LogisticRegressionOccupant.delta_output_map">delta_output_map (citylearn.occupant.LogisticRegressionOccupant property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="glossary.html#term-Demand-response"><strong>Demand response</strong></a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.building.html#citylearn.building.Building.demand_observation_limit_factor">demand_observation_limit_factor (citylearn.building.Building property)</a>
 </li>
       <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.Battery.depth_of_discharge">depth_of_discharge (citylearn.energy_model.Battery property)</a>
@@ -1152,10 +1152,10 @@
       </ul></li>
       <li><a href="api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.energyplus_output_directory">energyplus_output_directory (citylearn.end_use_load_profiles.neighborhood.Neighborhood property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.data.html#citylearn.data.EnergySimulation">EnergySimulation (class in citylearn.data)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent.ENGINE_CLASS">ENGINE_CLASS (citylearn.agents.baseline.BusinessAsUsualAgent attribute)</a>
 
       <ul>
@@ -1307,6 +1307,8 @@
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.export_kpis_on_episode_end">export_kpis_on_episode_end (citylearn.citylearn.CityLearnEnv property)</a>
 </li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.export_only_final_episode">export_only_final_episode (citylearn.citylearn.CityLearnEnv property)</a>
+</li>
+      <li><a href="api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.export_origin">export_origin() (citylearn.exporter.EpisodeExporter method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1564,8 +1566,6 @@
 </li>
       <li><a href="api/citylearn.data.html#citylearn.data.DataSet.github_account">github_account (citylearn.data.DataSet property)</a>
 </li>
-      <li><a href="api/citylearn.data.html#citylearn.data.DataSet.GITHUB_API_CONTENT_URL">GITHUB_API_CONTENT_URL (citylearn.data.DataSet attribute)</a>
-</li>
       <li><a href="api/citylearn.electric_vehicle_charger.html#citylearn.electric_vehicle_charger.Charger.gross_energy_charge">gross_energy_charge (citylearn.electric_vehicle_charger.Charger property)</a>
 
       <ul>
@@ -1734,8 +1734,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.agents.base.html#citylearn.agents.base.Agent.learn">learn() (citylearn.agents.base.Agent method)</a>
 </li>
-      <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.Battery.legacy_discharge_power_limit">legacy_discharge_power_limit (citylearn.energy_model.Battery attribute)</a>
-</li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.load_agent">load_agent() (citylearn.citylearn.CityLearnEnv method)</a>
 </li>
       <li><a href="api/citylearn.data.html#citylearn.data.WashingMachineSimulation.load_profile">load_profile (citylearn.data.WashingMachineSimulation attribute)</a>
@@ -1748,10 +1746,10 @@
 </li>
       <li><a href="api/citylearn.occupant.html#citylearn.occupant.LogisticRegressionOccupant">LogisticRegressionOccupant (class in citylearn.occupant)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.building.html#citylearn.building.LogisticRegressionOccupantInteractionBuilding">LogisticRegressionOccupantInteractionBuilding (class in citylearn.building)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.data.html#citylearn.data.LogisticRegressionOccupantParameters">LogisticRegressionOccupantParameters (class in citylearn.data)</a>
 </li>
       <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.StorageDevice.loss_coefficient">loss_coefficient (citylearn.energy_model.StorageDevice property)</a>
@@ -1774,6 +1772,8 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/citylearn.multi_community.html#citylearn.multi_community.MultiCommunityEnv.MANIFEST_DEFINITION_VERSION">MANIFEST_DEFINITION_VERSION (citylearn.multi_community.MultiCommunityEnv attribute)</a>
+</li>
       <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.MARL">MARL (class in citylearn.reward_function)</a>
 </li>
       <li><a href="api/citylearn.agents.marlisa.html#citylearn.agents.marlisa.MARLISA">MARLISA (class in citylearn.agents.marlisa)</a>
@@ -1925,6 +1925,10 @@
         <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.WashingMachine.name">(citylearn.energy_model.WashingMachine property)</a>
 </li>
       </ul></li>
+      <li><a href="api/citylearn.random_streams.html#citylearn.random_streams.namespace_parts">namespace_parts() (in module citylearn.random_streams)</a>
+</li>
+      <li><a href="api/citylearn.random_streams.html#citylearn.random_streams.namespaced_key">namespaced_key() (in module citylearn.random_streams)</a>
+</li>
       <li><a href="api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood">Neighborhood (class in citylearn.end_use_load_profiles.neighborhood)</a>
 </li>
       <li><a href="api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.NeighborhoodBuild">NeighborhoodBuild (class in citylearn.end_use_load_profiles.neighborhood)</a>
@@ -2007,14 +2011,14 @@
         <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.net_electricity_consumption_without_storage_and_partial_load">(citylearn.citylearn.CityLearnEnv property)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.building.html#citylearn.building.DynamicsBuilding.net_electricity_consumption_without_storage_and_partial_load_and_pv">net_electricity_consumption_without_storage_and_partial_load_and_pv (citylearn.building.DynamicsBuilding property)</a>
 
       <ul>
         <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.net_electricity_consumption_without_storage_and_partial_load_and_pv">(citylearn.citylearn.CityLearnEnv property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.building.html#citylearn.building.Building.net_electricity_consumption_without_storage_and_pv">net_electricity_consumption_without_storage_and_pv (citylearn.building.Building property)</a>
 
       <ul>
@@ -2203,6 +2207,8 @@
 </li>
       <li><a href="api/citylearn.data.html#citylearn.data.DeferrableApplianceSimulation.parse_load_profile">parse_load_profile() (citylearn.data.DeferrableApplianceSimulation static method)</a>
 </li>
+      <li><a href="api/citylearn.random_streams.html#citylearn.random_streams.parse_random_stream_namespace">parse_random_stream_namespace() (in module citylearn.random_streams)</a>
+</li>
       <li><a href="api/citylearn.random_streams.html#citylearn.random_streams.parse_random_stream_version">parse_random_stream_version() (in module citylearn.random_streams)</a>
 </li>
       <li><a href="api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.parse_render_start_date">parse_render_start_date() (citylearn.exporter.EpisodeExporter static method)</a>
@@ -2257,6 +2263,8 @@
 </li>
       <li><a href="api/citylearn.power_outage.html#citylearn.power_outage.PowerOutage">PowerOutage (class in citylearn.power_outage)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.agents.base.html#citylearn.agents.base.Agent.predict">predict() (citylearn.agents.base.Agent method)</a>
 
       <ul>
@@ -2275,8 +2283,6 @@
         <li><a href="api/citylearn.occupant.html#citylearn.occupant.Occupant.predict">(citylearn.occupant.Occupant method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.agents.marlisa.html#citylearn.agents.marlisa.MARLISA.predict_demand">predict_demand() (citylearn.agents.marlisa.MARLISA method)</a>
 </li>
       <li><a href="api/citylearn.end_use_load_profiles.lstm_model.preprocessing.html#citylearn.end_use_load_profiles.lstm_model.preprocessing.preprocess_df">preprocess_df() (in module citylearn.end_use_load_profiles.lstm_model.preprocessing)</a>
@@ -2591,8 +2597,6 @@
 </li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.root_directory">root_directory (citylearn.citylearn.CityLearnEnv property)</a>
 </li>
-      <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.StorageDevice.round_trip_efficiency">round_trip_efficiency (citylearn.energy_model.StorageDevice property)</a>
-</li>
       <li><a href="api/citylearn.end_use_load_profiles.lstm_model.model_generation.html#citylearn.end_use_load_profiles.lstm_model.model_generation.run">run() (in module citylearn.end_use_load_profiles.lstm_model.model_generation)</a>
 </li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline">run_business_as_usual_baseline() (citylearn.citylearn.CityLearnEnv method)</a>
@@ -2642,7 +2646,11 @@
       <li><a href="glossary.html#term-Scorecard"><strong>Scorecard</strong></a>
 </li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.scorecard">scorecard() (citylearn.citylearn.CityLearnEnv method)</a>
+
+      <ul>
+        <li><a href="api/citylearn.multi_community.html#citylearn.multi_community.MultiCommunityEnv.scorecard">(citylearn.multi_community.MultiCommunityEnv method)</a>
 </li>
+      </ul></li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.SCORECARD_DEFAULT_KPIS">SCORECARD_DEFAULT_KPIS (citylearn.citylearn.CityLearnEnv attribute)</a>
 </li>
       <li><a href="api/citylearn.base.html#citylearn.base.Environment.seconds_per_time_step">seconds_per_time_step (citylearn.base.Environment property)</a>
@@ -2688,7 +2696,11 @@
       <li><a href="api/citylearn.agents.marlisa.html#citylearn.agents.marlisa.MARLISA.set_energy_coefficients">set_energy_coefficients() (citylearn.agents.marlisa.MARLISA method)</a>
 </li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.set_experiment_identity">set_experiment_identity() (citylearn.citylearn.CityLearnEnv method)</a>
+
+      <ul>
+        <li><a href="api/citylearn.multi_community.html#citylearn.multi_community.MultiCommunityEnv.set_experiment_identity">(citylearn.multi_community.MultiCommunityEnv method)</a>
 </li>
+      </ul></li>
       <li><a href="api/citylearn.dynamics.html#citylearn.dynamics.LSTMDynamics.set_linear">set_linear() (citylearn.dynamics.LSTMDynamics method)</a>
 </li>
       <li><a href="api/citylearn.dynamics.html#citylearn.dynamics.LSTMDynamics.set_lstm">set_lstm() (citylearn.dynamics.LSTMDynamics method)</a>
@@ -2831,6 +2843,8 @@
         <li><a href="api/citylearn.wrappers.html#citylearn.wrappers.RLlibMultiAgentEnv.step">(citylearn.wrappers.RLlibMultiAgentEnv method)</a>
 </li>
       </ul></li>
+      <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.StorageDevice.step_loss_fraction">step_loss_fraction (citylearn.energy_model.StorageDevice property)</a>
+</li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.step_many">step_many() (citylearn.citylearn.CityLearnEnv method)</a>
 </li>
       <li><a href="api/citylearn.building.html#citylearn.building.Building.stochastic_power_outage">stochastic_power_outage (citylearn.building.Building property)</a>
@@ -3039,18 +3053,20 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.validate_curve">validate_curve() (in module citylearn.energy_model)</a>
+</li>
       <li><a href="api/citylearn.base.html#citylearn.base.EpisodeTracker.validate_episode_split_boundary">validate_episode_split_boundary() (citylearn.base.EpisodeTracker class method)</a>
 </li>
       <li><a href="api/citylearn.base.html#citylearn.base.EpisodeTracker.validate_episode_splits">validate_episode_splits() (citylearn.base.EpisodeTracker method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.ComfortReward.version">version (citylearn.reward_function.ComfortReward attribute)</a>
 
       <ul>
         <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.Electric_Vehicles_Reward_Function.version">(citylearn.reward_function.Electric_Vehicles_Reward_Function attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.ComfortReward.VERSIONS">VERSIONS (citylearn.reward_function.ComfortReward attribute)</a>
 
       <ul>

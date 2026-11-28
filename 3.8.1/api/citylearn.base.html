@@ -1,0 +1,464 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.base module &mdash; CityLearn 3.8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="citylearn.building module" href="citylearn.building.html" />
+    <link rel="prev" title="citylearn.utils.noise module" href="citylearn.utils.noise.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_full_reference.html">Full Reference Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../python_api.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">All modules</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="citylearn.html">citylearn package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="citylearn.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="citylearn.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../python_api.html">Python API</a></li>
+          <li class="breadcrumb-item"><a href="modules.html">citylearn</a></li>
+          <li class="breadcrumb-item"><a href="citylearn.html">citylearn package</a></li>
+      <li class="breadcrumb-item active">citylearn.base module</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/api/citylearn.base.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="module-citylearn.base">
+<span id="citylearn-base-module"></span><h1>citylearn.base module<a class="headerlink" href="#module-citylearn.base" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="citylearn.base.Environment">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.base.</span></span><span class="sig-name descname"><span class="pre">Environment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seconds_per_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episode_tracker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citylearn.base.EpisodeTracker" title="citylearn.base.EpisodeTracker"><span class="pre">EpisodeTracker</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_stream_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_stream_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/base.html#Environment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.Environment" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for all <cite>citylearn</cite> classes that have a spatio-temporal dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seconds_per_time_step</strong> (<em>float</em><em>, </em><em>default: 3600.0</em>) – Number of seconds in 1 <cite>time_step</cite> and must be set to &gt;= 1.</p></li>
+<li><p><strong>random_seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Pseudorandom number generator seed for repeatable results.</p></li>
+<li><p><strong>random_stream_version</strong> (<em>str</em><em>, </em><em>optional</em>) – Derivation of the object’s random streams, <code class="docutils literal notranslate"><span class="pre">'v2'</span></code>, the only version. See <a class="reference internal" href="citylearn.random_streams.html#module-citylearn.random_streams" title="citylearn.random_streams"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.random_streams</span></code></a>.</p></li>
+<li><p><strong>random_stream_key</strong> (<em>Tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Identity of the object in its random streams, so objects that share a seed draw independent values.</p></li>
+<li><p><strong>simulation_start_time_step</strong> (<em>int</em><em>, </em><em>optional</em>) – Time step to start reading from data files. Should be set at the <a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.citylearn.CityLearnEnv</span></code></a> level so that it propagates to other descendant objects.</p></li>
+<li><p><strong>simulation_end_time_step</strong> (<em>int</em><em>, </em><em>optional</em>) – Time step to end reading from data files. Should be set at the <a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.citylearn.CityLearnEnv</span></code></a> level so that it propagates to other descendant objects.</p></li>
+<li><p><strong>episode_tracker</strong> (<a class="reference internal" href="#citylearn.base.EpisodeTracker" title="citylearn.base.EpisodeTracker"><em>EpisodeTracker</em></a><em>, </em><em>optional</em>) – <a class="reference internal" href="#citylearn.base.EpisodeTracker" title="citylearn.base.EpisodeTracker"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.base.EpisodeTracker</span></code></a> object used to keep track of current episode time steps for reading observations from data files.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.base.Environment.DEFAULT_RANDOM_SEED_RANGE">
+<span class="sig-name descname"><span class="pre">DEFAULT_RANDOM_SEED_RANGE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(0,</span> <span class="pre">100000000)</span></em><a class="headerlink" href="#citylearn.base.Environment.DEFAULT_RANDOM_SEED_RANGE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.base.Environment.DEFAULT_SECONDS_PER_TIME_STEP">
+<span class="sig-name descname"><span class="pre">DEFAULT_SECONDS_PER_TIME_STEP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3600.0</span></em><a class="headerlink" href="#citylearn.base.Environment.DEFAULT_SECONDS_PER_TIME_STEP" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.Environment.episode_tracker">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">episode_tracker</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#citylearn.base.EpisodeTracker" title="citylearn.base.EpisodeTracker"><span class="pre">EpisodeTracker</span></a></em><a class="headerlink" href="#citylearn.base.Environment.episode_tracker" title="Link to this definition"></a></dt>
+<dd><p><a class="reference internal" href="#citylearn.base.EpisodeTracker" title="citylearn.base.EpisodeTracker"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.base.EpisodeTracker</span></code></a> object used to keep track of
+current episode time steps for reading observations from data files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.base.Environment.get_metadata">
+<span class="sig-name descname"><span class="pre">get_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/base.html#Environment.get_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.Environment.get_metadata" title="Link to this definition"></a></dt>
+<dd><p>Returns general static information.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.base.Environment.next_time_step">
+<span class="sig-name descname"><span class="pre">next_time_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/base.html#Environment.next_time_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.Environment.next_time_step" title="Link to this definition"></a></dt>
+<dd><p>Advance to next <cite>time_step</cite> value.</p>
+<p class="rubric">Notes</p>
+<p>Override in subclass for custom implementation when advancing to next <cite>time_step</cite>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.Environment.numpy_random_state">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">numpy_random_state</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#citylearn.base.Environment.numpy_random_state" title="Link to this definition"></a></dt>
+<dd><p>Stream for randomly drawn parameters of this object.</p>
+<p>One persistent generator per object, derived from <cite>random_seed</cite> and <a class="reference internal" href="#citylearn.base.Environment.random_stream_key" title="citylearn.base.Environment.random_stream_key"><code class="xref py py-attr docutils literal notranslate"><span class="pre">random_stream_key</span></code></a>,
+so successive draws are independent.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.base.Environment.random_generator">
+<span class="sig-name descname"><span class="pre">random_generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">purpose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">parts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span></span></span><a class="reference internal" href="../_modules/citylearn/base.html#Environment.random_generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.Environment.random_generator" title="Link to this definition"></a></dt>
+<dd><p>Persistent generator for <cite>purpose</cite> and <cite>parts</cite> of this object.</p>
+<p>The generator is derived from <a class="reference internal" href="#citylearn.base.Environment.random_seed" title="citylearn.base.Environment.random_seed"><code class="xref py py-attr docutils literal notranslate"><span class="pre">random_seed</span></code></a>, <cite>purpose</cite>, <a class="reference internal" href="#citylearn.base.Environment.random_stream_key" title="citylearn.base.Environment.random_stream_key"><code class="xref py py-attr docutils literal notranslate"><span class="pre">random_stream_key</span></code></a>
+and <cite>parts</cite>, and is kept until the seed, version or key changes.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.Environment.random_seed">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">random_seed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#citylearn.base.Environment.random_seed" title="Link to this definition"></a></dt>
+<dd><p>Pseudorandom number generator seed for repeatable results.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.Environment.random_stream_key">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">random_stream_key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.base.Environment.random_stream_key" title="Link to this definition"></a></dt>
+<dd><p>Identity of this object in its random streams, e.g. <code class="docutils literal notranslate"><span class="pre">('building',</span> <span class="pre">'Building_1',</span> <span class="pre">'pv')</span></code>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.Environment.random_stream_version">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">random_stream_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#citylearn.base.Environment.random_stream_version" title="Link to this definition"></a></dt>
+<dd><p>Derivation of this object’s random streams; see <a class="reference internal" href="citylearn.random_streams.html#module-citylearn.random_streams" title="citylearn.random_streams"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.random_streams</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.base.Environment.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/base.html#Environment.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.Environment.reset" title="Link to this definition"></a></dt>
+<dd><p>Reset environment to initial state.</p>
+<p>Calls <cite>reset_time_step</cite>.</p>
+<p class="rubric">Notes</p>
+<p>Override in subclass for custom implementation when reseting environment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.base.Environment.reset_time_step">
+<span class="sig-name descname"><span class="pre">reset_time_step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/base.html#Environment.reset_time_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.Environment.reset_time_step" title="Link to this definition"></a></dt>
+<dd><p>Reset <cite>time_step</cite> to initial state.</p>
+<p>Sets <cite>time_step</cite> to 0.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.Environment.seconds_per_time_step">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">seconds_per_time_step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.base.Environment.seconds_per_time_step" title="Link to this definition"></a></dt>
+<dd><p>Number of seconds in 1 time step.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.Environment.time_step">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#citylearn.base.Environment.time_step" title="Link to this definition"></a></dt>
+<dd><p>Current environment time step.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.Environment.time_step_ratio">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_step_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#citylearn.base.Environment.time_step_ratio" title="Link to this definition"></a></dt>
+<dd><p><a class="reference internal" href="#citylearn.base.EpisodeTracker" title="citylearn.base.EpisodeTracker"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.base.EpisodeTracker</span></code></a> object used to keep track of
+current episode time steps for reading observations from data files.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.Environment.uid">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uid</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#citylearn.base.Environment.uid" title="Link to this definition"></a></dt>
+<dd><p>Unique environment ID.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.base.</span></span><span class="sig-name descname"><span class="pre">EpisodeTracker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation_start_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_end_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/base.html#EpisodeTracker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.EpisodeTracker" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for keeping track of current episode time steps for reading observations from data files.</p>
+<p>An EpisodeTracker object is shared amongst the environment, buildings in environment and all descendant
+building devices. The object however, should be updated at the environment level only so that its changes
+propagate to all other evironment decscendants. <cite>simulation_start_time_step</cite> and <cite>simulation_end_time_step</cite>
+are useful to separate training data from test data in the same data file. There may be one or more episodes betweeen
+<cite>simulation_start_time_step</cite> and <cite>simulation_end_time_step</cite> and their values should be defined in <cite>schema</cite>
+or parsed to <code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.citylearn.CityLearnEnv.__init__</span></code>. Both <cite>simulation_start_time_step</cite> and
+<cite>simulation_end_time_step</cite> are used to select time series for building device and storage sizing as well as
+action and observation space estimation in <code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.buiLding.Building</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>simulation_start_time_step</strong> (<em>int</em>) – Time step to start reading from data files.</p></li>
+<li><p><strong>simulation_end_time_step</strong> (<em>int</em>) – Time step to end reading from data files.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.EPISODE_SPLIT_BOUNDARIES">
+<span class="sig-name descname"><span class="pre">EPISODE_SPLIT_BOUNDARIES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('shared',</span> <span class="pre">'disjoint')</span></em><a class="headerlink" href="#citylearn.base.EpisodeTracker.EPISODE_SPLIT_BOUNDARIES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.episode">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">episode</span></span><a class="headerlink" href="#citylearn.base.EpisodeTracker.episode" title="Link to this definition"></a></dt>
+<dd><p>Current episode index</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.episode_end_time_step">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">episode_end_time_step</span></span><a class="headerlink" href="#citylearn.base.EpisodeTracker.episode_end_time_step" title="Link to this definition"></a></dt>
+<dd><p>End time step in current episode split.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.episode_random_seed">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">episode_random_seed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#citylearn.base.EpisodeTracker.episode_random_seed" title="Link to this definition"></a></dt>
+<dd><p>Environment seed captured when the current episode was selected.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.episode_start_time_step">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">episode_start_time_step</span></span><a class="headerlink" href="#citylearn.base.EpisodeTracker.episode_start_time_step" title="Link to this definition"></a></dt>
+<dd><p>Start time step in current episode split.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.episode_time_steps">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">episode_time_steps</span></span><a class="headerlink" href="#citylearn.base.EpisodeTracker.episode_time_steps" title="Link to this definition"></a></dt>
+<dd><p>Number of time steps in current episode split.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.next_episode">
+<span class="sig-name descname"><span class="pre">next_episode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_time_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rolling_episode_split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_episode_split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episode_split_boundary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'shared'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/base.html#EpisodeTracker.next_episode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.EpisodeTracker.next_episode" title="Link to this definition"></a></dt>
+<dd><p>Advance to next episode and set <cite>episode_start_time_step</cite> and <cite>episode_end_time_step</cite> for reading data files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>episode_time_steps</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – If type is <cite>int</cite>, it is the number of time steps in an episode. If type is <cite>List[Tuple[int, int]]]</cite> is provided, it is a list of
+episode start and end time steps between <cite>simulation_start_time_step</cite> and <cite>simulation_end_time_step</cite>. Defaults to (<cite>simulation_end_time_step</cite></p></li>
+<li><p><strong>`List</strong><strong>[</strong><strong>Tuple</strong><strong>[</strong><strong>int</strong> (<em>- simulation_start_time_step</em><em>) </em><em>+ 1. Will ignore rolling_episode_split if episode_splits is</em><em> of </em><em>type</em>) – </p></li>
+<li><p><strong>int</strong><strong>]</strong><strong>]</strong><strong>]</strong><strong>`.</strong></p></li>
+<li><p><strong>rolling_episode_split</strong> (<em>bool</em><em>, </em><em>default: False</em>) – True if episode sequences are split such that each time step is a candidate for <cite>episode_start_time_step</cite> otherwise, False to split episodes
+in steps of <cite>episode_time_steps</cite>.</p></li>
+<li><p><strong>random_episode_split</strong> (<em>bool</em><em>, </em><em>default: False</em>) – True if episode splits are to be selected at random during training otherwise, False to select sequentially.</p></li>
+<li><p><strong>episode_split_boundary</strong> (<em>str</em><em>, </em><em>default: 'shared'</em>) – How consecutive (non-rolling) splits of an integer <cite>episode_time_steps</cite> meet. An episode of N data rows
+executes N - 1 control steps, because its last row is only the terminal observation. With <cite>‘shared’</cite>,
+consecutive episodes advance by N - 1 rows, so the terminal row of one episode is the first row of the next
+and every interval between them is simulated; N must then be at least 2. With <cite>‘disjoint’</cite>, consecutive
+episodes advance by N rows and do not overlap, so the interval between the last row of one episode and the
+first row of the next is never simulated (the CityLearn 3.6.0 behaviour). Rolling and explicit list splits
+are not affected.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.random_stream_episode">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">random_stream_episode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#citylearn.base.EpisodeTracker.random_stream_episode" title="Link to this definition"></a></dt>
+<dd><p>Episode key of the per-episode random streams.</p>
+<p>The environment sets it at reset: the episode index, or 0 after a reset with an explicit
+seed, so that <code class="docutils literal notranslate"><span class="pre">reset(seed=s)</span></code> uses the streams of the first episode of an environment
+built with <cite>s</cite>. Parameters drawn at construction keep their values and the episode window
+still advances, so the episode itself repeats only on a new environment built with <cite>s</cite>.
+Unset, it is the episode index.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.reset_episode_index">
+<span class="sig-name descname"><span class="pre">reset_episode_index</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/base.html#EpisodeTracker.reset_episode_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.EpisodeTracker.reset_episode_index" title="Link to this definition"></a></dt>
+<dd><p>Resets episode index to -1 before any simulation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.set_next_episode_index">
+<span class="sig-name descname"><span class="pre">set_next_episode_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/base.html#EpisodeTracker.set_next_episode_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.EpisodeTracker.set_next_episode_index" title="Link to this definition"></a></dt>
+<dd><p>Select a reproducible episode split on the next environment reset.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.simulation_end_time_step">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">simulation_end_time_step</span></span><a class="headerlink" href="#citylearn.base.EpisodeTracker.simulation_end_time_step" title="Link to this definition"></a></dt>
+<dd><p>Time step to end reading from data files.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.simulation_start_time_step">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">simulation_start_time_step</span></span><a class="headerlink" href="#citylearn.base.EpisodeTracker.simulation_start_time_step" title="Link to this definition"></a></dt>
+<dd><p>Time step to start reading from data files.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.simulation_time_steps">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">simulation_time_steps</span></span><a class="headerlink" href="#citylearn.base.EpisodeTracker.simulation_time_steps" title="Link to this definition"></a></dt>
+<dd><p>Number of time steps between <cite>simulation_start_time_step</cite> and <cite>simulation_end_time_step</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.validate_episode_split_boundary">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_episode_split_boundary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_split_boundary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/citylearn/base.html#EpisodeTracker.validate_episode_split_boundary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.EpisodeTracker.validate_episode_split_boundary" title="Link to this definition"></a></dt>
+<dd><p>Return the normalised episode split boundary mode, <cite>‘shared’</cite> when <cite>None</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.validate_episode_splits">
+<span class="sig-name descname"><span class="pre">validate_episode_splits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_time_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/base.html#EpisodeTracker.validate_episode_splits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.EpisodeTracker.validate_episode_splits" title="Link to this definition"></a></dt>
+<dd><p>Return explicit episode splits as <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end]</span></code> pairs, or raise <cite>ValueError</cite> for an invalid one.</p>
+<p>Only the rows of the simulation window are loaded, so every split must lie inside
+[<cite>simulation_start_time_step</cite>, <cite>simulation_end_time_step</cite>] (CityLearn #308).</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="citylearn.utils.noise.html" class="btn btn-neutral float-left" title="citylearn.utils.noise module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="citylearn.building.html" class="btn btn-neutral float-right" title="citylearn.building module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

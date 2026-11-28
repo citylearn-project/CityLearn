@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.random_streams &mdash; CityLearn 3.8.0 documentation</title>
+  <title>citylearn.random_streams &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -149,28 +149,26 @@
 
 <span class="sd">CityLearn draws random values for unspecified device parameters, the state of charge of electric</span>
 <span class="sd">vehicles away from their charger, occupant set-point interactions and stochastic power outages.</span>
-<span class="sd">``random_stream_version`` selects how those streams are derived from ``random_seed``:</span>
+<span class="sd">``random_stream_version`` names how those streams are derived from ``random_seed``:</span>
 
-<span class="sd">``'v1'``</span>
-<span class="sd">    The derivation of CityLearn 3.6.0 and earlier, kept so that an existing seed reproduces</span>
-<span class="sd">    earlier results. Every device parameter is the first draw of a new ``RandomState``, so all</span>
-<span class="sd">    of them sit at the same quantile; the electric-vehicle drift seed is ``seed + episode``, so</span>
-<span class="sd">    seed ``s`` in episode 1 repeats seed ``s + 1`` in episode 0; every occupant draws</span>
-<span class="sd">    ``RandomState(seed + time_step)``, the same value in every building and episode; and</span>
-<span class="sd">    stochastic outages skip day 0 and the partial last day and floor their durations.</span>
-<span class="sd">``'v2'`` (default)</span>
-<span class="sd">    Each stream comes from :class:`numpy.random.SeedSequence` with the seed as entropy and the</span>
-<span class="sd">    purpose, entity and episode as its spawn key, so streams for different purposes, objects</span>
-<span class="sd">    and episodes are independent. Each object keeps one generator per stream.</span>
+<span class="sd">``'v2'``</span>
+<span class="sd">    The only version. Each stream comes from :class:`numpy.random.SeedSequence` with the seed as</span>
+<span class="sd">    entropy and the purpose, entity and episode as its spawn key, so streams for different purposes,</span>
+<span class="sd">    objects and episodes are independent. Each object keeps one generator per stream.</span>
 
-<span class="sd">Agents follow the version of their environment. With ``'v1'``, :class:`~citylearn.agents.q_learning.TabularQLearning`</span>
-<span class="sd">draws its exploration decision from ``RandomState(seed + time_step)`` and</span>
-<span class="sd">:class:`~citylearn.agents.marlisa.MARLISA` shuffles its coordination order with the same seed, so</span>
-<span class="sd">seed ``s`` at time step ``t + 1`` repeats seed ``s + 1`` at time step ``t``; with ``'v2'`` each agent</span>
-<span class="sd">keeps one generator per purpose and episode. :class:`~citylearn.end_use_load_profiles.neighborhood.Neighborhood`</span>
-<span class="sd">takes its own ``random_stream_version``: with ``'v1'`` partial-load simulation ``i`` of building</span>
-<span class="sd">``b`` is seeded with ``b + i``, which repeats simulation ``i - 1`` of building ``b + 1``; with ``'v2'``</span>
-<span class="sd">the seed is derived from the neighborhood seed, the building and the simulation index.</span>
+<span class="sd">An environment built with a ``random_stream_namespace`` adds ``('namespace', &lt;namespace&gt;)`` to the key of</span>
+<span class="sd">every stream it derives from its seed, so two environments with the same seed and the same building and</span>
+<span class="sd">EV names still draw independently. :class:`~citylearn.multi_community.MultiCommunityEnv` gives each</span>
+<span class="sd">community its ``community_id`` as namespace. Without a namespace the keys are unchanged.</span>
+
+<span class="sd">Version ``'v1'``, the derivation of CityLearn 3.6.0, was removed in CityLearn 3.8.1 (#466); CityLearn</span>
+<span class="sd">3.7 reproduces it. The setting accepts ``'v2'``, ``2`` and ``"2"``, as parsed by</span>
+<span class="sd">:py:func:`citylearn.internal.versions.parse_version`.</span>
+
+<span class="sd">Agents follow the version of their environment: :class:`~citylearn.agents.q_learning.TabularQLearning`</span>
+<span class="sd">and :class:`~citylearn.agents.marlisa.MARLISA` keep one generator per purpose and episode.</span>
+<span class="sd">:class:`~citylearn.end_use_load_profiles.neighborhood.Neighborhood` derives the seed of each</span>
+<span class="sd">partial-load simulation from the neighborhood seed, the building and the simulation index.</span>
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
@@ -179,9 +177,10 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="n">RANDOM_STREAM_VERSIONS</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'v1'</span><span class="p">,</span> <span class="s1">'v2'</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.versions</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_version</span>
+
+<span class="n">RANDOM_STREAM_VERSIONS</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'v2'</span><span class="p">,)</span>
 <span class="n">DEFAULT_RANDOM_STREAM_VERSION</span> <span class="o">=</span> <span class="s1">'v2'</span>
-<span class="n">LEGACY_RANDOM_STREAM_VERSION</span> <span class="o">=</span> <span class="s1">'v1'</span>
 
 <span class="c1"># Stream purposes. A purpose is part of every spawn key, so two purposes never share a stream.</span>
 <span class="n">DEVICE_PARAMETERS</span> <span class="o">=</span> <span class="s1">'device_parameters'</span>
@@ -197,21 +196,16 @@
 <div class="viewcode-block" id="parse_random_stream_version">
 <a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.parse_random_stream_version">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">parse_random_stream_version</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'random_stream_version'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return the canonical random-stream version for `value`; None gives the default."""</span>
+<span class="w">    </span><span class="sd">"""Return the canonical random-stream version for `value`, ``'v2'``; None gives the default.</span>
 
-    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">DEFAULT_RANDOM_STREAM_VERSION</span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `value` is not ``'v2'``, ``2`` or ``"2"``. The error for ``'v1'`` says it was removed in</span>
+<span class="sd">        CityLearn 3.8.1.</span>
+<span class="sd">    """</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1"> must be one of </span><span class="si">{</span><span class="n">RANDOM_STREAM_VERSIONS</span><span class="si">}</span><span class="s1">, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
-
-    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span> <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'v'</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">'v</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s1">'</span>
-
-    <span class="k">if</span> <span class="n">text</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RANDOM_STREAM_VERSIONS</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1"> must be one of </span><span class="si">{</span><span class="n">RANDOM_STREAM_VERSIONS</span><span class="si">}</span><span class="s1">, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">text</span></div>
+    <span class="k">return</span> <span class="n">parse_version</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,),</span> <span class="n">path</span><span class="p">,</span> <span class="n">removed</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,),</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">'v'</span><span class="p">)</span></div>
 
 
 
@@ -244,6 +238,39 @@
     <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">digest</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">4</span><span class="p">],</span> <span class="s1">'big'</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="namespace_parts">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.namespace_parts">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">namespace_parts</span><span class="p">(</span><span class="n">namespace</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Key parts that separate the streams of `namespace`: empty without one."""</span>
+
+    <span class="k">return</span> <span class="p">()</span> <span class="k">if</span> <span class="n">namespace</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="s1">'namespace'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">namespace</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="namespaced_key">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.namespaced_key">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">namespaced_key</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">namespace</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""`key` followed by the parts of `namespace`, or `key` itself without one."""</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="o">*</span><span class="n">namespace_parts</span><span class="p">(</span><span class="n">namespace</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="parse_random_stream_namespace">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.parse_random_stream_namespace">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_random_stream_namespace</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'random_stream_namespace'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return `value` as a namespace: None, or a non-empty string without surrounding spaces."""</span>
+
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">''</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1"> must be None or a non-empty string, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
 
 
 
@@ -297,13 +324,11 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Seed of partial-load simulation `simulation_index` of building `building_id` in a generated neighborhood.</span>
 
-<span class="sd">    With ``random_stream_version='v1'`` it is ``int(building_id) + simulation_index``, as in CityLearn 3.6.0,</span>
-<span class="sd">    which ignores `seed` and repeats simulation ``i - 1`` of building ``b + 1`` in simulation ``i`` of building</span>
-<span class="sd">    ``b``. With ``'v2'`` it is derived from `seed`, the building and the simulation index.</span>
+<span class="sd">    It is derived from `seed`, the building and the simulation index. `random_stream_version` is checked</span>
+<span class="sd">    with :py:func:`parse_random_stream_version`.</span>
 <span class="sd">    """</span>
 
-    <span class="k">if</span> <span class="n">parse_random_stream_version</span><span class="p">(</span><span class="n">random_stream_version</span><span class="p">)</span> <span class="o">==</span> <span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">building_id</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">simulation_index</span><span class="p">)</span>
+    <span class="n">parse_random_stream_version</span><span class="p">(</span><span class="n">random_stream_version</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">derived_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">PARTIAL_LOAD_SIMULATION</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">building_id</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">simulation_index</span><span class="p">))</span></div>
 

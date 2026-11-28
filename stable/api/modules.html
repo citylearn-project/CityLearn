@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn &mdash; CityLearn 3.8.0 documentation</title>
+  <title>citylearn &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -147,7 +147,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -242,6 +242,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.energy_model.html">citylearn.energy_model module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.energy_model.html#citylearn.energy_model.Battery"><code class="docutils literal notranslate"><span class="pre">Battery</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.energy_model.html#citylearn.energy_model.CurveValueError"><code class="docutils literal notranslate"><span class="pre">CurveValueError</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.energy_model.html#citylearn.energy_model.DeferrableAppliance"><code class="docutils literal notranslate"><span class="pre">DeferrableAppliance</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.energy_model.html#citylearn.energy_model.Device"><code class="docutils literal notranslate"><span class="pre">Device</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.energy_model.html#citylearn.energy_model.ElectricDevice"><code class="docutils literal notranslate"><span class="pre">ElectricDevice</span></code></a></li>
@@ -252,6 +253,7 @@
 <li class="toctree-l4"><a class="reference internal" href="citylearn.energy_model.html#citylearn.energy_model.StorageDevice"><code class="docutils literal notranslate"><span class="pre">StorageDevice</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.energy_model.html#citylearn.energy_model.StorageTank"><code class="docutils literal notranslate"><span class="pre">StorageTank</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.energy_model.html#citylearn.energy_model.WashingMachine"><code class="docutils literal notranslate"><span class="pre">WashingMachine</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.energy_model.html#citylearn.energy_model.validate_curve"><code class="docutils literal notranslate"><span class="pre">validate_curve()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.exporter.html">citylearn.exporter module</a><ul>
@@ -284,6 +286,9 @@
 <li class="toctree-l3"><a class="reference internal" href="citylearn.random_streams.html">citylearn.random_streams module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.derived_seed"><code class="docutils literal notranslate"><span class="pre">derived_seed()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.generator"><code class="docutils literal notranslate"><span class="pre">generator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.namespace_parts"><code class="docutils literal notranslate"><span class="pre">namespace_parts()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.namespaced_key"><code class="docutils literal notranslate"><span class="pre">namespaced_key()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.parse_random_stream_namespace"><code class="docutils literal notranslate"><span class="pre">parse_random_stream_namespace()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.parse_random_stream_version"><code class="docutils literal notranslate"><span class="pre">parse_random_stream_version()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.partial_load_simulation_seed"><code class="docutils literal notranslate"><span class="pre">partial_load_simulation_seed()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.seed_sequence"><code class="docutils literal notranslate"><span class="pre">seed_sequence()</span></code></a></li>

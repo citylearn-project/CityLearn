@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.agents.baseline &mdash; CityLearn 3.8.0 documentation</title>
+  <title>citylearn.agents.baseline &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../../../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -161,8 +161,8 @@
 <span class="sd">                                            departure SOC (``ev_charge_target='requested'``);</span>
 <span class="sd">                                            starts appliances at the first admissible step; the</span>
 <span class="sd">                                            home battery stores PV surplus and serves local import.</span>
-<span class="sd">                                            With ``hvac='dataset_demand'`` (default under</span>
-<span class="sd">                                            ``baseline_version=2``) the HVAC delivers the dataset's</span>
+<span class="sd">                                            With ``hvac='dataset_demand'`` (default on datasets</span>
+<span class="sd">                                            with HVAC actions) the HVAC delivers the dataset's</span>
 <span class="sd">                                            heating and cooling demand.</span>
 <span class="sd">:class:`RBCBasicPolicy`                     Current price and service urgency for EVs and</span>
 <span class="sd">                                            appliances; battery self-consumption.</span>
@@ -178,8 +178,8 @@
 
 <span class="sd">The three RBCs also run the HVAC (``heating_device``, ``cooling_device``,</span>
 <span class="sd">``cooling_or_heating_device``) at the dataset's heating and cooling demand, as the</span>
-<span class="sd">BAU does under the default ``baseline_version=2`` (``hvac='dataset_demand'``, the default; pass</span>
-<span class="sd">``hvac='off'`` for the zero HVAC of earlier releases). They do not optimise the HVAC.</span>
+<span class="sd">BAU does (``hvac='dataset_demand'``, the default; pass ``hvac='off'`` for zero HVAC actions).</span>
+<span class="sd">They do not optimise the HVAC.</span>
 <span class="sd">On datasets without HVAC actions this changes nothing.</span>
 
 <span class="sd">The policies are ported from the Soft-CPS Algorithms baselines and keep their</span>
@@ -482,17 +482,16 @@
 <span class="sd">    estimating local surplus or import.</span>
 
 <span class="sd">    The HVAC follows `hvac`. With ``'off'`` the ``heating_device``, ``cooling_device`` and</span>
-<span class="sd">    ``cooling_or_heating_device`` actions are zero, as in CityLearn 3.6.0 and under ``baseline_version=1``,</span>
-<span class="sd">    so on datasets with HVAC actions the BAU buildings are neither heated nor cooled (#362). With</span>
+<span class="sd">    ``cooling_or_heating_device`` actions are zero, as in CityLearn 3.6.0, so on datasets with HVAC actions</span>
+<span class="sd">    the BAU buildings are neither heated nor cooled (#362). With</span>
 <span class="sd">    ``'dataset_demand'`` each step the HVAC action is the fraction of the device's nominal power that</span>
 <span class="sd">    delivers the dataset's own heating or cooling demand (``heating_demand_without_control`` and</span>
 <span class="sd">    ``cooling_demand_without_control`` of the energy simulation, the as-simulated demand of the building</span>
 <span class="sd">    file), clipped to the action bounds; the device limits (nominal power, outage supply) cap it as for any</span>
 <span class="sd">    action. That is a thermostat that meets the</span>
 <span class="sd">    load without optimisation. The demand is used only in the steps whose ``hvac_mode`` allows that service.</span>
-<span class="sd">    The default, ``None``, is ``'dataset_demand'`` when the environment's ``baseline_version`` is 2 (the</span>
-<span class="sd">    default) and it has HVAC actions, and ``'off'`` under version 1 or without HVAC actions, which keeps the</span>
-<span class="sd">    definition and identity of earlier releases there.</span>
+<span class="sd">    The default, ``None``, is ``'dataset_demand'`` when the environment has HVAC actions, and ``'off'``</span>
+<span class="sd">    without HVAC actions, which keeps the definition and identity of earlier releases there.</span>
 
 <span class="sd">    Choose the BAU that ``evaluate_v2()`` uses with the environment's</span>
 <span class="sd">    ``business_as_usual_ev_charge_target`` and ``baseline_version``.</span>
@@ -539,20 +538,16 @@
 <a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent.hvac_mode_for">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">hvac_mode_for</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""HVAC behaviour of the BAU under the environment's ``baseline_version``.</span>
+<span class="w">        </span><span class="sd">"""Default HVAC behaviour of the BAU on `env`.</span>
 
-<span class="sd">        ``'dataset_demand'`` from version 2 on an environment with HVAC actions, ``'off'`` otherwise: where no</span>
-<span class="sd">        building has an HVAC action both run the same, and ``'off'`` keeps the BAU definition and identity of</span>
-<span class="sd">        earlier releases.</span>
+<span class="sd">        ``'dataset_demand'`` on an environment with HVAC actions, ``'off'`` otherwise: where no building has an</span>
+<span class="sd">        HVAC action both run the same, and ``'off'`` keeps the BAU definition and identity of earlier releases.</span>
 <span class="sd">        """</span>
-
-        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION</span><span class="p">,</span> <span class="n">baseline_version_of</span>
 
         <span class="n">env</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'unwrapped'</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
         <span class="n">has_hvac</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_HVAC_ACTIONS</span> <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'buildings'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[])</span>
                        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'active_actions'</span><span class="p">,</span> <span class="p">[]))</span>
-        <span class="n">version</span> <span class="o">=</span> <span class="n">baseline_version_of</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s1">'dataset_demand'</span> <span class="k">if</span> <span class="n">has_hvac</span> <span class="ow">and</span> <span class="n">version</span> <span class="o">&gt;=</span> <span class="n">BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION</span> <span class="k">else</span> <span class="s1">'off'</span></div>
+        <span class="k">return</span> <span class="s1">'dataset_demand'</span> <span class="k">if</span> <span class="n">has_hvac</span> <span class="k">else</span> <span class="s1">'off'</span></div>
 </div>
 
 
@@ -561,7 +556,7 @@
 <span class="w">    </span><span class="sd">"""Rule-based controller: the engine dispatches storage, EVs and appliances, the HVAC meets the dataset demand.</span>
 
 <span class="sd">    With ``hvac='dataset_demand'`` (default) the HVAC actions deliver the dataset's own heating and cooling</span>
-<span class="sd">    demand at each step, as the BAU does under the default ``baseline_version=2``: a thermostat that meets the load,</span>
+<span class="sd">    demand at each step, as the BAU does: a thermostat that meets the load,</span>
 <span class="sd">    without optimisation. ``hvac='off'`` sends zero, as these controllers did before. On datasets without</span>
 <span class="sd">    HVAC actions both give the same results.</span>
 <span class="sd">    """</span>
@@ -644,9 +639,8 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">ZeroActionAgent</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Agent that requests zero for every action dimension.</span>
 
-<span class="sd">    Up to CityLearn 3.6.0 this class was called ``ZeroActionBaselineAgent``. That name is a deprecated alias that</span>
-<span class="sd">    will be removed in a later release: in CityLearn, "baseline" names the KPI counterfactual, while this agent</span>
-<span class="sd">    requests zero actions.</span>
+<span class="sd">    Up to CityLearn 3.6.0 this class was called ``ZeroActionBaselineAgent``; that alias was removed in CityLearn</span>
+<span class="sd">    3.8.1. In CityLearn, "baseline" names the KPI counterfactual, while this agent requests zero actions.</span>
 
 <span class="sd">    Under the entity interface it returns flat-like zero vectors in</span>
 <span class="sd">    ``env.action_names`` order, which the entity interface accepts.</span>
@@ -673,16 +667,6 @@
     <span class="s1">'RBCCommunityPolicy'</span><span class="p">,</span>
     <span class="s1">'ZeroActionAgent'</span><span class="p">,</span>
 <span class="p">]</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="c1"># Deprecated names of renamed classes resolve to the same class, also for unpickling and import paths.</span>
-    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">'ZeroActionBaselineAgent'</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents._renamed</span><span class="w"> </span><span class="kn">import</span> <span class="n">renamed</span>
-
-        <span class="k">return</span> <span class="n">renamed</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">'ZeroActionBaselineAgent'</span><span class="p">,</span> <span class="s1">'ZeroActionAgent'</span><span class="p">,</span> <span class="n">ZeroActionAgent</span><span class="p">)</span>
-
-    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'module </span><span class="si">{</span><span class="vm">__name__</span><span class="si">!r}</span><span class="s1"> has no attribute </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s1">'</span><span class="p">)</span>
 </pre></div>
 
            </div>

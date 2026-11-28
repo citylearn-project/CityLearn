@@ -1,8 +1,13 @@
 [
   {
-    "name": "stable (3.8.0)",
+    "name": "stable (3.8.1)",
     "version": "stable",
     "path": ""
+  },
+  {
+    "name": "3.8.1",
+    "version": "3.8.1",
+    "path": "3.8.1/"
   },
   {
     "name": "3.8.0",

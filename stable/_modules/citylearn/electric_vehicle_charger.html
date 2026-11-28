@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.electric_vehicle_charger &mdash; CityLearn 3.8.0 documentation</title>
+  <title>citylearn.electric_vehicle_charger &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -153,6 +153,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.electric_vehicle</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElectricVehicle</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChargerSimulation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.energy_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_curve</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.units</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">energy_kwh_to_power_kw</span><span class="p">,</span>
     <span class="n">normalized_power_action_to_energy_kwh</span><span class="p">,</span>
@@ -164,9 +165,6 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">Charger</span><span class="p">(</span><span class="n">Environment</span><span class="p">):</span>
     <span class="c1">#: Charging power in kW assumed when neither `max_charging_power` nor `nominal_power` is given.</span>
     <span class="n">_DEFAULT_MAX_CHARGING_POWER</span> <span class="o">=</span> <span class="mf">50.0</span>
-
-    <span class="c1">#: Defaults of physics version 1 for omitted power limits: a 50 kW charger in both directions.</span>
-    <span class="n">_LEGACY_DEFAULT_POWER</span> <span class="o">=</span> <span class="mf">50.0</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">episode_tracker</span><span class="p">:</span> <span class="n">EpisodeTracker</span><span class="p">,</span> <span class="n">charger_simulation</span><span class="p">:</span> <span class="n">ChargerSimulation</span> <span class="p">,</span><span class="n">charger_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">efficiency</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_charging_power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -190,7 +188,7 @@
 <span class="sd">            Minimum charging power in kW.</span>
 <span class="sd">        max_discharging_power : float, default 0</span>
 <span class="sd">            Maximum discharging (V2G) power in kW. The default 0 means the charger cannot</span>
-<span class="sd">            discharge; set it to allow V2G. Physics version 1 loads an omitted value as 50 kW.</span>
+<span class="sd">            discharge; set it to allow V2G.</span>
 <span class="sd">        min_discharging_power : float, default 0</span>
 <span class="sd">            Minimum discharging power in kW.</span>
 <span class="sd">        charge_efficiency_curve : List, none [[0, 0.83],[0.3, 0.83],[0.7, 0.9],[0.8, 0.9],[1, 0.85]]</span>
@@ -433,7 +431,7 @@
     <span class="nd">@max_discharging_power</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">max_discharging_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_discharging_power</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">max_discharging_power</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># V2G is off unless configured (#369); physics version 1 loads an omitted value as 50 kW.</span>
+                <span class="c1"># V2G is off unless configured (#369).</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">__max_discharging_power</span> <span class="o">=</span> <span class="mf">0.0</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">__max_discharging_power</span> <span class="o">=</span> <span class="n">max_discharging_power</span>
@@ -448,14 +446,16 @@
     <span class="nd">@charge_efficiency_curve</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">charge_efficiency_curve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charge_efficiency_curve</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]):</span>
         <span class="k">if</span> <span class="n">charge_efficiency_curve</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__charge_efficiency_curve</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">charge_efficiency_curve</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__charge_efficiency_curve</span> <span class="o">=</span> <span class="n">validate_curve</span><span class="p">(</span><span class="n">charge_efficiency_curve</span><span class="p">,</span> <span class="s1">'charge_efficiency_curve'</span><span class="p">,</span> <span class="n">efficiency</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__charge_efficiency_curve</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@discharge_efficiency_curve</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">discharge_efficiency_curve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">discharge_efficiency_curve</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]):</span>
         <span class="k">if</span> <span class="n">discharge_efficiency_curve</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__discharge_efficiency_curve</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">discharge_efficiency_curve</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__discharge_efficiency_curve</span> <span class="o">=</span> <span class="n">validate_curve</span><span class="p">(</span>
+                <span class="n">discharge_efficiency_curve</span><span class="p">,</span> <span class="s1">'discharge_efficiency_curve'</span><span class="p">,</span> <span class="n">efficiency</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__discharge_efficiency_curve</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -621,6 +621,39 @@
 
         <span class="k">return</span> <span class="n">efficiency</span><span class="p">,</span> <span class="n">commanded_energy_kwh</span><span class="p">,</span> <span class="n">battery_energy_kwh</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_applied_ac_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">battery_energy_kwh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">commanded_battery_energy_kwh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">charging</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+                           <span class="n">efficiency</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Charger efficiency and AC energy, in control-step kWh, for the energy the EV battery accepted.</span>
+
+<span class="sd">        When the battery limits the transfer, the efficiency curve is evaluated at the applied AC power instead</span>
+<span class="sd">        of at the commanded power, by fixed-point iteration until the AC energy times the efficiency at its power</span>
+<span class="sd">        equals the accepted energy (#424). A constant efficiency, or a transfer the battery does not limit, is</span>
+<span class="sd">        unchanged.</span>
+<span class="sd">        """</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_ac</span><span class="p">(</span><span class="n">efficiency</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">battery_energy_kwh</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">efficiency</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">battery_energy_kwh</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">battery_energy_kwh</span> <span class="o">*</span> <span class="n">efficiency</span>
+            <span class="p">)</span>
+
+        <span class="n">ac_energy</span> <span class="o">=</span> <span class="n">to_ac</span><span class="p">(</span><span class="n">efficiency</span><span class="p">)</span>
+        <span class="n">curve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__charge_efficiency_curve</span> <span class="k">if</span> <span class="n">charging</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__discharge_efficiency_curve</span>
+        <span class="n">limited</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">battery_energy_kwh</span> <span class="o">-</span> <span class="n">commanded_battery_energy_kwh</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.0e-9</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">commanded_battery_energy_kwh</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">curve</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">limited</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">efficiency</span><span class="p">,</span> <span class="n">ac_energy</span>
+
+        <span class="n">max_power_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_charging_power</span> <span class="k">if</span> <span class="n">charging</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_discharging_power</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+            <span class="n">normalized_power</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">energy_kwh_to_power_kw</span><span class="p">(</span><span class="n">ac_energy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">))</span>\
+                <span class="o">/</span><span class="nb">max</span><span class="p">(</span><span class="n">max_power_kw</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span>
+            <span class="n">efficiency</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_efficiency</span><span class="p">(</span><span class="n">normalized_power</span><span class="p">,</span> <span class="n">charging</span><span class="p">))</span>
+            <span class="n">previous</span><span class="p">,</span> <span class="n">ac_energy</span> <span class="o">=</span> <span class="n">ac_energy</span><span class="p">,</span> <span class="n">to_ac</span><span class="p">(</span><span class="n">efficiency</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ac_energy</span> <span class="o">-</span> <span class="n">previous</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.0e-12</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ac_energy</span><span class="p">)):</span>
+                <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">efficiency</span><span class="p">,</span> <span class="n">ac_energy</span>
+
 <div class="viewcode-block" id="Charger.preview_power_kw">
 <a class="viewcode-back" href="../../api/citylearn.electric_vehicle_charger.html#citylearn.electric_vehicle_charger.Charger.preview_power_kw">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">preview_power_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -642,10 +675,7 @@
         <span class="n">battery_energy</span> <span class="o">=</span> <span class="n">battery</span><span class="o">.</span><span class="n">preview_charge</span><span class="p">(</span><span class="n">battery_command</span><span class="p">)</span>
         <span class="n">ratio</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">ratio</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span>
         <span class="n">battery_energy</span> <span class="o">*=</span> <span class="n">ratio</span>
-        <span class="n">ac_energy</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">battery_energy</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">efficiency</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">battery_energy</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">battery_energy</span> <span class="o">*</span> <span class="n">efficiency</span>
-        <span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">ac_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_applied_ac_energy</span><span class="p">(</span><span class="n">battery_energy</span><span class="p">,</span> <span class="n">battery_energy_kwh</span><span class="p">,</span> <span class="n">charging</span><span class="p">,</span> <span class="n">efficiency</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">energy_kwh_to_power_kw</span><span class="p">(</span><span class="n">ac_energy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span></div>
 
 
@@ -694,10 +724,7 @@
                 <span class="n">battery_energy_balance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">electric_vehicle</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">_last_transfer_energy</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">battery_energy_balance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">electric_vehicle</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">energy_balance</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">])</span>
-            <span class="n">ac_energy</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">battery_energy_balance</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">efficiency</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">battery_energy_balance</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">battery_energy_balance</span> <span class="o">*</span> <span class="n">efficiency</span>
-            <span class="p">)</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">ac_energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_applied_ac_energy</span><span class="p">(</span><span class="n">battery_energy_balance</span><span class="p">,</span> <span class="n">battery_energy_kwh</span><span class="p">,</span> <span class="n">charging</span><span class="p">,</span> <span class="n">efficiency</span><span class="p">)</span>
             <span class="c1"># Add in float64 before storing, as NumPy 1 did; NEP 50 would add a Python float in float32.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__electricity_consumption</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__electricity_consumption</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">])</span> <span class="o">+</span> <span class="n">ac_energy</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__gross_energy_charge</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__gross_energy_charge</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">])</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">ac_energy</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>

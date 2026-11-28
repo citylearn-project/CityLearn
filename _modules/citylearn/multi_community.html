@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.multi_community &mdash; CityLearn 3.8.0 documentation</title>
+  <title>citylearn.multi_community &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -162,9 +162,13 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">EvaluationCondition</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.kpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">BATTERY_NOMINAL_CAPACITY_ATTR</span><span class="p">,</span> <span class="n">CityLearnKPIService</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.kpi_catalogue</span><span class="w"> </span><span class="kn">import</span> <span class="n">kpi_status</span>
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"MultiCommunityEnv"</span><span class="p">]</span>
+
+<span class="c1"># Table attribute with the rule of each portfolio row, keyed by its name; the export manifest records it.</span>
+<span class="n">PORTFOLIO_AGGREGATION_ATTR</span> <span class="o">=</span> <span class="s2">"portfolio_aggregation"</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -222,6 +226,8 @@
                     <span class="n">child_kwargs</span><span class="p">[</span><span class="s2">"evaluation_window"</span><span class="p">]</span> <span class="o">=</span> <span class="n">evaluation_window</span>
                 <span class="n">child_kwargs</span><span class="p">[</span><span class="s2">"render_directory"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_output_root</span>
                 <span class="n">child_kwargs</span><span class="p">[</span><span class="s2">"render_session_name"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">render_session_name</span><span class="p">)</span> <span class="o">/</span> <span class="n">config</span><span class="o">.</span><span class="n">community_id</span><span class="p">)</span>
+                <span class="c1"># Communities with the same seed and the same member or EV names draw independent values (#462).</span>
+                <span class="n">child_kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"random_stream_namespace"</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">community_id</span><span class="p">)</span>
                 <span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="o">**</span><span class="n">child_kwargs</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">community_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">env</span>
                 <span class="n">created_envs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
@@ -414,15 +420,18 @@
 <span class="sd">        The table has the columns of :py:meth:`citylearn.citylearn.CityLearnEnv.evaluate_v2` and a</span>
 <span class="sd">        ``community_id`` column. Each community contributes its ``'building'`` and ``'district'`` rows under its</span>
 <span class="sd">        own ``community_id``. The ``'portfolio'`` rows (``community_id`` ``'__portfolio__'``, names starting</span>
-<span class="sd">        ``portfolio_``) aggregate the district rows: ratios of totals are recomputed from the summed totals,</span>
-<span class="sd">        rates, EV battery health ratios, and battery equivalent full cycles are pooled by their denominators,</span>
-<span class="sd">        other ``_kwh``/``_eur``/``_kgco2``/``_count`` rows are summed,</span>
-<span class="sd">        other ratios and percentages are means weighted by the community ``weight``, and other rows (``_kw``,</span>
-<span class="sd">        ``_c``, ``_hours``) have no portfolio row. When some communities have a community market and others do</span>
-<span class="sd">        not, a community without a market enters the portfolio community-market rows with its plain grid</span>
-<span class="sd">        settlement: no local trade, its members' grid import and export, and its control cost as settled and</span>
-<span class="sd">        counterfactual cost. Its own district rows are unchanged. The KPI reference guide gives the rule of each</span>
-<span class="sd">        family.</span>
+<span class="sd">        ``portfolio_``) aggregate the district rows: ratios of totals are recomputed from the summed totals;</span>
+<span class="sd">        rates, including the EV departure, thermal-service, flexible-appliance and equity audit rates and the</span>
+<span class="sd">        useful-PV ratios, are pooled by their count or energy denominators; battery equivalent full cycles,</span>
+<span class="sd">        capacity fade and EV battery health ratios are pooled by nominal capacity; the ledger's max-residual</span>
+<span class="sd">        diagnostics take the largest community value; other ``_kwh``/``_eur``/``_kgco2``/``_count`` rows are</span>
+<span class="sd">        summed; other ratios and percentages are means weighted by the community ``weight``; and other rows</span>
+<span class="sd">        (``_kw``, ``_c``, ``_hours``) have no portfolio row. Each portfolio ``description`` states its rule, and</span>
+<span class="sd">        the table attribute ``portfolio_aggregation`` lists the rule of every portfolio row. When some</span>
+<span class="sd">        communities have a community market and others do not, a community without a market enters the</span>
+<span class="sd">        portfolio community-market rows with its plain grid settlement: no local trade, its members' grid</span>
+<span class="sd">        import and export, and its control cost as settled and counterfactual cost. Its own district rows are</span>
+<span class="sd">        unchanged. The KPI reference guide gives the rule of each family.</span>
 <span class="sd">        """</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_community_kpis</span><span class="p">({</span>
@@ -449,11 +458,82 @@
 
         <span class="n">local</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">frames</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
         <span class="n">portfolio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_portfolio_kpis</span><span class="p">(</span><span class="n">local</span><span class="p">,</span> <span class="n">capacities</span><span class="p">)</span>
+        <span class="n">rules</span> <span class="o">=</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PORTFOLIO_AGGREGATION_ATTR</span><span class="p">,</span> <span class="p">{})</span>
 
         <span class="k">if</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="n">local</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">PORTFOLIO_AGGREGATION_ATTR</span><span class="p">:</span> <span class="n">rules</span><span class="p">}</span>
             <span class="k">return</span> <span class="n">local</span>
 
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">local</span><span class="p">,</span> <span class="n">portfolio</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">combined</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">local</span><span class="p">,</span> <span class="n">portfolio</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># How each portfolio row was aggregated, for the export manifest.</span>
+        <span class="n">combined</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">PORTFOLIO_AGGREGATION_ATTR</span><span class="p">:</span> <span class="n">rules</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">combined</span>
+
+    <span class="n">MANIFEST_DEFINITION_VERSION</span> <span class="o">=</span> <span class="s2">"multi-community-export-v1"</span>
+    <span class="c1"># Settings every community must share (see `_validate_constructor_homogeneity`), recorded in the manifest.</span>
+    <span class="n">_HOMOGENEOUS_SETTINGS</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">"physics_version"</span><span class="p">,</span> <span class="s2">"random_stream_version"</span><span class="p">,</span> <span class="s2">"baseline_version"</span><span class="p">,</span> <span class="s2">"business_as_usual_ev_charge_target"</span><span class="p">,</span>
+        <span class="s2">"ev_soc_carryover"</span><span class="p">,</span> <span class="s2">"ev_departure_service_tolerance"</span><span class="p">,</span> <span class="s2">"ev_departure_within_tolerance"</span><span class="p">,</span> <span class="s2">"energy_provenance"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="MultiCommunityEnv.set_experiment_identity">
+<a class="viewcode-back" href="../../api/citylearn.multi_community.html#citylearn.multi_community.MultiCommunityEnv.set_experiment_identity">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_experiment_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">implementation</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">observation_access</span><span class="o">=</span><span class="s2">"agent_payload"</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Declare the controller of every community for exported paired comparisons.</span>
+
+<span class="sd">        Calls :py:meth:`citylearn.citylearn.CityLearnEnv.set_experiment_identity` on each community with the same</span>
+<span class="sd">        arguments, so each community export and the portfolio manifest record it as ``controller_identity``.</span>
+<span class="sd">        """</span>
+
+        <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">set_experiment_identity</span><span class="p">(</span><span class="n">implementation</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">observation_access</span><span class="o">=</span><span class="n">observation_access</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_controller_identity</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span><span class="o">.</span><span class="n">_controller_identity</span></div>
+
+
+<div class="viewcode-block" id="MultiCommunityEnv.scorecard">
+<a class="viewcode-back" href="../../api/citylearn.multi_community.html#citylearn.multi_community.MultiCommunityEnv.scorecard">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scorecard</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpis</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">evaluate_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the default scorecard rows of :py:meth:`evaluate_v2` for every community and the portfolio.</span>
+
+<span class="sd">        The rows are those of `CityLearnEnv.SCORECARD_DEFAULT_KPIS`, with ``portfolio_`` in place of ``district_``</span>
+<span class="sd">        for the portfolio rows, in that order, then communities in order with the portfolio last.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kpis: pandas.DataFrame, optional</span>
+<span class="sd">            A table returned by :py:meth:`evaluate_v2`. When omitted, :py:meth:`evaluate_v2` is called with</span>
+<span class="sd">            `evaluate_kwargs`.</span>
+<span class="sd">        level: str, optional</span>
+<span class="sd">            Keep only ``'portfolio'``, ``'district'`` or ``'building'`` rows.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">kpis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kpis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="o">**</span><span class="n">evaluate_kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">evaluate_kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Pass either kpis or evaluate_v2() arguments to scorecard(), not both."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">level</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"portfolio"</span><span class="p">,</span> <span class="s2">"district"</span><span class="p">,</span> <span class="s2">"building"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"level must be 'portfolio', 'district', 'building' or None, not </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+
+        <span class="n">order</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">CityLearnEnv</span><span class="o">.</span><span class="n">SCORECARD_DEFAULT_KPIS</span><span class="p">)}</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">kpis</span><span class="p">[</span><span class="s2">"cost_function"</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^portfolio_"</span><span class="p">,</span> <span class="s2">"district_"</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">kpis</span><span class="p">[</span><span class="n">names</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">order</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="n">rows</span><span class="p">[</span><span class="s2">"level"</span><span class="p">]</span> <span class="o">==</span> <span class="n">level</span><span class="p">]</span>
+
+        <span class="n">communities</span> <span class="o">=</span> <span class="p">{</span><span class="n">community_id</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">community_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">community_ids</span><span class="p">)}</span>
+        <span class="n">communities</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">PORTFOLIO_COMMUNITY_ID</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">communities</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span>
+                <span class="n">_order</span><span class="o">=</span><span class="n">names</span><span class="p">[</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">order</span><span class="p">),</span>
+                <span class="n">_community</span><span class="o">=</span><span class="n">rows</span><span class="p">[</span><span class="s2">"community_id"</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">communities</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">"_order"</span><span class="p">,</span> <span class="s2">"_community"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"stable"</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"_order"</span><span class="p">,</span> <span class="s2">"_community"</span><span class="p">])</span>
+            <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="MultiCommunityEnv.export_final_kpis">
 <a class="viewcode-back" href="../../api/citylearn.multi_community.html#citylearn.multi_community.MultiCommunityEnv.export_final_kpis">[docs]</a>
@@ -466,39 +546,136 @@
         <span class="n">kpi_round_decimals</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">export_community_kpis</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">community_filepath</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"exported_kpis.csv"</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Export child KPIs to child folders and global multi-community KPIs."""</span>
+        <span class="n">include_battery_health_audit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Export each community's KPIs to its folder and the portfolio table with its manifest.</span>
+
+<span class="sd">        The portfolio table has the long :py:meth:`evaluate_v2` format. It is Parquet (``.parquet``) when every</span>
+<span class="sd">        community uses ``render_file_format='parquet'``, otherwise CSV. Next to it,</span>
+<span class="sd">        ``&lt;name&gt;.manifest.json`` records the community ids and weights, the settings the communities share, the</span>
+<span class="sd">        export settings, the rule of each portfolio row, the KPI definitions and, for each community, its</span>
+<span class="sd">        manifest path and the evidence that :py:func:`citylearn.internal.comparison.compare_manifests` reads, so</span>
+<span class="sd">        :py:func:`citylearn.internal.comparison.compare_exports` can pair two portfolio exports. Returns the</span>
+<span class="sd">        manifest.</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"MultiCommunityEnv.export_final_kpis does not support model overrides in v1."</span><span class="p">)</span>
 
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.comparison</span><span class="w"> </span><span class="kn">import</span> <span class="n">manifest_evidence</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.experiment</span><span class="w"> </span><span class="kn">import</span> <span class="n">experiment_manifest</span>
+
         <span class="c1"># Evaluate each community once: its own export and the portfolio rows use the same table.</span>
         <span class="n">community_kpis</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">community_id</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">)</span>
+            <span class="n">community_id</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span>
+                <span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">,</span>
+                <span class="n">include_battery_health_audit</span><span class="o">=</span><span class="n">include_battery_health_audit</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">}</span>
 
-        <span class="k">if</span> <span class="n">export_community_kpis</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">env</span><span class="o">.</span><span class="n">_episode_exporter</span><span class="o">.</span><span class="n">export_final_kpis</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_output_dir</span><span class="p">()</span>
+        <span class="n">community_manifests</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">manifest_paths</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">export_community_kpis</span><span class="p">:</span>
+                <span class="n">community_manifests</span><span class="p">[</span><span class="n">community_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_episode_exporter</span><span class="o">.</span><span class="n">export_final_kpis</span><span class="p">(</span>
                     <span class="n">filepath</span><span class="o">=</span><span class="n">community_filepath</span><span class="p">,</span>
                     <span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">,</span>
                     <span class="n">export_business_as_usual_timeseries</span><span class="o">=</span><span class="n">export_business_as_usual_timeseries</span><span class="p">,</span>
                     <span class="n">kpi_round_decimals</span><span class="o">=</span><span class="n">kpi_round_decimals</span><span class="p">,</span>
+                    <span class="n">include_battery_health_audit</span><span class="o">=</span><span class="n">include_battery_health_audit</span><span class="p">,</span>
                     <span class="n">evaluated_kpis</span><span class="o">=</span><span class="n">community_kpis</span><span class="p">[</span><span class="n">community_id</span><span class="p">],</span>
                 <span class="p">)</span>
+                <span class="n">written</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">new_folder_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">env</span><span class="o">.</span><span class="n">_episode_exporter</span><span class="o">.</span><span class="n">_export_filename</span><span class="p">(</span><span class="n">community_filepath</span><span class="p">)</span>
+                <span class="n">manifest_paths</span><span class="p">[</span><span class="n">community_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_relative_to_output</span><span class="p">(</span><span class="n">written</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".manifest.json"</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">community_manifests</span><span class="p">[</span><span class="n">community_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">experiment_manifest</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+                <span class="n">manifest_paths</span><span class="p">[</span><span class="n">community_id</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_output_dir</span><span class="p">()</span>
         <span class="n">kpis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_community_kpis</span><span class="p">(</span><span class="n">community_kpis</span><span class="p">)</span>
+        <span class="n">rules</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PORTFOLIO_AGGREGATION_ATTR</span><span class="p">,</span> <span class="p">{})</span>
 
         <span class="k">if</span> <span class="n">kpi_round_decimals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">kpis</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">kpis</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"coerce"</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">kpi_round_decimals</span><span class="p">)</span>
 
+        <span class="n">parquet</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_episode_exporter</span><span class="o">.</span><span class="n">_render_file_format</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"parquet"</span> <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_export_path</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".parquet"</span><span class="p">)</span> <span class="k">if</span> <span class="n">parquet</span> <span class="k">else</span> <span class="n">path</span>
         <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">kpis</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">na_rep</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">parquet</span><span class="p">:</span>
+            <span class="n">kpis</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kpis</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">na_rep</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>
 
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utils.file_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileHandler</span>
+
+        <span class="n">manifest</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"multi_community"</span><span class="p">,</span>
+            <span class="s2">"definition_version"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">MANIFEST_DEFINITION_VERSION</span><span class="p">,</span>
+            <span class="s2">"simulator_version"</span><span class="p">:</span> <span class="n">__version__</span><span class="p">,</span>
+            <span class="s2">"community_ids"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_ids</span><span class="p">,</span>
+            <span class="s2">"weights"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span>
+            <span class="s2">"shared_settings"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"interface"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="p">,</span>
+                <span class="s2">"central_agent"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span>
+                <span class="s2">"seconds_per_time_step"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span>
+                <span class="s2">"episode_time_steps"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">,</span>
+                <span class="s2">"evaluation_window"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span><span class="o">.</span><span class="n">_evaluation_window_effective</span><span class="p">),</span>
+                <span class="o">**</span><span class="p">{</span>
+                    <span class="n">setting</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span> <span class="n">setting</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">setting</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HOMOGENEOUS_SETTINGS</span>
+                <span class="p">},</span>
+            <span class="p">},</span>
+            <span class="s2">"kpi_export"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"include_business_as_usual"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">include_business_as_usual</span><span class="p">),</span>
+                <span class="s2">"include_battery_health_audit"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">include_battery_health_audit</span><span class="p">),</span>
+                <span class="s2">"kpi_round_decimals"</span><span class="p">:</span> <span class="n">kpi_round_decimals</span><span class="p">,</span>
+                <span class="s2">"community_kpis_exported"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">export_community_kpis</span><span class="p">),</span>
+                <span class="s2">"file_format"</span><span class="p">:</span> <span class="s2">"parquet"</span> <span class="k">if</span> <span class="n">parquet</span> <span class="k">else</span> <span class="s2">"csv"</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"controller_identity"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_controller_identity"</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="s2">"portfolio_aggregation"</span><span class="p">:</span> <span class="n">rules</span><span class="p">,</span>
+            <span class="s2">"kpi_definitions"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kpi_definitions</span><span class="p">(</span><span class="n">kpis</span><span class="p">),</span>
+            <span class="s2">"communities"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">community_id</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"weight"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="n">community_id</span><span class="p">],</span>
+                    <span class="s2">"random_stream_namespace"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="p">[</span><span class="n">community_id</span><span class="p">]</span><span class="o">.</span><span class="n">random_stream_namespace</span><span class="p">,</span>
+                    <span class="s2">"manifest"</span><span class="p">:</span> <span class="n">manifest_paths</span><span class="p">[</span><span class="n">community_id</span><span class="p">],</span>
+                    <span class="s2">"comparison_evidence"</span><span class="p">:</span> <span class="n">manifest_evidence</span><span class="p">(</span><span class="n">community_manifests</span><span class="p">[</span><span class="n">community_id</span><span class="p">]),</span>
+                <span class="p">}</span>
+                <span class="k">for</span> <span class="n">community_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_ids</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+        <span class="n">FileHandler</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".manifest.json"</span><span class="p">)),</span> <span class="n">manifest</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">manifest</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_kpi_definitions</span><span class="p">(</span><span class="n">kpis</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Unit and description of every KPI name in the table, portfolio rows with their own description."""</span>
+
+        <span class="n">definitions</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="s2">"unit"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kpis</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">definitions</span>
+
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">[</span><span class="n">column</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"unit"</span><span class="p">,</span> <span class="s2">"description"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">,</span> <span class="s2">"replacement"</span><span class="p">)</span> <span class="k">if</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">kpis</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">kpis</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="s2">"cost_function"</span><span class="p">)[[</span><span class="s2">"cost_function"</span><span class="p">,</span> <span class="o">*</span><span class="n">metadata</span><span class="p">]]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s2">"records"</span><span class="p">):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"cost_function"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"unit"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"unit"</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="s2">"unit"</span><span class="p">])):</span>
+                <span class="k">continue</span>
+            <span class="n">definitions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">record</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="n">definitions</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_relative_to_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_folder_path</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MultiCommunityEnv.render">
 <a class="viewcode-back" href="../../api/citylearn.multi_community.html#citylearn.multi_community.MultiCommunityEnv.render">[docs]</a>
@@ -826,6 +1003,23 @@
         <span class="n">finite</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)]</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">finite</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="k">if</span> <span class="n">finite</span><span class="o">.</span><span class="n">size</span> <span class="k">else</span> <span class="mf">0.0</span>
 
+    <span class="c1"># How each portfolio row is built from the community district rows; written into the row description and the</span>
+    <span class="c1"># export manifest. `{over}` names the rows that weight or compose it.</span>
+    <span class="n">_PORTFOLIO_RULES</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"sum"</span><span class="p">:</span> <span class="s2">"sum of the community values"</span><span class="p">,</span>
+        <span class="s2">"ratio_of_sums"</span><span class="p">:</span> <span class="s2">"ratio of the summed totals </span><span class="si">{over}</span><span class="s2">, over the communities that report both"</span><span class="p">,</span>
+        <span class="s2">"pooled_mean"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">"pooled over the communities: their values weighted by </span><span class="si">{over}</span><span class="s2">, which is the ratio of the summed "</span>
+            <span class="s2">"numerators and denominators; community weights are not used"</span>
+        <span class="p">),</span>
+        <span class="s2">"pooled_comparison"</span><span class="p">:</span> <span class="s2">"computed from the portfolio values </span><span class="si">{over}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"capacity_pooled"</span><span class="p">:</span> <span class="s2">"pooled over the nominal battery capacity of the communities"</span><span class="p">,</span>
+        <span class="s2">"max"</span><span class="p">:</span> <span class="s2">"largest community value"</span><span class="p">,</span>
+        <span class="s2">"max_difference"</span><span class="p">:</span> <span class="s2">"difference of the portfolio maxima </span><span class="si">{over}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"window_sum"</span><span class="p">:</span> <span class="s2">"signed sum of the community values, undefined if one of them is undefined"</span><span class="p">,</span>
+        <span class="s2">"weighted_mean"</span><span class="p">:</span> <span class="s2">"mean of the community values weighted by the community weight"</span><span class="p">,</span>
+    <span class="p">}</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_portfolio_kpis</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">local</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">capacities</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
@@ -839,6 +1033,7 @@
         <span class="n">district</span><span class="p">[</span><span class="s2">"numeric_value"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">district</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"value"</span><span class="p">),</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"coerce"</span><span class="p">)</span>
         <span class="n">district</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_plain_grid_settlement</span><span class="p">(</span><span class="n">district</span><span class="p">,</span> <span class="n">local</span><span class="p">)</span>
         <span class="n">rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">rules</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">total_ratios</span> <span class="o">=</span> <span class="n">CityLearnKPIService</span><span class="o">.</span><span class="n">total_ratio_components</span><span class="p">(</span><span class="s2">"district"</span><span class="p">)</span>
         <span class="n">pooled_means</span> <span class="o">=</span> <span class="n">CityLearnKPIService</span><span class="o">.</span><span class="n">pooled_mean_components</span><span class="p">(</span><span class="s2">"district"</span><span class="p">)</span>
         <span class="n">pooled_comparisons</span> <span class="o">=</span> <span class="n">CityLearnKPIService</span><span class="o">.</span><span class="n">pooled_mean_business_as_usual_comparisons</span><span class="p">(</span><span class="s2">"district"</span><span class="p">)</span>
@@ -846,26 +1041,41 @@
             <span class="n">metric</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pooled_mean</span><span class="p">(</span><span class="n">district</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">weights</span> <span class="ow">in</span> <span class="n">pooled_means</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">}</span>
+        <span class="n">capacity_pooled</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">community_capacity</span><span class="p">(</span><span class="n">run_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span>
+                <span class="n">community_id</span><span class="p">:</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">run_name</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">capacities</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">},</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float64"</span><span class="p">)</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
         <span class="k">for</span> <span class="n">run_name</span><span class="p">,</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"control"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="p">(</span><span class="s2">"business_as_usual"</span><span class="p">,</span> <span class="s2">"_business_as_usual"</span><span class="p">)):</span>
             <span class="n">throughput_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"district_battery_total_throughput</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">_kwh"</span>
             <span class="n">throughput</span> <span class="o">=</span> <span class="n">district</span><span class="p">[</span><span class="n">district</span><span class="p">[</span><span class="s2">"cost_function"</span><span class="p">]</span> <span class="o">==</span> <span class="n">throughput_name</span><span class="p">]</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"community_id"</span><span class="p">)[</span><span class="s2">"numeric_value"</span><span class="p">]</span>
-            <span class="n">capacity</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span>
-                <span class="n">community_id</span><span class="p">:</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">run_name</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">capacities</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="p">},</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float64"</span><span class="p">)</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">throughput</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">capacity</span> <span class="o">=</span> <span class="n">community_capacity</span><span class="p">(</span><span class="n">run_name</span><span class="p">,</span> <span class="n">throughput</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
             <span class="n">nominal_capacity</span> <span class="o">=</span> <span class="n">capacity</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
             <span class="n">cycles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
             <span class="k">if</span> <span class="n">nominal_capacity</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">capacity</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">throughput</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
                 <span class="n">cycles</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">throughput</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">nominal_capacity</span><span class="p">))</span>
             <span class="n">pooled_mean_values</span><span class="p">[</span><span class="sa">f</span><span class="s2">"district_battery_health_equivalent_full_cycles</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">_count"</span><span class="p">]</span> <span class="o">=</span> <span class="n">cycles</span>
+            <span class="n">capacity_pooled</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s2">"district_battery_health_equivalent_full_cycles</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">_count"</span><span class="p">)</span>
+
+            <span class="c1"># Capacity fade is capacity lost over nominal capacity, so it pools by nominal capacity (#428).</span>
+            <span class="n">fade_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"district_battery_health_capacity_fade</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">_ratio"</span>
+            <span class="n">fade</span> <span class="o">=</span> <span class="n">district</span><span class="p">[</span><span class="n">district</span><span class="p">[</span><span class="s2">"cost_function"</span><span class="p">]</span> <span class="o">==</span> <span class="n">fade_name</span><span class="p">]</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"community_id"</span><span class="p">)[</span><span class="s2">"numeric_value"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">fade</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="n">capacity</span> <span class="o">=</span> <span class="n">community_capacity</span><span class="p">(</span><span class="n">run_name</span><span class="p">,</span> <span class="n">fade</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                <span class="n">installed</span> <span class="o">=</span> <span class="p">(</span><span class="n">capacity</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">fade</span><span class="p">)</span>
+                <span class="n">pooled_fade</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">capacity</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="n">installed</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                    <span class="n">pooled_fade</span> <span class="o">=</span> <span class="nb">float</span><span class="p">((</span><span class="n">fade</span><span class="p">[</span><span class="n">installed</span><span class="p">]</span> <span class="o">*</span> <span class="n">capacity</span><span class="p">[</span><span class="n">installed</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">capacity</span><span class="p">[</span><span class="n">installed</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+                <span class="n">pooled_mean_values</span><span class="p">[</span><span class="n">fade_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pooled_fade</span>
+                <span class="n">capacity_pooled</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">fade_name</span><span class="p">)</span>
 
         <span class="n">ev_fade_rows</span> <span class="o">=</span> <span class="n">district</span><span class="p">[</span><span class="n">district</span><span class="p">[</span><span class="s2">"cost_function"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"district_ev_battery_health_capacity_fade_kwh"</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ev_fade_rows</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
             <span class="n">ev_fade</span> <span class="o">=</span> <span class="n">ev_fade_rows</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"community_id"</span><span class="p">)[</span><span class="s2">"numeric_value"</span><span class="p">]</span>
-            <span class="n">ev_cap_fade</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span>
-                <span class="n">community_id</span><span class="p">:</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ev_control"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">capacities</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="p">},</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float64"</span><span class="p">)</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">ev_fade</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">ev_cap_fade</span> <span class="o">=</span> <span class="n">community_capacity</span><span class="p">(</span><span class="s2">"ev_control"</span><span class="p">,</span> <span class="n">ev_fade</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
             <span class="n">ev_nominal_capacity</span> <span class="o">=</span> <span class="n">ev_cap_fade</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
             <span class="n">ev_fade_ratio</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
             <span class="n">ev_soh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
@@ -875,21 +1085,38 @@
                 <span class="n">ev_soh</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">((</span><span class="n">ev_nominal_capacity</span> <span class="o">-</span> <span class="n">ev_fade_total</span><span class="p">)</span> <span class="o">/</span> <span class="n">ev_nominal_capacity</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
             <span class="n">pooled_mean_values</span><span class="p">[</span><span class="s2">"district_ev_battery_health_capacity_fade_ratio"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ev_fade_ratio</span>
             <span class="n">pooled_mean_values</span><span class="p">[</span><span class="s2">"district_ev_battery_health_terminal_soh_ratio"</span><span class="p">]</span> <span class="o">=</span> <span class="n">ev_soh</span>
+            <span class="n">capacity_pooled</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="s2">"district_ev_battery_health_capacity_fade_ratio"</span><span class="p">,</span>
+                                    <span class="s2">"district_ev_battery_health_terminal_soh_ratio"</span><span class="p">))</span>
 
         <span class="n">ev_efc_name</span> <span class="o">=</span> <span class="s2">"district_ev_battery_health_equivalent_full_cycles_count"</span>
         <span class="n">ev_efc_rows</span> <span class="o">=</span> <span class="n">district</span><span class="p">[</span><span class="n">district</span><span class="p">[</span><span class="s2">"cost_function"</span><span class="p">]</span> <span class="o">==</span> <span class="n">ev_efc_name</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ev_efc_rows</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
             <span class="n">ev_efc</span> <span class="o">=</span> <span class="n">ev_efc_rows</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"community_id"</span><span class="p">)[</span><span class="s2">"numeric_value"</span><span class="p">]</span>
-            <span class="n">ev_cap</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span>
-                <span class="n">community_id</span><span class="p">:</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ev_control"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">capacities</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="p">},</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float64"</span><span class="p">)</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">ev_efc</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">ev_cap</span> <span class="o">=</span> <span class="n">community_capacity</span><span class="p">(</span><span class="s2">"ev_control"</span><span class="p">,</span> <span class="n">ev_efc</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
             <span class="n">positive_ev</span> <span class="o">=</span> <span class="n">ev_cap</span> <span class="o">&gt;</span> <span class="mf">0.0</span>
             <span class="n">ev_cycles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
             <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">ev_cap</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="n">positive_ev</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">ev_efc</span><span class="p">[</span><span class="n">positive_ev</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
                 <span class="n">ev_cycles</span> <span class="o">=</span> <span class="nb">float</span><span class="p">((</span><span class="n">ev_efc</span><span class="p">[</span><span class="n">positive_ev</span><span class="p">]</span> <span class="o">*</span> <span class="n">ev_cap</span><span class="p">[</span><span class="n">positive_ev</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">ev_cap</span><span class="p">[</span><span class="n">positive_ev</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
             <span class="n">pooled_mean_values</span><span class="p">[</span><span class="n">ev_efc_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ev_cycles</span>
+            <span class="n">capacity_pooled</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ev_efc_name</span><span class="p">)</span>
 
+        <span class="c1"># The largest residual of the ledger over the communities, not their sum (#428).</span>
+        <span class="n">maxima</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">group_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"storage"</span><span class="p">,</span> <span class="s2">"bus"</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"_business_as_usual"</span><span class="p">):</span>
+                <span class="n">metric</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"district_energy_provenance_</span><span class="si">{</span><span class="n">group_name</span><span class="si">}</span><span class="s2">_max_residual</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">_kwh"</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">district</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">district</span><span class="p">[</span><span class="s2">"cost_function"</span><span class="p">]</span> <span class="o">==</span> <span class="n">metric</span><span class="p">,</span> <span class="s2">"numeric_value"</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">values</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                    <span class="n">maxima</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="n">maximum_differences</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sa">f</span><span class="s2">"district_energy_provenance_</span><span class="si">{</span><span class="n">group_name</span><span class="si">}</span><span class="s2">_max_residual_delta_to_business_as_usual_kwh"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"district_energy_provenance_</span><span class="si">{</span><span class="n">group_name</span><span class="si">}</span><span class="s2">_max_residual_kwh"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"district_energy_provenance_</span><span class="si">{</span><span class="n">group_name</span><span class="si">}</span><span class="s2">_max_residual_business_as_usual_kwh"</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">group_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"storage"</span><span class="p">,</span> <span class="s2">"bus"</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="n">portfolio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_portfolio_cost_function</span>
         <span class="k">for</span> <span class="n">cost_function</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">district</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"cost_function"</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="n">metric</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cost_function</span><span class="p">)</span>
             <span class="n">aggregate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
@@ -899,8 +1126,13 @@
                     <span class="n">district</span><span class="p">,</span> <span class="o">*</span><span class="n">total_ratios</span><span class="p">[</span><span class="n">metric</span><span class="p">],</span>
                     <span class="n">zero_over_zero</span><span class="o">=</span><span class="n">CityLearnKPIService</span><span class="o">.</span><span class="n">ratio_zero_over_zero</span><span class="p">(</span><span class="n">metric</span><span class="p">),</span>
                 <span class="p">)</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"ratio_of_sums"</span><span class="p">,</span> <span class="p">[</span><span class="n">portfolio</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">total_ratios</span><span class="p">[</span><span class="n">metric</span><span class="p">][:</span><span class="mi">2</span><span class="p">]])</span>
             <span class="k">elif</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">pooled_mean_values</span><span class="p">:</span>
                 <span class="n">aggregate</span> <span class="o">=</span> <span class="n">pooled_mean_values</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="p">(</span><span class="s2">"capacity_pooled"</span><span class="p">,</span> <span class="p">[])</span> <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">capacity_pooled</span>
+                    <span class="k">else</span> <span class="p">(</span><span class="s2">"pooled_mean"</span><span class="p">,</span> <span class="p">[</span><span class="n">portfolio</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">pooled_means</span><span class="p">[</span><span class="n">metric</span><span class="p">]])</span>
+                <span class="p">)</span>
             <span class="k">elif</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">pooled_comparisons</span><span class="p">:</span>
                 <span class="n">control_name</span><span class="p">,</span> <span class="n">reference_name</span><span class="p">,</span> <span class="n">operation</span> <span class="o">=</span> <span class="n">pooled_comparisons</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span>
                 <span class="n">control</span> <span class="o">=</span> <span class="n">pooled_mean_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">control_name</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
@@ -912,6 +1144,15 @@
                         <span class="n">control</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">zero_over_zero</span><span class="o">=</span><span class="n">CityLearnKPIService</span><span class="o">.</span><span class="n">ratio_zero_over_zero</span><span class="p">(</span><span class="n">metric</span><span class="p">),</span>
                     <span class="p">)</span>
                     <span class="n">aggregate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"pooled_comparison"</span><span class="p">,</span> <span class="p">[</span><span class="n">portfolio</span><span class="p">(</span><span class="n">control_name</span><span class="p">),</span> <span class="n">portfolio</span><span class="p">(</span><span class="n">reference_name</span><span class="p">)])</span>
+            <span class="k">elif</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">maxima</span> <span class="ow">or</span> <span class="n">metric</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">"_max_residual_kwh"</span><span class="p">,</span> <span class="s2">"_max_residual_business_as_usual_kwh"</span><span class="p">)):</span>
+                <span class="n">aggregate</span> <span class="o">=</span> <span class="n">maxima</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"max"</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="k">elif</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">maximum_differences</span><span class="p">:</span>
+                <span class="n">control_name</span><span class="p">,</span> <span class="n">reference_name</span> <span class="o">=</span> <span class="n">maximum_differences</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span>
+                <span class="n">control</span><span class="p">,</span> <span class="n">reference</span> <span class="o">=</span> <span class="n">maxima</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">control_name</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">),</span> <span class="n">maxima</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">reference_name</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                <span class="n">aggregate</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">control</span> <span class="o">-</span> <span class="n">reference</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">control</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"max_difference"</span><span class="p">,</span> <span class="p">[</span><span class="n">portfolio</span><span class="p">(</span><span class="n">control_name</span><span class="p">),</span> <span class="n">portfolio</span><span class="p">(</span><span class="n">reference_name</span><span class="p">)])</span>
             <span class="k">elif</span> <span class="p">(</span>
                 <span class="p">(</span><span class="n">metric</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"district_energy_grid_window_average_power_"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">metric</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"_kw"</span><span class="p">))</span>
                 <span class="ow">or</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">"district_ev_window_net_exchange_control_kwh"</span>
@@ -921,31 +1162,54 @@
                     <span class="n">aggregate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">aggregate</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"window_sum"</span><span class="p">,</span> <span class="p">[])</span>
             <span class="k">elif</span> <span class="n">metric</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_SUM_SUFFIXES</span><span class="p">):</span>
                 <span class="n">values</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s2">"numeric_value"</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
                 <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
                     <span class="n">aggregate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">aggregate</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"sum"</span><span class="p">,</span> <span class="p">[])</span>
             <span class="k">elif</span> <span class="n">metric</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_WEIGHTED_MEAN_SUFFIXES</span><span class="p">):</span>
                 <span class="n">aggregate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weighted_mean</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">aggregate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">aggregate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"weighted_mean"</span><span class="p">,</span> <span class="p">[])</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">continue</span>
 
+            <span class="n">name</span> <span class="o">=</span> <span class="n">portfolio</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+            <span class="n">rules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"rule"</span><span class="p">:</span> <span class="n">rule</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"over"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">rule</span><span class="p">[</span><span class="mi">1</span><span class="p">])}</span>
             <span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="n">column</span><span class="p">:</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">local</span><span class="o">.</span><span class="n">columns</span><span class="p">}</span>
-            <span class="n">row</span><span class="p">[</span><span class="s2">"cost_function"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_portfolio_cost_function</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+            <span class="n">row</span><span class="p">[</span><span class="s2">"cost_function"</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
             <span class="n">row</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span> <span class="o">=</span> <span class="n">aggregate</span>
             <span class="n">row</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PORTFOLIO_NAME</span>
             <span class="n">row</span><span class="p">[</span><span class="s2">"level"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"portfolio"</span>
             <span class="n">row</span><span class="p">[</span><span class="s2">"community_id"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PORTFOLIO_COMMUNITY_ID</span>
             <span class="k">if</span> <span class="s2">"unit"</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
                 <span class="n">row</span><span class="p">[</span><span class="s2">"unit"</span><span class="p">]</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s2">"unit"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">row</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">row</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_portfolio_description</span><span class="p">(</span><span class="n">rules</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">group</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="s2">"status"</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+                <span class="c1"># The status of the district row, with the portfolio name of its replacement (#433).</span>
+                <span class="n">row</span><span class="p">[</span><span class="s2">"status"</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">"replacement"</span><span class="p">]</span> <span class="o">=</span> <span class="n">kpi_status</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">local</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">local</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+        <span class="n">frame</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">PORTFOLIO_AGGREGATION_ATTR</span><span class="p">]</span> <span class="o">=</span> <span class="n">rules</span>
+        <span class="k">return</span> <span class="n">frame</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_portfolio_description</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">rule</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">district_description</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Portfolio rule, then the district definition the communities report."""</span>
+
+        <span class="n">over</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"over"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_PORTFOLIO_RULES</span><span class="p">[</span><span class="n">rule</span><span class="p">[</span><span class="s2">"rule"</span><span class="p">]]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">over</span><span class="o">=</span><span class="s2">" and "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">over</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">over</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="k">else</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"`</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">`"</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">over</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Portfolio: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s2">."</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">district_description</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">district_description</span><span class="p">:</span>
+            <span class="n">description</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">" Each community: </span><span class="si">{</span><span class="n">district_description</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">return</span> <span class="n">description</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_with_plain_grid_settlement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">district</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">local</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Give communities without a market their plain grid settlement in a mixed portfolio (#373).</span>

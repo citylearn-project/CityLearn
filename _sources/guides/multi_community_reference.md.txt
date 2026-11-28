@@ -141,8 +141,18 @@ The wrapper validates these conditions at construction and again after reset, an
 raises a `ValueError` that names the setting, for example:
 
 ```text
-ValueError: MultiCommunityEnv requires all communities to share physics_version, got {'A': 2, 'B': 1}.
+ValueError: MultiCommunityEnv requires all communities to share business_as_usual_ev_charge_target, got {'A': 'full', 'B': 'requested'}.
 ```
+
+Each community draws its own random values. The wrapper passes its `community_id` to the child as
+`random_stream_namespace`, which is added to the key of every random stream (drawn device parameters, EV
+drift and initial SOC, occupant interactions, stochastic outages, data and robustness noise). Two communities
+with the same seed and the same building or EV names, such as `pt_rec_4` and `pt_rec_15`, therefore draw
+independent values, while the shared seed still selects the same episode windows. A community's draws differ
+from those of the same dataset run alone as a `CityLearnEnv`; pass the same `random_stream_namespace` in
+`env_kwargs` to the standalone environment to reproduce them. `compare_manifests()` reports two runs with
+different namespaces as incompatible (`random_stream_namespace`)
+([#462](https://github.com/citylearn-project/CityLearn/issues/462)).
 
 Calendar windows are not part of the contract. Each child selects its episode
 split from its own simulation window, `random_episode_split` setting and
@@ -171,6 +181,7 @@ Only district-level child KPIs are aggregated:
 | `_kwh`, `_eur`, `_kgco2`, other `_count` | Sum across communities. |
 | `_ratio` of a control total to a reference total | Ratio of the summed totals, e.g. `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
 | Rates and means with additive denominators | Pooled: mean weighted by the denominator, e.g. `portfolio_ev_events_departure_met_count / portfolio_ev_events_departure_count`. |
+| `energy_provenance_{storage,bus}_max_residual_kwh` and their BAU values | Largest community value; the delta to the BAU is the difference of the two portfolio maxima. |
 | Other `_ratio`, `_percent` | Weighted mean using community `weight`. |
 | `energy_grid_window_average_power_*_kw` | Signed sum across communities sharing `evaluation_window` (`NaN` if any community value is undefined). |
 | Other `_kw`, `_c`, other `_hours` and other point metrics | Not aggregated in v1. |
@@ -200,20 +211,43 @@ equal the ratio of the pooled numerator and denominator and ignore `weight`:
 | Community-market local share of export | Local export plus grid export after local trading |
 | Demand-response compliance | `demand_response_valid_requested_total_kwh` |
 | Demand-response audit compliance, requested-energy coverage and baseline coverage, per purpose | The audit's valid requested energy, requested energy and active intervals |
-| Stationary-battery equivalent full cycles (control and BAU) | Nominal stationary-battery capacity |
+| Stationary-battery equivalent full cycles and capacity fade (control and BAU) | Nominal stationary-battery capacity |
+| EV departure audit: service coverage and threshold coverage (`ev_departure_audit_*coverage_ratio`) | `ev_departure_audit_departures_count` |
+| EV departure audit: `*_service_observed_ratio` | `ev_departure_audit_service_observed_count` |
+| EV departure audit: `*_service_feasible_ratio` | The matching `ev_departure_audit_*_feasible_service_observed_count` |
+| Thermal-service audit: discomfort, thermal coverage and their outage variants | Evaluated occupied, occupied, evaluated outage occupied and outage occupied intervals |
+| Thermal-service audit: occupancy and energy coverage | Executed intervals |
+| Thermal-service audit: unserved service ratio and its outage variant | Expected service energy, over all intervals or outage intervals |
+| Flexible-appliance audit: observed completion and resolved coverage; resolved completion | Offered requests; resolved requests |
+| Equity audit: coverage ratio; losers percentage | Population members; eligible members |
+| Useful PV (`energy_provenance_pv_useful_{building,with_mobility}_ratio`, control and BAU) | `energy_provenance_pv_generated_kwh` (control or BAU) |
 
 The BAU deltas and ratios of the pooled deferrable service level, start delay,
-self-consumption and equivalent full cycles compare the pooled control and BAU
-values. Communities whose value is undefined carry no weight.
+self-consumption, equivalent full cycles, capacity fade and useful PV compare the
+pooled control and BAU values. Communities whose value is undefined carry no weight.
+Communities with weight 0 still count in these rows, as in the summed totals: a
+pooled rate is the rate of the portfolio's own counts
+([#428](https://github.com/citylearn-project/CityLearn/issues/428)).
 
 For stationary batteries, the portfolio cycle count is total throughput divided
-by twice the total nominal capacity. Installed batteries contribute their capacity
+by twice the total nominal capacity, and the capacity fade is the capacity lost
+over the total nominal capacity. Installed batteries contribute their capacity
 even if they are idle. The result is undefined when the total capacity is zero.
 
-Ratios without additive totals stay weighted means: grid-shape ratios (peaks,
-ramping and load-factor penalties), comfort and resilience proportions, equity,
-the thermal-service, EV-departure and other audit ratios, battery capacity fade,
-and the ratio of battery capacity fade to its BAU value.
+Ratios without additive totals stay means weighted by the community `weight`:
+
+| Rows | Why they are not pooled |
+|---|---|
+| Grid-shape ratios (peaks, ramping and load-factor penalties) | A portfolio peak or load factor needs the summed time series, which the district rows do not hold. |
+| Equity Gini, top-20 % share and asset-poor over asset-rich ratio | Distributions over the members; they cannot be rebuilt from district counts. |
+| Legacy comfort and resilience rows (`comfort_resilience_*`) and the legacy equity losers percentage | Their district values are plain means of the buildings; the pooled canonical rows are the thermal-service and equity audits. |
+| `*_building_mean_ratio` rows | Means of member ratios by definition. |
+| Phase imbalance and the EV departure tolerance | A time average of imbalance, and a setting that every community shares. |
+
+Each portfolio row has its own `description`, which states its rule and then the
+district definition, for example `Portfolio: pooled over the communities: their
+values weighted by portfolio_ev_departure_audit_departures_count, ...`. The export
+manifest lists the rule of every row under `portfolio_aggregation`.
 
 Communities without a community market report zeros in their market rows. In a
 portfolio where some communities have a market and others do not, a community
@@ -230,17 +264,53 @@ portfolios where every community has a market or none has
 
 Portfolio KPI names replace a leading `district_` prefix with `portfolio_`, for example `district_demand_response_revenue_total_eur` becomes `portfolio_demand_response_revenue_total_eur`.
 
+## Scorecard
+
+`scorecard(kpis=None, level=None, **evaluate_kwargs)` returns the rows of
+`CityLearnEnv.SCORECARD_DEFAULT_KPIS` for every community and, with `portfolio_`
+in place of `district_`, for the portfolio. Rows follow that list, then the
+communities in order, with the portfolio last. `level` keeps only `'portfolio'`,
+`'district'` or `'building'` rows.
+
 ## Export
 
-`export_final_kpis()` writes each child export in its own subfolder and writes a global CSV in the wrapper session folder:
+`export_final_kpis()` writes each child export in its own subfolder and writes the portfolio table and its manifest in the wrapper session folder:
 
 ```text
 <render_directory>/<render_session_name>/
   exported_kpis_multi_community.csv
+  exported_kpis_multi_community.manifest.json
   community_a/exported_kpis.csv
+  community_a/exported_kpis.manifest.json
   community_b/exported_kpis.csv
+  community_b/exported_kpis.manifest.json
 ```
 
-The global CSV keeps the long `evaluate_v2()` format with local and portfolio
-rows and the `unit` and `description` columns. Each child keeps its wide
-numeric table and stores its KPI definitions in `exported_kpis.manifest.json`.
+The portfolio table keeps the long `evaluate_v2()` format with local and portfolio
+rows and the `unit`, `description`, `status` and `replacement` columns. It is
+written as `exported_kpis_multi_community.parquet` when every community uses
+`render_file_format="parquet"`. Each child keeps its wide numeric table and stores
+its KPI definitions in `exported_kpis.manifest.json`.
+`include_battery_health_audit=True` adds the opt-in EV battery-health rows to every
+table, as in `evaluate_v2()`.
+
+The portfolio manifest records:
+
+| Key | Content |
+|---|---|
+| `kind`, `definition_version` | `"multi_community"` and the manifest version. |
+| `community_ids`, `weights` | The communities in order and their weights. |
+| `shared_settings` | The settings every community shares (interface, step, episode length, evaluation window, physics, random-stream and baseline versions, BAU EV target, EV tolerances, SOC carry-over, energy provenance). |
+| `kpi_export` | `include_business_as_usual`, `include_battery_health_audit`, `kpi_round_decimals`, whether the community tables were written, and the file format. |
+| `controller_identity` | The identity set with `set_experiment_identity()`. |
+| `portfolio_aggregation` | The rule of each portfolio row and the rows it is built from. |
+| `kpi_definitions` | Unit, description, status and replacement of every KPI in the table, portfolio rows included. |
+| `communities` | For each community: its weight, random-stream namespace, the path of its manifest relative to the session folder, and the evidence that `compare_manifests()` reads. |
+
+`set_experiment_identity(implementation, version, parameters, observation_access)`
+declares the controller of every community at once. `compare_exports()` on two
+portfolio tables reads their manifests: the portfolios pair when they have the
+same communities, weights and portfolio rules and each community pairs with its
+namesake; a community's mismatches and missing evidence are listed as
+`<community_id>:<item>`, for example `community_a:controller_identity`
+([#429](https://github.com/citylearn-project/CityLearn/issues/429)).

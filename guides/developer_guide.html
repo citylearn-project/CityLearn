@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Guide &mdash; CityLearn 3.8.0 documentation</title>
+  <title>Developer Guide &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -158,7 +158,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -298,9 +298,15 @@ the comparison reports <code class="docutils literal notranslate"><span class="p
 </pre></div>
 </div>
 <p>CI performance smoke check:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">.venv/bin/python scripts/ci/perf_smoke.py --episode-steps 600 --seconds 60 --baseline-file scripts/ci/perf_baseline.json</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">.venv/bin/python scripts/ci/perf_smoke.py --require-baseline</span>
 </pre></div>
 </div>
+<p>It times the 2022 <code class="docutils literal notranslate"><span class="pre">plus_evs</span></code> dataset (flat, flat with end rendering and entity, 60 s step on hourly data),
+<code class="docutils literal notranslate"><span class="pre">pt_rec_4</span></code> at its native step with <code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode='reject'</span></code> and the physics invariant checks on, and the
+construction of the whole 15 s Parquet electrical-service dataset. The gates are loose; the thresholds are the
+script’s defaults and <code class="docutils literal notranslate"><span class="pre">scripts/ci/perf_baseline.json</span></code> stores only measurements. CI writes the ratio of every
+metric to its baseline to the job summary. Re-record the baseline once per release with <code class="docutils literal notranslate"><span class="pre">--write-baseline</span></code>;
+<code class="docutils literal notranslate"><span class="pre">--cases</span></code> limits a run (or a re-recording) to some cases. Constructing the 15 s dataset needs about 6 GB of memory.</p>
 <p>Step/component profiling:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">.venv/bin/python scripts/audit/profile_step_breakdown.py --episode-steps 300 --seconds 60 --agent rbc --interface flat --render-mode none --no-write --table-limit 14</span>
 </pre></div>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.base &mdash; CityLearn 3.8.0 documentation</title>
+  <title>citylearn.base &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -198,7 +198,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">random_stream_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Episode key of the per-episode random streams (``random_stream_version='v2'``).</span>
+<span class="w">        </span><span class="sd">"""Episode key of the per-episode random streams.</span>
 
 <span class="sd">        The environment sets it at reset: the episode index, or 0 after a reset with an explicit</span>
 <span class="sd">        seed, so that ``reset(seed=s)`` uses the streams of the first episode of an environment</span>
@@ -430,8 +430,7 @@
 <span class="sd">    random_seed : int, optional</span>
 <span class="sd">        Pseudorandom number generator seed for repeatable results.</span>
 <span class="sd">    random_stream_version : str, optional</span>
-<span class="sd">        Derivation of the object's random streams, ``'v2'`` (default) or ``'v1'`` (CityLearn 3.6.0 and earlier).</span>
-<span class="sd">        See :py:mod:`citylearn.random_streams`.</span>
+<span class="sd">        Derivation of the object's random streams, ``'v2'``, the only version. See :py:mod:`citylearn.random_streams`.</span>
 <span class="sd">    random_stream_key : Tuple[Any, ...], optional</span>
 <span class="sd">        Identity of the object in its random streams, so objects that share a seed draw independent values.</span>
 <span class="sd">    simulation_start_time_step: int, optional</span>
@@ -496,17 +495,12 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__seconds_per_time_step</span>
     
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">numpy_random_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">numpy_random_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Stream for randomly drawn parameters of this object.</span>
 
-<span class="sd">        With ``random_stream_version='v1'`` it is a new ``RandomState(random_seed)`` on every</span>
-<span class="sd">        access, as in CityLearn 3.6.0, so every draw is the first value of that seed. With ``'v2'``</span>
-<span class="sd">        it is one persistent generator per object, derived from `random_seed` and</span>
-<span class="sd">        :py:attr:`random_stream_key`, so successive draws are independent.</span>
+<span class="sd">        One persistent generator per object, derived from `random_seed` and :py:attr:`random_stream_key`,</span>
+<span class="sd">        so successive draws are independent.</span>
 <span class="sd">        """</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">==</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_generator</span><span class="p">(</span><span class="n">random_streams</span><span class="o">.</span><span class="n">DEVICE_PARAMETERS</span><span class="p">)</span>
 
@@ -541,7 +535,7 @@
 <div class="viewcode-block" id="Environment.random_generator">
 <a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.Environment.random_generator">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">random_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Persistent generator for `purpose` and `parts` of this object (``random_stream_version='v2'``).</span>
+<span class="w">        </span><span class="sd">"""Persistent generator for `purpose` and `parts` of this object.</span>
 
 <span class="sd">        The generator is derived from :py:attr:`random_seed`, `purpose`, :py:attr:`random_stream_key`</span>
 <span class="sd">        and `parts`, and is kept until the seed, version or key changes.</span>

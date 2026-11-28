@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.agents.marlisa module &mdash; CityLearn 3.8.0 documentation</title>
+  <title>citylearn.agents.marlisa module &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -154,7 +154,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -337,9 +337,7 @@ moves to the time step before standardization. Schedules that already meet it ar
 <dt class="sig sig-object py" id="citylearn.agents.marlisa.MARLISA.shuffle_coordination_order">
 <span class="sig-name descname"><span class="pre">shuffle_coordination_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/marlisa.html#MARLISA.shuffle_coordination_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.marlisa.MARLISA.shuffle_coordination_order" title="Link to this definition"></a></dt>
 <dd><p>Shuffle, in place, the order in which buildings act during exploration with information sharing.</p>
-<p>With <code class="docutils literal notranslate"><span class="pre">random_stream_version='v1'</span></code> the order is shuffled by <code class="docutils literal notranslate"><span class="pre">RandomState(random_seed</span> <span class="pre">+</span> <span class="pre">time_step)</span></code>, as in
-CityLearn 3.6.0, so seed <code class="docutils literal notranslate"><span class="pre">s</span></code> at time step <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">+</span> <span class="pre">1</span></code> repeats seed <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">+</span> <span class="pre">1</span></code> at time step <code class="docutils literal notranslate"><span class="pre">t</span></code>. With <code class="docutils literal notranslate"><span class="pre">'v2'</span></code>
-it is shuffled by one generator per episode, derived from <code class="xref py py-attr docutils literal notranslate"><span class="pre">random_seed</span></code> and the episode.</p>
+<p>It is shuffled by one generator per episode, derived from <code class="xref py py-attr docutils literal notranslate"><span class="pre">random_seed</span></code> and the episode.</p>
 </dd></dl>
 
 <dl class="py property">

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.citylearn module &mdash; CityLearn 3.8.0 documentation</title>
+  <title>citylearn.citylearn module &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -153,7 +153,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -236,10 +236,14 @@ each building independently in a <code class="code docutils literal notranslate"
 <li><p><strong>random_seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Pseudorandom number generator seed for repeatable results.</p></li>
 <li><p><strong>random_stream_version</strong> (<em>str</em><em>, </em><em>optional</em>) – Keyword argument. How the random streams for unspecified device parameters, away-from-charger EV
 state of charge, occupant set-point interactions and stochastic power outages are derived from
-<cite>random_seed</cite>: <code class="docutils literal notranslate"><span class="pre">'v2'</span></code> (default) derives one independent stream per purpose, object and episode
-with <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.SeedSequence</span></code>; <code class="docutils literal notranslate"><span class="pre">'v1'</span></code> reproduces CityLearn 3.6.0 and earlier. Overrides
-<code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> in the schema. Agents built on the environment use the same version for
-their own random streams. See <a class="reference internal" href="citylearn.random_streams.html#module-citylearn.random_streams" title="citylearn.random_streams"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.random_streams</span></code></a>.</p></li>
+<cite>random_seed</cite>: <code class="docutils literal notranslate"><span class="pre">'v2'</span></code>, the only version, derives one independent stream per purpose, object and
+episode with <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.SeedSequence</span></code>. Version <code class="docutils literal notranslate"><span class="pre">'v1'</span></code> was removed in CityLearn 3.8.1.
+Overrides <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> in the schema. Agents built on the environment use the same
+streams. See <a class="reference internal" href="citylearn.random_streams.html#module-citylearn.random_streams" title="citylearn.random_streams"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.random_streams</span></code></a>.</p></li>
+<li><p><strong>random_stream_namespace</strong> (<em>str</em><em>, </em><em>optional</em>) – Keyword argument, constructor only. Adds the namespace to the key of every random stream derived from
+<cite>random_seed</cite>, so two environments with the same seed and the same building and EV names draw
+independent values. <a class="reference internal" href="citylearn.multi_community.html#citylearn.multi_community.MultiCommunityEnv" title="citylearn.multi_community.MultiCommunityEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code></a> sets it to each community’s
+<code class="docutils literal notranslate"><span class="pre">community_id</span></code>. Defaults to none, which leaves the streams unchanged. It does not change the episode split.</p></li>
 <li><p><strong>offline</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
 error when required files are not available locally. Defaults to the <code class="docutils literal notranslate"><span class="pre">CITYLEARN_OFFLINE</span></code> environment
 variable, read at initialization, or False when it is unset.</p></li>
@@ -249,8 +253,9 @@ See the flat and entity interfaces guide.</p></li>
 <li><p><strong>topology_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – <code class="docutils literal notranslate"><span class="pre">'static'</span></code> (default) keeps the members and assets of the schema for the whole episode; <code class="docutils literal notranslate"><span class="pre">'dynamic'</span></code>
 applies the schema’s <code class="docutils literal notranslate"><span class="pre">topology_events</span></code> (members and assets joining or leaving) and requires
 <code class="docutils literal notranslate"><span class="pre">interface='entity'</span></code>. Overrides the schema key.</p></li>
-<li><p><strong>start_date</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>datetime.date</em><em>]</em><em>, </em><em>optional</em>) – Date of the first time step in rendered and exported timestamps, e.g. <code class="docutils literal notranslate"><span class="pre">'2024-01-01'</span></code>. Defaults to the
-schema’s <code class="docutils literal notranslate"><span class="pre">start_date</span></code>, else 2024-01-01. It does not change the simulation.</p></li>
+<li><p><strong>start_date</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>datetime.date</em><em>]</em><em>, </em><em>optional</em>) – Date of global row 0 in rendered and exported timestamps, e.g. <code class="docutils literal notranslate"><span class="pre">'2024-01-01'</span></code>; the time of day comes
+from the dataset’s <code class="docutils literal notranslate"><span class="pre">hour</span></code>, <code class="docutils literal notranslate"><span class="pre">minutes</span></code> and <code class="docutils literal notranslate"><span class="pre">seconds</span></code> columns. Defaults to the schema’s <code class="docutils literal notranslate"><span class="pre">start_date</span></code>,
+else to the date that the <code class="docutils literal notranslate"><span class="pre">month</span></code> and <code class="docutils literal notranslate"><span class="pre">day_type</span></code> columns give. It does not change the simulation.</p></li>
 <li><p><strong>render_directory</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>, </em><em>optional</em>) – Base directory where rendering and export artifacts are stored. Relative paths are resolved from the current working directory.</p></li>
 <li><p><strong>render_directory_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Folder name created in the current working directory for rendering and export artifacts when <code class="docutils literal notranslate"><span class="pre">render_directory</span></code> is not provided.
 Defaults to <code class="docutils literal notranslate"><span class="pre">render_logs</span></code>.</p></li>
@@ -268,13 +273,13 @@ If not provided, defaults to the effective rendering setting (enabled when rende
 <li><p><strong>ev_departure_service_tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower SOC service tolerance used by EV departure minimum-acceptable KPIs. Defaults to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
 <li><p><strong>business_as_usual_ev_charge_target</strong> (<em>str</em><em>, </em><em>optional</em>) – EV charging of the native BAU reference built by <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>: <code class="docutils literal notranslate"><span class="pre">'full'</span></code> charges to 100%,
 <code class="docutils literal notranslate"><span class="pre">'requested'</span></code> to the user’s requested departure SOC. Defaults to the schema value, else <code class="docutils literal notranslate"><span class="pre">'full'</span></code>.</p></li>
-<li><p><strong>physics_version</strong> (<em>int</em><em>, </em><em>optional</em>) – Physics definitions: <code class="docutils literal notranslate"><span class="pre">2</span></code> (default) or <code class="docutils literal notranslate"><span class="pre">1</span></code>, which reproduces the physics of CityLearn 3.6.0. Overrides the
-schema key. The migration guide lists the corrections of version 2.</p></li>
-<li><p><strong>baseline_version</strong> (<em>int</em><em>, </em><em>optional</em>) – Definition of the default KPI baseline (the <code class="docutils literal notranslate"><span class="pre">*_without_storage</span></code> series) and of the native BAU HVAC: <code class="docutils literal notranslate"><span class="pre">2</span></code>
-(default) removes the battery, the thermal storage and the EV charging of the controlled run, and adds back the
+<li><p><strong>physics_version</strong> (<em>int</em><em>, </em><em>optional</em>) – Physics definitions: <code class="docutils literal notranslate"><span class="pre">2</span></code>, the only version (version <code class="docutils literal notranslate"><span class="pre">1</span></code> was removed in CityLearn 3.8.1). Overrides the
+schema key. See <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.physics_version</span></code>.</p></li>
+<li><p><strong>baseline_version</strong> (<em>int</em><em>, </em><em>optional</em>) – Definition of the default KPI baseline (the <code class="docutils literal notranslate"><span class="pre">*_without_storage</span></code> series) and of the native BAU HVAC: version
+<code class="docutils literal notranslate"><span class="pre">2</span></code> removes the battery, the thermal storage and the EV charging of the controlled run, and adds back the
 EV charging of the native BAU with the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target, so it is the same for every controller and has no V2G;
-its native BAU also runs the HVAC so that it delivers the dataset’s own heating and cooling demand. <code class="docutils literal notranslate"><span class="pre">1</span></code> adds
-nothing back and its BAU sends zero to the HVAC actions, as in CityLearn 3.6.0. Overrides the schema key. See
+its native BAU also runs the HVAC so that it delivers the dataset’s own heating and cooling demand. <code class="docutils literal notranslate"><span class="pre">2</span></code> is
+the only version (version <code class="docutils literal notranslate"><span class="pre">1</span></code> was removed in CityLearn 3.8.1). Overrides the schema key. See
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.baseline_version</span></code>.</p></li>
 <li><p><strong>debug_timing</strong> (<em>bool</em><em>, </em><em>optional</em>) – Log runtime timings. Defaults to the schema value, else <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p><strong>check_observation_limits</strong> (<em>bool</em><em>, </em><em>optional</em>) – Check observations against their estimated bounds. Defaults to the schema value, else <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
@@ -368,7 +373,7 @@ and electricity pricing at the current time step.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.baseline_version">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">baseline_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.baseline_version" title="Link to this definition"></a></dt>
-<dd><p>Definition of the default KPI baseline and, from version 2, of the native BAU HVAC; see
+<dd><p>Definition of the default KPI baseline and of the native BAU HVAC; see
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.baseline_version</span></code>.</p>
 </dd></dl>
 
@@ -621,6 +626,10 @@ ratio without any event to serve.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> (str): the building name for building rows, <code class="docutils literal notranslate"><span class="pre">'District'</span></code> for district rows.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">level</span></code> (str): <code class="docutils literal notranslate"><span class="pre">'building'</span></code> or <code class="docutils literal notranslate"><span class="pre">'district'</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">unit</span></code> (str) and <code class="docutils literal notranslate"><span class="pre">description</span></code> (str): the unit and English description from the KPI catalogue.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">status</span></code> (str): <code class="docutils literal notranslate"><span class="pre">'canonical'</span></code> for the row to report for its question, <code class="docutils literal notranslate"><span class="pre">'legacy'</span></code> for an older
+definition kept for comparison with earlier results, <code class="docutils literal notranslate"><span class="pre">'deprecated'</span></code> for an alias that returns the
+value of its canonical row, <code class="docutils literal notranslate"><span class="pre">'current'</span></code> otherwise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">replacement</span></code> (str): for <code class="docutils literal notranslate"><span class="pre">'legacy'</span></code> and <code class="docutils literal notranslate"><span class="pre">'deprecated'</span></code> rows, the name of the canonical row.</p></li>
 </ul>
 <p>Which KPIs appear depends on the scenario’s assets and services. <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.scorecard" title="citylearn.citylearn.CityLearnEnv.scorecard"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scorecard()</span></code></a> selects the
 default subset. The KPI catalogue lists every name and the KPI reference guide defines every family.
@@ -636,8 +645,11 @@ community, with a <code class="docutils literal notranslate"><span class="pre">c
 
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.export_final_kpis">
-<span class="sig-name descname"><span class="pre">export_final_kpis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.agents.base.html#citylearn.agents.base.Agent" title="citylearn.agents.base.Agent"><span class="pre">Agent</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'exported_kpis.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_business_as_usual</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_business_as_usual_timeseries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kpi_round_decimals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/citylearn.html#CityLearnEnv.export_final_kpis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.export_final_kpis" title="Link to this definition"></a></dt>
-<dd><p>Export episode KPIs to csv.</p>
+<span class="sig-name descname"><span class="pre">export_final_kpis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.agents.base.html#citylearn.agents.base.Agent" title="citylearn.agents.base.Agent"><span class="pre">Agent</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'exported_kpis.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_business_as_usual</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_business_as_usual_timeseries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kpi_round_decimals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_battery_health_audit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/citylearn.html#CityLearnEnv.export_final_kpis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.export_final_kpis" title="Link to this definition"></a></dt>
+<dd><p>Export episode KPIs to csv (or parquet with <cite>render_file_format=’parquet’</cite>) and their manifest.</p>
+<p><cite>include_battery_health_audit</cite> adds the opt-in EV battery-health rows of <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.evaluate_v2" title="citylearn.citylearn.CityLearnEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_v2()</span></code></a>. The
+manifest (<code class="docutils literal notranslate"><span class="pre">exported_kpis.manifest.json</span></code>) records it with <cite>include_business_as_usual</cite> and
+<cite>kpi_round_decimals</cite> under <code class="docutils literal notranslate"><span class="pre">kpi_export</span></code>. Returns the manifest.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -968,7 +980,10 @@ is returned where each sublist is a list of 1 building’s observation values an
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.render_start_date">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">render_start_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">date</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.render_start_date" title="Link to this definition"></a></dt>
-<dd><p>Date used as the origin for rendered timestamps.</p>
+<dd><p>Date of global row 0 in rendered and exported timestamps.</p>
+<p>The <cite>start_date</cite> argument or schema key; without one, the date that the dataset’s <cite>month</cite> and
+<cite>day_type</cite> columns give (see the export clock in the running-simulations guide). With a calendar
+file and no <cite>start_date</cite> argument, exported timestamps come from the calendar instead.</p>
 </dd></dl>
 
 <dl class="py method">

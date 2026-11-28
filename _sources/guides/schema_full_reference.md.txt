@@ -40,9 +40,9 @@ How to read the values:
 |---|---|---|---|
 | `root_directory` | dataset folder, relative to the schema file | the schema's folder | Every file name below is read from here. A `dict` schema must set it. The `root_directory` argument overrides it. |
 | `random_seed` | `2022` | a new random seed at each construction | Set it for repeatable runs: drawn device parameters, EV initial SOC and drift, noise and random episodes depend on it. |
-| `random_stream_version` | `"v2"` | `"v2"` | `"v1"` reproduces the random draws of CityLearn 3.6.0. |
-| `physics_version` | `2` | `2` | `1` reproduces the physics of 3.6.0; see [What each version changes](schema_reference.md#what-each-version-changes). |
-| `baseline_version` | `2` | `2` | `1`: the KPI baseline adds no EV charging back, and the BAU sends zero to the HVAC actions, as in 3.6.0. This dataset has no HVAC actions, so its BAU is the same under both versions. |
+| `random_stream_version` | `"v2"` | `"v2"` | The only version; see [Versions](schema_reference.md#versions). |
+| `physics_version` | `2` | `2` | The only version; see [What each version changes](schema_reference.md#what-each-version-changes). |
+| `baseline_version` | `2` | `2` | The only version: the KPI baseline adds back the BAU EV charging. This dataset has no HVAC actions, so its BAU sends no HVAC action. |
 
 ## Agent layout, time window and episodes
 
@@ -511,7 +511,7 @@ size them or use `"autosize": true`.
 | `loss_coefficient` | `null` | drawn in 0.001-0.009 per hour | |
 | `capacity_loss_coefficient` | `null` | drawn in 1e-5-1e-4 | Capacity fade per equivalent full cycle. |
 | `power_efficiency_curve`, `capacity_power_curve` | `null` | drawn curves | Give them to make the battery independent of the seed. |
-| `discharge_power_curve` | `null` | `[[0, 1], [1, 1]]` | Physics version 1 uses `capacity_power_curve` for discharge too. |
+| `discharge_power_curve` | `null` | `[[0, 1], [1, 1]]` | Limits discharge only; `capacity_power_curve` limits charging. |
 | `phase_connection` | `null` | `L1` (single phase) | Phase under the electrical service. |
 | `autosize_attributes` | `duration` drawn in 1.5-3.5 h, `parallel` `false`, `safety_factor` `1.0` | | Used only with `"autosize": true`. |
 | `pv.attributes.nominal_power` | 12 kW | `0` | |
@@ -918,7 +918,6 @@ size them or use `"autosize": true`.
 | To | Change |
 |---|---|
 | Train on random one-week episodes | `"episode_time_steps": 169`, `"random_episode_split": true` |
-| Reproduce CityLearn 3.6.0 | `"physics_version": 1`, `"baseline_version": 1`, `"random_stream_version": "v1"`, `"episode_split_boundary": "disjoint"` |
 | Control both buildings with one agent | `"central_agent": true` |
 | Use entity tables | `"interface": "entity"` and the `observation_bundles` you need |
 | Settle energy locally and pay exports | `community_market`: `"enabled": true`, `"settlement_version": 2`, `"grid_export_price": 0.05` |

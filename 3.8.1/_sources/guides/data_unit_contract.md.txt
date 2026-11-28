@@ -1,0 +1,215 @@
+# Data Unit Contract
+
+This document fixes the unit contract expected by the simulator. The goal is to avoid ambiguity when using hourly datasets, sub-hourly datasets or real data that originally arrives as power.
+
+## Base Rule
+
+The physical engine accounts for energy per simulation step.
+
+| Quantity | Unit |
+|---|---|
+| Time-series energy columns | `kWh/step` |
+| Nominal power, limits, contracts and physical power actions | `kW` |
+| Storage capacity | `kWh` |
+| State of charge (`soc`) | fraction in `[0, 1]` |
+| Energy prices | currency per `kWh` |
+| Carbon intensity | CO2 mass per `kWh` |
+
+`seconds_per_time_step` in the schema must represent the physical cadence of the dataset. If the dataset resolution and schema resolution differ, the simulator applies the compatibility conversion and prints an explicit `[CityLearn][unit-conversion]` warning. This is supported, but the preferred production path is to generate the dataset at the same resolution declared by the schema.
+
+With that conversion, simulated electricity series are control-step kWh. This includes the `net_electricity_consumption_without_storage_and_partial_load*` baselines: the device electricity for the extra heating and cooling of the ideal (uncontrolled) demand is converted once from dataset-step to control-step kWh, like the controlled device electricity.
+
+## Main Time Series
+
+| Field | Unit | Notes |
+|---|---|---|
+| `energy_simulation.non_shiftable_load` | `kWh/step` | Energy consumed in the step. |
+| `energy_simulation.cooling_demand` | `kWh/step` | Thermal demand in the step. |
+| `energy_simulation.heating_demand` | `kWh/step` | Thermal demand in the step. |
+| `energy_simulation.dhw_demand` | `kWh/step` | Thermal demand in the step. |
+| `energy_simulation.solar_generation` | average power per installed kW (W/kW) or `kWh/step` | Depends on `pv.attributes.generation_mode`; see PV section. |
+| `pricing.electricity_pricing` | currency/`kWh` | Not scaled by step size. |
+| `carbon_intensity.carbon_intensity` | CO2/`kWh` | Not scaled by step size. |
+| `weather` | physical unit of each variable | Temperature, irradiance and humidity are not energy. |
+
+## Equipment
+
+| Element | Typical field | Unit |
+|---|---|---|
+| Battery / electrical storage | `capacity` | `kWh` |
+| Battery / electrical storage | `nominal_power` | `kW` |
+| Thermal storage | `capacity` | `kWh` |
+| Thermal storage | `max_input_power`, `max_output_power` | `kW` |
+| Heat pumps, heaters, chillers | `nominal_power` | electrical `kW` |
+| PV | `nominal_power` | `kW` |
+| EV charger | `max_charging_power`, `max_discharging_power` | `kW` |
+| Electric vehicle | battery `capacity` | `kWh` |
+| Deferrable appliance | cycle `load_profile` | `kWh/step` |
+| Deferrable appliance | cycle `total_energy_kwh` | `kWh` |
+| Grid/phase/contract limits | power limits | `kW` |
+
+Any `kW` limit is converted to step energy with:
+
+```text
+max_energy_kwh_step = limit_kw * seconds_per_time_step / 3600
+```
+
+## Real Data Conversion
+
+When the real source arrives as power, the converter must produce energy columns in `kWh/step` before generating the CityLearn dataset.
+
+```text
+energy_kwh_step = mean_power_kw_over_step * seconds_per_time_step / 3600
+```
+
+Practical rules:
+
+| Source | Conversion |
+|---|---|
+| Power series in `kW` | Aggregate to simulator cadence with time mean, then convert to `kWh/step`. |
+| Interval readings already in `kWh` | Sum intervals belonging to the simulation step. |
+| Cumulative `kWh` meters | Difference consecutive readings, then aggregate. |
+| Prices and emissions | Align or forward-fill to simulator cadence; do not multiply by step size. |
+| Phase limits, contracted power and device ratings | Keep in `kW`. |
+| EV timestamps | Convert absolute times to integer timesteps used by charger schedules. |
+| Deferrable timestamps | Use global dataset timesteps for `earliest_start_time_step`, `latest_start_time_step` and `deadline_time_step`. |
+| EV charger countdowns | `electric_vehicle_departure_time` and `electric_vehicle_estimated_arrival_time` are step counts, not clock hours. |
+| Entity derived forecasts | Computed from future dataset values in simulator time, with horizons converted from seconds using `seconds_per_time_step`. |
+| Entity action feedback | Requested/limited actions are normalized commands; requested/limited/applied power fields are `kW`; short-window energy fields are `kWh`. |
+| Entity BESS energy capacity | `max_*_energy_kwh_step` is nominal power converted by step duration; `available_*_energy_kwh_step` is the constrained SOC/headroom/outage capacity for the same step. |
+| Sub-minute datasets | Include optional `seconds` in `energy_simulation` whenever possible. |
+| Quality flags like `generated` | Keep them in the ingestion/conversion pipeline; they are not native physical CityLearn fields. |
+
+Example:
+
+```text
+load_kw = 55.0
+seconds_per_time_step = 15
+load_kwh_step = 55.0 * 15 / 3600 = 0.2291667
+```
+
+Small `kWh/step` values are physically correct at 15s. If an agent needs `kW` or normalized values, convert in the agent observation layer, not in the internal energy balance.
+
+## Formats and Loading
+
+Time-series files referenced by the schema may be CSV (`.csv`) or Parquet (`.parquet`, `.pq`, `.parq`). The column and unit contract is identical in both formats.
+
+The loader reads only the window declared by `simulation_start_time_step` and `simulation_end_time_step`, while preserving the original offset so rolling or non-zero episodes stay aligned with global dataset indices.
+
+For large datasets, especially full-year 15s data, Parquet is usually better than CSV because it preserves types, compresses better and avoids text parsing. Parquet support requires `pyarrow`; without it, use CSV.
+
+When several buildings point to the same `weather`, `pricing` or `carbon_intensity` file and `noise_std = 0`, the simulator shares the same in-memory time series. `energy_simulation` remains building-specific, except for its calendar columns (`month`, `hour`, `minutes`, `seconds`, `day_type`, `daylight_savings_status`): buildings whose calendar values are bit-identical share one read-only array, which the simulator never writes. Writing into a calendar array in place raises `ValueError`; assign a new array to the attribute instead. The other series, including `hvac_mode`, `power_outage` and `comfort_band`, stay building-specific and can be edited in place.
+
+Memory grows with the simulation window, not with the episode: every episode of the window must be available, and observation-space limits and autosizing read the whole window. A full year at 15 s holds about 2.1 million rows per building. For a short study, set `simulation_start_time_step` and `simulation_end_time_step` to the period of interest instead of only `episode_time_steps`; observation-space limits and autosized equipment then come from that period, so results are not comparable with runs over the full window.
+
+### Robustness noise
+
+A building's `noise_std` adds zero-mean Gaussian noise to its indoor and outdoor temperature, outdoor relative humidity, diffuse and direct solar irradiance and their forecasts, solar generation, electricity price and carbon intensity. The standard deviation is in the unit of each series; the noise is not scaled by the series. One rule keeps the perturbed values physical:
+
+| Series | Bound |
+|---|---|
+| `solar_generation`, `diffuse_solar_irradiance`, `direct_solar_irradiance` and their forecasts | `>= 0`; no noise where the noise-free value is zero (night) |
+| `outdoor_relative_humidity` and its forecasts | `[0, 100]` % |
+| `carbon_intensity` | `>= 0` |
+
+Only noise that leaves the range is clipped: a dataset value that is already outside it keeps its noise. Outdoor temperature and electricity prices, which can be negative, are not bounded; indoor temperature keeps its clip to [-90, 57] C. With `noise_std = 0` every series is unchanged.
+
+## Deferrable Appliances
+
+The official format for deferrable loads uses two files per appliance:
+
+| File | Purpose |
+|---|---|
+| `cycle_profiles_file` | Physical cycle profile catalog. |
+| `flexibility_schedule_file` | Flexibility requests pointing to catalog entries through `profile_id`. |
+
+`cycle_profiles_file`:
+
+| Field | Unit/type | Notes |
+|---|---|---|
+| `profile_id` | identifier | Stable physical profile key. |
+| `duration_steps` | steps | Must match `load_profile` length. |
+| `total_energy_kwh` | `kWh` | Must match `sum(load_profile)`. |
+| `load_profile` | list of `kWh/step` | Energy consumed at each cycle step. |
+
+`flexibility_schedule_file`:
+
+| Field | Unit/type | Notes |
+|---|---|---|
+| `cycle_id` | identifier | Unique request/occurrence. |
+| `profile_id` | identifier | Reference to the catalog. |
+| `earliest_start_time_step` | global timestep | First timestep where the cycle may start. |
+| `latest_start_time_step` | global timestep | Last timestep where the agent may start. |
+| `deadline_time_step` | global timestep | Last timestep by which the cycle must be complete. |
+| `priority` | ratio `[0, 1]` | External request priority/urgency. |
+| `must_run` | bool | Service contract flag. |
+
+The RL action is simple: `start`. If the action exceeds the threshold, the simulator tries to start the next pending cycle. The cycle starts only inside `[earliest_start_time_step, latest_start_time_step]` and only if it fits before `deadline_time_step`. If `latest_start_time_step` passes without a valid start, the cycle is marked missed.
+
+If real cycle data arrives as power (`kW`), the converter must generate `load_profile` as energy:
+
+```text
+cycle_step_kwh = cycle_step_kw * seconds_per_time_step / 3600
+```
+
+Do not repeat `load_profile` per timestep in the dataset. Temporal repetition belongs in `flexibility_schedule_file`, pointing to the same `profile_id`.
+
+## EV Flexibility Features
+
+In the entity interface, EV flexibility should preferably be consumed through physical/normalized derived features.
+Energies are stored EV battery energy; powers are AC-side, at the charger terminals. The conversion between them is
+`eta = charger efficiency × EV battery one-way efficiency`, both read at full charger power: the charger
+`charge_efficiency_curve` (or `efficiency`) at 1.0, and the square root of the EV battery's round-trip
+`power_efficiency_curve` at the battery power that full charger power delivers.
+
+| Feature | Meaning |
+|---|---|
+| `hours_until_departure` | Physical time until departure. |
+| `time_until_departure_ratio` | `hours_until_departure / 24`, clipped to `[0, 1]`. |
+| `energy_to_required_soc_kwh` | Stored energy still required to reach target SOC. |
+| `required_average_power_kw` | Average AC charger power required until departure: `energy_to_required_soc_kwh / (hours_until_departure × eta)`. |
+| `charging_slack_kw` | Charger max power minus `required_average_power_kw`. |
+| `charging_priority_ratio` | Urgency in `[0, 1]`: `required_average_power_kw` divided by charger max power. |
+| `max_deliverable_energy_until_departure_kwh` | Stored energy that can still be delivered by departure: current feasible AC charge power × `hours_until_departure` × `eta`, at most the energy to full. |
+| `departure_energy_margin_kwh` | `max_deliverable_energy_until_departure_kwh - energy_to_required_soc_kwh`; negative means the target is currently infeasible. |
+| `departure_feasibility_ratio` | `energy_to_required_soc_kwh / max_deliverable_energy_until_departure_kwh`; values above `1` indicate infeasibility under current limits. |
+| `min_required_action_normalized` | `required_average_power_kw` divided by charger max charging power; values above `1` indicate a power deadline conflict. |
+
+Until CityLearn 3.8.0 `required_average_power_kw` was the stored energy per hour, compared with the AC charger power
+without any efficiency, and `max_deliverable_energy_until_departure_kwh` used the charger efficiency only.
+
+## PV
+
+`energy_simulation.solar_generation` is the easiest field to misinterpret. The simulator reads this field from the dataset. For compatibility with original CityLearn, the default mode treats it as generation profile per `1 kW` of installed PV and multiplies by `pv.nominal_power`.
+
+Default `per_kw` mode:
+
+```text
+pv_generation_kwh_step = pv.nominal_power_kw * solar_generation / 1000 * step_hours
+```
+
+`solar_generation` is the average AC power per installed kW over the step, in W/kW, and `step_hours` is the step
+length in hours (`seconds_per_time_step / 3600`). At hourly resolution the step factor is 1, so a value in Wh/kW
+gives the same result; at 15 minutes, a profile stored as energy per step instead of average power is 4 times too
+small.
+
+For real absolute data, declare:
+
+```json
+"pv": {
+  "type": "citylearn.energy_model.PV",
+  "autosize": false,
+  "attributes": {
+    "nominal_power": 120.0,
+    "generation_mode": "absolute"
+  }
+}
+```
+
+With `generation_mode = "absolute"`, `energy_simulation.solar_generation` is interpreted directly as real PV energy in `kWh/step`:
+
+```text
+pv_generation_kwh_step = solar_generation
+```
+
+In absolute mode, `pv.nominal_power` remains useful as installed power or physical rating in `kW`, but it no longer scales the dataset series.

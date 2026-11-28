@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.citylearn &mdash; CityLearn 3.8.0 documentation</title>
+  <title>citylearn.citylearn &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,7 +137,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -331,10 +331,15 @@
 <span class="sd">    random_stream_version: str, optional</span>
 <span class="sd">        Keyword argument. How the random streams for unspecified device parameters, away-from-charger EV</span>
 <span class="sd">        state of charge, occupant set-point interactions and stochastic power outages are derived from</span>
-<span class="sd">        `random_seed`: ``'v2'`` (default) derives one independent stream per purpose, object and episode</span>
-<span class="sd">        with :class:`numpy.random.SeedSequence`; ``'v1'`` reproduces CityLearn 3.6.0 and earlier. Overrides</span>
-<span class="sd">        ``random_stream_version`` in the schema. Agents built on the environment use the same version for</span>
-<span class="sd">        their own random streams. See :py:mod:`citylearn.random_streams`.</span>
+<span class="sd">        `random_seed`: ``'v2'``, the only version, derives one independent stream per purpose, object and</span>
+<span class="sd">        episode with :class:`numpy.random.SeedSequence`. Version ``'v1'`` was removed in CityLearn 3.8.1.</span>
+<span class="sd">        Overrides ``random_stream_version`` in the schema. Agents built on the environment use the same</span>
+<span class="sd">        streams. See :py:mod:`citylearn.random_streams`.</span>
+<span class="sd">    random_stream_namespace: str, optional</span>
+<span class="sd">        Keyword argument, constructor only. Adds the namespace to the key of every random stream derived from</span>
+<span class="sd">        `random_seed`, so two environments with the same seed and the same building and EV names draw</span>
+<span class="sd">        independent values. :class:`~citylearn.multi_community.MultiCommunityEnv` sets it to each community's</span>
+<span class="sd">        ``community_id``. Defaults to none, which leaves the streams unchanged. It does not change the episode split.</span>
 <span class="sd">    offline: bool, optional</span>
 <span class="sd">        If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear</span>
 <span class="sd">        error when required files are not available locally. Defaults to the ``CITYLEARN_OFFLINE`` environment</span>
@@ -348,8 +353,9 @@
 <span class="sd">        applies the schema's ``topology_events`` (members and assets joining or leaving) and requires</span>
 <span class="sd">        ``interface='entity'``. Overrides the schema key.</span>
 <span class="sd">    start_date: Union[str, datetime.date], optional</span>
-<span class="sd">        Date of the first time step in rendered and exported timestamps, e.g. ``'2024-01-01'``. Defaults to the</span>
-<span class="sd">        schema's ``start_date``, else 2024-01-01. It does not change the simulation.</span>
+<span class="sd">        Date of global row 0 in rendered and exported timestamps, e.g. ``'2024-01-01'``; the time of day comes</span>
+<span class="sd">        from the dataset's ``hour``, ``minutes`` and ``seconds`` columns. Defaults to the schema's ``start_date``,</span>
+<span class="sd">        else to the date that the ``month`` and ``day_type`` columns give. It does not change the simulation.</span>
 
 <span class="sd">    Other Parameters</span>
 <span class="sd">    ----------------</span>
@@ -383,14 +389,14 @@
 <span class="sd">        EV charging of the native BAU reference built by ``evaluate_v2()``: ``'full'`` charges to 100%,</span>
 <span class="sd">        ``'requested'`` to the user's requested departure SOC. Defaults to the schema value, else ``'full'``.</span>
 <span class="sd">    physics_version: int, optional</span>
-<span class="sd">        Physics definitions: ``2`` (default) or ``1``, which reproduces the physics of CityLearn 3.6.0. Overrides the</span>
-<span class="sd">        schema key. The migration guide lists the corrections of version 2.</span>
+<span class="sd">        Physics definitions: ``2``, the only version (version ``1`` was removed in CityLearn 3.8.1). Overrides the</span>
+<span class="sd">        schema key. See :py:mod:`citylearn.internal.physics_version`.</span>
 <span class="sd">    baseline_version: int, optional</span>
-<span class="sd">        Definition of the default KPI baseline (the ``*_without_storage`` series) and of the native BAU HVAC: ``2``</span>
-<span class="sd">        (default) removes the battery, the thermal storage and the EV charging of the controlled run, and adds back the</span>
+<span class="sd">        Definition of the default KPI baseline (the ``*_without_storage`` series) and of the native BAU HVAC: version</span>
+<span class="sd">        ``2`` removes the battery, the thermal storage and the EV charging of the controlled run, and adds back the</span>
 <span class="sd">        EV charging of the native BAU with the ``'full'`` target, so it is the same for every controller and has no V2G;</span>
-<span class="sd">        its native BAU also runs the HVAC so that it delivers the dataset's own heating and cooling demand. ``1`` adds</span>
-<span class="sd">        nothing back and its BAU sends zero to the HVAC actions, as in CityLearn 3.6.0. Overrides the schema key. See</span>
+<span class="sd">        its native BAU also runs the HVAC so that it delivers the dataset's own heating and cooling demand. ``2`` is</span>
+<span class="sd">        the only version (version ``1`` was removed in CityLearn 3.8.1). Overrides the schema key. See</span>
 <span class="sd">        :py:mod:`citylearn.internal.baseline_version`.</span>
 <span class="sd">    debug_timing: bool, optional</span>
 <span class="sd">        Log runtime timings. Defaults to the schema value, else ``False``.</span>
@@ -440,7 +446,7 @@
         <span class="s1">'random_seed'</span><span class="p">,</span> <span class="s1">'offline'</span><span class="p">,</span> <span class="s1">'time_step_ratio'</span><span class="p">,</span> <span class="s1">'interface'</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'start_date'</span><span class="p">,</span>
         <span class="s1">'episode_split_boundary'</span><span class="p">,</span> <span class="s1">'time_step_ratio_mode'</span><span class="p">,</span> <span class="s1">'random_stream_version'</span><span class="p">,</span> <span class="s1">'physics_version'</span><span class="p">,</span> <span class="s1">'evaluation_window'</span><span class="p">,</span>
         <span class="s1">'district_electrical_service'</span><span class="p">,</span>
-        <span class="s1">'baseline_version'</span><span class="p">,</span> <span class="s1">'ev_soc_carryover'</span><span class="p">,</span>
+        <span class="s1">'baseline_version'</span><span class="p">,</span> <span class="s1">'ev_soc_carryover'</span><span class="p">,</span> <span class="s1">'random_stream_namespace'</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -479,6 +485,7 @@
         <span class="n">ev_departure_service_tolerance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'ev_departure_service_tolerance'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">business_as_usual_ev_charge_target</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'business_as_usual_ev_charge_target'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">random_stream_version</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'random_stream_version'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">random_stream_namespace</span> <span class="o">=</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">parse_random_stream_namespace</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'random_stream_namespace'</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
         <span class="n">district_electrical_service</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'district_electrical_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">evaluation_window</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'evaluation_window'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">kw_render_mode</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'render_mode'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -615,7 +622,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_observations_cache</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_observations_cache_time_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_render_origin_overridden</span> <span class="o">=</span> <span class="n">start_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_render_start_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_render_start_date</span><span class="p">(</span><span class="n">start_date</span> <span class="k">if</span> <span class="n">start_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">schema_start_date</span><span class="p">)</span>
+        <span class="n">given_start_date</span> <span class="o">=</span> <span class="n">start_date</span> <span class="k">if</span> <span class="n">start_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">schema_start_date</span>
+        <span class="c1"># None when neither the argument nor the schema gives one: the date then comes from the calendar columns.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_render_start_date_given</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="n">given_start_date</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_render_start_date</span><span class="p">(</span><span class="n">given_start_date</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_export_origin</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_render_start_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_render_start_date</span><span class="p">(</span><span class="n">given_start_date</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">previous_month</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_day</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_start_date</span><span class="o">.</span><span class="n">day</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_start_date</span><span class="o">.</span><span class="n">year</span>
@@ -626,6 +639,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_cost_history</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_net_electricity_consumption_emission_history</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buildings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Read by the loader, which adds it to the stream key of every building, device and EV battery.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_namespace</span> <span class="o">=</span> <span class="n">random_stream_namespace</span>
         <span class="c1"># Set before the seed and the buildings, which draw from streams of this version.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_random_stream</span><span class="p">(</span><span class="n">random_streams</span><span class="o">.</span><span class="n">parse_random_stream_version</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'random_stream_version'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">random_stream_version</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">random_stream_version</span><span class="p">,</span>
@@ -848,9 +863,17 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">render_start_date</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Date used as the origin for rendered timestamps."""</span>
+<span class="w">        </span><span class="sd">"""Date of global row 0 in rendered and exported timestamps.</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_start_date</span>
+<span class="sd">        The `start_date` argument or schema key; without one, the date that the dataset's `month` and</span>
+<span class="sd">        `day_type` columns give (see the export clock in the running-simulations guide). With a calendar</span>
+<span class="sd">        file and no `start_date` argument, exported timestamps come from the calendar instead.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_render_start_date_given'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_start_date</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_episode_exporter</span><span class="o">.</span><span class="n">export_origin</span><span class="p">()</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">schema</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
@@ -896,11 +919,11 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">baseline_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Definition of the default KPI baseline and, from version 2, of the native BAU HVAC; see</span>
+<span class="w">        </span><span class="sd">"""Definition of the default KPI baseline and of the native BAU HVAC; see</span>
 <span class="sd">        :py:mod:`citylearn.internal.baseline_version`."""</span>
 
-        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">baseline_version_of</span>
-        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_baseline_version'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">baseline_version_of</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_BASELINE_VERSION</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_baseline_version'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">DEFAULT_BASELINE_VERSION</span>
 
     <span class="nd">@baseline_version</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">baseline_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
@@ -1966,6 +1989,7 @@
             <span class="s1">'reward_evidence'</span><span class="p">:</span> <span class="n">reward_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
             <span class="o">**</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">(),</span>
             <span class="s1">'random_stream_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span><span class="p">,</span>
+            <span class="s1">'random_stream_namespace'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_namespace</span><span class="p">,</span>
             <span class="s1">'interface'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="p">,</span>
             <span class="s1">'topology_mode'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">topology_mode</span><span class="p">,</span>
             <span class="s1">'topology_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">topology_version</span><span class="p">,</span>
@@ -1990,7 +2014,7 @@
                 <span class="s1">'intra_community_sell_ratio'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_market_sell_ratio</span><span class="p">,</span>
                 <span class="s1">'grid_export_price'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_market_grid_export_price</span><span class="p">,</span>
                 <span class="s1">'local_trading_enabled'</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'community_market_local_enabled'</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
-                <span class="s1">'settlement_version'</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'community_market'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'settlement_version'</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="s1">'settlement_version'</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'community_market_settlement_version'</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
                 <span class="s1">'import_member_weights'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_market_import_member_weights</span><span class="p">,</span>
                 <span class="s1">'kpis'</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s1">'community_local_traded_enabled'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_market_kpi_local_traded_enabled</span><span class="p">,</span>
@@ -2178,6 +2202,10 @@
 <span class="sd">            * ``name`` (str): the building name for building rows, ``'District'`` for district rows.</span>
 <span class="sd">            * ``level`` (str): ``'building'`` or ``'district'``.</span>
 <span class="sd">            * ``unit`` (str) and ``description`` (str): the unit and English description from the KPI catalogue.</span>
+<span class="sd">            * ``status`` (str): ``'canonical'`` for the row to report for its question, ``'legacy'`` for an older</span>
+<span class="sd">              definition kept for comparison with earlier results, ``'deprecated'`` for an alias that returns the</span>
+<span class="sd">              value of its canonical row, ``'current'`` otherwise.</span>
+<span class="sd">            * ``replacement`` (str): for ``'legacy'`` and ``'deprecated'`` rows, the name of the canonical row.</span>
 
 <span class="sd">            Which KPIs appear depends on the scenario's assets and services. :py:meth:`scorecard` selects the</span>
 <span class="sd">            default subset. The KPI catalogue lists every name and the KPI reference guide defines every family.</span>
@@ -2305,8 +2333,14 @@
         <span class="n">include_business_as_usual</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">export_business_as_usual_timeseries</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">kpi_round_decimals</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">include_battery_health_audit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Export episode KPIs to csv."""</span>
+<span class="w">        </span><span class="sd">"""Export episode KPIs to csv (or parquet with `render_file_format='parquet'`) and their manifest.</span>
+
+<span class="sd">        `include_battery_health_audit` adds the opt-in EV battery-health rows of :py:meth:`evaluate_v2`. The</span>
+<span class="sd">        manifest (``exported_kpis.manifest.json``) records it with `include_business_as_usual` and</span>
+<span class="sd">        `kpi_round_decimals` under ``kpi_export``. Returns the manifest.</span>
+<span class="sd">        """</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_episode_exporter</span><span class="o">.</span><span class="n">export_final_kpis</span><span class="p">(</span>
             <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
@@ -2314,6 +2348,7 @@
             <span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">,</span>
             <span class="n">export_business_as_usual_timeseries</span><span class="o">=</span><span class="n">export_business_as_usual_timeseries</span><span class="p">,</span>
             <span class="n">kpi_round_decimals</span><span class="o">=</span><span class="n">kpi_round_decimals</span><span class="p">,</span>
+            <span class="n">include_battery_health_audit</span><span class="o">=</span><span class="n">include_battery_health_audit</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -2526,22 +2561,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_community_market_settlement_history</span> <span class="o">=</span> <span class="n">MarketSettlementHistory</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_observations_cache</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_observations_cache_time_step</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-        <span class="n">episode_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="p">,</span> <span class="s1">'episode'</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_reset_seed_explicit</span> <span class="o">=</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_generators</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">==</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span> <span class="o">+</span> <span class="n">episode_index</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_seed</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Each EV draws from its own stream (see `CityLearnRuntimeService.ev_drift_generator`);</span>
-            <span class="c1"># this identifies the episode's streams in metadata and comparisons.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_seed</span> <span class="o">=</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">stream_id</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">EV_AWAY_SOC_DRIFT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">random_stream_episode</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_random_state</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ev_suspended_drift_random_state</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Each EV draws from its own stream (see `CityLearnRuntimeService.ev_drift_generator`);</span>
+        <span class="c1"># this identifies the episode's streams in metadata and comparisons.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_seed</span> <span class="o">=</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">stream_id</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">EV_AWAY_SOC_DRIFT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">random_stream_episode</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">random_streams</span><span class="o">.</span><span class="n">namespace_parts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_stream_namespace</span><span class="p">),</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_render_buffer</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_action_cache</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_variables</span><span class="p">()</span>
@@ -2683,6 +2711,7 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">community_market_sell_ratio</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="s1">'local_price_ratio_to_grid_import'</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">community_market_grid_export_price</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="s1">'grid_export_price'</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">community_market_settlement_version</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="s1">'settlement_version'</span><span class="p">]</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.community_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">configure_tariffs</span>
         <span class="n">configure_tariffs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">community_market_import_member_weights</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="s1">'import_member_weights'</span><span class="p">]</span>

@@ -1,0 +1,44 @@
+citylearn package
+=================
+
+.. automodule:: citylearn
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   citylearn.agents
+   citylearn.end_use_load_profiles
+   citylearn.utils
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   citylearn.base
+   citylearn.building
+   citylearn.citylearn
+   citylearn.community_dataset
+   citylearn.cost_function
+   citylearn.data
+   citylearn.dynamics
+   citylearn.electric_vehicle
+   citylearn.electric_vehicle_charger
+   citylearn.energy_model
+   citylearn.exporter
+   citylearn.multi_community
+   citylearn.occupant
+   citylearn.power_outage
+   citylearn.preprocessing
+   citylearn.random_streams
+   citylearn.reward_function
+   citylearn.rl
+   citylearn.utilities
+   citylearn.wrappers

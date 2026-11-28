@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portugal REC Datasets &mdash; CityLearn 3.8.0 documentation</title>
+  <title>Portugal REC Datasets &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -151,7 +151,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -378,7 +378,12 @@ Begin with a short window: full two-year runs without the BAU reference took
 <ul class="simple">
 <li><p><strong>Calendar:</strong> 70,176 interval-start timestamps from 1 January 2023 00:00 UTC to
 31 December 2024 23:45 UTC. Lisbon civil days have 92 or 100 intervals at
-daylight-saving transitions.</p></li>
+daylight-saving transitions.
+The <code class="docutils literal notranslate"><span class="pre">month</span></code>, <code class="docutils literal notranslate"><span class="pre">hour</span></code> and <code class="docutils literal notranslate"><span class="pre">minutes</span></code> columns are Lisbon civil time, and exported
+timestamps are too, with their UTC offset (<code class="docutils literal notranslate"><span class="pre">2023-06-27T03:00:00+01:00</span></code>). The
+<code class="docutils literal notranslate"><span class="pre">day_type</span></code> column is the Lisbon weekday, 1 Monday to 7 Sunday, and 8 on the
+public holidays that fall from Monday to Friday: the national holidays and 13 June,
+the Lisbon municipal holiday. A holiday on a Saturday or Sunday keeps 6 or 7.</p></li>
 <li><p><strong>Units:</strong> demand, PV and programme profiles in kWh per interval (multiply by four
 for average kW); battery capacity in kWh; power limits in kW; prices in EUR/kWh;
 carbon intensity in kg CO2e/kWh; SOC as a fraction. Missing observations use -9999.</p></li>

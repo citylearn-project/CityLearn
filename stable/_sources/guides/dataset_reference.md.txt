@@ -67,8 +67,8 @@ For 15 seconds:
 | Column | Required | Unit | Meaning |
 |---|---:|---:|---|
 | `month` | yes | 1-12 | Month. |
-| `hour` | yes | 1-24 | Hour. |
-| `day_type` | yes | 1-8 | Day of week or special day. |
+| `hour` | yes | 1-24 | Hour; hour 1 starts at 00:00 and hour 24 at 23:00. Exported timestamps, the evaluation window and the calendar observations read it this way ([Exported timestamps](running_simulations.md#exported-timestamps)). |
+| `day_type` | yes | 1-8 | Day of week, 1 Monday to 7 Sunday, or 8 for a holiday or special day. |
 | `minutes` | recommended sub-hour | 0-59 | Minute. |
 | `seconds` | recommended sub-minute | 0-59 | Second. |
 | `indoor_dry_bulb_temperature` | yes | C | Indoor temperature. |
@@ -123,9 +123,8 @@ may be in ratio while the targets are in percent. A column whose values are all 
 read as ratio; declare `"soc_unit": "percent"` on the charger in the schema if such a file is in
 percent (the declared unit applies to all its SOC columns). A column read as percent that also
 holds values between 0 and 1 gives a warning, since one stray value above 1 in a ratio column would
-turn 0.3 into 0.3 %. Physics version 1
-keeps the rule of CityLearn 3.6.0, value by value: a value in [0, 1] is a ratio and a value above 1 a
-percentage, so 1 (1 %) in a percent file was read as 100 %, unless the charger declares `soc_unit`
+turn 0.3 into 0.3 %. CityLearn 3.6.0 decided the unit value by value: a value in [0, 1] was a ratio and
+a value above 1 a percentage, so 1 (1 %) in a percent file was read as 100 %
 ([#368](https://github.com/citylearn-project/CityLearn/issues/368)).
 
 ## Entity Observation Bundles in Packaged Datasets

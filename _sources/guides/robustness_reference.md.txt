@@ -48,6 +48,8 @@ Observation and forecast corruption is agent-facing only. Rewards, physical KPIs
 
 The baselines in `citylearn.agents.baseline` read entity observations under both interfaces. Under the flat interface, `predict(observations)` applies the step's observation events to those entity observations as the entity interface does, so a baseline run as a controller takes the same actions under both interfaces. This draws from no random stream (noise is a function of `random_seed`, the event, the step and the target), records nothing in the robustness history or KPIs and leaves the flat observations unchanged. The native business-as-usual reference of `evaluate_v2()` calls `predict([])` and reads uncorrupted observations.
 
+An escalator action (flat interface only) is a `building` target whose `target_feature` is the action name, `escalator_<id>`; an `action` event on it changes the state requested from that escalator.
+
 A PV array has no action. An `asset` event on a `pv` target with `target_feature` `control` or `both` takes the array out of service: it generates nothing during the event, so net consumption, cost, emissions, energy provenance and PV KPIs all use zero generation for those steps. The business-as-usual reference sees the same outage. With `telemetry` only the PV keeps generating and only its observations are hidden.
 
 ## Entity Diagnostics

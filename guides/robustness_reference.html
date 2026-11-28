@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Robustness Reference &mdash; CityLearn 3.8.0 documentation</title>
+  <title>Robustness Reference &mdash; CityLearn 3.8.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=948f11bf"></script>
+      <script src="../_static/documentation_options.js?v=30f795a6"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -148,7 +148,7 @@
   <p><span class="citylearn-version-switcher" hidden>Version:
   <select id="citylearn-version-select" data-release="true"
           aria-label="Documentation version" style="margin-right: 1em;"></select></span>
-  This is the documentation of CityLearn 3.8.0<span id="citylearn-version-badge"></span>. Use the version
+  This is the documentation of CityLearn 3.8.1<span id="citylearn-version-badge"></span>. Use the version
   selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
   development documentation (<code>dev</code>).</p>
 </div>
@@ -240,6 +240,7 @@
 </table>
 <p>Observation and forecast corruption is agent-facing only. Rewards, physical KPIs and demand-response settlement still use the real simulator state. Action and asset-control events change the action effectively applied, so they can change physics and normal KPIs.</p>
 <p>The baselines in <code class="docutils literal notranslate"><span class="pre">citylearn.agents.baseline</span></code> read entity observations under both interfaces. Under the flat interface, <code class="docutils literal notranslate"><span class="pre">predict(observations)</span></code> applies the step’s observation events to those entity observations as the entity interface does, so a baseline run as a controller takes the same actions under both interfaces. This draws from no random stream (noise is a function of <code class="docutils literal notranslate"><span class="pre">random_seed</span></code>, the event, the step and the target), records nothing in the robustness history or KPIs and leaves the flat observations unchanged. The native business-as-usual reference of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> calls <code class="docutils literal notranslate"><span class="pre">predict([])</span></code> and reads uncorrupted observations.</p>
+<p>An escalator action (flat interface only) is a <code class="docutils literal notranslate"><span class="pre">building</span></code> target whose <code class="docutils literal notranslate"><span class="pre">target_feature</span></code> is the action name, <code class="docutils literal notranslate"><span class="pre">escalator_&lt;id&gt;</span></code>; an <code class="docutils literal notranslate"><span class="pre">action</span></code> event on it changes the state requested from that escalator.</p>
 <p>A PV array has no action. An <code class="docutils literal notranslate"><span class="pre">asset</span></code> event on a <code class="docutils literal notranslate"><span class="pre">pv</span></code> target with <code class="docutils literal notranslate"><span class="pre">target_feature</span></code> <code class="docutils literal notranslate"><span class="pre">control</span></code> or <code class="docutils literal notranslate"><span class="pre">both</span></code> takes the array out of service: it generates nothing during the event, so net consumption, cost, emissions, energy provenance and PV KPIs all use zero generation for those steps. The business-as-usual reference sees the same outage. With <code class="docutils literal notranslate"><span class="pre">telemetry</span></code> only the PV keeps generating and only its observations are hidden.</p>
 </section>
 <section id="entity-diagnostics">
