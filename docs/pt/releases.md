@@ -3,7 +3,11 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
-## Por publicar
+## v3.8.1 - 2026-11-28
+
+### Novidades
+
+A 3.8.1 fecha os problemas que ainda restavam da auditoria da 3.7.0. Remove as opções que só existiam para reproduzir o CityLearn 3.6.0 (`physics_version`, `baseline_version` e `random_stream_version` aceitam agora só o valor atual, a versão 1 das recompensas e os nomes antigos de agentes e atributos desaparecem, e o CityLearn 3.7 continua a ser a versão que reproduz a 3.6.0), pelo que cada correção passa a aplicar-se a uma única definição. Corrige também vários pormenores da física (ordem do abastecimento durante falhas de energia, as eficiências das características de viabilidade entity, a eficiência do carregador na potência aplicada, a validação das curvas, as alterações de eficiência por topologia, as unidades das perdas do armazenamento), agrega as taxas de auditoria do portefólio, escreve um manifesto para os exports do portefólio e marca as linhas de KPI legadas, constrói os timestamps exportados a partir das colunas de calendário, dá a cada comunidade de um `MultiCommunityEnv` os seus próprios fluxos aleatórios, valida os calendários e os eventos de topologia na construção, e escreve o dia da semana real na coluna `day_type` dos datasets das CER portuguesas. As baselines por regras custam o mesmo que na 3.8.0 em `pt_rec_4` e `pt_rec_15` e menos de 0,01% de diferença em `citylearn_challenge_2022_phase_all_plus_evs`; as alterações que mudam observações, tempos exportados ou linhas do portefólio estão descritas abaixo.
 
 ### Alterações
 
@@ -35,6 +39,16 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 - **Verificação de desempenho.** A verificação de desempenho do CI media apenas o `plus_evs` com passo de 60 s sobre dados horários e aceitava cerca de quatro vezes o tempo por passo da referência, pelo que um abrandamento de 20 % por passo nos conjuntos de dados `pt_rec` e uma construção 4 s mais longa dos conjuntos de dados a 15 s passaram. Mede agora também o `pt_rec_4` na interface entity, no seu passo nativo de 900 s, com `time_step_ratio_mode='reject'` e as verificações de invariantes físicos ativas, e a construção do conjunto de dados completo de serviço elétrico em Parquet a 15 s, com o limite de três vezes a referência mais 5 s. Os limites são os valores por omissão de `scripts/ci/perf_smoke.py`; o `scripts/ci/perf_baseline.json` deixa de guardar limites próprios, que já não coincidiam com os do CI, e as suas medições foram gravadas de novo para esta versão. Os limites continuam largos para os runners partilhados, e o resumo do job mostra a razão de cada métrica face à referência e assinala um caso que mudou 1,2 vezes ou mais face aos outros. A falta da referência de um caso faz falhar a verificação ([#468](https://github.com/citylearn-project/CityLearn/issues/468)).
 - **Testes em Windows.** Um job em Windows (`windows-2025`, Python 3.12) executa em cada pull request o `tests/test_portable_pairing_evidence.py`, que inclui `test_windows_spellings_of_one_data_file_pair` e as verificações dos atributos do checkout que só importam em Windows, e quatro ficheiros curtos de testes centrais. Falha se os testes exclusivos de Windows forem ignorados ([#471](https://github.com/citylearn-project/CityLearn/issues/471)).
 - **Pipeline dos perfis de consumo por uso final.** Um workflow semanal, que também pode ser iniciado à mão, instala o extra `end_use_load_profiles` e executa os testes do pipeline: as importações dos módulos e `Neighborhood.test_citylearn_simulation` num edifício de `citylearn_challenge_2023_phase_1`, sem EnergyPlus. Indica no resumo do job quando o extra não pode ser instalado ou os módulos não importam, e falha se os testes forem ignorados ([#471](https://github.com/citylearn-project/CityLearn/issues/471)).
+
+### Validação
+
+No pull request da versão, a suite completa de testes passou em todos os jobs do CI (Python 3.10 a 3.14 com NumPy 2, Python 3.10 com NumPy 1 e o novo job de Windows), juntamente com as auditorias de runtime, os notebooks de exemplo, a construção da documentação e o teste de instalação em macOS e Windows. Antes da publicação, as verificações independentes da auditoria da 3.7.0 foram repetidas no candidato a versão: 31 corridas em `pt_rec_4`, `pt_rec_15`, `citylearn_challenge_2022_phase_all_plus_evs`, na demo trifásica e no Quebec recalcularam a física dos VE e os KPIs de partida, o BAU e a baseline dos KPIs, os balanços do consumo doméstico, da FV e das falhas de energia e as famílias de KPIs a partir das séries originais, sem nenhuma diferença face às definições documentadas; as linhas do portefólio que agora agregam as suas contagens diferem das antigas médias ponderadas, como pretendido. A escada do BAU ao `RBCCommunityPolicy` em `pt_rec_4` e `pt_rec_15` é idêntica à da 3.8.0, com todas as partidas dos VE cumpridas. O verificador de ambientes do Gymnasium passa nos wrappers do Stable Baselines3 e do RLlib de três datasets, e dois ambientes com a mesma semente dão as mesmas observações, ações aleatórias e trajetórias.
+
+### Contribuidores
+
+- **Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)): as correções da auditoria da 3.7.0 em [#479](https://github.com/citylearn-project/CityLearn/pull/479), [#480](https://github.com/citylearn-project/CityLearn/pull/480), [#481](https://github.com/citylearn-project/CityLearn/pull/481), [#482](https://github.com/citylearn-project/CityLearn/pull/482) e [#483](https://github.com/citylearn-project/CityLearn/pull/483).
+
+[Changelog completo](https://github.com/citylearn-project/CityLearn/compare/v3.8.0...v3.8.1)
 
 ## v3.8.0 - 2026-11-27
 
